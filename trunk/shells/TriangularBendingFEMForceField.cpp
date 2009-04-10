@@ -23,7 +23,7 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #define SOFA_COMPONENT_FORCEFIELD_TRIANGULARBENDINGFEMFORCEFIELD_CPP
-#include <sofa/component/forcefield/TriangularBendingFEMForceField.h>
+#include <sofa/component/forcefield/shells/TriangularBendingFEMForceField.h>
 #include <sofa/core/ObjectFactory.h>
 #include <sofa/core/componentmodel/behavior/ForceField.inl>
 #include <sofa/helper/gl/template.h>
