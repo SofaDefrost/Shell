@@ -140,8 +140,8 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
     // DEBUG
     Quat quat;
-    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -0.174532925);	// 10°  0.174532925 rad
-//    quat.axisToQuat(Vec3(1.0, 0.0, 0.0), -0.785398163);  // 45°
+//    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -0.174532925);	// 10°  0.174532925 rad
+    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -0.785398163);  // 45°
 //    quat.axisToQuat(Vec3(0.0, 0.0, 1.0), -3.141592654*0.5);
     std::cout << "quat = " << quat << std::endl;
 
@@ -170,7 +170,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
     triangleInf.resize(_topology->getNbTriangles());
 
     // set initial position of the nodes
-    _initialPoints = this->mstate->getX0();
+    _restPositions = this->mstate->getX0();
 
     for (int i=0;i<_topology->getNbTriangles();++i)
     {
@@ -283,28 +283,55 @@ void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&
 //	// second vector in the plane of the two first edges
 //	// third vector orthogonal to first and second
 	Transformation R_0_1;
-	computeRotationLarge(R_0_1, (*_initialPoints), a, b, c );
+	computeRotationLarge(R_0_1, (*_restPositions), a, b, c );
         tinfo->initial_rotation = R_0_1;
 
         // The positions of each point is expressed into the local frame
-        tinfo->initialLocalPositions[0] = R_0_1 * ((*_initialPoints)[b].getCenter() - (*_initialPoints)[a].getCenter());
-        tinfo->initialLocalPositions[1] = R_0_1 * ((*_initialPoints)[c].getCenter() - (*_initialPoints)[a].getCenter());
-
+        tinfo->restLocalPositions[0] = R_0_1 * ((*_restPositions)[b].getCenter() - (*_restPositions)[a].getCenter());
+        tinfo->restLocalPositions[1] = R_0_1 * ((*_restPositions)[c].getCenter() - (*_restPositions)[a].getCenter());
 
         if (f_bending.getValue())
         {
+            VecCoord p0 = *this->mstate->getX0();
+            VecCoord p = *this->mstate->getX();
+
+            // To compute invC
+            Vec3 A = Vec3(0.0f, 0.0f, 0.0f);
+            computeStrainDisplacementBending(i, A, tinfo->restLocalPositions[0], tinfo->restLocalPositions[1]);
+
+            Vec3 uz = R_0_1 * (p[a].getCenter() - p0[a].getCenter());
+            Vec3 urot = R_0_1 * (p[a].getOrientation().toEulerVector() - p0[a].getOrientation().toEulerVector());
+            tinfo->u[0] = uz[2];
+            tinfo->u[1] = urot[0];
+            tinfo->u[2] = urot[1];
+
+            uz = R_0_1 * (p[b].getCenter() - p0[b].getCenter());
+            urot = R_0_1 * (p[b].getOrientation().toEulerVector() - p0[b].getOrientation().toEulerVector());
+            tinfo->u[3] = uz[2];
+            tinfo->u[4] = urot[0];
+            tinfo->u[5] = urot[1];
+
+            uz = R_0_1 * (p[c].getCenter() - p0[c].getCenter());
+            urot = R_0_1 * (p[c].getOrientation().toEulerVector() - p0[c].getOrientation().toEulerVector());
+            tinfo->u[6] = uz[2];
+            tinfo->u[7] = urot[0];
+            tinfo->u[8] = urot[1];
+
+
+//            std::cout << "u init = " << tinfo->u << std::endl;
+
             // Rotations needed to go from one point's orientation to the triangle's orientation (expressed in global frame)
             Quat Qframe, dQA, dQB, dQC;
             Transformation R_1_0;
             R_1_0.transpose(R_0_1);
             Qframe.fromMatrix(R_1_0);
-            dQA = qDiff((*_initialPoints)[a].getOrientation(), Qframe);
-            dQB = qDiff((*_initialPoints)[b].getOrientation(), Qframe);
-            dQC = qDiff((*_initialPoints)[c].getOrientation(), Qframe);
+            dQA = qDiff((*_restPositions)[a].getOrientation(), Qframe);
+            dQB = qDiff((*_restPositions)[b].getOrientation(), Qframe);
+            dQC = qDiff((*_restPositions)[c].getOrientation(), Qframe);
 
-            tinfo->initialOrientations[0] = dQA;
-            tinfo->initialOrientations[1] = dQB;
-            tinfo->initialOrientations[2] = dQC;
+            tinfo->restOrientations[0] = dQA;
+            tinfo->restOrientations[1] = dQB;
+            tinfo->restOrientations[2] = dQC;
 
             /**
              * Computes translation on Z
@@ -312,16 +339,16 @@ void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&
             // Average of rotation matrices (using interpolation of quaternions)
             Transformation R_3_0, R_0_3;
             Quat Qmoy;
-            Qmoy.slerp((*_initialPoints)[a].getOrientation(), (*_initialPoints)[b].getOrientation(), 0.5);
-            Qmoy.slerp(Qmoy, (*_initialPoints)[c].getOrientation(), 1./3);
+            Qmoy.slerp((*_restPositions)[a].getOrientation(), (*_restPositions)[b].getOrientation(), 0.5);
+            Qmoy.slerp(Qmoy, (*_restPositions)[c].getOrientation(), 1./3);
             Qmoy.toMatrix(R_3_0);
             R_0_3.transpose(R_3_0);
 
             // Positions in barycentric frame
-            Vec3 G = ((*_initialPoints)[a].getCenter()+(*_initialPoints)[b].getCenter()+(*_initialPoints)[c].getCenter())/3;
-            tinfo->initialBaryPositions[0] = R_0_3 * ((*_initialPoints)[a].getCenter()-G);
-            tinfo->initialBaryPositions[1] = R_0_3 * ((*_initialPoints)[b].getCenter()-G);
-            tinfo->initialBaryPositions[2] = R_0_3 * ((*_initialPoints)[c].getCenter()-G);
+            Vec3 G = ((*_restPositions)[a].getCenter()+(*_restPositions)[b].getCenter()+(*_restPositions)[c].getCenter())/3;
+            tinfo->restBaryPositions[0] = R_0_3 * ((*_restPositions)[a].getCenter()-G);
+            tinfo->restBaryPositions[1] = R_0_3 * ((*_restPositions)[b].getCenter()-G);
+            tinfo->restBaryPositions[2] = R_0_3 * ((*_restPositions)[c].getCenter()-G);
         }
 
         triangleInfo.endEdit();
@@ -362,8 +389,8 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLarge(Displac
     Vec3 uAB, uAC;
     tinfo->currentLocalPositions[0] = AB;
     tinfo->currentLocalPositions[1] = AC;
-    uAB = AB - tinfo->initialLocalPositions[0];
-    uAC = AC - tinfo->initialLocalPositions[1];
+    uAB = AB - tinfo->restLocalPositions[0];
+    uAC = AC - tinfo->restLocalPositions[1];
 
     // In-plane local displacements
     D[0] = 0;
@@ -414,9 +441,9 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     Vec3 C = R_0_3 * (p[c].getCenter()-G);
 
     Vec3 uA, uB, uC;
-    uA = A - tinfo->initialBaryPositions[0];
-    uB = B - tinfo->initialBaryPositions[1];
-    uC = C - tinfo->initialBaryPositions[2];
+    uA = A - tinfo->restBaryPositions[0];
+    uB = B - tinfo->restBaryPositions[1];
+    uC = C - tinfo->restBaryPositions[2];
 
     /**
      * Writes translation on Z (expressed in barycentric frame)
@@ -451,17 +478,17 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     tinfo->currentOrientations[1] = dQB;
     tinfo->currentOrientations[2] = dQC;
 
-//    std::cout << "dQA init = " << tinfo->initialOrientations[0].toEulerVector() << std::endl;
-//    std::cout << "dQB init = " << tinfo->initialOrientations[1].toEulerVector() << std::endl;
-//    std::cout << "dQC init = " << tinfo->initialOrientations[2].toEulerVector() << std::endl;
+//    std::cout << "dQA init = " << tinfo->restOrientations[0].toEulerVector() << std::endl;
+//    std::cout << "dQB init = " << tinfo->restOrientations[1].toEulerVector() << std::endl;
+//    std::cout << "dQC init = " << tinfo->restOrientations[2].toEulerVector() << std::endl;
 //
 //    std::cout << "dQA = " << dQA.toEulerVector() << std::endl;
 //    std::cout << "dQB = " << dQB.toEulerVector() << std::endl;
 //    std::cout << "dQC = " << dQC.toEulerVector() << std::endl;
 
-    uA = qDiff(dQA, tinfo->initialOrientations[0]).toEulerVector();
-    uB = qDiff(dQB, tinfo->initialOrientations[1]).toEulerVector();
-    uC = qDiff(dQC, tinfo->initialOrientations[2]).toEulerVector();
+    uA = qDiff(dQA, tinfo->restOrientations[0]).toEulerVector();
+    uB = qDiff(dQB, tinfo->restOrientations[1]).toEulerVector();
+    uC = qDiff(dQC, tinfo->restOrientations[2]).toEulerVector();
 
 //    std::cout << "uA = " << uA << std::endl;
 //    std::cout << "uB = " << uB << std::endl;
@@ -473,8 +500,8 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     uC = Rotation * uC;
 
 //    std::cout << "Rotation = " << Rotation << std::endl;
-    Quat qR;
-    qR.fromMatrix(Rotation);
+//    Quat qR;
+//    qR.fromMatrix(Rotation);
 //    std::cout << "quat Rotation = " << qR.toEulerVector() << std::endl;
 
     /**
@@ -600,19 +627,29 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementBending
 //    C(7,2) = 1;		C(7,4) = c[0];			C(7,5) = 2*c[1];			C(7,7) = 2*c[0]*c[1] + c[0]*c[0];					C(7,8) = 3*c[1]*c[1];
 //    C(8,1) = -1;	C(8,3) = -2*c[0];		C(8,4) = -c[1];				C(8,6) = -3*c[0]*c[0];		C(8,7) = -c[1]*c[1] -2*c[0]*c[1];
 
+    std::cout << "C = " << std::endl;
+    for (int i=0;i<9;i++)
+    {
+        for (int j =0;j<9;j++)
+        {
+            std::cout << C(i,j) << "  " ;
+        }
+        std::cout << std::endl;
+    }
 
+    // Inverse of C
+    tinfo->invC.invert(C);
+
+//    std::cout << "invC = " << std::endl;
 //    for (int i=0;i<9;i++)
 //    {
 //        for (int j =0;j<9;j++)
 //        {
-//            std::cout << C(i,j) << "  " ;
+//            std::cout << tinfo->invC(i,j) << "  " ;
 //        }
 //        std::cout << std::endl;
 //    }
 
-    // Inverse of C
-    Mat<9, 9, Real> invC;
-    invC.invert(C);
 
     // Calculation of strain-displacement matrices for the 3 Gauss points taken in the centre of each edges
     tinfo->b1.clear();
@@ -626,13 +663,13 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementBending
     // Retrieves the strain tensor used in flat-plate theory in a given point
     Mat<3, 9, Real> D;
     tensorFlatPlate(D, gaussPoint1);
-    tinfo->b1 = D * invC;
+    tinfo->b1 = D * tinfo->invC;
 
     tensorFlatPlate(D, gaussPoint2);
-    tinfo->b2 = D * invC;
+    tinfo->b2 = D * tinfo->invC;
 
     tensorFlatPlate(D, gaussPoint3);
-    tinfo->b3 = D * invC;
+    tinfo->b3 = D * tinfo->invC;
     
     triangleInfo.endEdit();
 }
@@ -698,15 +735,43 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainBending(const Index
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
-    Vec <9, Real> u;
-    for (unsigned int i = 0; i< u.size(); i++)
+    for (unsigned int i = 0; i< tinfo->u.size(); i++)
     {
-        u[i] = D[6+i];
+        tinfo->u[i] = D[6+i];
     }
 
-    tinfo->bendingStrain1 = tinfo->b1 * u;
-    tinfo->bendingStrain2 = tinfo->b2 * u;
-    tinfo->bendingStrain3 = tinfo->b3 * u;
+    
+            Index a = _topology->getTriangle(elementIndex)[0];
+            Index b = _topology->getTriangle(elementIndex)[1];
+            Index c = _topology->getTriangle(elementIndex)[2];
+
+            VecCoord p0 = *this->mstate->getX0();
+            VecCoord p = *this->mstate->getX();
+
+            Transformation rotation;
+            rotation.transpose(tinfo->rotation);
+            Vec3 uz = rotation * (p[a].getCenter() - p0[a].getCenter());
+            Vec3 urot = rotation * (p[a].getOrientation().toEulerVector() - p0[a].getOrientation().toEulerVector());
+            tinfo->u[0] = uz[2];
+            tinfo->u[1] = urot[0];
+            tinfo->u[2] = urot[1];
+
+            uz = rotation * (p[b].getCenter() - p0[b].getCenter());
+            urot = rotation * (p[b].getOrientation().toEulerVector() - p0[b].getOrientation().toEulerVector());
+            tinfo->u[3] = uz[2];
+            tinfo->u[4] = urot[0];
+            tinfo->u[5] = urot[1];
+
+            uz = rotation * (p[c].getCenter() - p0[c].getCenter());
+            urot = rotation * (p[c].getOrientation().toEulerVector() - p0[c].getOrientation().toEulerVector());
+            tinfo->u[6] = uz[2];
+            tinfo->u[7] = urot[0];
+            tinfo->u[8] = urot[1];
+
+
+    tinfo->bendingStrain1 = tinfo->b1 * tinfo->u;
+    tinfo->bendingStrain2 = tinfo->b2 * tinfo->u;
+    tinfo->bendingStrain3 = tinfo->b3 * tinfo->u;
 
 //    std::cout << "u = " << u << std::endl;
 
@@ -1145,111 +1210,165 @@ void TriangularBendingFEMForceField<DataTypes>::addDForce(VecDeriv& df, const Ve
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::draw()
 {
-//    VecCoord p0 = *this->mstate->getX0();
-//    VecCoord p = *this->mstate->getX();
-//
-//    glDisable(GL_LIGHTING);
-//    glBegin(GL_POINTS);
-//    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
-//    {
-//        glColor3f(0.5,0,0);
-//        glVertex3f(0,0,-0.1f);
-//        glColor3f(0,0.5,0);
-//        helper::gl::glVertexT(triangleInfo.getValue()[t].initialLocalPositions[0] + Vec3(0,0,-0.1f));
-//        glColor3f(0,0,0.5);
-//        helper::gl::glVertexT(triangleInfo.getValue()[t].initialLocalPositions[1] + Vec3(0,0,-0.1f));
-//
-//        glColor3f(1,0,0);
-//        glVertex3f(0,0,0.1f);
-//        glColor3f(0,1,0);
-//        helper::gl::glVertexT(triangleInfo.getValue()[t].currentLocalPositions[0] + Vec3(0,0,0.1f));
-//        glColor3f(0,0,1);
-//        helper::gl::glVertexT(triangleInfo.getValue()[t].currentLocalPositions[1] + Vec3(0,0,0.1f));
-//}
-//    glEnd();
-//    glBegin(GL_LINES);
-//    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
-//    {
-//        Index a = _topology->getTriangle(t)[0];
-//        Index b = _topology->getTriangle(t)[1];
-//        Index c = _topology->getTriangle(t)[2];
-//
-//        // Triangle frame (average of 3 node's orientations)
-//        Vec3 G = (p[a].getCenter() + p[b].getCenter() + p[c].getCenter())/3;
-//        glColor3f(1,0,0);
-//        helper::gl::glVertexT(G + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(G + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].triangleOrientations.rotate(Vec3(0.1f,0,0)));
-//        glColor3f(0,1,0);
-//        helper::gl::glVertexT(G + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(G + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].triangleOrientations.rotate(Vec3(0,0.1f,0)));
-//        glColor3f(0,0,1);
-//        helper::gl::glVertexT(G + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(G + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].triangleOrientations.rotate(Vec3(0,0,0.1f)));
-//
-//        // Initial orientations
-//        glColor3f(1,0,0);
-//        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f));
-//        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[0].rotate(Vec3(0.1f,0,0)));
-//        glColor3f(0,1,0);
-//        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f));
-//        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[0].rotate(Vec3(0,0.1f,0)));
-//        glColor3f(0,0,1);
-//        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f));
-//        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[0].rotate(Vec3(0,0,0.1f)));
-//
-//        glColor3f(1,0,0);
-//        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f));
-//        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[1].rotate(Vec3(0.1f,0,0)));
-//        glColor3f(0,1,0);
-//        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f));
-//        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[1].rotate(Vec3(0,0.1f,0)));
-//        glColor3f(0,0,1);
-//        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f));
-//        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[1].rotate(Vec3(0,0,0.1f)));
-//
-//        glColor3f(1,0,0);
-//        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f));
-//        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[2].rotate(Vec3(0.1f,0,0)));
-//        glColor3f(0,1,0);
-//        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f));
-//        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[2].rotate(Vec3(0,0.1f,0)));
-//        glColor3f(0,0,1);
-//        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f));
-//        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[2].rotate(Vec3(0,0,0.1f)));
-//
-//        // Current orientations
-//        glColor3f(1,0,0);
-//        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[0].rotate(Vec3(0.1f,0,0)));
-//        glColor3f(0,1,0);
-//        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[0].rotate(Vec3(0,0.1f,0)));
-//        glColor3f(0,0,1);
-//        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[0].rotate(Vec3(0,0,0.1f)));
-//
-//        glColor3f(1,0,0);
-//        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[1].rotate(Vec3(0.1f,0,0)));
-//        glColor3f(0,1,0);
-//        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[1].rotate(Vec3(0,0.1f,0)));
-//        glColor3f(0,0,1);
-//        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[1].rotate(Vec3(0,0,0.1f)));
-//
-//        glColor3f(1,0,0);
-//        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[2].rotate(Vec3(0.1f,0,0)));
-//        glColor3f(0,1,0);
-//        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[2].rotate(Vec3(0,0.1f,0)));
-//        glColor3f(0,0,1);
-//        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f));
-//        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[2].rotate(Vec3(0,0,0.1f)));
-//
-//    }
-//    glEnd();
+    VecCoord p0 = *this->mstate->getX0();
+    VecCoord p = *this->mstate->getX();
+
+    // Subdivision
+    glBegin(GL_TRIANGLES);
+    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
+    {
+        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+        TriangleInformation *tinfo = &triangleInf[t];
+
+        Index a = _topology->getTriangle(t)[0];
+        Index b = _topology->getTriangle(t)[1];
+        Index c = _topology->getTriangle(t)[2];
+
+        Vec3 M01, M02, M12;
+        M01 = (p[a].getCenter()+p[b].getCenter())/2;
+        M02 = (p[a].getCenter()+p[c].getCenter())/2;
+        M12 = (p[b].getCenter()+p[c].getCenter())/2;
+
+        Vec <9, Real> coeff;
+        coeff = tinfo->invC * tinfo->u;
+
+        std::cout << "coeff = " << coeff << std::endl;
+        std::cout << "u = " << tinfo->u << std::endl;
+
+        // Tocher's deflection function CORRECTED: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
+        M01[2] = coeff[0] + coeff[1]*M01[0] + coeff[2]*M01[1] + coeff[3]*M01[0]*M01[0] + coeff[4]*M01[0]*M01[1] + coeff[5]*M01[1]*M01[1] + coeff[6]*M01[0]*M01[0]*M01[0] + coeff[7]*M01[0]*M01[1]*M01[1] + coeff[8]*M01[1]*M01[1]*M01[1];
+        M02[2] = coeff[0] + coeff[1]*M02[0] + coeff[2]*M02[1] + coeff[3]*M02[0]*M02[0] + coeff[4]*M02[0]*M02[1] + coeff[5]*M02[1]*M02[1] + coeff[6]*M02[0]*M02[0]*M02[0] + coeff[7]*M02[0]*M02[1]*M02[1] + coeff[8]*M02[1]*M02[1]*M02[1];
+        M12[2] = coeff[0] + coeff[1]*M12[0] + coeff[2]*M12[1] + coeff[3]*M12[0]*M12[0] + coeff[4]*M12[0]*M12[1] + coeff[5]*M12[1]*M12[1] + coeff[6]*M12[0]*M12[0]*M12[0] + coeff[7]*M12[0]*M12[1]*M12[1] + coeff[8]*M12[1]*M12[1]*M12[1];
+
+        std::cout << "M01z = " << M01[2] << std::endl;
+        std::cout << "M02z = " << M02[2] << std::endl;
+        std::cout << "M12z = " << M12[2] << std::endl;
+
+
+        glColor3f(1,0.5,0);
+
+        helper::gl::glVertexT(p[a].getCenter());
+        helper::gl::glVertexT(M01);
+        helper::gl::glVertexT(M02);
+
+        helper::gl::glVertexT(M01);
+        helper::gl::glVertexT(p[b].getCenter());
+        helper::gl::glVertexT(M12);
+
+        helper::gl::glVertexT(M01);
+        helper::gl::glVertexT(M12);
+        helper::gl::glVertexT(M02);
+
+        helper::gl::glVertexT(M02);
+        helper::gl::glVertexT(M12);
+        helper::gl::glVertexT(p[c].getCenter());
+
+        triangleInfo.endEdit();
+    }
+    glEnd();
+
+    glDisable(GL_LIGHTING);
+    glBegin(GL_POINTS);
+    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
+    {
+        glColor3f(0.5,0,0);
+        glVertex3f(0,0,-0.1f);
+        glColor3f(0,0.5,0);
+        helper::gl::glVertexT(triangleInfo.getValue()[t].restLocalPositions[0] + Vec3(0,0,-0.1f));
+        glColor3f(0,0,0.5);
+        helper::gl::glVertexT(triangleInfo.getValue()[t].restLocalPositions[1] + Vec3(0,0,-0.1f));
+
+        glColor3f(1,0,0);
+        glVertex3f(0,0,0.1f);
+        glColor3f(0,1,0);
+        helper::gl::glVertexT(triangleInfo.getValue()[t].currentLocalPositions[0] + Vec3(0,0,0.1f));
+        glColor3f(0,0,1);
+        helper::gl::glVertexT(triangleInfo.getValue()[t].currentLocalPositions[1] + Vec3(0,0,0.1f));
+    }
+    glEnd();
+    glBegin(GL_LINES);
+    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
+    {
+        Index a = _topology->getTriangle(t)[0];
+        Index b = _topology->getTriangle(t)[1];
+        Index c = _topology->getTriangle(t)[2];
+
+        // Triangle frame (average of 3 node's orientations)
+        Vec3 G = (p[a].getCenter() + p[b].getCenter() + p[c].getCenter())/3;
+        glColor3f(1,0,0);
+        helper::gl::glVertexT(G + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(G + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].triangleOrientations.rotate(Vec3(0.1f,0,0)));
+        glColor3f(0,1,0);
+        helper::gl::glVertexT(G + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(G + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].triangleOrientations.rotate(Vec3(0,0.1f,0)));
+        glColor3f(0,0,1);
+        helper::gl::glVertexT(G + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(G + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].triangleOrientations.rotate(Vec3(0,0,0.1f)));
+
+        // Initial orientations
+        glColor3f(1,0,0);
+        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f));
+        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[0].rotate(Vec3(0.1f,0,0)));
+        glColor3f(0,1,0);
+        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f));
+        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[0].rotate(Vec3(0,0.1f,0)));
+        glColor3f(0,0,1);
+        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f));
+        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[0].rotate(Vec3(0,0,0.1f)));
+
+        glColor3f(1,0,0);
+        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f));
+        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[1].rotate(Vec3(0.1f,0,0)));
+        glColor3f(0,1,0);
+        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f));
+        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[1].rotate(Vec3(0,0.1f,0)));
+        glColor3f(0,0,1);
+        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f));
+        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[1].rotate(Vec3(0,0,0.1f)));
+
+        glColor3f(1,0,0);
+        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f));
+        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[2].rotate(Vec3(0.1f,0,0)));
+        glColor3f(0,1,0);
+        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f));
+        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[2].rotate(Vec3(0,0.1f,0)));
+        glColor3f(0,0,1);
+        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f));
+        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[2].rotate(Vec3(0,0,0.1f)));
+
+        // Current orientations
+        glColor3f(1,0,0);
+        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[0].rotate(Vec3(0.1f,0,0)));
+        glColor3f(0,1,0);
+        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[0].rotate(Vec3(0,0.1f,0)));
+        glColor3f(0,0,1);
+        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(p[a].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[0].rotate(Vec3(0,0,0.1f)));
+
+        glColor3f(1,0,0);
+        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[1].rotate(Vec3(0.1f,0,0)));
+        glColor3f(0,1,0);
+        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[1].rotate(Vec3(0,0.1f,0)));
+        glColor3f(0,0,1);
+        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(p[b].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[1].rotate(Vec3(0,0,0.1f)));
+
+        glColor3f(1,0,0);
+        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[2].rotate(Vec3(0.1f,0,0)));
+        glColor3f(0,1,0);
+        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[2].rotate(Vec3(0,0.1f,0)));
+        glColor3f(0,0,1);
+        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f));
+        helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[2].rotate(Vec3(0,0,0.1f)));
+
+    }
+    glEnd();
 }
 	
 

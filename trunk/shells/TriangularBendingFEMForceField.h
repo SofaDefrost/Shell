@@ -98,9 +98,9 @@ protected:
         {
             public:
                 
-                helper::fixed_array <Vec3, 2> initialLocalPositions;
-                helper::fixed_array <Quat, 3> initialOrientations;
-                helper::fixed_array <Vec3, 3> initialBaryPositions;
+                helper::fixed_array <Vec3, 2> restLocalPositions;
+                helper::fixed_array <Quat, 3> restOrientations;
+                helper::fixed_array <Vec3, 3> restBaryPositions;
                 Quat triangleOrientations;
 
                 helper::fixed_array <Vec3, 2> currentLocalPositions;
@@ -133,6 +133,10 @@ protected:
                 Vec3 bendingStress2;
                 Vec3 bendingStress3;
                 Real thirdSurface;
+
+                // Both needed for subdivision
+                Mat<9, 9, Real> invC;
+                Vec <9, Real> u;
                 TriangleInformation() { }
 
                 /// Output stream
@@ -153,7 +157,7 @@ protected:
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
 	//const VecElement *_indexedElements;
 	//Data< VecCoord > _initialPoints; ///< the intial positions of the points
-	VecCoord* _initialPoints;
+	VecCoord* _restPositions;
 	//     int _method; ///< the computation method of the displacements
 	
 	
