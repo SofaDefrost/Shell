@@ -145,7 +145,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 //    quat.axisToQuat(Vec3(0.0, 0.0, 1.0), -3.141592654*0.5);
     std::cout << "quat = " << quat << std::endl;
 
-    serr << "initializing TriangularBendingFEMForceField" << sendl;
+    sout << "initializing TriangularBendingFEMForceField" << sendl;
     this->Inherited::init();
 
     _topology = getContext()->getMeshTopology();
@@ -368,8 +368,8 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLarge(Displac
     // In-plane local displacements
     D[0] = 0;
     D[1] = 0;
-    D[2] = 0;
-    D[3] = uAB[1];
+    D[2] = uAB[0];
+    D[3] = 0;
     D[4] = uAC[0];
     D[5] = uAC[1];
 
