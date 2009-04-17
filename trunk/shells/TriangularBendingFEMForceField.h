@@ -93,7 +93,9 @@ protected:
 	typedef Mat<6, 3, Real> StrainDisplacement;				///< the strain-displacement matrix
 	typedef sofa::helper::vector<StrainDisplacement> VecStrainDisplacement;	///< a vector of strain-displacement matrices
 	typedef Mat<3, 3, Real > Transformation;				///< matrix for rigid transformations like rotations
-	
+        typedef helper::fixed_array <Vec3, 3> RenderingTriangle;                ///> contains the 3 summets of a triangle
+	typedef sofa::helper::vector<RenderingTriangle> ListTriangles;          ///> vector of triangles
+
 	class TriangleInformation
         {
             public:
@@ -187,6 +189,7 @@ public:
         Data <Real> f_thickness;
 	Data<bool> showStressValue;
 	Data<bool> showStressVector;
+        Data<int> nbSubdivision;
 
 	Real getPoisson() { return f_poisson.getValue(); }
 	void setPoisson(Real val) { f_poisson.setValue(val); }
@@ -226,6 +229,9 @@ protected :
 	void accumulateForceLarge( VecDeriv& f, const VecCoord & p, Index elementIndex);
 	void accumulateDampingLarge( VecDeriv& f, Index elementIndex );
 	void applyStiffnessLarge( VecDeriv& f, Real h, const VecDeriv& x );
+
+        void subdivideAndComputeDeflection(const ListTriangles listTriangles, Transformation rotation, Mat<9, 9, Real> invC, Vec <9, Real> u, ListTriangles& newListTriangles);
+        void renderTriangles(const ListTriangles& listTriangles);
 };
 
 
