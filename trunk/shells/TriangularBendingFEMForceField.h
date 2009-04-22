@@ -55,18 +55,6 @@ using sofa::helper::vector;
 using namespace sofa::component::topology;
 
 
-/** corotational triangle from
- * @InProceedings{NPF05,
- *   author       = "Nesme, Matthieu and Payan, Yohan and Faure, Fran\c{c}ois",
- *   title        = "Efficient, Physically Plausible Finite Elements",
- *   booktitle    = "Eurographics (short papers)",
- *   month        = "august",
- *   year         = "2005",
- *   editor       = "J. Dingliana and F. Ganovelli",
- *   keywords     = "animation, physical model, elasticity, finite elements",
- *   url          = "http://www-evasion.imag.fr/Publications/2005/NPF05"
- * }
- */
 template<class DataTypes>
 class TriangularBendingFEMForceField : public core::componentmodel::behavior::ForceField<DataTypes>, public virtual core::objectmodel::BaseObject
 {
@@ -79,12 +67,12 @@ public:
 	typedef typename DataTypes::Coord    Coord   ;
 	typedef typename DataTypes::Deriv    Deriv   ;
 	typedef typename Coord::value_type   Real    ;
-        typedef Vec<3,Real> Vec3;
-	
+	typedef Vec<3,Real> Vec3;
+
 	typedef sofa::core::componentmodel::topology::BaseMeshTopology::index_type Index;
 	typedef sofa::core::componentmodel::topology::BaseMeshTopology::Triangle Element;
 	typedef sofa::core::componentmodel::topology::BaseMeshTopology::SeqTriangles VecElement;
-	
+
 protected:
 
 	typedef Vec<15, Real> Displacement;                                      ///< the displacement vector
@@ -94,15 +82,15 @@ protected:
 	typedef sofa::helper::vector<StrainDisplacement> VecStrainDisplacement;	///< a vector of strain-displacement matrices
 	typedef Mat<3, 3, Real > Transformation;				///< matrix for rigid transformations like rotations
         typedef helper::fixed_array <Vec3, 3> RenderingTriangle;                ///> contains the 3 summets of a triangle
-	typedef sofa::helper::vector<RenderingTriangle> ListTriangles;          ///> vector of triangles
+        typedef sofa::helper::vector<RenderingTriangle> ListTriangles;          ///> vector of triangles
 
 	class TriangleInformation
         {
             public:
-                
+
                 helper::fixed_array <Vec3, 2> restLocalPositions;
-                helper::fixed_array <Quat, 3> restOrientations;
-                helper::fixed_array <Vec3, 3> restBaryPositions;
+                helper::fixed_array <Quat, 3> initialOrientations;
+                helper::fixed_array <Vec3, 3> initialBaryPositions;
                 Quat triangleOrientations;
 
                 helper::fixed_array <Vec3, 2> currentLocalPositions;
@@ -135,11 +123,11 @@ protected:
                 Vec3 bendingStress2;
                 Vec3 bendingStress3;
                 Real thirdSurface;
-
-                // Both needed for subdivision
-                Mat<9, 9, Real> invC;
-                Vec <9, Real> u;
                 TriangleInformation() { }
+
+                // variables needed for drawing the shell
+                Vec<9, Real> u; // displacement vector
+                Mat<9, 9, Real> invC; // inverse of C (used in bending mode only)
 
                 /// Output stream
                 inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ )
@@ -153,18 +141,18 @@ protected:
                     return in;
                 }
         };
-	
+
 	TriangleData<TriangleInformation> triangleInfo;
 
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
 	//const VecElement *_indexedElements;
 	//Data< VecCoord > _initialPoints; ///< the intial positions of the points
-	VecCoord* _restPositions;
+	VecCoord* _initialPoints;
 	//     int _method; ///< the computation method of the displacements
-	
-	
+
+
 	bool updateMatrix;
-	
+
 public:
 
     TriangularBendingFEMForceField();
@@ -189,7 +177,7 @@ public:
         Data <Real> f_thickness;
 	Data<bool> showStressValue;
 	Data<bool> showStressVector;
-        Data<int> nbSubdivision;
+        Data<int> subdivisions;
 
 	Real getPoisson() { return f_poisson.getValue(); }
 	void setPoisson(Real val) { f_poisson.setValue(val); }
@@ -214,13 +202,13 @@ protected :
 	void computeStress(Vec<3,Real> &stress, MaterialStiffness &K, Vec<3,Real> &strain);
         void computeStressBending(const Index& elementIndex);
 	void computeForce(Displacement &F, Index elementIndex, const VecCoord &p);
-	
+
 	static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
-	
+
 	/// f += Kx where K is the stiffness matrix and x a displacement
 	virtual void applyStiffness( VecDeriv& f, Real h, const VecDeriv& x );
 	virtual void computeMaterialStiffness(int i, Index& a, Index& b, Index& c);
-	
+
 	////////////// large displacements method
 	//sofa::helper::vector< helper::fixed_array <Coord, 3> > _rotatedInitialElements;   ///< The initials positions in its frame
 	//sofa::helper::vector< Transformation > _rotations;
@@ -230,7 +218,8 @@ protected :
 	void accumulateDampingLarge( VecDeriv& f, Index elementIndex );
 	void applyStiffnessLarge( VecDeriv& f, Real h, const VecDeriv& x );
 
-        void subdivideAndComputeDeflection(const ListTriangles listTriangles, Transformation rotation, Mat<9, 9, Real> invC, Vec <9, Real> u, ListTriangles& newListTriangles);
+        void subdivide(const ListTriangles listTriangles, ListTriangles& newListTriangles);
+        void computeDeflection(ListTriangles &listTriangles, const Vec3 &a0, const Transformation &rotation, const Mat<9, 9, Real> &invC, const Vec <9, Real> &u);
         void renderTriangles(const ListTriangles& listTriangles);
 };
 

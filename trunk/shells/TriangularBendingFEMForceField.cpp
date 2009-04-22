@@ -56,12 +56,12 @@ namespace sofa
 			using namespace sofa::defaulttype;
 			using namespace	sofa::component::topology;
 			using namespace core::componentmodel::topology;
-			
 
-			
-	
+
+
+
 // --------------------------------------------------------------------------------------
-// ---	 
+// ---
 // --------------------------------------------------------------------------------------
 inline Quat qDiff(Quat a, const Quat& b)
 {
@@ -79,7 +79,7 @@ inline Quat qDiff(Quat a, const Quat& b)
 
 
 // --------------------------------------------------------------------------------------
-// ---	 
+// ---
 // --------------------------------------------------------------------------------------
 template< class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFunction(int triangleIndex, void* param, TriangleInformation &/*tinfo*/,	const Triangle& t, const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&)
@@ -95,10 +95,10 @@ void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFunction(int
             ff->computeMaterialStiffness(triangleIndex,a,b,c);
         }
 }
- 
+
 
 // --------------------------------------------------------------------------------------
-// ---	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
@@ -109,12 +109,12 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , f_thickness(initData(&f_thickness,(Real)1.,"thickness","Thickness of the plates"))
 , showStressValue(initData(&showStressValue,false,"showStressValue","Flag activating rendering of stress values as a color in each triangle"))
 , showStressVector(initData(&showStressVector,false,"showStressVector","Flag activating rendering of stress directions within each triangle"))
-, nbSubdivision(initData(&nbSubdivision,1,"nbSubdivision","Number of subdivisions for triangles rendering"))
+, subdivisions(initData(&subdivisions,(int)1,"subdivisions", "number of subdivisions for displaying triangle shells"))
 {
 }
-			
+
 // --------------------------------------------------------------------------------------
-// ---	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes> void TriangularBendingFEMForceField<DataTypes>::handleTopologyChange()
 {
@@ -125,7 +125,7 @@ template <class DataTypes> void TriangularBendingFEMForceField<DataTypes>::handl
 }
 
 // --------------------------------------------------------------------------------------
-// ---	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 TriangularBendingFEMForceField<DataTypes>::~TriangularBendingFEMForceField()
@@ -133,7 +133,7 @@ TriangularBendingFEMForceField<DataTypes>::~TriangularBendingFEMForceField()
 }
 
 // --------------------------------------------------------------------------------------
-// --- Initialization stage	 
+// --- Initialization stage
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::init()
@@ -141,12 +141,9 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
     // DEBUG
     Quat quat;
-//    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -0.174532925);	// 10°  0.174532925 rad
-    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -0.785398163);  // 45°
-//    quat.axisToQuat(Vec3(0.0, 0.0, 1.0), -3.141592654*0.5);
+    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -0.174532925);	// 10°  0.174532925 rad
     std::cout << "quat = " << quat << std::endl;
 
-    sout << "initializing TriangularBendingFEMForceField" << sendl;
     this->Inherited::init();
 
     _topology = getContext()->getMeshTopology();
@@ -161,7 +158,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 }
 
 // --------------------------------------------------------------------------------------
-// --- Re-initialization (called when we change a parameter through the GUI)	 
+// --- Re-initialization (called when we change a parameter through the GUI)
 // --------------------------------------------------------------------------------------
 template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit()
 {
@@ -171,7 +168,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
     triangleInf.resize(_topology->getNbTriangles());
 
     // set initial position of the nodes
-    _restPositions = this->mstate->getX0();
+    _initialPoints = this->mstate->getX0();
 
     for (int i=0;i<_topology->getNbTriangles();++i)
     {
@@ -187,7 +184,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 
 
 // --------------------------------------------------------------------------------------
-// ---	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
     double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/)
@@ -197,7 +194,7 @@ template <class DataTypes>
 }
 
 // --------------------------------------------------------------------------------------
-// ---   	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeRotationLarge( Transformation &r, const VecCoord &p, const Index &a, const Index &b, const Index &c)
@@ -234,40 +231,39 @@ void TriangularBendingFEMForceField<DataTypes>::computeRotationLarge( Transforma
     r[2][1] = edgez[1];
     r[2][2] = edgez[2];
 
-
     // y vector on first edge
     // z vector in the plane of the two first edges
     // x vector orthogonal to first and second
-//    Vec3 edgey = p[b].getCenter() - p[a].getCenter();
-//    edgey.normalize();
-//
-//    Vec3 edgex = p[c].getCenter() - p[a].getCenter();
-//    edgex.normalize();
-//
-//    Vec3 edgez;
-//    edgez = cross(edgex, edgey);
-//    edgez.normalize();
-//
-//    edgex = cross(edgey, edgez);
-//    edgex.normalize();
-//
-//    r[0][0] = edgex[0];
-//    r[0][1] = edgex[1];
-//    r[0][2] = edgex[2];
-//    r[1][0] = edgey[0];
-//    r[1][1] = edgey[1];
-//    r[1][2] = edgey[2];
-//    r[2][0] = edgez[0];
-//    r[2][1] = edgez[1];
-//    r[2][2] = edgez[2];
+/*    Vec3 edgey = p[b].getCenter() - p[a].getCenter();
+    edgey.normalize();
+
+    Vec3 edgex = p[c].getCenter() - p[a].getCenter();
+    edgex.normalize();
+
+    Vec3 edgez;
+    edgez = cross(edgex, edgey);
+    edgez.normalize();
+
+    edgex = cross(edgey, edgez);
+    edgex.normalize();
+
+    r[0][0] = edgex[0];
+    r[0][1] = edgex[1];
+    r[0][2] = edgex[2];
+    r[1][0] = edgey[0];
+    r[1][1] = edgey[1];
+    r[1][2] = edgey[2];
+    r[2][0] = edgez[0];
+    r[2][1] = edgez[1];
+    r[2][2] = edgez[2]; */
 }
 
 
 // --------------------------------------------------------------------------------------
-// --- Store the initial position of the nodes 	 
+// --- Store the initial position of the nodes
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&b, Index&c)
+        void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&b, Index&c)
 {
 
 #ifdef DEBUG_TRIANGLEFEM
@@ -276,106 +272,96 @@ void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&
 
 
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    TriangleInformation *tinfo = &triangleInf[i];
+    
+    VecCoord p0 = *this->mstate->getX0();
+    VecCoord p = *this->mstate->getX();
 
-        TriangleInformation *tinfo = &triangleInf[i];
+    //   Rotation matrix (initial triangle/world)
+    //   first vector on first edge
+    //   second vector in the plane of the two first edges
+    //   third vector orthogonal to first and second
+    Transformation R_0_1, R_1_0;
+    computeRotationLarge(R_0_1, (*_initialPoints), a, b, c );
+    tinfo->initial_rotation = R_0_1;
+    R_1_0.transpose(R_0_1);
+    tinfo->rotation = R_1_0;
 
-//	// Rotation matrix (initial triangle/world)
-//	// first vector on first edge
-//	// second vector in the plane of the two first edges
-//	// third vector orthogonal to first and second
-	Transformation R_0_1;
-	computeRotationLarge(R_0_1, (*_restPositions), a, b, c );
+    // The positions of each point is expressed into the local frame
+    tinfo->restLocalPositions[0] = R_0_1 * ((*_initialPoints)[b].getCenter() - (*_initialPoints)[a].getCenter());
+    tinfo->restLocalPositions[1] = R_0_1 * ((*_initialPoints)[c].getCenter() - (*_initialPoints)[a].getCenter());
+
+    if (f_bending.getValue()) {
+
+        // Compute intital displacement if position != rest_position in mechanical state
+        Vec3 A = Vec3(0.0f, 0.0f, 0.0f);
+        computeStrainDisplacementBending(i, A, tinfo->restLocalPositions[0], tinfo->restLocalPositions[1]);
+
+        Vec3 uz = R_0_1 * (p[a].getCenter() - p0[a].getCenter());
+        Vec3 urot = R_0_1 * (p[a].getOrientation().toEulerVector() - p0[a].getOrientation().toEulerVector());
+        tinfo->u[0] = uz[2];
+        tinfo->u[1] = urot[0];
+        tinfo->u[2] = urot[1];
+
+        uz = R_0_1 * (p[b].getCenter() - p0[b].getCenter());
+        urot = R_0_1 * (p[b].getOrientation().toEulerVector() - p0[b].getOrientation().toEulerVector());
+        tinfo->u[3] = uz[2];
+        tinfo->u[4] = urot[0];
+        tinfo->u[5] = urot[1];
+
+        uz = R_0_1 * (p[c].getCenter() - p0[c].getCenter());
+        urot = R_0_1 * (p[c].getOrientation().toEulerVector() - p0[c].getOrientation().toEulerVector());
+        tinfo->u[6] = uz[2];
+        tinfo->u[7] = urot[0];
+        tinfo->u[8] = urot[1];
+
+        // Rotations needed to go from one point's orientation to the triangle's orientation (expressed in global frame)
+        Quat Qframe, dQA, dQB, dQC;
         Transformation R_1_0;
         R_1_0.transpose(R_0_1);
-        tinfo->rotation = R_1_0;
+        Qframe.fromMatrix(R_1_0);
+        dQA = qDiff((*_initialPoints)[a].getOrientation(), Qframe);
+        dQB = qDiff((*_initialPoints)[b].getOrientation(), Qframe);
+        dQC = qDiff((*_initialPoints)[c].getOrientation(), Qframe);
 
-        // The positions of each point is expressed into the local frame
-        tinfo->restLocalPositions[0] = R_0_1 * ((*_restPositions)[b].getCenter() - (*_restPositions)[a].getCenter());
-        tinfo->restLocalPositions[1] = R_0_1 * ((*_restPositions)[c].getCenter() - (*_restPositions)[a].getCenter());
+        tinfo->initialOrientations[0] = dQA;
+        tinfo->initialOrientations[1] = dQB;
+        tinfo->initialOrientations[2] = dQC;
 
-        if (f_bending.getValue())
-        {
-            VecCoord p0 = *this->mstate->getX0();
-            VecCoord p = *this->mstate->getX();
+        // Compute average of rotation matrices on the triangle (using interpolation of quaternions)
+        Transformation R_3_0, R_0_3;
+        Quat Qmoy;
+        Qmoy.slerp((*_initialPoints)[a].getOrientation(), (*_initialPoints)[b].getOrientation(), 0.5);
+        Qmoy.slerp(Qmoy, (*_initialPoints)[c].getOrientation(), 1./3);
+        Qmoy.toMatrix(R_3_0);
+        R_0_3.transpose(R_3_0);
 
-            // To compute invC
-            Vec3 A = Vec3(0.0f, 0.0f, 0.0f);
-            computeStrainDisplacementBending(i, A, tinfo->restLocalPositions[0], tinfo->restLocalPositions[1]);
-
-            Vec3 uz = R_0_1 * (p[a].getCenter() - p0[a].getCenter());
-            Vec3 urot = R_0_1 * (p[a].getOrientation().toEulerVector() - p0[a].getOrientation().toEulerVector());
-            tinfo->u[0] = uz[2];
-            tinfo->u[1] = urot[0];
-            tinfo->u[2] = urot[1];
-
-            uz = R_0_1 * (p[b].getCenter() - p0[b].getCenter());
-            urot = R_0_1 * (p[b].getOrientation().toEulerVector() - p0[b].getOrientation().toEulerVector());
-            tinfo->u[3] = uz[2];
-            tinfo->u[4] = urot[0];
-            tinfo->u[5] = urot[1];
-
-            uz = R_0_1 * (p[c].getCenter() - p0[c].getCenter());
-            urot = R_0_1 * (p[c].getOrientation().toEulerVector() - p0[c].getOrientation().toEulerVector());
-            tinfo->u[6] = uz[2];
-            tinfo->u[7] = urot[0];
-            tinfo->u[8] = urot[1];
-
-
-//            std::cout << "u init = " << tinfo->u << std::endl;
-
-            // Rotations needed to go from one point's orientation to the triangle's orientation (expressed in global frame)
-            Quat Qframe, dQA, dQB, dQC;
-            Transformation R_1_0;
-            R_1_0.transpose(R_0_1);
-            Qframe.fromMatrix(R_1_0);
-            dQA = qDiff((*_restPositions)[a].getOrientation(), Qframe);
-            dQB = qDiff((*_restPositions)[b].getOrientation(), Qframe);
-            dQC = qDiff((*_restPositions)[c].getOrientation(), Qframe);
-
-            tinfo->restOrientations[0] = dQA;
-            tinfo->restOrientations[1] = dQB;
-            tinfo->restOrientations[2] = dQC;
-
-            std::cout << "dQC rest = " << dQC.toEulerVector() << std::endl;
-
-            /**
-             * Computes translation on Z
-             */
-            // Average of rotation matrices (using interpolation of quaternions)
-            Transformation R_3_0, R_0_3;
-            Quat Qmoy;
-            Qmoy.slerp((*_restPositions)[a].getOrientation(), (*_restPositions)[b].getOrientation(), 0.5);
-            Qmoy.slerp(Qmoy, (*_restPositions)[c].getOrientation(), 1./3);
-            Qmoy.toMatrix(R_3_0);
-            R_0_3.transpose(R_3_0);
-
-            // Positions in barycentric frame
-            Vec3 G = ((*_restPositions)[a].getCenter()+(*_restPositions)[b].getCenter()+(*_restPositions)[c].getCenter())/3;
-            tinfo->restBaryPositions[0] = R_0_3 * ((*_restPositions)[a].getCenter()-G);
-            tinfo->restBaryPositions[1] = R_0_3 * ((*_restPositions)[b].getCenter()-G);
-            tinfo->restBaryPositions[2] = R_0_3 * ((*_restPositions)[c].getCenter()-G);
-        }
-
-        triangleInfo.endEdit();
-
+        // Positions in barycentric frame
+        Vec3 G = ((*_initialPoints)[a].getCenter()+(*_initialPoints)[b].getCenter()+(*_initialPoints)[c].getCenter())/3;
+        tinfo->initialBaryPositions[0] = R_0_3 * ((*_initialPoints)[a].getCenter()-G);
+        tinfo->initialBaryPositions[1] = R_0_3 * ((*_initialPoints)[b].getCenter()-G);
+        tinfo->initialBaryPositions[2] = R_0_3 * ((*_initialPoints)[c].getCenter()-G);
+    }
+    triangleInfo.endEdit();
 }
-			
+
+
 // --------------------------------------------------------------------------------------
-// ---	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Real h, const VecDeriv& x )
 {
     applyStiffnessLarge( v,h,x );
 }
-	
+
 // -------------------------------------------------------------------------------------------------------------
-// --- Compute displacement vector D as the difference between current current position 'p' and initial position  
+// --- Compute displacement vector D as the difference between current current position 'p' and initial position
 // --- expressed in the co-rotational frame of reference
 // -------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLarge(Displacement &D, Index elementIndex, const VecCoord &p)
-{	
+{
     Index a = _topology->getTriangle(elementIndex)[0];
     Index b = _topology->getTriangle(elementIndex)[1];
     Index c = _topology->getTriangle(elementIndex)[2];
@@ -386,6 +372,8 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLarge(Displac
     // Rotation matrix (triangle/world)
     Transformation R_0_2;
     computeRotationLarge(R_0_2, p, a, b, c );
+
+ //   std::cout << "R = " << R_0_2 << std::endl;
 
     // Positions in local frame
     Vec3 AB = R_0_2 * (p[b].getCenter()-p[a].getCenter());
@@ -405,9 +393,9 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLarge(Displac
     D[4] = uAC[0];
     D[5] = uAC[1];
 
-//    std::cout << "uAB = " << uAB << std::endl;
-//    std::cout << "uAC = " << uAC << std::endl;
-    
+ //   std::cout << "uAB = " << uAB << std::endl;
+ //   std::cout << "uAC = " << uAC << std::endl;
+
     triangleInfo.endEdit();
 }
 
@@ -446,9 +434,9 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     Vec3 C = R_0_3 * (p[c].getCenter()-G);
 
     Vec3 uA, uB, uC;
-    uA = A - tinfo->restBaryPositions[0];
-    uB = B - tinfo->restBaryPositions[1];
-    uC = C - tinfo->restBaryPositions[2];
+    uA = A - tinfo->initialBaryPositions[0];
+    uB = B - tinfo->initialBaryPositions[1];
+    uC = C - tinfo->initialBaryPositions[2];
 
     /**
      * Writes translation on Z (expressed in barycentric frame)
@@ -456,6 +444,10 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     D[6] = uA[2];
     D[9] = uB[2];
     D[12] = uC[2];
+
+//    std::cout << "uAz = " << uA[2] << std::endl;
+//    std::cout << "uBz = " << uB[2] << std::endl;
+//    std::cout << "uCz = " << uC[2] << std::endl;
 
     D[6] = 0;
     D[9] = 0;
@@ -483,21 +475,21 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     tinfo->currentOrientations[1] = dQB;
     tinfo->currentOrientations[2] = dQC;
 
-//    std::cout << "dQA init = " << tinfo->restOrientations[0].toEulerVector() << std::endl;
-//    std::cout << "dQB init = " << tinfo->restOrientations[1].toEulerVector() << std::endl;
-//    std::cout << "dQC init = " << tinfo->restOrientations[2].toEulerVector() << std::endl;
+//    std::cout << "dQA init = " << tinfo->initialOrientations[0].toEulerVector() << std::endl;
+//    std::cout << "dQB init = " << tinfo->initialOrientations[1].toEulerVector() << std::endl;
+//    std::cout << "dQC init = " << tinfo->initialOrientations[2].toEulerVector() << std::endl;
 //
 //    std::cout << "dQA = " << dQA.toEulerVector() << std::endl;
 //    std::cout << "dQB = " << dQB.toEulerVector() << std::endl;
 //    std::cout << "dQC = " << dQC.toEulerVector() << std::endl;
 
-    uA = qDiff(dQA, tinfo->restOrientations[0]).toEulerVector();
-    uB = qDiff(dQB, tinfo->restOrientations[1]).toEulerVector();
-    uC = qDiff(dQC, tinfo->restOrientations[2]).toEulerVector();
+    uA = qDiff(dQA, tinfo->initialOrientations[0]).toEulerVector();
+    uB = qDiff(dQB, tinfo->initialOrientations[1]).toEulerVector();
+    uC = qDiff(dQC, tinfo->initialOrientations[2]).toEulerVector();
 
-//    std::cout << "uA = " << uA << std::endl;
-//    std::cout << "uB = " << uB << std::endl;
-//    std::cout << "uC = " << uC << std::endl;
+ //   std::cout << "uA = " << uA << std::endl;
+ //  std::cout << "uB = " << uB << std::endl;
+ //   std::cout << "uC = " << uC << std::endl;
 
     // Rotations in local frame
     uA = Rotation * uA;
@@ -505,15 +497,11 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     uC = Rotation * uC;
 
 //    std::cout << "Rotation = " << Rotation << std::endl;
-//    Quat qR;
-//    qR.fromMatrix(Rotation);
+    Quat qR;
+    qR.fromMatrix(Rotation);
 //    std::cout << "quat Rotation = " << qR.toEulerVector() << std::endl;
 
-//    std::cout << "Rotation * uC = " << uC << std::endl;
-
-    /**
-     * Writes rotations
-     */
+    // Write rotations
     D[7] = uA[0];
     D[8] = uA[1];
 
@@ -523,11 +511,11 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     D[13] = uC[0];
     D[14] = uC[1];
 
-    // Stores u for drawing
     for (unsigned int i = 0; i< tinfo->u.size(); i++)
     {
         tinfo->u[i] = D[6+i];
     }
+
 //    std::cout << "Az = " << D[6] << std::endl;
 //    std::cout << "Ax = " << D[7] << std::endl;
 //    std::cout << "Ay = " << D[8] << std::endl;
@@ -581,7 +569,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacement( Strai
     J[5][0] = 0;
     J[5][1] = x21;
     J[5][2] = y12;
-	
+
 }
 
 
@@ -628,40 +616,31 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementBending
 
 
     // Real original (same local frame)
-//    C(0,0) = 1;
-//    C(1,2) = 1;
-//    C(2,1) = -1;
-//    C(3,0) = 1; 	C(3,2) = b[1]; 			C(3,5) = b[1]*b[1];		C(3,8) = b[1]*b[1]*b[1];
-//    C(4,2) = 1; 	C(4,5) = 2*b[1]; 		C(4,8) = 3*b[1]*b[1];
-//    C(5,1) = -1; 	C(5,4) = -b[1]; 		C(5,7) = -b[1]*b[1];
-//    C(6,0) = 1;		C(6,1) = c[0];			C(6,2) = c[1];				C(6,3) = c[0]*c[0];			C(6,4) = c[0]*c[1];		C(6,5) = c[1]*c[1];
-//    C(6,6) = c[0]*c[0]*c[0];				C(6,7) = c[0]*c[1]*c[1] + c[0]*c[0]*c[1]; 				C(6,8) = c[1]*c[1]*c[1];
-//    C(7,2) = 1;		C(7,4) = c[0];			C(7,5) = 2*c[1];			C(7,7) = 2*c[0]*c[1] + c[0]*c[0];					C(7,8) = 3*c[1]*c[1];
-//    C(8,1) = -1;	C(8,3) = -2*c[0];		C(8,4) = -c[1];				C(8,6) = -3*c[0]*c[0];		C(8,7) = -c[1]*c[1] -2*c[0]*c[1];
+/*    C(0,0) = 1;
+    C(1,2) = 1;
+    C(2,1) = -1;
+    C(3,0) = 1; 	C(3,2) = b[1]; 			C(3,5) = b[1]*b[1];		C(3,8) = b[1]*b[1]*b[1];
+    C(4,2) = 1; 	C(4,5) = 2*b[1]; 		C(4,8) = 3*b[1]*b[1];
+    C(5,1) = -1; 	C(5,4) = -b[1]; 		C(5,7) = -b[1]*b[1];
+    C(6,0) = 1;		C(6,1) = c[0];			C(6,2) = c[1];				C(6,3) = c[0]*c[0];			C(6,4) = c[0]*c[1];		C(6,5) = c[1]*c[1];
+    C(6,6) = c[0]*c[0]*c[0];				C(6,7) = c[0]*c[1]*c[1] + c[0]*c[0]*c[1]; 				C(6,8) = c[1]*c[1]*c[1];
+    C(7,2) = 1;		C(7,4) = c[0];			C(7,5) = 2*c[1];			C(7,7) = 2*c[0]*c[1] + c[0]*c[0];					C(7,8) = 3*c[1]*c[1];
+    C(8,1) = -1;	C(8,3) = -2*c[0];		C(8,4) = -c[1];				C(8,6) = -3*c[0]*c[0];		C(8,7) = -c[1]*c[1] -2*c[0]*c[1];
+*/
 
-//    std::cout << "C = " << std::endl;
-//    for (int i=0;i<9;i++)
-//    {
-//        for (int j =0;j<9;j++)
-//        {
-//            std::cout << C(i,j) << "  " ;
-//        }
-//        std::cout << std::endl;
-//    }
-
+/*    for (int i=0;i<9;i++)
+    {
+        for (int j =0;j<9;j++)
+        {
+            std::cout << C(i,j) << "  " ;
+        }
+        std::cout << std::endl;
+    }
+*/
     // Inverse of C
-    tinfo->invC.invert(C);
-
-//    std::cout << "invC = " << std::endl;
-//    for (int i=0;i<9;i++)
-//    {
-//        for (int j =0;j<9;j++)
-//        {
-//            std::cout << tinfo->invC(i,j) << "  " ;
-//        }
-//        std::cout << std::endl;
-//    }
-
+    Mat<9, 9, Real> invC;
+    invC.invert(C);
+    tinfo->invC = invC;
 
     // Calculation of strain-displacement matrices for the 3 Gauss points taken in the centre of each edges
     tinfo->b1.clear();
@@ -675,14 +654,14 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementBending
     // Retrieves the strain tensor used in flat-plate theory in a given point
     Mat<3, 9, Real> D;
     tensorFlatPlate(D, gaussPoint1);
-    tinfo->b1 = D * tinfo->invC;
+    tinfo->b1 = D * invC;
 
     tensorFlatPlate(D, gaussPoint2);
-    tinfo->b2 = D * tinfo->invC;
+    tinfo->b2 = D * invC;
 
     tensorFlatPlate(D, gaussPoint3);
-    tinfo->b3 = D * tinfo->invC;
-    
+    tinfo->b3 = D * invC;
+
     triangleInfo.endEdit();
 }
 
@@ -711,12 +690,13 @@ void TriangularBendingFEMForceField<DataTypes>::tensorFlatPlate(Mat<3, 9, Real>&
 
 	D.clear();
 
-        // Original
-//        D(0,3) = 2;		D(0,6) = 6*P[0];        D(0,7) = 2*P[1];
+
+	// Original
+//    D(0,3) = 2;		D(0,6) = 6*P[0];        D(0,7) = 2*P[1];
 //	D(1,5) = 2;		D(1,7) = 2*P[0];	D(1,8) = 6*P[1];
 //	D(2,4) = 2;		D(2,7) = 4*(P[0]+P[1]);
 
-        // Corrected
+    // Corrected
 	D(0,3) = 2;		D(0,6) = 6*P[0];
 	D(1,5) = 2;		D(1,7) = 2*P[0];	D(1,8) = 6*P[1];
 	D(2,4) = 2;		D(2,7) = 4*P[1];
@@ -731,11 +711,11 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrain(Vec3 &strain, cons
 {
 	Mat<3,6,Real> Jt;
 	Jt.transpose(J);
-	
+
         strain[0] = Jt[0][0] * D[0] + /* Jt[0][1] * Depl[1] + */ Jt[0][2] * D[2] /* + Jt[0][3] * Depl[3] + Jt[0][4] * Depl[4] + Jt[0][5] * Depl[5] */ ;
         strain[1] = /* Jt[1][0] * Depl[0] + */ Jt[1][1] * D[1] + /* Jt[1][2] * Depl[2] + */ Jt[1][3] * D[3] + /* Jt[1][4] * Depl[4] + */ Jt[1][5] * D[5];
         strain[2] = Jt[2][0] * D[0] + Jt[2][1] * D[1] + Jt[2][2] * D[2] +	Jt[2][3] * D[3] + Jt[2][4] * D[4] /* + Jt[2][5] * Depl[5] */ ;
-	
+
 }
 
 // --------------------------------------------------------------------------------------------------------
@@ -756,8 +736,6 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainBending(const Index
     tinfo->bendingStrain1 = tinfo->b1 * u;
     tinfo->bendingStrain2 = tinfo->b2 * u;
     tinfo->bendingStrain3 = tinfo->b3 * u;
-
-//    std::cout << "u = " << u << std::endl;
 
 //    std::cout << "b1 = " << tinfo->b1 << std::endl;
 //    std::cout << "b2 = " << tinfo->b2 << std::endl;
@@ -802,11 +780,11 @@ void TriangularBendingFEMForceField<DataTypes>::computeStressBending(const Index
 
 
 // --------------------------------------------------------------------------------------
-// ---	Compute material stiffness 
-// --------------------------------------------------------------------------------------	
+// ---	Compute material stiffness
+// --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(int i, Index &/*a*/, Index &/*b*/, Index &/*c*/)
-{    
+{
 	helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
 	TriangleInformation *tinfo = &triangleInf[i];
@@ -820,7 +798,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(int i, 
 	tinfo->materialMatrix[2][0] = 0;
 	tinfo->materialMatrix[2][1] = 0;
 	tinfo->materialMatrix[2][2] = 0.5f * (1 - f_poisson.getValue());
-	
+
 	tinfo->materialMatrix *= (f_young.getValue() / (12 * (1 - f_poisson.getValue() * f_poisson.getValue())));
 
 	triangleInfo.endEdit();
@@ -847,12 +825,13 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, In
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
-     // co-rotational method
+    // co-rotational method
     // first, compute rotation matrix into co-rotational frame
     computeRotationLarge(R_0_2, p, a, b, c);
 
     // then compute displacement in this frame
     computeDisplacementLarge(D, elementIndex, p);
+
     // and compute postions of b, c in the co-rotational frame (a is always (0,0,0))
     Vec3 A = Vec3(0.0, 0.0, 0.0);
     Vec3 B = R_0_2 * (p[b].getCenter()-p[a].getCenter());
@@ -862,8 +841,6 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, In
     computeStrain(strain, J, D);
     computeStress(stress, tinfo->materialMatrix, strain);
 
-
-//    std::cout << std::endl;
 //    std::cout << "p[a]=(" << p[a] << ") - p[b]=(" << p[b] << ") - p[c]=(" << p[c] << ")" << std::endl;
 //    std::cout << "D: " << D << std::endl;
 //    std::cout << "J: " << J << std::endl;
@@ -889,9 +866,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, In
     tinfo->strain = strain;
     tinfo->stress = stress;
 
-    /**
-     * bending forces
-     */
+    // bending forces
     if (f_bending.getValue())
     {
         computeDisplacementLargeBending(D, elementIndex, p);
@@ -899,7 +874,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, In
         // Computes the area of the triangle (1/2*(x2*y3))
         Real thirdSurface = 1./6*(B[0]*C[1]);
         tinfo->thirdSurface = thirdSurface;
-        
+
         computeStrainDisplacementBending(elementIndex, A, B, C);
         computeStrainBending(elementIndex, D);
         computeStressBending(elementIndex);
@@ -914,7 +889,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, In
         Real t = f_thickness.getValue();
         force = (bt1 * tinfo->bendingStress1 + bt2 * tinfo->bendingStress2 + bt3 * tinfo->bendingStress3) * tinfo->thirdSurface * t * t * t;
 
-//        std::cout << "force (local) = " << force << std::endl;
+        //std::cout << "force (local) = " << force << std::endl;
 
         for (unsigned int i = 0; i< force.size(); i++)
         {
@@ -927,12 +902,12 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, In
 
 
 // --------------------------------------------------------------------------------------
-// ---   	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::applyStiffnessLarge(VecDeriv &v, Real h, const VecDeriv &dx)
 {
-	
+
 #ifdef DEBUG_TRIANGLEFEM
 	sout << "TriangularBendingFEMForceField::applyStiffnessLarge"<<sendl;
 #endif
@@ -942,11 +917,11 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffnessLarge(VecDeriv &v,
 	MaterialStiffness K;
 	Displacement D;
 	Vec3 x_2;
-	unsigned int nbTriangles = _topology->getNbTriangles();	
-	
+	unsigned int nbTriangles = _topology->getNbTriangles();
+
 	helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
-	for(unsigned int i=0; i<nbTriangles; i++) 
+	for(unsigned int i=0; i<nbTriangles; i++)
 	{
             TriangleInformation *tinfo = &triangleInf[i];
 
@@ -960,17 +935,14 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffnessLarge(VecDeriv &v,
             x_2 = R_0_2 * dx[a].getVCenter();
             D[0] = x_2[0];
             D[1] = x_2[1];
-//            D[6] = 0;
-		
+
             x_2 = R_0_2 * dx[b].getVCenter();
             D[2] = x_2[0];
             D[3] = x_2[1];
-//            D[9] = 0;
-		
+
             x_2 = R_0_2 * dx[c].getVCenter();
             D[4] = x_2[0];
             D[5] = x_2[1];
-//            D[12] = 0;
 
             Displacement F;
 
@@ -995,20 +967,22 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffnessLarge(VecDeriv &v,
             {
                 // bending displacements
                 Transformation Rotation, RotationT;
-//                Rotation = R_0_2 - tinfo->initial_rotation;
                 Rotation = R_0_2;
                 RotationT.transpose(Rotation);
 
                 Vec3 u;
                 u = Rotation * dx[a].getVOrientation();
+                D[6] = 0;
                 D[7] = u[0];
                 D[8] = u[1];
 
                 u = Rotation * dx[b].getVOrientation();
+                D[9] = 0;
                 D[10] = u[0];
                 D[11] = u[1];
 
                 u = Rotation * dx[c].getVOrientation();
+                D[12] = 0;
                 D[13] = u[0];
                 D[14] = u[1];
 
@@ -1021,7 +995,6 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffnessLarge(VecDeriv &v,
 //                D[6] = A[2];
 //                D[9] = B[2];
 //                D[12] = C[2];
-
 
                 computeStrainBending(i, D);
                 computeStressBending(i);
@@ -1037,12 +1010,10 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffnessLarge(VecDeriv &v,
                 force = (bt1 * tinfo->bendingStress1 + bt2 * tinfo->bendingStress2 + bt3 * tinfo->bendingStress3) * tinfo->thirdSurface * t * t * t;
 
                 for (unsigned int j = 0; j< force.size(); j++)
-                {
                     F[j+6] = force[j];
-                }
 
                 Vec3 fa1 = tinfo->rotation * Vec3(0.0, 0.0, h*F[6]);
-//                Vec3 fa2 = tinfo->rotation * Vec3(h*F[7], h*F[8], 0.0);
+//              Vec3 fa2 = tinfo->rotation * Vec3(h*F[7], h*F[8], 0.0);
                 Vec3 fa2 = RotationT * Vec3(h*F[7], h*F[8], 0.0);
 
                 Vec3 fb1 = tinfo->rotation * Vec3(0.0, 0.0, h*F[9]);
@@ -1053,8 +1024,6 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffnessLarge(VecDeriv &v,
 //                Vec3 fc2 = tinfo->rotation * Vec3(h*F[13], h*F[14], 0.0);
                 Vec3 fc2 = RotationT * Vec3(h*F[13], h*F[14], 0.0);
 
-//                fa2 = Vec3(0.0, 0.0, 0.0);
-//                fb2 = Vec3(0.0, 0.0, 0.0);
 
                 v[a] += Deriv(-fa1, -fa2);
                 v[b] += Deriv(-fb1, -fb2);
@@ -1066,9 +1035,9 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffnessLarge(VecDeriv &v,
 	triangleInfo.endEdit();
 }
 
-	
+
 // --------------------------------------------------------------------------------------
-// ---   	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::accumulateForceLarge(VecDeriv &f, const VecCoord &p, Index elementIndex )
@@ -1086,6 +1055,8 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForceLarge(VecDeriv &f
     // compute force on element (in the co-rotational space)
     computeForce( F, elementIndex, p);
 
+//    std::cout << " F = " << F << std::endl;
+
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
@@ -1099,20 +1070,16 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForceLarge(VecDeriv &f
         Transformation R_2_0, R_0_2, Rotation, RotationT;
         R_2_0 = tinfo->rotation;
         R_0_2.transpose(R_2_0);
-//        Rotation = R_0_2 - tinfo->initial_rotation;
         Rotation = R_0_2;
         RotationT.transpose(Rotation);
 
         Vec3 fa1 = tinfo->rotation * Vec3(0.0, 0.0, F[6]);
-//                Vec3 fa2 = tinfo->rotation * Vec3(F[7], F[8], 0.0);
         Vec3 fa2 = RotationT * Vec3(F[7], F[8], 0.0);
 
         Vec3 fb1 = tinfo->rotation * Vec3(0.0, 0.0, F[9]);
-//                Vec3 fb2 = tinfo->rotation * Vec3(F[10], F[11], 0.0);
         Vec3 fb2 = RotationT * Vec3(F[10], F[11], 0.0);
 
         Vec3 fc1 = tinfo->rotation * Vec3(0.0, 0.0, F[12]);
-//                Vec3 fc2 = tinfo->rotation * Vec3(F[13], F[14], 0.0);
         Vec3 fc2 = RotationT * Vec3(F[13], F[14], 0.0);
 
 //    	std::cout << "fa1 = " << -fa1 << std::endl;
@@ -1136,7 +1103,7 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForceLarge(VecDeriv &f
 
 
 // --------------------------------------------------------------------------------------
-// ---   	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::accumulateDampingLarge(VecDeriv &, Index )
@@ -1149,17 +1116,15 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateDampingLarge(VecDeriv 
 }
 
 // --------------------------------------------------------------------------------------
-// --- 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::addForce(VecDeriv& f, const VecCoord& x, const VecDeriv& /*v*/)
 {
-//     std::cout << "addForce" << std::endl;
+        int nbTriangles=_topology->getNbTriangles();
 
-	int nbTriangles=_topology->getNbTriangles();
-	
 	f.resize(x.size());
-	
+
 	if(f_damping.getValue() != 0)
         {
             for ( int i=0; i<nbTriangles; i+=3 )
@@ -1176,26 +1141,26 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(VecDeriv& f, const VecC
             }
 	}
 }
-	
+
 // --------------------------------------------------------------------------------------
-// ---	 
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::addDForce(VecDeriv& df, const VecDeriv& dx)
 {
-//    std::cout << "addDForce" << std::endl;
-
     Real h=1;
     df.resize(dx.size());
-		
+
     applyStiffnessLarge( df,h,dx );
 }
 
 
+// --------------------------------------------------------------------------------------
+// ---
+// --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::subdivideAndComputeDeflection(const ListTriangles listTriangles, Transformation rotation, Mat<9, 9, Real> invC, Vec <9, Real> u, ListTriangles& newListTriangles)
+void TriangularBendingFEMForceField<DataTypes>::subdivide(const ListTriangles listTriangles, ListTriangles& newListTriangles)
 {
-    // Subdivision
     for (unsigned int t=0; t<listTriangles.size(); t++)
     {
         Vec3 a, b, c;
@@ -1203,32 +1168,11 @@ void TriangularBendingFEMForceField<DataTypes>::subdivideAndComputeDeflection(co
         b = listTriangles[t][1];
         c = listTriangles[t][2];
 
+        // Global coordinates
         Vec3 mAB, mAC, mBC;
         mAB = (a+b)/2;
         mAC = (a+c)/2;
         mBC = (b+c)/2;
-
-        Vec <9, Real> coeff;
-        coeff = invC * u;
-
-        // Tocher's deflection function CORRECTED: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
-        Real z;
-        Vec3 Uz;
-        z = coeff[0] + coeff[1]*mAB[0] + coeff[2]*mAB[1] + coeff[3]*mAB[0]*mAB[0] + coeff[4]*mAB[0]*mAB[1] + coeff[5]*mAB[1]*mAB[1] + coeff[6]*mAB[0]*mAB[0]*mAB[0] + coeff[7]*mAB[0]*mAB[1]*mAB[1] + coeff[8]*mAB[1]*mAB[1]*mAB[1];
-        Uz = rotation * Vec3(0.0, 0.0, z);
-        mAB += Uz;
-
-        z = coeff[0] + coeff[1]*mAC[0] + coeff[2]*mAC[1] + coeff[3]*mAC[0]*mAC[0] + coeff[4]*mAC[0]*mAC[1] + coeff[5]*mAC[1]*mAC[1] + coeff[6]*mAC[0]*mAC[0]*mAC[0] + coeff[7]*mAC[0]*mAC[1]*mAC[1] + coeff[8]*mAC[1]*mAC[1]*mAC[1];
-        Uz = rotation * Vec3(0.0, 0.0, z);
-        mAC += Uz;
-
-        z = coeff[0] + coeff[1]*mBC[0] + coeff[2]*mBC[1] + coeff[3]*mBC[0]*mBC[0] + coeff[4]*mBC[0]*mBC[1] + coeff[5]*mBC[1]*mBC[1] + coeff[6]*mBC[0]*mBC[0]*mBC[0] + coeff[7]*mBC[0]*mBC[1]*mBC[1] + coeff[8]*mBC[1]*mBC[1]*mBC[1];
-        Uz = rotation * Vec3(0.0, 0.0, z);
-        mBC += Uz;
-
-    //        std::cout << "mABz = " << mAB[2] << std::endl;
-    //        std::cout << "mACz = " << mAC[2] << std::endl;
-    //        std::cout << "mBCz = " << mBC[2] << std::endl;
 
         RenderingTriangle triangle;
         triangle[0] = a;
@@ -1241,92 +1185,115 @@ void TriangularBendingFEMForceField<DataTypes>::subdivideAndComputeDeflection(co
         triangle[2] = mBC;
         newListTriangles.push_back(triangle);
 
-        triangle[0] = mAB;
-        triangle[1] = mBC;
-        triangle[2] = mAC;
-        newListTriangles.push_back(triangle);
-
         triangle[0] = mAC;
         triangle[1] = mBC;
         triangle[2] = c;
         newListTriangles.push_back(triangle);
+
+        triangle[0] = mBC;
+        triangle[1] = mAC;
+        triangle[2] = mAB;
+        newListTriangles.push_back(triangle);
     }
 }
 
+
+// --------------------------------------------------------------------------------------
+// ---
+// --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::renderTriangles(const ListTriangles& listTriangles)
+void TriangularBendingFEMForceField<DataTypes>::computeDeflection(ListTriangles &listTriangles, const Vec3 &a0, const Transformation &rotation, const Mat<9, 9, Real> &invC, const Vec <9, Real> &u)
 {
     // Subdivision
     for (unsigned int t=0; t<listTriangles.size(); t++)
     {
-        glBegin(GL_TRIANGLES);
+        Vec3 a, b, c;
+        a = listTriangles[t][0];
+        b = listTriangles[t][1];
+        c = listTriangles[t][2];
 
-        glColor3f(1,0.5,0);
+        // Local coordinates needed to compute deflection
+        Transformation R;
+        R.transpose(rotation);
 
-        helper::gl::glVertexT(listTriangles[t][0]);
-        helper::gl::glVertexT(listTriangles[t][1]);
-        helper::gl::glVertexT(listTriangles[t][2]);
+        Vec3 A = R * (a-a0);
+        Vec3 B = R * (b-a0);
+        Vec3 C = R * (c-a0);
 
+        // Tocher's deflection function CORRECTED: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
+        // Solve ci
+        Vec <9, Real> coeff;
+        coeff = invC * u;
+
+  //      for (double s=0; s<=0.9; s+=0.025)
+  //           std::cout  <<  coeff[0] + coeff[1]*0.5 + coeff[2]*s + coeff[3]*0.5*0.5 + coeff[4]*0.5*s + coeff[5]*s*s + coeff[6]*0.5*0.5*0.5 + coeff[7]*0.5*s*s + coeff[8]*s*s*s << std::endl;
+
+        // Compute deflection
+        Real z;
+        Vec3 Uz;
+        glBegin(GL_LINES);
+        glColor3f(0.0f, 0.0f, 1.0f);
+        z = coeff[0] + coeff[1]*A[0] + coeff[2]*A[1] + coeff[3]*A[0]*A[0] + coeff[4]*A[0]*A[1] + coeff[5]*A[1]*A[1] + coeff[6]*A[0]*A[0]*A[0] + coeff[7]*A[0]*A[1]*A[1] + coeff[8]*A[1]*A[1]*A[1];
+        Uz = rotation * Vec3(0.0, 0.0, z);
+        glVertex3d(a[0], a[1], a[2]);
+        a += Uz;
+        glVertex3d(a[0], a[1], a[2]);
+
+        z = coeff[0] + coeff[1]*B[0] + coeff[2]*B[1] + coeff[3]*B[0]*B[0] + coeff[4]*B[0]*B[1] + coeff[5]*B[1]*B[1] + coeff[6]*B[0]*B[0]*B[0] + coeff[7]*B[0]*B[1]*B[1] + coeff[8]*B[1]*B[1]*B[1];
+        Uz = rotation * Vec3(0.0, 0.0, z);
+        glVertex3d(b[0], b[1], b[2]);
+        b += Uz;
+        glVertex3d(b[0], b[1], b[2]);
+
+        z = coeff[0] + coeff[1]*C[0] + coeff[2]*C[1] + coeff[3]*C[0]*C[0] + coeff[4]*C[0]*C[1] + coeff[5]*C[1]*C[1] + coeff[6]*C[0]*C[0]*C[0] + coeff[7]*C[0]*C[1]*C[1] + coeff[8]*C[1]*C[1]*C[1];
+        Uz = rotation * Vec3(0.0, 0.0, z);
+        glVertex3d(c[0], c[1], c[2]);
+        c += Uz;
+        glVertex3d(c[0], c[1], c[2]);
         glEnd();
+
+        listTriangles[t][0] = a;
+        listTriangles[t][1] = b;
+        listTriangles[t][2] = c;
+
     }
 }
 
+// --------------------------------------------------------------------------------------
+// ---
+// --------------------------------------------------------------------------------------
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::renderTriangles(const ListTriangles& listTriangles)
+{
+    // Subdivision
+    glEnable(GL_LIGHTING);
+    glEnable(GL_COLOR_MATERIAL);
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+    glColor3f(1,0.5,0);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_SPECULAR);
+    glColor3f(1,1,1);
+    glBegin(GL_TRIANGLES);
+    for (unsigned int t=0; t<listTriangles.size(); t++)
+    {
+        helper::gl::glVertexT(listTriangles[t][0]);
+        helper::gl::glVertexT(listTriangles[t][1]);
+        helper::gl::glVertexT(listTriangles[t][2]);
+    }
+    glEnd();
+    glDisable(GL_COLOR_MATERIAL);
+    glDisable(GL_LIGHTING);
+}
 
+// --------------------------------------------------------------------------------------
+// ---
+// --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::draw()
 {
     VecCoord p0 = *this->mstate->getX0();
     VecCoord p = *this->mstate->getX();
 
-    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
-    {
-        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-        TriangleInformation *tinfo = &triangleInf[t];
-
-        Index a = _topology->getTriangle(t)[0];
-        Index b = _topology->getTriangle(t)[1];
-        Index c = _topology->getTriangle(t)[2];
-
-        ListTriangles listTriangles;
-        RenderingTriangle triangle;
-        triangle[0] = p[a].getCenter();
-        triangle[1] = p[b].getCenter();
-        triangle[2] = p[c].getCenter();
-        listTriangles.push_back(triangle);
-
-        ListTriangles newListTriangles;
-
-        for (int sub=0; sub<nbSubdivision.getValue(); sub++)
-        {
-            subdivideAndComputeDeflection(listTriangles, tinfo->rotation, tinfo->invC, tinfo->u, newListTriangles);
-            listTriangles = newListTriangles;
-            newListTriangles.clear();
-        }
-
-        renderTriangles(listTriangles);
-        
-        triangleInfo.endEdit();
-    }
-
-    glDisable(GL_LIGHTING);
-    glBegin(GL_POINTS);
-    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
-    {
-        glColor3f(0.5,0,0);
-        glVertex3f(0,0,-0.1f);
-        glColor3f(0,0.5,0);
-        helper::gl::glVertexT(triangleInfo.getValue()[t].restLocalPositions[0] + Vec3(0,0,-0.1f));
-        glColor3f(0,0,0.5);
-        helper::gl::glVertexT(triangleInfo.getValue()[t].restLocalPositions[1] + Vec3(0,0,-0.1f));
-
-        glColor3f(1,0,0);
-        glVertex3f(0,0,0.1f);
-        glColor3f(0,1,0);
-        helper::gl::glVertexT(triangleInfo.getValue()[t].currentLocalPositions[0] + Vec3(0,0,0.1f));
-        glColor3f(0,0,1);
-        helper::gl::glVertexT(triangleInfo.getValue()[t].currentLocalPositions[1] + Vec3(0,0,0.1f));
-    }
-    glEnd();
     glBegin(GL_LINES);
     for (int t=0;t<(int)triangleInfo.getValue().size();++t)
     {
@@ -1346,36 +1313,49 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
         helper::gl::glVertexT(G + Vec3(0,0,0.1f));
         helper::gl::glVertexT(G + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].triangleOrientations.rotate(Vec3(0,0,0.1f)));
 
+
+        // Positions in barycentric frame
+    //    Vec3 G = (p[a].getCenter()+p[b].getCenter()+p[c].getCenter())/3;
+    //    Vec3 C = p[c].getCenter()-G;
+//        Quat q20, q30;
+//        q20.fromMatrix(triangleInfo.getValue()[t].rotation);
+//        q30 = triangleInfo.getValue()[t].triangleOrientations;
+//        Quat diff = qDiff(q20, q30);
+//        glColor3f(0,0,1);
+//        helper::gl::glVertexT(p[c].getCenter());
+//        helper::gl::glVertexT(diff.rotate(p[c].getCenter()));
+
+        
         // Initial orientations
-        glColor3f(1,0,0);
+ /*       glColor3f(1,0,0);
         helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f));
-        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[0].rotate(Vec3(0.1f,0,0)));
+        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[0].rotate(Vec3(0.1f,0,0)));
         glColor3f(0,1,0);
         helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f));
-        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[0].rotate(Vec3(0,0.1f,0)));
+        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[0].rotate(Vec3(0,0.1f,0)));
         glColor3f(0,0,1);
         helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f));
-        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[0].rotate(Vec3(0,0,0.1f)));
+        helper::gl::glVertexT(p0[a].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[0].rotate(Vec3(0,0,0.1f)));
 
         glColor3f(1,0,0);
         helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f));
-        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[1].rotate(Vec3(0.1f,0,0)));
+        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[1].rotate(Vec3(0.1f,0,0)));
         glColor3f(0,1,0);
         helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f));
-        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[1].rotate(Vec3(0,0.1f,0)));
+        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[1].rotate(Vec3(0,0.1f,0)));
         glColor3f(0,0,1);
         helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f));
-        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[1].rotate(Vec3(0,0,0.1f)));
+        helper::gl::glVertexT(p0[b].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[1].rotate(Vec3(0,0,0.1f)));
 
         glColor3f(1,0,0);
         helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f));
-        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[2].rotate(Vec3(0.1f,0,0)));
+        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[2].rotate(Vec3(0.1f,0,0)));
         glColor3f(0,1,0);
         helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f));
-        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[2].rotate(Vec3(0,0.1f,0)));
+        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[2].rotate(Vec3(0,0.1f,0)));
         glColor3f(0,0,1);
         helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f));
-        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].restOrientations[2].rotate(Vec3(0,0,0.1f)));
+        helper::gl::glVertexT(p0[c].getCenter() + Vec3(0,0,-0.1f) + triangleInfo.getValue()[t].initialOrientations[2].rotate(Vec3(0,0,0.1f)));
 
         // Current orientations
         glColor3f(1,0,0);
@@ -1407,11 +1387,56 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
         glColor3f(0,0,1);
         helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f));
         helper::gl::glVertexT(p[c].getCenter() + Vec3(0,0,0.1f) + triangleInfo.getValue()[t].currentOrientations[2].rotate(Vec3(0,0,0.1f)));
-
+*/
     }
     glEnd();
+
+     // Subdivision of each triangle to display shells
+    if (getContext()->getShowWireFrame())
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    else
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_SMOOTH);
+    }
+
+    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
+    {
+        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+        TriangleInformation *tinfo = &triangleInf[t];
+
+        Index a = _topology->getTriangle(t)[0];
+        Index b = _topology->getTriangle(t)[1];
+        Index c = _topology->getTriangle(t)[2];
+
+        // Initialise the list of subdivided triangles with the first one
+        ListTriangles listTriangles;
+        RenderingTriangle triangle;
+        triangle[0] = p[a].getCenter();
+        triangle[1] = p[b].getCenter();
+        triangle[2] = p[c].getCenter();
+        listTriangles.push_back(triangle);
+
+        // Subdivision
+        ListTriangles newListTriangles;
+        for (int sub=0; sub<subdivisions.getValue(); sub++)
+        {
+            subdivide(listTriangles, newListTriangles);
+            listTriangles = newListTriangles;
+            newListTriangles.clear();
+        }
+
+        // Computes deflection
+        computeDeflection(listTriangles, p[a].getCenter(), tinfo->rotation, tinfo->invC, tinfo->u);
+
+        // Makes rendering
+        renderTriangles(listTriangles);
+
+        triangleInfo.endEdit();
+    }
 }
-	
+
 
 
 SOFA_DECL_CLASS(TriangularBendingFEMForceField)
@@ -1434,7 +1459,7 @@ template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<Rigi
 template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<Rigid3fTypes>;
 #endif
 
-    
+
 } // namespace forcefield
 
 } // namespace component
