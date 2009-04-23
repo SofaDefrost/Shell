@@ -141,8 +141,8 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
     // DEBUG
     Quat quat;
-//    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -0.174532925);	// 10°  0.174532925 rad
-    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -M_PI/2);
+    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), 0.174532925);	// 10°  0.174532925 rad
+//    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -M_PI/2);
     std::cout << "quat = " << quat << std::endl;
 
     this->Inherited::init();
@@ -462,7 +462,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     R_0_2.transpose(R_2_0);
 
     // Rotations needed to go from the triangle's orientation to one point's orientation (expressed in global frame)
-    Quat Qframe, dQA, dQB, dQC;
+    Quat Qframe, dQA, dQB, dQC, dQC0;
     Qframe.fromMatrix(R_2_0);
 //    Qframe = p[a].getOrientation();
 //    dQA =  qDiff(p[a].getOrientation(), Qframe);
@@ -496,24 +496,58 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
 
 
     VecCoord p0 = *this->mstate->getX0();
-    Quat qDisp;
-    qDisp = p[a].getOrientation() * p0[a].getOrientation().inverse();
-    uA = qDisp.toEulerVector();
-    qDisp = p[b].getOrientation() * p0[b].getOrientation().inverse();
-    uB = qDisp.toEulerVector();
-    qDisp = p[c].getOrientation() * p0[c].getOrientation().inverse();
+    Quat qDisp, Qrot, Qframe0;
+    Transformation R_1_0;
+    R_1_0.transpose(tinfo->initial_rotation);
+    Qframe0.fromMatrix(R_1_0);
+    Qrot = Qframe * Qframe0.inverse();
+    std::cout << "Qrot = " << Qrot.toEulerVector() << std::endl;
+
+
+    // METHODE 1 (différence entre p et p0, puis soustraction de la rotation rigide) => puis conversion global vers local
+    // OK pour Shell1, Shell2 et Shell3, légère différence pour Shell4, trop de bending pour Shell4b
+//    qDisp = p[a].getOrientation() * p0[a].getOrientation().inverse();
+//    dQA = qDiff(qDisp, Qrot);
+//    uA = dQA.toEulerVector();
+//    qDisp = p[b].getOrientation() * p0[b].getOrientation().inverse();
+//    dQB = qDiff(qDisp, Qrot);
+//    uB = dQB.toEulerVector();
+//    qDisp = p[c].getOrientation() * p0[c].getOrientation().inverse();   // diff entre C et C0 dans global
+//    dQC = qDiff(qDisp, Qrot);
+////    dQC = qDisp * Qrot.inverse();
+//    uC = dQC.toEulerVector();
+
+
+    
+    // METHODE 2 (différence entre p et rotation rigide, puis différence entre p0 et rotation rigide et enfin différence entre les 2) => puis conversion global vers local
+    // OK pour Shell2 et Shell3, légère différence pour Shell4, trop de bending pour Shell4b
+//    dQC = p[c].getOrientation() * Qrot.inverse();
+//    dQC0 = p0[c].getOrientation() * Qrot.inverse();
+//    qDisp = dQC * dQC0.inverse();
+//    uC = qDisp.toEulerVector();
+
+
+
+    // METHODE 3 (différence p0 et Qframe0, puis différence p et Qframe, puis différence entre les 2) => déjà en local
+    // OK pour Shell2 et Shell3, légère différence pour Shell4, trop de bending pour Shell4b
+    dQC0 = qDiff(p0[c].getOrientation(), Qframe0);
+    dQC = qDiff(p[c].getOrientation(), Qframe);
+    qDisp = dQC * dQC0.inverse();
     uC = qDisp.toEulerVector();
 
- //   std::cout << "uA = " << uA << std::endl;
- //  std::cout << "uB = " << uB << std::endl;
-    std::cout << "uC = " << uC << std::endl;
 
+
+    std::cout << "dQC0 = " << dQC0.toEulerVector() << std::endl;
+    std::cout << "dQC = " << dQC.toEulerVector() << std::endl;
+    std::cout << "qDisp = " << qDisp.toEulerVector() << std::endl;
+
+    std::cout << "uC = " << uC << std::endl;
     std::cout << "R_0_2 = " << R_0_2 << std::endl;
 
     // Rotations in local frame
-    uA = R_0_2 * uA;
-    uB = R_0_2 * uB;
-    uC = R_0_2 * uC;
+//    uA = R_0_2 * uA;
+//    uB = R_0_2 * uB;
+//    uC = R_0_2 * uC;
 
     std::cout << "uC ap = " << uC << std::endl;
 
