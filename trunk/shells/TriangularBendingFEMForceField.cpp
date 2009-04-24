@@ -140,10 +140,18 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 {
 
     // DEBUG
-    Quat quat;
-    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), 0.174532925);	// 10°  0.174532925 rad
-//    quat.axisToQuat(Vec3(0.0, 1.0, 0.0), -M_PI/2);
-    std::cout << "quat = " << quat << std::endl;
+    Quat quat1, quat2, q12, q21;
+    quat1.axisToQuat(Vec3(0.0, 1.0, 0.0), M_PI/4);
+    quat2.axisToQuat(Vec3(1.0, 0.0, 0.0), M_PI/4);
+ //   std::cout << "quat1*quat2 = " << quat1*quat2 << std::endl;
+    std::cout << "quat1 = " << quat1 << std::endl;
+    std::cout << "quat2 = " << quat2 << std::endl;
+    q12=qDiff(quat1, quat2);
+    q21=qDiff(quat2, quat1);
+    std::cout << "q21*quat1 = " << q21*quat1 << std::endl;
+    std::cout << "q21*quat1 = " << quat1*q21 << std::endl; // winner ! Qc*qDiff(Qframe, Qc);
+    std::cout << "q12*quat1 = " << q12*quat1 << std::endl;
+    std::cout << "q12*quat1 = " << quat1*q12 << std::endl;
 
     this->Inherited::init();
 
@@ -284,8 +292,8 @@ template <class DataTypes>
     //   third vector orthogonal to first and second
     Transformation R_0_1, R_1_0;
     computeRotationLarge(R_0_1, (*_initialPoints), a, b, c );
-    tinfo->initial_rotation = R_0_1;
     R_1_0.transpose(R_0_1);
+    tinfo->initial_rotation = R_1_0;
     tinfo->rotation = R_1_0;
 
     // The positions of each point is expressed into the local frame
@@ -409,6 +417,8 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLarge(Displac
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(Displacement &D, Index elementIndex, const VecCoord &p)
 {
+    VecCoord p0 = *this->mstate->getX0();
+
     Index a = _topology->getTriangle(elementIndex)[0];
     Index b = _topology->getTriangle(elementIndex)[1];
     Index c = _topology->getTriangle(elementIndex)[2];
@@ -440,16 +450,6 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
 //    uB = B - tinfo->initialBaryPositions[1];
 //    uC = C - tinfo->initialBaryPositions[2];
 
-    /**
-     * Writes translation on Z (expressed in barycentric frame)
-     */
-    D[6] = 0;
-    D[9] = p[a].getOrientation().rotate(p[b].getCenter()-p[a].getCenter())[2];
-    D[12] = p[a].getOrientation().rotate(p[c].getCenter()-p[a].getCenter())[2];
-
-//    D[9] = 0;
-//    D[12] = 0;
-
 //    std::cout << "bz = " << D[9] << std::endl;
 //    std::cout << "cz = " << D[12] << std::endl;
 
@@ -457,99 +457,66 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
      * Computes rotations on X and Y
      */
     // Rotation matrices between global to local frame
-    Transformation R_0_2, R_2_0;
+    Transformation R_2_0, R_1_0;
     R_2_0 = tinfo->rotation;
-    R_0_2.transpose(R_2_0);
+//    R_0_2.transpose(R_2_0);
 
-    // Rotations needed to go from the triangle's orientation to one point's orientation (expressed in global frame)
-    Quat Qframe, dQA, dQB, dQC, dQC0;
+    // Rotations needed to go from one point's orientation to the triangle's orientation (expressed in global frame)
+    Quat Qframe, Qframe0, dQA, dQB, dQC, dQA0, dQB0, dQC0;
+    Qframe0.fromMatrix(tinfo->initial_rotation); // R_1_0
     Qframe.fromMatrix(R_2_0);
-//    Qframe = p[a].getOrientation();
+
+    Quat Qa0 = p0[a].getOrientation();
+    Quat Qb0 = p0[b].getOrientation();
+    Quat Qc0 = p0[c].getOrientation();
+
+    Quat Qa = p[a].getOrientation();
+    Quat Qb = p[b].getOrientation();
+    Quat Qc = p[c].getOrientation();
+
+    dQA0 = Qframe0.inverse()*Qa0; // Rotation from Qframe to Qa
+    dQB0 = Qframe0.inverse()*Qb0; // Rotation from Qframe to Qb
+    dQC0 = Qframe0.inverse()*Qc0; // Rotation from Qframe to Qc
+
+    dQA = Qframe.inverse()*Qa; // Rotation from Qframe to Qa
+    dQB = Qframe.inverse()*Qb; // Rotation from Qframe to Qb
+    dQC = Qframe.inverse()*Qc; // Rotation from Qframe to Qc
+
 //    dQA =  qDiff(p[a].getOrientation(), Qframe);
 //    dQB =  qDiff(p[b].getOrientation(), Qframe);
 //    dQC =  qDiff(p[c].getOrientation(), Qframe);
-//    tinfo->currentOrientations[0] = dQA;
-//    tinfo->currentOrientations[1] = dQB;
-//    tinfo->currentOrientations[2] = dQC;
+    tinfo->currentOrientations[0] = dQA;
+    tinfo->currentOrientations[1] = dQB;
+    tinfo->currentOrientations[2] = dQC;
+//    std::cout << "Qframe = " << Qframe << std::endl;
+    std::cout << "X axis of R2 in global frame = " << Qframe.rotate(Vec3(1,0,0)) << std::endl;
+    std::cout << "Y axis of R2 in global frame = " << Qframe.rotate(Vec3(0,1,0)) << std::endl;
+    std::cout << "Z axis of R2 in global frame = " << Qframe.rotate(Vec3(0,0,1)) << std::endl;
+    std::cout << "---------------------------- " << std::endl;
+//    std::cout << "Qc = " << Qc << std::endl;
+    std::cout << "X axis at C in global frame = " << Qc.rotate(Vec3(1,0,0)) << std::endl;
+    std::cout << "Y axis at C in global frame = " << Qc.rotate(Vec3(0,1,0)) << std::endl;
+    std::cout << "Z axis at C in global frame = " << Qc.rotate(Vec3(0,0,1)) << std::endl;
+    std::cout << "---------------------------- " << std::endl;
+    std::cout << "X axis at C in Qframe = " << dQC.rotate(Vec3(1,0,0)) << std::endl;
+    std::cout << "Y axis at C in Qframe = " << dQC.rotate(Vec3(0,1,0)) << std::endl;
+    std::cout << "Z axis at C in Qframe = " << dQC.rotate(Vec3(0,0,1)) << std::endl;
+    std::cout << "---------------------------- " << std::endl;
 
-//    std::cout << "dQA init = " << tinfo->initialOrientations[0].toEulerVector() << std::endl;
-//    std::cout << "dQB init = " << tinfo->initialOrientations[1].toEulerVector() << std::endl;
-//    std::cout << "dQC init = " << tinfo->initialOrientations[2].toEulerVector() << std::endl;
+  //  Quat dQC0(0, 0, -0.707107, 0.707107);
 
-//    std::cout << "dQA = " << dQA.toEulerVector() << std::endl;
-//    std::cout << "dQB = " << dQB.toEulerVector() << std::endl;
-//    std::cout << "dQC = " << dQC.toEulerVector() << std::endl;
-
-//    Vec3 uA, uB, uC;
-//    uA = qDiff(dQA, tinfo->initialOrientations[0]).toEulerVector();
-//    uB = qDiff(dQB, tinfo->initialOrientations[1]).toEulerVector();
-//    uC = qDiff(dQC, tinfo->initialOrientations[2]).toEulerVector();
+    dQC = dQC*dQC0.inverse();
+    std::cout << "dQC0 = " << dQC0 << std::endl;
+    std::cout << "dQC = " << dQC << std::endl;
 
     Vec3 uA, uB, uC;
-//    uA = qDiff(p[a].getOrientation(), p[a].getOrientation()).toEulerVector();
-//    uB = qDiff(p[b].getOrientation(), p[a].getOrientation()).toEulerVector();
-//    uC = qDiff(p[c].getOrientation(), p[a].getOrientation()).toEulerVector();
+    uA = dQA.toEulerVector();
+    uB = dQB.toEulerVector();
+    uC = dQC.toEulerVector();
 
-//    uA = dQA.toEulerVector();
-//    uB = dQB.toEulerVector();
-//    uC = dQC.toEulerVector();
-
-
-    VecCoord p0 = *this->mstate->getX0();
-    Quat qDisp, Qrot, Qframe0;
-    Transformation R_1_0;
-    R_1_0.transpose(tinfo->initial_rotation);
-    Qframe0.fromMatrix(R_1_0);
-    Qrot = Qframe * Qframe0.inverse();
-    std::cout << "Qrot = " << Qrot.toEulerVector() << std::endl;
-
-
-    // METHODE 1 (différence entre p et p0, puis soustraction de la rotation rigide) => puis conversion global vers local
-    // OK pour Shell1, Shell2 et Shell3, légère différence pour Shell4, trop de bending pour Shell4b
-//    qDisp = p[a].getOrientation() * p0[a].getOrientation().inverse();
-//    dQA = qDiff(qDisp, Qrot);
-//    uA = dQA.toEulerVector();
-//    qDisp = p[b].getOrientation() * p0[b].getOrientation().inverse();
-//    dQB = qDiff(qDisp, Qrot);
-//    uB = dQB.toEulerVector();
-//    qDisp = p[c].getOrientation() * p0[c].getOrientation().inverse();   // diff entre C et C0 dans global
-//    dQC = qDiff(qDisp, Qrot);
-////    dQC = qDisp * Qrot.inverse();
-//    uC = dQC.toEulerVector();
-
-
-    
-    // METHODE 2 (différence entre p et rotation rigide, puis différence entre p0 et rotation rigide et enfin différence entre les 2) => puis conversion global vers local
-    // OK pour Shell2 et Shell3, légère différence pour Shell4, trop de bending pour Shell4b
-//    dQC = p[c].getOrientation() * Qrot.inverse();
-//    dQC0 = p0[c].getOrientation() * Qrot.inverse();
-//    qDisp = dQC * dQC0.inverse();
-//    uC = qDisp.toEulerVector();
-
-
-
-    // METHODE 3 (différence p0 et Qframe0, puis différence p et Qframe, puis différence entre les 2) => déjà en local
-    // OK pour Shell2 et Shell3, légère différence pour Shell4, trop de bending pour Shell4b
-    dQC0 = qDiff(p0[c].getOrientation(), Qframe0);
-    dQC = qDiff(p[c].getOrientation(), Qframe);
-    qDisp = dQC * dQC0.inverse();
-    uC = qDisp.toEulerVector();
-
-
-
-    std::cout << "dQC0 = " << dQC0.toEulerVector() << std::endl;
-    std::cout << "dQC = " << dQC.toEulerVector() << std::endl;
-    std::cout << "qDisp = " << qDisp.toEulerVector() << std::endl;
-
+    std::cout << "uA = " << uA << std::endl;
+    std::cout << "uB = " << uB << std::endl;
     std::cout << "uC = " << uC << std::endl;
-    std::cout << "R_0_2 = " << R_0_2 << std::endl;
-
-    // Rotations in local frame
-//    uA = R_0_2 * uA;
-//    uB = R_0_2 * uB;
-//    uC = R_0_2 * uC;
-
-    std::cout << "uC ap = " << uC << std::endl;
 
     // Write rotations
     D[7] = uA[0];
@@ -561,24 +528,31 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementLargeBending(
     D[13] = uC[0];
     D[14] = uC[1];
 
+    // compute translation in Z (expressed in triangle frame)
+    D[6] = 0;
+    D[9] = Qa.inverse().rotate(p[b].getCenter()-p[a].getCenter())[2];
+    D[12] = Qa.inverse().rotate(p[c].getCenter()-p[a].getCenter())[2];
+
     for (unsigned int i = 0; i< tinfo->u.size(); i++)
     {
         tinfo->u[i] = D[6+i];
     }
 
-//    std::cout << "Az = " << D[6] << std::endl;
-//    std::cout << "Ax = " << D[7] << std::endl;
-//    std::cout << "Ay = " << D[8] << std::endl;
-//    std::cout << "Bz = " << D[9] << std::endl;
-//    std::cout << "Bx = " << D[10] << std::endl;
-//    std::cout << "By = " << D[11] << std::endl;
-//    std::cout << "Cz = " << D[12] << std::endl;
-//    std::cout << "Cx = " << D[13] << std::endl;
-//    std::cout << "Cy = " << D[14] << std::endl;
+    // gros hack
+    D[9] = D[12] = 0;
+
+    std::cout << "Az = " << D[6] << std::endl;
+    std::cout << "Ax = " << D[7] << std::endl;
+    std::cout << "Ay = " << D[8] << std::endl;
+    std::cout << "Bz = " << D[9] << std::endl;
+    std::cout << "Bx = " << D[10] << std::endl;
+    std::cout << "By = " << D[11] << std::endl;
+    std::cout << "Cz = " << D[12] << std::endl;
+    std::cout << "Cx = " << D[13] << std::endl;
+    std::cout << "Cy = " << D[14] << std::endl;
 
     triangleInfo.endEdit();
 }
-
 
 // ------------------------------------------------------------------------------------------------------------
 // --- Compute the strain-displacement matrix where (a, b, c) are the coordinates of the 3 nodes of a triangle
@@ -939,7 +913,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, In
         Real t = f_thickness.getValue();
         force = (bt1 * tinfo->bendingStress1 + bt2 * tinfo->bendingStress2 + bt3 * tinfo->bendingStress3) * tinfo->thirdSurface * t * t * t;
 
-        //std::cout << "force (local) = " << force << std::endl;
+        std::cout << "force (local) = " << force << std::endl;
 
         for (unsigned int i = 0; i< force.size(); i++)
         {
@@ -1034,10 +1008,8 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffnessLarge(VecDeriv &v,
                 D[14] = u[1];
 
                 // Computes Z
-//                D[9] = dx[a].getVOrientation().rotate(dx[b].getVCenter()-dx[a].getVCenter())[2];
-//                D[12] = dx[a].getVOrientation().rotate(dx[c].getVCenter()-dx[a].getVCenter())[2];
-                D[9] = (dx[b].getVCenter()-dx[a].getVCenter())[2];
-                D[12] = (dx[c].getVCenter()-dx[a].getVCenter())[2];
+//                D[9] = (dx[b].getVCenter()-dx[a].getVCenter())[2];
+//                D[12] = (dx[c].getVCenter()-dx[a].getVCenter())[2];
 
                 computeStrainBending(i, D);
                 computeStressBending(i);
@@ -1118,12 +1090,12 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForceLarge(VecDeriv &f
         Vec3 fc1 = R_2_0 * Vec3(0.0, 0.0, F[12]);
         Vec3 fc2 = R_2_0 * Vec3(F[13], F[14], 0.0);
 
-//    	std::cout << "fa1 = " << -fa1 << std::endl;
-//    	std::cout << "fa2 = " << -fa2 << std::endl;
-//    	std::cout << "fb1 = " << -fb1 << std::endl;
-//    	std::cout << "fb2 = " << -fb2 << std::endl;
-//    	std::cout << "fc1 = " << -fc1 << std::endl;
-//    	std::cout << "fc2 = " << -fc2 << std::endl;
+//        std::cout << "fa1 = " << -fa1 << std::endl;
+//        std::cout << "fa2 = " << -fa2 << std::endl;
+//        std::cout << "fb1 = " << -fb1 << std::endl;
+//        std::cout << "fb2 = " << -fb2 << std::endl;
+//        std::cout << "fc1 = " << -fc1 << std::endl;
+//        std::cout << "fc2 = " << -fc2 << std::endl;
 //        std::cout << "-----------------------------------" << std::endl;
 
 //        fa2 = Vec3(0.0, 0.0, 0.0);
@@ -1310,10 +1282,10 @@ void TriangularBendingFEMForceField<DataTypes>::renderTriangles(const ListTriang
 //    glEnable(GL_COLOR_MATERIAL);
 //    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 //    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+    glColor3f(1,0.5,0);
 //    glColorMaterial(GL_FRONT_AND_BACK, GL_SPECULAR);
 //    glColor3f(1,1,1);
     glBegin(GL_TRIANGLES);
-    glColor3f(1,0.5,0);
     for (unsigned int t=0; t<listTriangles.size(); t++)
     {
         helper::gl::glVertexT(listTriangles[t][0]);
@@ -1376,9 +1348,9 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
 //        std::cout << "c = " << p[c].getCenter() << std::endl;
 //        std::cout << "c' = " << Qa.rotate(p[c].getCenter()-p[a].getCenter()) << std::endl;
 
-        Real cz = Qa.rotate(p[c].getCenter()-p[a].getCenter())[2];
+        Real cz = Qa.inverse().rotate(p[c].getCenter()-p[a].getCenter())[2];
         helper::gl::glVertexT(p[c].getCenter());
-        helper::gl::glVertexT(p[c].getCenter() - Vec3(0.0, 0.0, cz));
+        helper::gl::glVertexT(p[c].getCenter() - Qa.rotate(Vec3(0.0, 0.0, cz)));
 
         // Initial orientations
  /*       glColor3f(1,0,0);
