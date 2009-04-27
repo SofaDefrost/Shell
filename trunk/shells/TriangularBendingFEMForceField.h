@@ -90,11 +90,6 @@ protected:
 
                 helper::fixed_array <Vec3, 2> restLocalPositions;
                 helper::fixed_array <Quat, 3> initialOrientations;
-                helper::fixed_array <Vec3, 3> initialBaryPositions;
-                Quat triangleOrientations;
-
-                helper::fixed_array <Vec3, 2> currentLocalPositions;
-                helper::fixed_array <Quat, 3> currentOrientations;
 
                 /// material stiffness matrices of each tetrahedron
                 MaterialStiffness materialMatrix;
@@ -104,12 +99,9 @@ protected:
                 Mat<3, 9, Real> b1;
                 Mat<3, 9, Real> b2;
                 Mat<3, 9, Real> b3;
-                // large displacement method
-                helper::fixed_array<Vec3,3> rotatedInitialElements;
                 // Transformation rotation;
                 Transformation rotation;
                 Transformation initial_rotation;
-                Transformation initialBaryRotation;
                 // strain vector
                 Vec3 strain;
                 // strain caused by bending at each Gauss point
@@ -122,14 +114,14 @@ protected:
                 Vec3 bendingStress1;
                 Vec3 bendingStress2;
                 Vec3 bendingStress3;
+                
                 Real thirdSurface;
                 TriangleInformation() { }
 
                 // variables needed for drawing the shell
                 Vec<9, Real> u; // displacement vector
                 Mat<9, 9, Real> invC; // inverse of C (used in bending mode only)
-                Mat<9, 9, Real> invC0; // inverse of C at rest position (used in bending mode only)
-
+                
                 /// Output stream
                 inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ )
                 {
@@ -146,19 +138,10 @@ protected:
 	TriangleData<TriangleInformation> triangleInfo;
 
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
-	//const VecElement *_indexedElements;
-	//Data< VecCoord > _initialPoints; ///< the intial positions of the points
-	VecCoord* _initialPoints;
-	//     int _method; ///< the computation method of the displacements
-
-
-	bool updateMatrix;
 
 public:
 
     TriangularBendingFEMForceField();
-
-    //virtual const char* getTypeName() const { return "TriangularFEMForceField"; }
 
 	virtual ~TriangularBendingFEMForceField();
 	virtual void init();
@@ -169,32 +152,18 @@ public:
 	virtual void handleTopologyChange();
 	virtual void draw();
 
-	int method;
-	Data<std::string> f_method;
 	Data<Real> f_poisson;
 	Data<Real> f_young;
 	Data<Real> f_damping;
         Data<bool> f_bending;
         Data <Real> f_thickness;
-	Data<bool> showStressValue;
-	Data<bool> showStressVector;
         Data<int> subdivisions;
 
-	Real getPoisson() { return f_poisson.getValue(); }
-	void setPoisson(Real val) { f_poisson.setValue(val); }
-	Real getYoung() { return f_young.getValue(); }
-	void setYoung(Real val) { f_young.setValue(val); }
-	Real getDamping() { return f_damping.getValue(); }
-	void setDamping(Real val) { f_damping.setValue(val); }
-	int  getMethod() { return method; }
-	void setMethod(int val) { method = val; }
-        /// Compute current stress
-//        void computeStress(Vec<3,Real> &stress, Index elementIndex);
 
 protected :
 
-	void computeDisplacementLarge(Displacement &D, Index elementIndex, const VecCoord &p);
-        void computeDisplacementLargeBending(Displacement &D, Index elementIndex, const VecCoord &p);
+	void computeDisplacementLarge(Displacement &Disp, Index elementIndex, const VecCoord &p);
+        void computeDisplacementLargeBending(Displacement &Disp, Index elementIndex, const VecCoord &p);
 	void computeStrainDisplacement( StrainDisplacement &J, Vec3 a, Vec3 b, Vec3 c );
         void computeStrainDisplacementBending(const Index elementIndex, Vec3& /*a*/, Vec3& b, Vec3& c );
         void tensorFlatPlate(Mat<3, 9, Real>& D, Vec3 &P);
