@@ -100,8 +100,8 @@ protected:
                 Mat<3, 9, Real> b2;
                 Mat<3, 9, Real> b3;
                 // Transformation rotation;
-                Transformation rotation;
-                Transformation initial_rotation;
+                Quat Qframe0;
+                Quat Qframe;
                 // strain vector
                 Vec3 strain;
                 // strain caused by bending at each Gauss point
@@ -116,6 +116,7 @@ protected:
                 Vec3 bendingStress3;
                 
                 Real thirdSurface;
+
                 TriangleInformation() { }
 
                 // variables needed for drawing the shell
@@ -154,7 +155,6 @@ public:
 
 	Data<Real> f_poisson;
 	Data<Real> f_young;
-	Data<Real> f_damping;
         Data<bool> f_bending;
         Data <Real> f_thickness;
         Data<int> subdivisions;
@@ -162,8 +162,8 @@ public:
 
 protected :
 
-	void computeDisplacementLarge(Displacement &Disp, Index elementIndex, const VecCoord &p);
-        void computeDisplacementLargeBending(Displacement &Disp, Index elementIndex, const VecCoord &p);
+	void computeDisplacement(Displacement &Disp, Index elementIndex, const VecCoord &p);
+        void computeDisplacementBending(Displacement &Disp, Index elementIndex, const VecCoord &p);
 	void computeStrainDisplacement( StrainDisplacement &J, Vec3 a, Vec3 b, Vec3 c );
         void computeStrainDisplacementBending(const Index elementIndex, Vec3& /*a*/, Vec3& b, Vec3& c );
         void tensorFlatPlate(Mat<3, 9, Real>& D, Vec3 &P);
@@ -176,20 +176,18 @@ protected :
 	static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
 	/// f += Kx where K is the stiffness matrix and x a displacement
-	virtual void applyStiffness( VecDeriv& f, Real h, const VecDeriv& x );
+	virtual void applyStiffness( VecDeriv& f, Real h, const VecDeriv& dx );
 	virtual void computeMaterialStiffness(int i, Index& a, Index& b, Index& c);
 
 	////////////// large displacements method
 	//sofa::helper::vector< helper::fixed_array <Coord, 3> > _rotatedInitialElements;   ///< The initials positions in its frame
 	//sofa::helper::vector< Transformation > _rotations;
 	void initLarge(int i, Index&a, Index&b, Index&c);
-	void computeRotationLarge( Transformation &r, const VecCoord &p, const Index &a, const Index &b, const Index &c);
-	void accumulateForceLarge( VecDeriv& f, const VecCoord & p, Index elementIndex);
-	void accumulateDampingLarge( VecDeriv& f, Index elementIndex );
-	void applyStiffnessLarge( VecDeriv& f, Real h, const VecDeriv& x );
+	void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
+	void accumulateForce(VecDeriv& f, const VecCoord & p, Index elementIndex);
 
         void subdivide(const ListTriangles listTriangles, ListTriangles& newListTriangles);
-        void computeDeflection(ListTriangles &listTriangles, const Vec3 &a0, const Transformation &rotation, const Mat<9, 9, Real> &invC, const Vec <9, Real> &u);
+        void computeDeflection(ListTriangles &listTriangles, const Vec3 &a0, const Quat &Qframe, const Mat<9, 9, Real> &invC, const Vec <9, Real> &u);
         void renderTriangles(const ListTriangles& listTriangles);
 };
 
