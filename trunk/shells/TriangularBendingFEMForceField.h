@@ -115,13 +115,16 @@ protected:
                 Vec3 bendingStress2;
                 Vec3 bendingStress3;
 
+                // Third of the surface
                 Real thirdSurface;
-
-                TriangleInformation() { }
-
-                // variables needed for drawing the shell
+                // Variables needed for drawing the shell
                 Vec<9, Real> u; // displacement vector
                 Mat<9, 9, Real> invC; // inverse of C (used in bending mode only)
+
+                // List of subdivided triangles
+                ListTriangles initialListTriangles;
+
+                TriangleInformation() { }
 
                 /// Output stream
                 inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ )
@@ -188,7 +191,7 @@ protected :
 	void accumulateForce(VecDeriv& f, const VecCoord & p, Index elementIndex);
 
         void subdivide(const ListTriangles listTriangles, ListTriangles& newListTriangles);
-        void computeDeflection(ListTriangles &listTriangles, const Vec3 &a0, const Quat &Qframe, const Mat<9, 9, Real> &invC, const Vec <9, Real> &u);
+        void computeDeflection(ListTriangles &listTriangles, const ListTriangles &initialListTriangles, const Vec3 &a0, const Quat &Qframe, const Quat &Qframe0, const Vec <9, Real> &coeff);
         void drawSubTriangles(const ListTriangles& listTriangles);
 };
 

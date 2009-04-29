@@ -279,10 +279,30 @@ void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&
         tinfo->u[7] = urot[0];
         tinfo->u[8] = urot[1];
 
+
+
         // Local initial rotations
         tinfo->initialOrientations[0] = qDiff(p0[a].getOrientation(), Qframe0);     // Rotation from Qframe0 to p0[a].getOrientation()
         tinfo->initialOrientations[1] = qDiff(p0[b].getOrientation(), Qframe0);     // Rotation from Qframe0 to p0[b].getOrientation()
         tinfo->initialOrientations[2] = qDiff(p0[c].getOrientation(), Qframe0);     // Rotation from Qframe0 to p0[c].getOrientation()
+
+
+
+        // Initialise the list of subdivided triangles with the first one
+        RenderingTriangle triangle;
+        triangle[0] = p0[a].getCenter();
+        triangle[1] = p0[b].getCenter();
+        triangle[2] = p0[c].getCenter();
+        tinfo->initialListTriangles.push_back(triangle);
+
+        // Subdivision
+        ListTriangles newListTriangles;
+        for (int sub=0; sub<subdivisions.getValue(); sub++)
+        {
+            subdivide(tinfo->initialListTriangles, newListTriangles);
+            tinfo->initialListTriangles = newListTriangles;
+            newListTriangles.clear();
+        }
     }
     triangleInfo.endEdit();
 }
@@ -924,46 +944,50 @@ void TriangularBendingFEMForceField<DataTypes>::subdivide(const ListTriangles li
 // Computes deflection due to bending
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeDeflection(ListTriangles &listTriangles, const Vec3 &a0, const Quat &Qframe, const Mat<9, 9, Real> &invC, const Vec <9, Real> &u)
+void TriangularBendingFEMForceField<DataTypes>::computeDeflection(ListTriangles &listTriangles, const ListTriangles &initialListTriangles, const Vec3 &origin, const Quat &Qframe, const Quat &Qframe0, const Vec <9, Real> &coeff)
 {
     // Subdivision
     for (unsigned int t=0; t<listTriangles.size(); t++)
     {
+        // Global coordinates
         Vec3 a, b, c;
         a = listTriangles[t][0];
         b = listTriangles[t][1];
         c = listTriangles[t][2];
 
+        // Initial global coordinates
+        Vec3 a0, b0, c0;
+        a0 = initialListTriangles[t][0];
+        b0 = initialListTriangles[t][1];
+        c0 = initialListTriangles[t][2];
+
+        // Compute translation in Z (expressed in initial triangle frame)
+        Vec3 a0a = Qframe0.inverseRotate(a-a0);
+        Vec3 b0b = Qframe0.inverseRotate(b-b0);
+        Vec3 c0c = Qframe0.inverseRotate(c-c0);
+
         // Local coordinates needed to compute deflection
-        Vec3 A = Qframe.inverseRotate(a-a0);
-        Vec3 B = Qframe.inverseRotate(b-a0);
-        Vec3 C = Qframe.inverseRotate(c-a0);
+        Vec3 A = Qframe.inverseRotate(a-origin);
+        Vec3 B = Qframe.inverseRotate(b-origin);
+        Vec3 C = Qframe.inverseRotate(c-origin);
 
-        // Tocher's deflection function CORRECTED: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
-
-        // WARNING: this may be a hack. It seems that we need to cancel out the displacement in z before computing deflection
-        Vec <9, Real> coeff, u0;
-        u0 = u;
-        u0[0]=0;    u0[3]=0;    u0[6]=0;
-
-        // Solve coefficients ci
-        coeff = invC * u0;
-
-        // Computes deflection
+        // Adds deflection and removes the measure of the z component
+        // WARNING: do we have to make the projection along Z or Z0? (in Qframe or Qframe0)
         Real z;
         Vec3 Uz;
         z = coeff[0] + coeff[1]*A[0] + coeff[2]*A[1] + coeff[3]*A[0]*A[0] + coeff[4]*A[0]*A[1] + coeff[5]*A[1]*A[1] + coeff[6]*A[0]*A[0]*A[0] + coeff[7]*A[0]*A[1]*A[1] + coeff[8]*A[1]*A[1]*A[1];
-        Uz = Qframe.rotate(Vec3(0.0, 0.0, z));
+        Uz = Qframe0.rotate(Vec3(0.0, 0.0, z-a0a[2]));
         a += Uz;
 
         z = coeff[0] + coeff[1]*B[0] + coeff[2]*B[1] + coeff[3]*B[0]*B[0] + coeff[4]*B[0]*B[1] + coeff[5]*B[1]*B[1] + coeff[6]*B[0]*B[0]*B[0] + coeff[7]*B[0]*B[1]*B[1] + coeff[8]*B[1]*B[1]*B[1];
-        Uz = Qframe.rotate(Vec3(0.0, 0.0, z));
+        Uz = Qframe0.rotate(Vec3(0.0, 0.0, z-b0b[2]));
         b += Uz;
 
         z = coeff[0] + coeff[1]*C[0] + coeff[2]*C[1] + coeff[3]*C[0]*C[0] + coeff[4]*C[0]*C[1] + coeff[5]*C[1]*C[1] + coeff[6]*C[0]*C[0]*C[0] + coeff[7]*C[0]*C[1]*C[1] + coeff[8]*C[1]*C[1]*C[1];
-        Uz = Qframe.rotate(Vec3(0.0, 0.0, z));
+        Uz = Qframe0.rotate(Vec3(0.0, 0.0, z-c0c[2]));
         c += Uz;
 
+        // Stores the new values
         listTriangles[t][0] = a;
         listTriangles[t][1] = b;
         listTriangles[t][2] = c;
@@ -984,6 +1008,17 @@ void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTrian
         helper::gl::glVertexT(listTriangles[t][0]);
         helper::gl::glVertexT(listTriangles[t][1]);
         helper::gl::glVertexT(listTriangles[t][2]);
+
+        // Computes normal of the triangle
+        Vec3 edgex = listTriangles[t][1] - listTriangles[t][0];
+        edgex.normalize();
+        Vec3 edgey = listTriangles[t][2] - listTriangles[t][0];
+        edgey.normalize();
+        Vec3 edgez;
+        edgez = cross(edgex, edgey);
+        edgez.normalize();
+
+        helper::gl::glNormalT(edgez);
     }
     glEnd();
 
@@ -992,44 +1027,46 @@ void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTrian
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::drawAll()
 {
-    VecCoord p0 = *this->mstate->getX0();
     VecCoord p = *this->mstate->getX();
 
-	// Subdivision of each triangle to display shells
-	for (int t=0;t<(int)triangleInfo.getValue().size();++t)
-	{
-		helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-		TriangleInformation *tinfo = &triangleInf[t];
+    // Subdivision of each triangle to display shells
+    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
+    {
+        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+        TriangleInformation *tinfo = &triangleInf[t];
 
-		Index a = _topology->getTriangle(t)[0];
-		Index b = _topology->getTriangle(t)[1];
-		Index c = _topology->getTriangle(t)[2];
+        Index a = _topology->getTriangle(t)[0];
+        Index b = _topology->getTriangle(t)[1];
+        Index c = _topology->getTriangle(t)[2];
 
-		// Initialise the list of subdivided triangles with the first one
-		ListTriangles listTriangles;
-		RenderingTriangle triangle;
-		triangle[0] = p[a].getCenter();
-		triangle[1] = p[b].getCenter();
-		triangle[2] = p[c].getCenter();
-		listTriangles.push_back(triangle);
+        // Initialise the list of subdivided triangles with the first one
+        ListTriangles listTriangles;
+        RenderingTriangle triangle;
+        triangle[0] = p[a].getCenter();
+        triangle[1] = p[b].getCenter();
+        triangle[2] = p[c].getCenter();
+        listTriangles.push_back(triangle);
 
-		// Subdivision
-		ListTriangles newListTriangles;
-		for (int sub=0; sub<subdivisions.getValue(); sub++)
-		{
-			subdivide(listTriangles, newListTriangles);
-			listTriangles = newListTriangles;
-			newListTriangles.clear();
-		}
+        // Subdivision
+        ListTriangles newListTriangles;
+        for (int sub=0; sub<subdivisions.getValue(); sub++)
+        {
+            subdivide(listTriangles, newListTriangles);
+            listTriangles = newListTriangles;
+            newListTriangles.clear();
+        }
 
-		// Computes deflection
-		computeDeflection(listTriangles, p[a].getCenter(), tinfo->Qframe, tinfo->invC, tinfo->u);
+        // Solve coefficients ci
+        Vec <9, Real> coeff = tinfo->invC * tinfo->u;
 
-		// Makes rendering
-		drawSubTriangles(listTriangles);
+        // Computes deflection using CORRECTED Tocher's deflection function: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
+        computeDeflection(listTriangles, tinfo->initialListTriangles, p[a].getCenter(), tinfo->Qframe, tinfo->Qframe0, coeff);
 
-		triangleInfo.endEdit();
-	}
+        // Makes rendering
+        drawSubTriangles(listTriangles);
+
+        triangleInfo.endEdit();
+    }
 }
 
 // --------------------------------------------------------------------------------------
@@ -1038,8 +1075,6 @@ void TriangularBendingFEMForceField<DataTypes>::drawAll()
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::draw()
 {
-
-
     if (!getContext()->getShowForceFields()) return;
     glDisable(GL_LIGHTING);
 
@@ -1093,16 +1128,16 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
         glPolygonMode(GL_FRONT_AND_BACK, GL_SMOOTH);
         glColor3f(1.0, 0.5, 0.0);
 
-     //   GLfloat no_mat[] = { 1.0, 0.5, 0.0, 1.0};
-    //    GLfloat mat_ambient[] = { 1.0, 0.0, 0.0, 1.0 };
-   //     GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
-  //      GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
- //       GLfloat high_shininess[] = { 100.0 };
+//        GLfloat no_mat[] = { 1.0, 0.5, 0.0, 1.0};
+//        GLfloat mat_ambient[] = { 1.0, 0.0, 0.0, 1.0 };
+//        GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
+//        GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+//        GLfloat high_shininess[] = { 100.0 };
 //
-    //    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, no_mat);
-   //     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-  //      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
- //       glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, high_shininess);
+//        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, no_mat);
+//        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+//        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+//        glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, high_shininess);
 //        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, no_mat);
     }
 
