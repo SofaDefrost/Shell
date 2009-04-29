@@ -999,8 +999,7 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
     VecCoord p = *this->mstate->getX();
 
     if (!getContext()->getShowForceFields()) return;
-
-//    glDisable(GL_LIGHTING);
+    glDisable(GL_LIGHTING);
 
     // Draws a red line that represents each z displacement
 //    glBegin(GL_LINES);
@@ -1028,8 +1027,6 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
 //        helper::gl::glVertexT(p[c].getCenter() - Qframe0.inverseRotate(Vec3(0.0, 0.0, uC[2])));
 //    }
 //    glEnd();
-
-    glDisable(GL_LIGHTING);
 
      // Mode of rendering
     if (getContext()->getShowWireFrame())
