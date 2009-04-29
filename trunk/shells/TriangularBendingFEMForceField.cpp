@@ -989,14 +989,56 @@ void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTrian
 
 }
 
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::drawAll()
+{
+    VecCoord p0 = *this->mstate->getX0();
+    VecCoord p = *this->mstate->getX();
+
+	// Subdivision of each triangle to display shells
+	for (int t=0;t<(int)triangleInfo.getValue().size();++t)
+	{
+		helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+		TriangleInformation *tinfo = &triangleInf[t];
+
+		Index a = _topology->getTriangle(t)[0];
+		Index b = _topology->getTriangle(t)[1];
+		Index c = _topology->getTriangle(t)[2];
+
+		// Initialise the list of subdivided triangles with the first one
+		ListTriangles listTriangles;
+		RenderingTriangle triangle;
+		triangle[0] = p[a].getCenter();
+		triangle[1] = p[b].getCenter();
+		triangle[2] = p[c].getCenter();
+		listTriangles.push_back(triangle);
+
+		// Subdivision
+		ListTriangles newListTriangles;
+		for (int sub=0; sub<subdivisions.getValue(); sub++)
+		{
+			subdivide(listTriangles, newListTriangles);
+			listTriangles = newListTriangles;
+			newListTriangles.clear();
+		}
+
+		// Computes deflection
+		computeDeflection(listTriangles, p[a].getCenter(), tinfo->Qframe, tinfo->invC, tinfo->u);
+
+		// Makes rendering
+		drawSubTriangles(listTriangles);
+
+		triangleInfo.endEdit();
+	}
+}
+
 // --------------------------------------------------------------------------------------
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::draw()
 {
-    VecCoord p0 = *this->mstate->getX0();
-    VecCoord p = *this->mstate->getX();
+
 
     if (!getContext()->getShowForceFields()) return;
     glDisable(GL_LIGHTING);
@@ -1031,7 +1073,17 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
      // Mode of rendering
     if (getContext()->getShowWireFrame())
     {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    	glEnable(GL_DEPTH_TEST);
+    	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    	glColor3f(1.0, 0.5, 0.0);
+    	drawAll();
+
+    	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    	glEnable(GL_POLYGON_OFFSET_FILL);
+    	glPolygonOffset(1.0, 1.0);
+    	glColor3f(0.0, 0.0, 0.0);
+    	drawAll();
+    	glDisable(GL_POLYGON_OFFSET_FILL);
     }
     else
     {
@@ -1051,41 +1103,8 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
 //        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, no_mat);
     }
 
-     // Subdivision of each triangle to display shells
-    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
-    {
-        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-        TriangleInformation *tinfo = &triangleInf[t];
 
-        Index a = _topology->getTriangle(t)[0];
-        Index b = _topology->getTriangle(t)[1];
-        Index c = _topology->getTriangle(t)[2];
-
-        // Initialise the list of subdivided triangles with the first one
-        ListTriangles listTriangles;
-        RenderingTriangle triangle;
-        triangle[0] = p[a].getCenter();
-        triangle[1] = p[b].getCenter();
-        triangle[2] = p[c].getCenter();
-        listTriangles.push_back(triangle);
-
-        // Subdivision
-        ListTriangles newListTriangles;
-        for (int sub=0; sub<subdivisions.getValue(); sub++)
-        {
-            subdivide(listTriangles, newListTriangles);
-            listTriangles = newListTriangles;
-            newListTriangles.clear();
-        }
-
-        // Computes deflection
-        computeDeflection(listTriangles, p[a].getCenter(), tinfo->Qframe, tinfo->invC, tinfo->u);
-
-        // Makes rendering
-        drawSubTriangles(listTriangles);
-
-        triangleInfo.endEdit();
-    }
+    drawAll();
 
     glDisable(GL_LIGHTING);
 }

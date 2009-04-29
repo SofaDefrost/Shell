@@ -114,7 +114,7 @@ protected:
                 Vec3 bendingStress1;
                 Vec3 bendingStress2;
                 Vec3 bendingStress3;
-                
+
                 Real thirdSurface;
 
                 TriangleInformation() { }
@@ -122,7 +122,7 @@ protected:
                 // variables needed for drawing the shell
                 Vec<9, Real> u; // displacement vector
                 Mat<9, 9, Real> invC; // inverse of C (used in bending mode only)
-                
+
                 /// Output stream
                 inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ )
                 {
@@ -152,6 +152,7 @@ public:
 	virtual double getPotentialEnergy(const VecCoord& x);
 	virtual void handleTopologyChange();
 	virtual void draw();
+	virtual void drawAll();
 
 	Data<Real> f_poisson;
 	Data<Real> f_young;
