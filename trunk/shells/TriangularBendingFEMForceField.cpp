@@ -1075,8 +1075,11 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
     {
     	glEnable(GL_DEPTH_TEST);
     	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    	glEnable(GL_POLYGON_OFFSET_LINE);
+    	glPolygonOffset(-1.0, 1.0);
     	glColor3f(1.0, 0.5, 0.0);
     	drawAll();
+    	glDisable(GL_POLYGON_OFFSET_FILL);
 
     	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     	glEnable(GL_POLYGON_OFFSET_FILL);
