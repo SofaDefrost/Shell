@@ -975,16 +975,9 @@ void TriangularBendingFEMForceField<DataTypes>::computeDeflection(ListTriangles 
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::renderTriangles(const ListTriangles& listTriangles)
+void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTriangles& listTriangles)
 {
     // Subdivision
-    glEnable(GL_LIGHTING);
-//    glEnable(GL_COLOR_MATERIAL);
-//    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-//    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-    glColor3f(1,0.5,0);
-//    glColorMaterial(GL_FRONT_AND_BACK, GL_SPECULAR);
-//    glColor3f(1,1,1);
     glBegin(GL_TRIANGLES);
     for (unsigned int t=0; t<listTriangles.size(); t++)
     {
@@ -993,8 +986,7 @@ void TriangularBendingFEMForceField<DataTypes>::renderTriangles(const ListTriang
         helper::gl::glVertexT(listTriangles[t][2]);
     }
     glEnd();
-//    glDisable(GL_COLOR_MATERIAL);
-    glDisable(GL_LIGHTING);
+
 }
 
 // --------------------------------------------------------------------------------------
@@ -1005,6 +997,10 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
 {
     VecCoord p0 = *this->mstate->getX0();
     VecCoord p = *this->mstate->getX();
+
+    if (!getContext()->getShowForceFields()) return;
+
+//    glDisable(GL_LIGHTING);
 
     // Draws a red line that represents each z displacement
 //    glBegin(GL_LINES);
@@ -1033,14 +1029,29 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
 //    }
 //    glEnd();
 
-     // Wire frame mode
+     // Mode of rendering
     if (getContext()->getShowWireFrame())
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDisable(GL_LIGHTING);
     }
     else
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_SMOOTH);
+        glEnable(GL_LIGHTING);
+
+        glColor3f(1.0, 0.0, 0.0);
+
+//        GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0};
+        GLfloat mat_diffuse[] = { 0.1, 0.5, 0.8, 1.0 };
+        GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat high_shininess[] = { 100.0 };
+//
+//        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, no_mat);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, high_shininess);
+//        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, no_mat);
     }
 
      // Subdivision of each triangle to display shells
@@ -1074,10 +1085,12 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
         computeDeflection(listTriangles, p[a].getCenter(), tinfo->Qframe, tinfo->invC, tinfo->u);
 
         // Makes rendering
-        renderTriangles(listTriangles);
+        drawSubTriangles(listTriangles);
 
         triangleInfo.endEdit();
     }
+
+    glDisable(GL_LIGHTING);
 }
 
 

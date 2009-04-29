@@ -188,7 +188,7 @@ protected :
 
         void subdivide(const ListTriangles listTriangles, ListTriangles& newListTriangles);
         void computeDeflection(ListTriangles &listTriangles, const Vec3 &a0, const Quat &Qframe, const Mat<9, 9, Real> &invC, const Vec <9, Real> &u);
-        void renderTriangles(const ListTriangles& listTriangles);
+        void drawSubTriangles(const ListTriangles& listTriangles);
 };
 
 
