@@ -241,7 +241,7 @@ void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&
 
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
-    
+
     VecCoord p0 = *this->mstate->getX0();
     VecCoord p = *this->mstate->getX();
 
@@ -485,7 +485,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
     Disp[12] = uC[2];   // z displacement in C
     Disp[13] = rC[0];   // x rotation in C
     Disp[14] = rC[1];   // y rotation in C
-    
+
     // Writes the vector u of displacements for the bending formulation
     for (unsigned int i = 0; i< tinfo->u.size(); i++)
     {
@@ -1029,28 +1029,28 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
 //    }
 //    glEnd();
 
+    glDisable(GL_LIGHTING);
+
      // Mode of rendering
     if (getContext()->getShowWireFrame())
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glDisable(GL_LIGHTING);
     }
     else
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_SMOOTH);
-        glEnable(GL_LIGHTING);
+        glColor3f(1.0, 0.5, 0.0);
 
-        glColor3f(1.0, 0.0, 0.0);
-
-//        GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0};
-        GLfloat mat_diffuse[] = { 0.1, 0.5, 0.8, 1.0 };
-        GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-        GLfloat high_shininess[] = { 100.0 };
+     //   GLfloat no_mat[] = { 1.0, 0.5, 0.0, 1.0};
+    //    GLfloat mat_ambient[] = { 1.0, 0.0, 0.0, 1.0 };
+   //     GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
+  //      GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+ //       GLfloat high_shininess[] = { 100.0 };
 //
-//        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, no_mat);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, high_shininess);
+    //    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, no_mat);
+   //     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+  //      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+ //       glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, high_shininess);
 //        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, no_mat);
     }
 
