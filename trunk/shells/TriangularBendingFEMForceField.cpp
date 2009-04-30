@@ -1001,24 +1001,55 @@ void TriangularBendingFEMForceField<DataTypes>::computeDeflection(ListTriangles 
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTriangles& listTriangles)
 {
+	std::map<Vector3, Vector3> normals;
+	std::map<Vector3, unsigned int> coeff;
+	std::map<Vector3, Vector3>::const_iterator it;
+
+	//Store normals per vertex
+	for(unsigned int t=0; t<listTriangles.size();t++)
+	{
+		// Computes normal of the triangle
+		Vec3 edgex = listTriangles[t][1] - listTriangles[t][0];
+		edgex.normalize();
+		Vec3 edgey = listTriangles[t][2] - listTriangles[t][0];
+		edgey.normalize();
+		Vec3 edgez;
+		edgez = cross(edgex, edgey);
+		edgez.normalize();
+
+		for(unsigned i=0 ; i<3 ;i++)
+		{
+			if(normals.find(listTriangles[t][i]) == normals.end())
+			{
+				normals[listTriangles[t][i]] = edgez;
+				coeff[listTriangles[t][i]] = 1;
+			}
+			else
+			{
+				normals[listTriangles[t][i]] += edgez;
+				coeff[listTriangles[t][i]]+=1;
+			}
+		}
+	}
+
+	for (it=normals.begin() ; it!= normals.end() ; it++)
+	{
+		normals[(*it).first] /= coeff[(*it).first];
+	}
+
+
     // Subdivision
     glBegin(GL_TRIANGLES);
     for (unsigned int t=0; t<listTriangles.size(); t++)
     {
+        helper::gl::glNormalT(normals[listTriangles[t][0]]);
         helper::gl::glVertexT(listTriangles[t][0]);
+        helper::gl::glNormalT(normals[listTriangles[t][1]]);
         helper::gl::glVertexT(listTriangles[t][1]);
+        helper::gl::glNormalT(normals[listTriangles[t][2]]);
         helper::gl::glVertexT(listTriangles[t][2]);
 
-        // Computes normal of the triangle
-        Vec3 edgex = listTriangles[t][1] - listTriangles[t][0];
-        edgex.normalize();
-        Vec3 edgey = listTriangles[t][2] - listTriangles[t][0];
-        edgey.normalize();
-        Vec3 edgez;
-        edgez = cross(edgex, edgey);
-        edgez.normalize();
 
-        helper::gl::glNormalT(edgez);
     }
     glEnd();
 
@@ -1076,7 +1107,7 @@ template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::draw()
 {
     if (!getContext()->getShowForceFields()) return;
-    glDisable(GL_LIGHTING);
+    //glDisable(GL_LIGHTING);
 
     // Draws a red line that represents each z displacement
 //    glBegin(GL_LINES);
@@ -1108,6 +1139,7 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
      // Mode of rendering
     if (getContext()->getShowWireFrame())
     {
+    	glDisable(GL_LIGHTING);
     	glEnable(GL_DEPTH_TEST);
     	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     	glEnable(GL_POLYGON_OFFSET_LINE);
@@ -1125,20 +1157,23 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
     }
     else
     {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_SMOOTH);
-        glColor3f(1.0, 0.5, 0.0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glShadeModel(GL_SMOOTH);
+        glColor3f(1.0 , 1.0, 1.0);
 
-//        GLfloat no_mat[] = { 1.0, 0.5, 0.0, 1.0};
-//        GLfloat mat_ambient[] = { 1.0, 0.0, 0.0, 1.0 };
-//        GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
-//        GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-//        GLfloat high_shininess[] = { 100.0 };
-//
-//        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, no_mat);
-//        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-//        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-//        glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, high_shininess);
-//        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, no_mat);
+        GLfloat no_mat[] = { 0.0, 0.0, 0.0, 0.0};
+          GLfloat mat_ambient[] = { 0.2, 0.0, 0.0, 1.0 };
+          GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
+        GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat high_shininess[] = { 100.0 };
+
+          glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+		  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+          glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+          glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, high_shininess);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, no_mat);
+
+
     }
 
 
