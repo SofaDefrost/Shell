@@ -134,7 +134,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
     // DEBUG
 //    Quat quat1, quat2;
 //    quat1.axisToQuat(Vec3(0.0, 1.0, 0.0), -M_PI/2);
-//    quat2.axisToQuat(Vec3(0.0, 0.0, 1.0), M_PI);
+//    quat2.axisToQuat(Vec3(0.0, 1.0, 0.0), -0.2);
 //    std::cout << "quat1 = " << quat1 << std::endl;
 //    std::cout << "quat2 = " << quat2 << std::endl;
 //    std::cout << "quat1 * quat2 = " << quat1 * quat2 << std::endl;
@@ -1001,42 +1001,41 @@ void TriangularBendingFEMForceField<DataTypes>::computeDeflection(ListTriangles 
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTriangles& listTriangles)
 {
-	std::map<Vector3, Vector3> normals;
-	std::map<Vector3, unsigned int> coeff;
-	std::map<Vector3, Vector3>::const_iterator it;
+    std::map<Vector3, Vector3> normals;
+    std::map<Vector3, unsigned int> coeff;
+    std::map<Vector3, Vector3>::const_iterator it;
 
-	//Store normals per vertex
-	for(unsigned int t=0; t<listTriangles.size();t++)
-	{
-		// Computes normal of the triangle
-		Vec3 edgex = listTriangles[t][1] - listTriangles[t][0];
-		edgex.normalize();
-		Vec3 edgey = listTriangles[t][2] - listTriangles[t][0];
-		edgey.normalize();
-		Vec3 edgez;
-		edgez = cross(edgex, edgey);
-		edgez.normalize();
+    //Store normals per vertex
+    for(unsigned int t=0; t<listTriangles.size();t++)
+    {
+        // Computes normal of the triangle
+        Vec3 edgex = listTriangles[t][1] - listTriangles[t][0];
+        edgex.normalize();
+        Vec3 edgey = listTriangles[t][2] - listTriangles[t][0];
+        edgey.normalize();
+        Vec3 edgez;
+        edgez = cross(edgex, edgey);
+        edgez.normalize();
 
-		for(unsigned i=0 ; i<3 ;i++)
-		{
-			if(normals.find(listTriangles[t][i]) == normals.end())
-			{
-				normals[listTriangles[t][i]] = edgez;
-				coeff[listTriangles[t][i]] = 1;
-			}
-			else
-			{
-				normals[listTriangles[t][i]] += edgez;
-				coeff[listTriangles[t][i]]+=1;
-			}
-		}
-	}
+        for(unsigned i=0 ; i<3 ;i++)
+        {
+            if(normals.find(listTriangles[t][i]) == normals.end())
+            {
+                normals[listTriangles[t][i]] = edgez;
+                coeff[listTriangles[t][i]] = 1;
+            }
+            else
+            {
+                normals[listTriangles[t][i]] += edgez;
+                coeff[listTriangles[t][i]]+=1;
+            }
+        }
+    }
 
-	for (it=normals.begin() ; it!= normals.end() ; it++)
-	{
-		normals[(*it).first] /= coeff[(*it).first];
-	}
-
+    for (it=normals.begin() ; it!= normals.end() ; it++)
+    {
+        normals[(*it).first] /= coeff[(*it).first];
+    }
 
     // Subdivision
     glBegin(GL_TRIANGLES);
@@ -1048,8 +1047,6 @@ void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTrian
         helper::gl::glVertexT(listTriangles[t][1]);
         helper::gl::glNormalT(normals[listTriangles[t][2]]);
         helper::gl::glVertexT(listTriangles[t][2]);
-
-
     }
     glEnd();
 
@@ -1058,7 +1055,9 @@ void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTrian
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::drawAll()
 {
+    // Retrieves current and rest positions
     VecCoord p = *this->mstate->getX();
+    VecCoord p0 = *this->mstate->getX0();
 
     // Subdivision of each triangle to display shells
     for (int t=0;t<(int)triangleInfo.getValue().size();++t)
@@ -1087,8 +1086,23 @@ void TriangularBendingFEMForceField<DataTypes>::drawAll()
             newListTriangles.clear();
         }
 
+        // Evaluates the difference between the initial position and the flate position to allow the use of an initial deformed shape
+        Quat dQA_flate = qDiff(p0[a].getOrientation(), tinfo->Qframe0);     // Rotation from Qframe0 to p0[a].getOrientation()
+        Quat dQB_flate = qDiff(p0[b].getOrientation(), tinfo->Qframe0);     // Rotation from Qframe0 to p0[b].getOrientation()
+        Quat dQC_flate = qDiff(p0[c].getOrientation(), tinfo->Qframe0);     // Rotation from Qframe0 to p0[c].getOrientation()
+        // Creates a vector u_flate matching this initial difference
+        Vec <9, Real> u_flate;
+        u_flate.clear();
+        u_flate[1] = dQA_flate.toEulerVector()[0];
+        u_flate[2] = dQA_flate.toEulerVector()[1];
+        u_flate[4] = dQB_flate.toEulerVector()[0];
+        u_flate[5] = dQB_flate.toEulerVector()[1];
+        u_flate[7] = dQC_flate.toEulerVector()[0];
+        u_flate[8] = dQC_flate.toEulerVector()[1];
+
+
         // Solve coefficients ci
-        Vec <9, Real> coeff = tinfo->invC * tinfo->u;
+        Vec <9, Real> coeff = tinfo->invC * (tinfo->u + u_flate);
 
         // Computes deflection using CORRECTED Tocher's deflection function: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
         computeDeflection(listTriangles, tinfo->initialListTriangles, p[a].getCenter(), tinfo->Qframe, tinfo->Qframe0, coeff);
@@ -1162,15 +1176,15 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
         glColor3f(1.0 , 1.0, 1.0);
 
         GLfloat no_mat[] = { 0.0, 0.0, 0.0, 0.0};
-          GLfloat mat_ambient[] = { 0.2, 0.0, 0.0, 1.0 };
-          GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
+        GLfloat mat_ambient[] = { 0.2, 0.0, 0.0, 1.0 };
+        GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
         GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
         GLfloat high_shininess[] = { 100.0 };
 
-          glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-		  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-          glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-          glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, high_shininess);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, high_shininess);
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, no_mat);
 
 
