@@ -122,7 +122,9 @@ protected:
                 Mat<9, 9, Real> invC; // inverse of C (used in bending mode only)
 
                 // List of subdivided triangles
-                ListTriangles initialListTriangles;
+//                ListTriangles initialListTriangles;
+                sofa::helper::vector<Vec3> initialSubVertices;
+                sofa::helper::vector<Vec3> subTriangles;
 
                 TriangleInformation() { }
 
@@ -190,9 +192,11 @@ protected :
 	void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
 	void accumulateForce(VecDeriv& f, const VecCoord & p, Index elementIndex);
 
-        void subdivide(const ListTriangles listTriangles, ListTriangles& newListTriangles);
-        void computeDeflection(ListTriangles &listTriangles, const ListTriangles &initialListTriangles, const Vec3 &a0, const Quat &Qframe, const Quat &Qframe0, const Vec <9, Real> &coeff);
-        void drawSubTriangles(const ListTriangles& listTriangles);
+//        void subdivide(const ListTriangles listTriangles, ListTriangles& newListTriangles);
+        void subdivide(sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> subTriangles, sofa::helper::vector<Vec3> &newSubTriangles);
+        void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
+        void computeDeflection(sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> &initialSubVertices, const Vec3 &origin, const Quat &Qframe, const Quat &Qframe0, const Vec <9, Real> &coeff);
+        void drawSubTriangles(const sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> &subTriangles);
 };
 
 

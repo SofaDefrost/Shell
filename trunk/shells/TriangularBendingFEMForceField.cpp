@@ -289,19 +289,18 @@ void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&
 
 
         // Initialise the list of subdivided triangles with the first one
-        RenderingTriangle triangle;
-        triangle[0] = p0[a].getCenter();
-        triangle[1] = p0[b].getCenter();
-        triangle[2] = p0[c].getCenter();
-        tinfo->initialListTriangles.push_back(triangle);
+        tinfo->initialSubVertices.push_back(p[a].getCenter());
+        tinfo->initialSubVertices.push_back(p[b].getCenter());
+        tinfo->initialSubVertices.push_back(p[c].getCenter());
+        tinfo->subTriangles.push_back(Vec3(0, 1, 2));
 
         // Subdivision
-        ListTriangles newListTriangles;
+        sofa::helper::vector<Vec3> newSubTriangles;
         for (int sub=0; sub<subdivisions.getValue(); sub++)
         {
-            subdivide(tinfo->initialListTriangles, newListTriangles);
-            tinfo->initialListTriangles = newListTriangles;
-            newListTriangles.clear();
+            subdivide(tinfo->initialSubVertices, tinfo->subTriangles, newSubTriangles);
+            tinfo->subTriangles = newSubTriangles;
+            newSubTriangles.clear();
         }
     }
     triangleInfo.endEdit();
@@ -353,7 +352,11 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
         J = triangleInf[i].strainDisplacementMatrix;
 
         computeStrain(strain, J, D);
-        computeStress(stress, tinfo->materialMatrix, strain);
+
+        Real scale = 1.0;
+        MaterialStiffness temp = scale*(tinfo->materialMatrix);
+        computeStress(stress, temp, strain);
+//        computeStress(stress, tinfo->materialMatrix, strain);
 
         F[0] = J[0][0] * stress[0] + /* J[0][1] * KJtD[1] + */ J[0][2] * stress[2];
         F[1] = /* J[1][0] * KJtD[0] + */ J[1][1] * stress[1] + J[1][2] * stress[2];
@@ -771,7 +774,11 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, In
 
     computeStrainDisplacement(J, A, B, C);
     computeStrain(strain, J, D);
-    computeStress(stress, tinfo->materialMatrix, strain);
+
+    Real scale = 1.0;
+    MaterialStiffness temp = scale*(tinfo->materialMatrix);
+    computeStress(stress, temp, strain);
+//    computeStress(stress, tinfo->materialMatrix, strain);
 
     // Compute F = J * stress;
     // Optimisations: The following values are 0 (per computeStrainDisplacement )
@@ -901,14 +908,14 @@ void TriangularBendingFEMForceField<DataTypes>::addDForce(VecDeriv& df, const Ve
 // Subdivides each triangle into 4 by taking the middle of each edge
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::subdivide(const ListTriangles listTriangles, ListTriangles& newListTriangles)
+void TriangularBendingFEMForceField<DataTypes>::subdivide(sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> subTriangles, sofa::helper::vector<Vec3> &newSubTriangles)
 {
-    for (unsigned int t=0; t<listTriangles.size(); t++)
+    for (unsigned int i=0; i<subTriangles.size(); i++)
     {
         Vec3 a, b, c;
-        a = listTriangles[t][0];
-        b = listTriangles[t][1];
-        c = listTriangles[t][2];
+        a = subVertices[(int)subTriangles[i][0]];
+        b = subVertices[(int)subTriangles[i][1]];
+        c = subVertices[(int)subTriangles[i][2]];
 
         // Global coordinates
         Vec3 mAB, mAC, mBC;
@@ -916,82 +923,72 @@ void TriangularBendingFEMForceField<DataTypes>::subdivide(const ListTriangles li
         mAC = (a+c)/2;
         mBC = (b+c)/2;
 
-        RenderingTriangle triangle;
-        triangle[0] = a;
-        triangle[1] = mAB;
-        triangle[2] = mAC;
-        newListTriangles.push_back(triangle);
+        // Adds vertex if we deal with a new point
+        int indexAB, indexAC, indexBC;
+        addVertexAndFindIndex(subVertices, mAB, indexAB);
+        addVertexAndFindIndex(subVertices, mAC, indexAC);
+        addVertexAndFindIndex(subVertices, mBC, indexBC);
 
-        triangle[0] = mAB;
-        triangle[1] = b;
-        triangle[2] = mBC;
-        newListTriangles.push_back(triangle);
+        // Finds index of the 3 summets
+        int indexA, indexB, indexC;
+        addVertexAndFindIndex(subVertices, a, indexA);
+        addVertexAndFindIndex(subVertices, b, indexB);
+        addVertexAndFindIndex(subVertices, c, indexC);
 
-        triangle[0] = mAC;
-        triangle[1] = mBC;
-        triangle[2] = c;
-        newListTriangles.push_back(triangle);
+        // Adds the 4 subdivided triangles to the list
+        newSubTriangles.push_back(Vec3(indexA, indexAB, indexAC));
+        newSubTriangles.push_back(Vec3(indexAB, indexB, indexBC));
+        newSubTriangles.push_back(Vec3(indexAC, indexBC, indexC));
+        newSubTriangles.push_back(Vec3(indexBC, indexAC, indexAB));
 
-        triangle[0] = mBC;
-        triangle[1] = mAC;
-        triangle[2] = mAB;
-        newListTriangles.push_back(triangle);
     }
 }
 
 
 // --------------------------------------------------------------------------------------
+// Adds a vertex if it is not already in the list
+// --------------------------------------------------------------------------------------
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index)
+{
+    bool alreadyHere = false;
+    for (unsigned v=0; v<subVertices.size(); v++)
+    {
+        if (subVertices[v] == vertex)
+        {
+            alreadyHere = true;
+            index = v;
+        }
+    }
+    if (!alreadyHere)
+    {
+        subVertices.push_back(vertex);
+        index = (int)subVertices.size()-1;
+    }
+
+}
+
+// --------------------------------------------------------------------------------------
 // Computes deflection due to bending
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeDeflection(ListTriangles &listTriangles, const ListTriangles &initialListTriangles, const Vec3 &origin, const Quat &Qframe, const Quat &Qframe0, const Vec <9, Real> &coeff)
+void TriangularBendingFEMForceField<DataTypes>::computeDeflection(sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> &initialSubVertices, const Vec3 &origin, const Quat &Qframe, const Quat &Qframe0, const Vec <9, Real> &coeff)
 {
-    // Subdivision
-    for (unsigned int t=0; t<listTriangles.size(); t++)
+    for (unsigned int i=0; i<subVertices.size(); i++)
     {
-        // Global coordinates
-        Vec3 a, b, c;
-        a = listTriangles[t][0];
-        b = listTriangles[t][1];
-        c = listTriangles[t][2];
-
-        // Initial global coordinates
-        Vec3 a0, b0, c0;
-        a0 = initialListTriangles[t][0];
-        b0 = initialListTriangles[t][1];
-        c0 = initialListTriangles[t][2];
-
         // Compute translation in Z (expressed in initial triangle frame)
-        Vec3 a0a = Qframe0.inverseRotate(a-a0);
-        Vec3 b0b = Qframe0.inverseRotate(b-b0);
-        Vec3 c0c = Qframe0.inverseRotate(c-c0);
+        Vec3 vertexZ = Qframe0.inverseRotate(subVertices[i]-initialSubVertices[i]);
 
         // Local coordinates needed to compute deflection
-        Vec3 A = Qframe.inverseRotate(a-origin);
-        Vec3 B = Qframe.inverseRotate(b-origin);
-        Vec3 C = Qframe.inverseRotate(c-origin);
+        Vec3 vertexLocal = Qframe.inverseRotate(subVertices[i]-origin);
 
         // Adds deflection and removes the measure of the z component
         // WARNING: do we have to make the projection along Z or Z0? (in Qframe or Qframe0)
         Real z;
         Vec3 Uz;
-        z = coeff[0] + coeff[1]*A[0] + coeff[2]*A[1] + coeff[3]*A[0]*A[0] + coeff[4]*A[0]*A[1] + coeff[5]*A[1]*A[1] + coeff[6]*A[0]*A[0]*A[0] + coeff[7]*A[0]*A[1]*A[1] + coeff[8]*A[1]*A[1]*A[1];
-        Uz = Qframe0.rotate(Vec3(0.0, 0.0, z-a0a[2]));
-        a += Uz;
-
-        z = coeff[0] + coeff[1]*B[0] + coeff[2]*B[1] + coeff[3]*B[0]*B[0] + coeff[4]*B[0]*B[1] + coeff[5]*B[1]*B[1] + coeff[6]*B[0]*B[0]*B[0] + coeff[7]*B[0]*B[1]*B[1] + coeff[8]*B[1]*B[1]*B[1];
-        Uz = Qframe0.rotate(Vec3(0.0, 0.0, z-b0b[2]));
-        b += Uz;
-
-        z = coeff[0] + coeff[1]*C[0] + coeff[2]*C[1] + coeff[3]*C[0]*C[0] + coeff[4]*C[0]*C[1] + coeff[5]*C[1]*C[1] + coeff[6]*C[0]*C[0]*C[0] + coeff[7]*C[0]*C[1]*C[1] + coeff[8]*C[1]*C[1]*C[1];
-        Uz = Qframe0.rotate(Vec3(0.0, 0.0, z-c0c[2]));
-        c += Uz;
-
-        // Stores the new values
-        listTriangles[t][0] = a;
-        listTriangles[t][1] = b;
-        listTriangles[t][2] = c;
-
+        z = coeff[0] + coeff[1]*vertexLocal[0] + coeff[2]*vertexLocal[1] + coeff[3]*vertexLocal[0]*vertexLocal[0] + coeff[4]*vertexLocal[0]*vertexLocal[1] + coeff[5]*vertexLocal[1]*vertexLocal[1] + coeff[6]*vertexLocal[0]*vertexLocal[0]*vertexLocal[0] + coeff[7]*vertexLocal[0]*vertexLocal[1]*vertexLocal[1] + coeff[8]*vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
+        Uz = Qframe0.rotate(Vec3(0.0, 0.0, z-vertexZ[2]));
+        subVertices[i] += Uz;
     }
 }
 
@@ -999,19 +996,19 @@ void TriangularBendingFEMForceField<DataTypes>::computeDeflection(ListTriangles 
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTriangles& listTriangles)
+void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> &subTriangles)
 {
     std::map<Vector3, Vector3> normals;
     std::map<Vector3, unsigned int> coeff;
     std::map<Vector3, Vector3>::const_iterator it;
 
     //Store normals per vertex
-    for(unsigned int t=0; t<listTriangles.size();t++)
+    for(unsigned int t=0; t<subTriangles.size();t++)
     {
         // Computes normal of the triangle
-        Vec3 edgex = listTriangles[t][1] - listTriangles[t][0];
+        Vec3 edgex = subVertices[(int)subTriangles[t][1]] - subVertices[(int)subTriangles[t][0]];
         edgex.normalize();
-        Vec3 edgey = listTriangles[t][2] - listTriangles[t][0];
+        Vec3 edgey = subVertices[(int)subTriangles[t][2]] - subVertices[(int)subTriangles[t][0]];
         edgey.normalize();
         Vec3 edgez;
         edgez = cross(edgex, edgey);
@@ -1019,15 +1016,15 @@ void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTrian
 
         for(unsigned i=0 ; i<3 ;i++)
         {
-            if(normals.find(listTriangles[t][i]) == normals.end())
+            if(normals.find(subVertices[(int)subTriangles[t][i]]) == normals.end())
             {
-                normals[listTriangles[t][i]] = edgez;
-                coeff[listTriangles[t][i]] = 1;
+                normals[subVertices[(int)subTriangles[t][i]]] = edgez;
+                coeff[subVertices[(int)subTriangles[t][i]]] = 1;
             }
             else
             {
-                normals[listTriangles[t][i]] += edgez;
-                coeff[listTriangles[t][i]]+=1;
+                normals[subVertices[(int)subTriangles[t][i]]] += edgez;
+                coeff[subVertices[(int)subTriangles[t][i]]]+=1;
             }
         }
     }
@@ -1039,14 +1036,14 @@ void TriangularBendingFEMForceField<DataTypes>::drawSubTriangles(const ListTrian
 
     // Subdivision
     glBegin(GL_TRIANGLES);
-    for (unsigned int t=0; t<listTriangles.size(); t++)
+    for (unsigned int t=0; t<subTriangles.size(); t++)
     {
-        helper::gl::glNormalT(normals[listTriangles[t][0]]);
-        helper::gl::glVertexT(listTriangles[t][0]);
-        helper::gl::glNormalT(normals[listTriangles[t][1]]);
-        helper::gl::glVertexT(listTriangles[t][1]);
-        helper::gl::glNormalT(normals[listTriangles[t][2]]);
-        helper::gl::glVertexT(listTriangles[t][2]);
+        helper::gl::glNormalT(normals[subVertices[(int)subTriangles[t][0]]]);
+        helper::gl::glVertexT(subVertices[(int)subTriangles[t][0]]);
+        helper::gl::glNormalT(normals[subVertices[(int)subTriangles[t][1]]]);
+        helper::gl::glVertexT(subVertices[(int)subTriangles[t][1]]);
+        helper::gl::glNormalT(normals[subVertices[(int)subTriangles[t][2]]]);
+        helper::gl::glVertexT(subVertices[(int)subTriangles[t][2]]);
     }
     glEnd();
 
@@ -1069,21 +1066,23 @@ void TriangularBendingFEMForceField<DataTypes>::drawAll()
         Index b = _topology->getTriangle(t)[1];
         Index c = _topology->getTriangle(t)[2];
 
+        // Initialise the list of subdivided vertices with the first ones
+        sofa::helper::vector<Vec3> subVertices;
+        subVertices.push_back(p[a].getCenter());
+        subVertices.push_back(p[b].getCenter());
+        subVertices.push_back(p[c].getCenter());
+
         // Initialise the list of subdivided triangles with the first one
-        ListTriangles listTriangles;
-        RenderingTriangle triangle;
-        triangle[0] = p[a].getCenter();
-        triangle[1] = p[b].getCenter();
-        triangle[2] = p[c].getCenter();
-        listTriangles.push_back(triangle);
+        sofa::helper::vector<Vec3> subTriangles;
+        subTriangles.push_back(Vec3(0, 1, 2));
 
         // Subdivision
-        ListTriangles newListTriangles;
+        sofa::helper::vector<Vec3> newSubTriangles;
         for (int sub=0; sub<subdivisions.getValue(); sub++)
         {
-            subdivide(listTriangles, newListTriangles);
-            listTriangles = newListTriangles;
-            newListTriangles.clear();
+            subdivide(subVertices, subTriangles, newSubTriangles);
+            subTriangles = newSubTriangles;
+            newSubTriangles.clear();
         }
 
         // Evaluates the difference between the initial position and the flate position to allow the use of an initial deformed shape
@@ -1105,10 +1104,10 @@ void TriangularBendingFEMForceField<DataTypes>::drawAll()
         Vec <9, Real> coeff = tinfo->invC * (tinfo->u + u_flate);
 
         // Computes deflection using CORRECTED Tocher's deflection function: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
-        computeDeflection(listTriangles, tinfo->initialListTriangles, p[a].getCenter(), tinfo->Qframe, tinfo->Qframe0, coeff);
+        computeDeflection(subVertices, tinfo->initialSubVertices, p[a].getCenter(), tinfo->Qframe, tinfo->Qframe0, coeff);
 
         // Makes rendering
-        drawSubTriangles(listTriangles);
+        drawSubTriangles(subVertices, subTriangles);
 
         triangleInfo.endEdit();
     }
@@ -1173,7 +1172,7 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glShadeModel(GL_SMOOTH);
-        glColor3f(1.0 , 1.0, 1.0);
+        glColor3f(1.0, 1.0, 1.0);
 
         GLfloat no_mat[] = { 0.0, 0.0, 0.0, 0.0};
         GLfloat mat_ambient[] = { 0.2, 0.0, 0.0, 1.0 };
