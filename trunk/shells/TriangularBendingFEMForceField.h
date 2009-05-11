@@ -81,8 +81,8 @@ protected:
 	typedef Mat<6, 3, Real> StrainDisplacement;				///< the strain-displacement matrix
 	typedef sofa::helper::vector<StrainDisplacement> VecStrainDisplacement;	///< a vector of strain-displacement matrices
 	typedef Mat<3, 3, Real > Transformation;				///< matrix for rigid transformations like rotations
-        typedef helper::fixed_array <Vec3, 3> RenderingTriangle;                ///> contains the 3 summets of a triangle
-        typedef sofa::helper::vector<RenderingTriangle> ListTriangles;          ///> vector of triangles
+	typedef helper::fixed_array <Vec3, 3> RenderingTriangle;                ///> contains the 3 summets of a triangle
+	typedef sofa::helper::vector<RenderingTriangle> ListTriangles;          ///> vector of triangles
 
 	class TriangleInformation
         {
@@ -120,11 +120,7 @@ protected:
                 // Variables needed for drawing the shell
                 Vec<9, Real> u; // displacement vector
                 Mat<9, 9, Real> invC; // inverse of C (used in bending mode only)
-
-                // List of subdivided triangles
-//                ListTriangles initialListTriangles;
-                sofa::helper::vector<Vec3> initialSubVertices;
-                sofa::helper::vector<Vec3> subTriangles;
+                Vec <9, Real> u_flat; // difference between the initial position and the flate position to allow the use of an initial deformed shape
 
                 TriangleInformation() { }
 
@@ -144,6 +140,15 @@ protected:
 	TriangleData<TriangleInformation> triangleInfo;
 
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
+
+        // List of initial subdivided vertices
+        sofa::helper::vector<Vec3> initialSubVertices;
+        // List of subdivided triangles
+        sofa::helper::vector<Vec3> subTriangles;
+        // List of base triangles for each subdivided vertex
+        sofa::helper::vector< sofa::helper::vector<int> > subVerticesTriangles;
+        // Barycentric coordinates (x,y) for each subdivided vertex
+        sofa::helper::vector< Vec3 > subVerticesBary;
 
 public:
 
@@ -185,17 +190,14 @@ protected :
 	virtual void applyStiffness( VecDeriv& f, Real h, const VecDeriv& dx );
 	virtual void computeMaterialStiffness(int i, Index& a, Index& b, Index& c);
 
-	////////////// large displacements method
-	//sofa::helper::vector< helper::fixed_array <Coord, 3> > _rotatedInitialElements;   ///< The initials positions in its frame
-	//sofa::helper::vector< Transformation > _rotations;
-	void initLarge(int i, Index&a, Index&b, Index&c);
+	void initTriangle(int i, Index&a, Index&b, Index&c);
 	void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
 	void accumulateForce(VecDeriv& f, const VecCoord & p, Index elementIndex);
 
-//        void subdivide(const ListTriangles listTriangles, ListTriangles& newListTriangles);
-        void subdivide(sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> subTriangles, sofa::helper::vector<Vec3> &newSubTriangles);
-        void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
-        void computeDeflection(sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> &initialSubVertices, const Vec3 &origin, const Quat &Qframe, const Quat &Qframe0, const Vec <9, Real> &coeff);
+        void subdivide(int triangle, sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> subTriangles, sofa::helper::vector<Vec3> &newSubTriangles);
+        void addVertexAndFindIndex(int triangle, sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
+        void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c);
+        void computeNewXYZ(sofa::helper::vector<Vec3> &subVertices);
         void drawSubTriangles(const sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> &subTriangles);
 };
 

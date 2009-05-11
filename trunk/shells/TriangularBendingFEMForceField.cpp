@@ -86,7 +86,7 @@ void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFunction(int
         Index b = t[1];
         Index c = t[2];
 
-        ff->initLarge(triangleIndex, a, b, c);
+        ff->initTriangle(triangleIndex, a, b, c);
         ff->computeMaterialStiffness(triangleIndex, a, b, c);
     }
 }
@@ -232,7 +232,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeRotation(Quat &Qframe, co
 // --- Store the initial position of the nodes
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&b, Index&c)
+void TriangularBendingFEMForceField<DataTypes>::initTriangle(int i, Index&a, Index&b, Index&c)
 {
 
 #ifdef DEBUG_TRIANGLEFEM
@@ -288,20 +288,46 @@ void TriangularBendingFEMForceField<DataTypes>::initLarge(int i, Index&a, Index&
 
 
 
-        // Initialise the list of subdivided triangles with the first one
-        tinfo->initialSubVertices.push_back(p[a].getCenter());
-        tinfo->initialSubVertices.push_back(p[b].getCenter());
-        tinfo->initialSubVertices.push_back(p[c].getCenter());
-        tinfo->subTriangles.push_back(Vec3(0, 1, 2));
 
-        // Subdivision
+        // Evaluates the difference between the initial position and the flat position to allow the use of an initial deformed shape
+        Quat dQA_flat = qDiff(p0[a].getOrientation(), tinfo->Qframe0);     // Rotation from Qframe0 to p0[a].getOrientation()
+        Quat dQB_flat = qDiff(p0[b].getOrientation(), tinfo->Qframe0);     // Rotation from Qframe0 to p0[b].getOrientation()
+        Quat dQC_flat = qDiff(p0[c].getOrientation(), tinfo->Qframe0);     // Rotation from Qframe0 to p0[c].getOrientation()
+        // Creates a vector u_flat matching this initial difference
+        tinfo->u_flat.clear();
+        tinfo->u_flat[1] = dQA_flat.toEulerVector()[0];
+        tinfo->u_flat[2] = dQA_flat.toEulerVector()[1];
+        tinfo->u_flat[4] = dQB_flat.toEulerVector()[0];
+        tinfo->u_flat[5] = dQB_flat.toEulerVector()[1];
+        tinfo->u_flat[7] = dQC_flat.toEulerVector()[0];
+        tinfo->u_flat[8] = dQC_flat.toEulerVector()[1];
+
+
+
+
+        // Adds the 3 summets of the current triangle to the list of vertices
+        int indexA, indexB, indexC;
+        addVertexAndFindIndex(i, initialSubVertices, p[a].getCenter(), indexA);
+        addVertexAndFindIndex(i, initialSubVertices, p[b].getCenter(), indexB);
+        addVertexAndFindIndex(i, initialSubVertices, p[c].getCenter(), indexC);
+
+        // Subdivision within the current triangle
+        sofa::helper::vector<Vec3> subTrianglesTemp;
+        subTrianglesTemp.push_back(Vec3(indexA, indexB, indexC));
         sofa::helper::vector<Vec3> newSubTriangles;
         for (int sub=0; sub<subdivisions.getValue(); sub++)
         {
-            subdivide(tinfo->initialSubVertices, tinfo->subTriangles, newSubTriangles);
-            tinfo->subTriangles = newSubTriangles;
+            subdivide(i, initialSubVertices, subTrianglesTemp, newSubTriangles);
+            subTrianglesTemp = newSubTriangles;
             newSubTriangles.clear();
         }
+
+        // Adds the subtriangles to the global list of subdivided triangles
+        for (unsigned int i=0; i<subTrianglesTemp.size(); i++)
+        {
+            subTriangles.push_back(subTrianglesTemp[i]);
+        }
+
     }
     triangleInfo.endEdit();
 }
@@ -480,9 +506,15 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
     Quat dQB = qDiff(p[b].getOrientation(), tinfo->Qframe);     // Rotation from Qframe to p[b].getOrientation()
     Quat dQC = qDiff(p[c].getOrientation(), tinfo->Qframe);     // Rotation from Qframe to p[c].getOrientation()
 
+    // Difference with the initial instant
+    // In the triangle frame
     dQA = qDiff(tinfo->initialOrientations[0].inverse(), dQA.inverse());
     dQB = qDiff(tinfo->initialOrientations[1].inverse(), dQB.inverse());
     dQC = qDiff(tinfo->initialOrientations[2].inverse(), dQC.inverse());
+    // In the frame of each point
+//    dQA = qDiff(dQA, tinfo->initialOrientations[0]);
+//    dQB = qDiff(dQB, tinfo->initialOrientations[1]);
+//    dQC = qDiff(dQC, tinfo->initialOrientations[2]);
 
     // Takes the Euler vector to get the rotation's axis
     Vec3 rA, rB, rC;
@@ -490,12 +522,19 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
     rB = dQB.toEulerVector();
     rC = dQC.toEulerVector();
 
-    // Compute translation in Z (expressed in initial triangle frame)
+//    std::cout << "elementIndex = " << elementIndex << std::endl;
+//    std::cout << "rA = " << rA << std::endl;
+//    std::cout << "rB = " << rB << std::endl;
+//    std::cout << "rC = " << rC << std::endl;
+
+    // Computes translation in Z (expressed in initial triangle frame)
     VecCoord p0 = *this->mstate->getX0();
     Vec3 uA = tinfo->Qframe0.inverseRotate(p[a].getCenter() - p0[a].getCenter());
     Vec3 uB = tinfo->Qframe0.inverseRotate(p[b].getCenter() - p0[b].getCenter());
     Vec3 uC = tinfo->Qframe0.inverseRotate(p[c].getCenter() - p0[c].getCenter());
 
+//    std::cout << "uC = " << uC << std::endl;
+    
     // Writes the computed displacements
     Disp[6] = uA[2];    // z displacement in A
     Disp[7] = rA[0];    // x rotation in A
@@ -870,6 +909,10 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, con
     	f[a] += Deriv(-fa1, -fa2);
     	f[b] += Deriv(-fb1, -fb2);
     	f[c] += Deriv(-fc1, -fc2);
+
+//        std::cout << "fc2 local in triangle " << elementIndex << " = " << tinfo->Qframe.inverseRotate(fc2) << std::endl;
+//        std::cout << "fc global " << elementIndex << " = " << f[c] << std::endl;
+
     }
 
 	triangleInfo.endEdit();
@@ -908,7 +951,7 @@ void TriangularBendingFEMForceField<DataTypes>::addDForce(VecDeriv& df, const Ve
 // Subdivides each triangle into 4 by taking the middle of each edge
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::subdivide(sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> subTriangles, sofa::helper::vector<Vec3> &newSubTriangles)
+void TriangularBendingFEMForceField<DataTypes>::subdivide(int triangle, sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> subTriangles, sofa::helper::vector<Vec3> &newSubTriangles)
 {
     for (unsigned int i=0; i<subTriangles.size(); i++)
     {
@@ -925,15 +968,15 @@ void TriangularBendingFEMForceField<DataTypes>::subdivide(sofa::helper::vector<V
 
         // Adds vertex if we deal with a new point
         int indexAB, indexAC, indexBC;
-        addVertexAndFindIndex(subVertices, mAB, indexAB);
-        addVertexAndFindIndex(subVertices, mAC, indexAC);
-        addVertexAndFindIndex(subVertices, mBC, indexBC);
+        addVertexAndFindIndex(triangle, subVertices, mAB, indexAB);
+        addVertexAndFindIndex(triangle, subVertices, mAC, indexAC);
+        addVertexAndFindIndex(triangle, subVertices, mBC, indexBC);
 
         // Finds index of the 3 summets
         int indexA, indexB, indexC;
-        addVertexAndFindIndex(subVertices, a, indexA);
-        addVertexAndFindIndex(subVertices, b, indexB);
-        addVertexAndFindIndex(subVertices, c, indexC);
+        addVertexAndFindIndex(triangle, subVertices, a, indexA);
+        addVertexAndFindIndex(triangle, subVertices, b, indexB);
+        addVertexAndFindIndex(triangle, subVertices, c, indexC);
 
         // Adds the 4 subdivided triangles to the list
         newSubTriangles.push_back(Vec3(indexA, indexAB, indexAC));
@@ -949,48 +992,147 @@ void TriangularBendingFEMForceField<DataTypes>::subdivide(sofa::helper::vector<V
 // Adds a vertex if it is not already in the list
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index)
+void TriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(int triangle, sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index)
 {
     bool alreadyHere = false;
+    sofa::helper::vector<int> listTriangleID;
+    
     for (unsigned v=0; v<subVertices.size(); v++)
     {
-        if (subVertices[v] == vertex)
+        if ( (subVertices[v]-vertex).norm() < 0.001)
         {
             alreadyHere = true;
             index = v;
+
+            // Since the point has already been added, adds a new triangle to the list if the latter is different that the ones already written in the list
+            listTriangleID = subVerticesTriangles[index];
+            bool alreadyThisTriangle = false;
+            for (unsigned int i=0; i<listTriangleID.size(); i++)
+            {
+                if (listTriangleID[i] == triangle)
+                {
+                    alreadyThisTriangle = true;
+                }
+            }
+            if (alreadyThisTriangle == false)
+            {
+                listTriangleID.push_back(triangle);
+                subVerticesTriangles[index] = listTriangleID;
+            }
         }
     }
-    if (!alreadyHere)
+    if (alreadyHere == false)
     {
         subVertices.push_back(vertex);
         index = (int)subVertices.size()-1;
-    }
 
+        // If we deal with a new point, adds the first triangle which it belongs to
+        listTriangleID.push_back(triangle);
+        subVerticesTriangles.push_back(listTriangleID);
+
+        // And stores its barycentric coordinates
+        VecCoord p = *this->mstate->getX();
+        Index a = _topology->getTriangle(triangle)[0];
+        Index b = _topology->getTriangle(triangle)[1];
+        Index c = _topology->getTriangle(triangle)[2];
+        Vec3 vertexBaryCoord;
+        computeBaryCoefs(vertexBaryCoord, vertex, p[a].getCenter(), p[b].getCenter(), p[c].getCenter());
+        subVerticesBary.push_back(vertexBaryCoord);
+    }
 }
 
 // --------------------------------------------------------------------------------------
-// Computes deflection due to bending
+// ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeDeflection(sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> &initialSubVertices, const Vec3 &origin, const Quat &Qframe, const Quat &Qframe0, const Vec <9, Real> &coeff)
+void TriangularBendingFEMForceField<DataTypes>::computeNewXYZ(sofa::helper::vector<Vec3> &subVertices)
 {
-    for (unsigned int i=0; i<subVertices.size(); i++)
+    VecCoord p = *this->mstate->getX();
+    VecCoord p0 = *this->mstate->getX0();
+
+    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+
+    for (unsigned int i=0; i<initialSubVertices.size(); i++)
     {
-        // Compute translation in Z (expressed in initial triangle frame)
-        Vec3 vertexZ = Qframe0.inverseRotate(subVertices[i]-initialSubVertices[i]);
+        sofa::helper::vector<int> listTrianglesID = subVerticesTriangles[i];
+        TriangleInformation *tinfo = &triangleInf[listTrianglesID[0]];
 
-        // Local coordinates needed to compute deflection
-        Vec3 vertexLocal = Qframe.inverseRotate(subVertices[i]-origin);
+        Index a = _topology->getTriangle(listTrianglesID[0])[0];
+        Index b = _topology->getTriangle(listTrianglesID[0])[1];
+        Index c = _topology->getTriangle(listTrianglesID[0])[2];
 
-        // Adds deflection and removes the measure of the z component
-        // WARNING: do we have to make the projection along Z or Z0? (in Qframe or Qframe0)
-        Real z;
-        Vec3 Uz;
-        z = coeff[0] + coeff[1]*vertexLocal[0] + coeff[2]*vertexLocal[1] + coeff[3]*vertexLocal[0]*vertexLocal[0] + coeff[4]*vertexLocal[0]*vertexLocal[1] + coeff[5]*vertexLocal[1]*vertexLocal[1] + coeff[6]*vertexLocal[0]*vertexLocal[0]*vertexLocal[0] + coeff[7]*vertexLocal[0]*vertexLocal[1]*vertexLocal[1] + coeff[8]*vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
-        Uz = Qframe0.rotate(Vec3(0.0, 0.0, z-vertexZ[2]));
-        subVertices[i] += Uz;
+        // Finds the new coordinates according to the vertex's barycentric coordinates
+        Vec3 newVertex = (p[a].getCenter()*subVerticesBary[i][0] + p[b].getCenter()*subVerticesBary[i][1] + p[c].getCenter()*subVerticesBary[i][2]);
+        subVertices.push_back(newVertex);
+
+        Vec3 Uz(0.0, 0.0, 0.0);
+        for (unsigned int t=0; t<listTrianglesID.size();t++)
+        {
+            a = _topology->getTriangle(listTrianglesID[t])[0];
+            b = _topology->getTriangle(listTrianglesID[t])[1];
+            c = _topology->getTriangle(listTrianglesID[t])[2];
+
+            tinfo = &triangleInf[listTrianglesID[t]];
+
+            // Local coordinates needed to compute deflection
+            Vec3 vertexLocal = tinfo->Qframe.inverseRotate(subVertices[i]-p[a].getCenter());
+
+            // Computes translation in Z (expressed in initial triangle frame)
+            // WARNING: takes into account rigid translation, may be a problem
+            Vec3 vertexZ = tinfo->Qframe0.inverseRotate(subVertices[i]-initialSubVertices[i]);
+
+            // Solve coefficients ci
+            // WARNING: CAN BE OPTIMISED BY STORING THE COEFFICIENTS FOR EACH TRIANGLE THE FIRST TIME THEY ARE COMPUTED
+            Vec <9, Real> coeff = tinfo->invC * (tinfo->u + tinfo->u_flat);
+
+            // Adds deflection and removes the measure of the z component
+            // WARNING: do we have to make the projection along Z or Z0? (in Qframe or Qframe0)
+            Real z;
+            z = coeff[0] + coeff[1]*vertexLocal[0] + coeff[2]*vertexLocal[1] + coeff[3]*vertexLocal[0]*vertexLocal[0] + coeff[4]*vertexLocal[0]*vertexLocal[1] + coeff[5]*vertexLocal[1]*vertexLocal[1] + coeff[6]*vertexLocal[0]*vertexLocal[0]*vertexLocal[0] + coeff[7]*vertexLocal[0]*vertexLocal[1]*vertexLocal[1] + coeff[8]*vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
+            Uz += tinfo->Qframe0.rotate(Vec3(0.0, 0.0, z-vertexZ[2]));
+        }
+        subVertices[i] += Uz/listTrianglesID.size();
+
     }
+
+    triangleInfo.endEdit();
 }
+
+
+// --------------------------------------------------------------------------------------
+// Barycentric coefficients of point p in triangle whose vertices are indexed by (ind_p1,ind_p2,ind_p3)
+// --------------------------------------------------------------------------------------
+template<class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c)
+{
+    const double ZERO = 1e-12;
+
+    Vec3 M = (Vec3) (b-a).cross(c-a);
+    double norm2_M = M*(M);
+
+    double coef_a, coef_b, coef_c;
+
+    //if(norm2_M==0.0) // triangle (a,b,c) is flat
+    if(norm2_M < ZERO) // triangle (a,b,c) is flat
+    {
+        coef_a = (double) (1.0/3.0);
+        coef_b = (double) (1.0/3.0);
+        coef_c = (double) (1.0 - (coef_a + coef_b));
+    }
+    else
+    {
+        Vec3 N =  M/norm2_M;
+
+        coef_a = N*((b-p).cross(c-p));
+        coef_b = N*((c-p).cross(a-p));
+        coef_c = (double) (1.0 - (coef_a + coef_b)); //N*((a-p).cross(b-p));
+    }
+
+    baryCoefs[0] = coef_a;
+    baryCoefs[1] = coef_b;
+    baryCoefs[2] = coef_c;
+}
+
 
 // --------------------------------------------------------------------------------------
 // ---
@@ -1056,61 +1198,12 @@ void TriangularBendingFEMForceField<DataTypes>::drawAll()
     VecCoord p = *this->mstate->getX();
     VecCoord p0 = *this->mstate->getX0();
 
-    // Subdivision of each triangle to display shells
-    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
-    {
-        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-        TriangleInformation *tinfo = &triangleInf[t];
+    // Updates the coordinates X and Y of each subvertex and computes its deflection
+    sofa::helper::vector<Vec3> subVertices;
+    computeNewXYZ(subVertices);
 
-        Index a = _topology->getTriangle(t)[0];
-        Index b = _topology->getTriangle(t)[1];
-        Index c = _topology->getTriangle(t)[2];
-
-        // Initialise the list of subdivided vertices with the first ones
-        sofa::helper::vector<Vec3> subVertices;
-        subVertices.push_back(p[a].getCenter());
-        subVertices.push_back(p[b].getCenter());
-        subVertices.push_back(p[c].getCenter());
-
-        // Initialise the list of subdivided triangles with the first one
-        sofa::helper::vector<Vec3> subTriangles;
-        subTriangles.push_back(Vec3(0, 1, 2));
-
-        // Subdivision
-        sofa::helper::vector<Vec3> newSubTriangles;
-        for (int sub=0; sub<subdivisions.getValue(); sub++)
-        {
-            subdivide(subVertices, subTriangles, newSubTriangles);
-            subTriangles = newSubTriangles;
-            newSubTriangles.clear();
-        }
-
-        // Evaluates the difference between the initial position and the flate position to allow the use of an initial deformed shape
-        Quat dQA_flate = qDiff(p0[a].getOrientation(), tinfo->Qframe0);     // Rotation from Qframe0 to p0[a].getOrientation()
-        Quat dQB_flate = qDiff(p0[b].getOrientation(), tinfo->Qframe0);     // Rotation from Qframe0 to p0[b].getOrientation()
-        Quat dQC_flate = qDiff(p0[c].getOrientation(), tinfo->Qframe0);     // Rotation from Qframe0 to p0[c].getOrientation()
-        // Creates a vector u_flate matching this initial difference
-        Vec <9, Real> u_flate;
-        u_flate.clear();
-        u_flate[1] = dQA_flate.toEulerVector()[0];
-        u_flate[2] = dQA_flate.toEulerVector()[1];
-        u_flate[4] = dQB_flate.toEulerVector()[0];
-        u_flate[5] = dQB_flate.toEulerVector()[1];
-        u_flate[7] = dQC_flate.toEulerVector()[0];
-        u_flate[8] = dQC_flate.toEulerVector()[1];
-
-
-        // Solve coefficients ci
-        Vec <9, Real> coeff = tinfo->invC * (tinfo->u + u_flate);
-
-        // Computes deflection using CORRECTED Tocher's deflection function: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
-        computeDeflection(subVertices, tinfo->initialSubVertices, p[a].getCenter(), tinfo->Qframe, tinfo->Qframe0, coeff);
-
-        // Makes rendering
-        drawSubTriangles(subVertices, subTriangles);
-
-        triangleInfo.endEdit();
-    }
+    // Makes rendering
+    drawSubTriangles(subVertices, subTriangles);
 }
 
 // --------------------------------------------------------------------------------------
@@ -1122,32 +1215,40 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
     if (!getContext()->getShowForceFields()) return;
     //glDisable(GL_LIGHTING);
 
-    // Draws a red line that represents each z displacement
+    // Retrieves current and rest positions
+//    VecCoord p = *this->mstate->getX();
+//    VecCoord p0 = *this->mstate->getX0();
+//
+//    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+//
+//    // Draws a red line that represents each z displacement
 //    glBegin(GL_LINES);
 //    for (int t=0;t<(int)triangleInfo.getValue().size();++t)
 //    {
+//        TriangleInformation *tinfo = &triangleInf[t];
+//
 //        Index a = _topology->getTriangle(t)[0];
 //        Index b = _topology->getTriangle(t)[1];
 //        Index c = _topology->getTriangle(t)[2];
 //
 //        glColor3f(1,0,0);
-//        Quat Qframe0;
-//        Qframe0.fromMatrix(triangleInfo.getValue()[t].initial_rotation);
 //
-//        Vec3 uA = Qframe0.rotate(p[a].getCenter()-p0[a].getCenter());
-//        Vec3 uB = Qframe0.rotate(p[b].getCenter()-p0[b].getCenter());
-//        Vec3 uC = Qframe0.rotate(p[c].getCenter()-p0[c].getCenter());
+//        Vec3 uA = tinfo->Qframe0.rotate(p[a].getCenter()-p0[a].getCenter());
+//        Vec3 uB = tinfo->Qframe0.rotate(p[b].getCenter()-p0[b].getCenter());
+//        Vec3 uC = tinfo->Qframe0.rotate(p[c].getCenter()-p0[c].getCenter());
 //
 //        helper::gl::glVertexT(p[a].getCenter());
-//        helper::gl::glVertexT(p[a].getCenter() - Qframe0.inverseRotate(Vec3(0.0, 0.0, uA[2])));
+//        helper::gl::glVertexT(p[a].getCenter() - tinfo->Qframe0.inverseRotate(Vec3(0.0, 0.0, uA[2])));
 //
 //        helper::gl::glVertexT(p[b].getCenter());
-//        helper::gl::glVertexT(p[b].getCenter() - Qframe0.inverseRotate(Vec3(0.0, 0.0, uB[2])));
+//        helper::gl::glVertexT(p[b].getCenter() - tinfo->Qframe0.inverseRotate(Vec3(0.0, 0.0, uB[2])));
 //
 //        helper::gl::glVertexT(p[c].getCenter());
-//        helper::gl::glVertexT(p[c].getCenter() - Qframe0.inverseRotate(Vec3(0.0, 0.0, uC[2])));
+//        helper::gl::glVertexT(p[c].getCenter() - tinfo->Qframe0.inverseRotate(Vec3(0.0, 0.0, uC[2])));
 //    }
 //    glEnd();
+//
+//    triangleInfo.endEdit();
 
      // Mode of rendering
     if (getContext()->getShowWireFrame())
