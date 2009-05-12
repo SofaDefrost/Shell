@@ -34,8 +34,6 @@
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Mat.h>
 #include <sofa/component/topology/TriangleData.h>
-#include <sofa/component/topology/EdgeData.h>
-#include <sofa/component/topology/PointData.h>
 #include <newmat/newmat.h>
 #include <newmat/newmatap.h>
 
@@ -90,6 +88,7 @@ protected:
 
                 helper::fixed_array <Vec3, 2> restLocalPositions;
                 helper::fixed_array <Quat, 3> initialOrientations;
+                helper::fixed_array <Quat, 3> previousOrientations;
 
                 /// material stiffness matrices of each tetrahedron
                 MaterialStiffness materialMatrix;

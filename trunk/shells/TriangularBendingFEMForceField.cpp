@@ -286,6 +286,10 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(int i, Index&a, Ind
         tinfo->initialOrientations[1] = qDiff(p0[b].getOrientation(), Qframe0);     // Rotation from Qframe0 to p0[b].getOrientation()
         tinfo->initialOrientations[2] = qDiff(p0[c].getOrientation(), Qframe0);     // Rotation from Qframe0 to p0[c].getOrientation()
 
+        // Initialise the previous orientations of each vertex with the initial ones
+        tinfo->previousOrientations[0] = p[a].getOrientation();
+        tinfo->previousOrientations[1] = p[b].getOrientation();
+        tinfo->previousOrientations[2] = p[c].getOrientation();
 
 
 
@@ -511,10 +515,6 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
     dQA = qDiff(tinfo->initialOrientations[0].inverse(), dQA.inverse());
     dQB = qDiff(tinfo->initialOrientations[1].inverse(), dQB.inverse());
     dQC = qDiff(tinfo->initialOrientations[2].inverse(), dQC.inverse());
-    // In the frame of each point
-//    dQA = qDiff(dQA, tinfo->initialOrientations[0]);
-//    dQB = qDiff(dQB, tinfo->initialOrientations[1]);
-//    dQC = qDiff(dQC, tinfo->initialOrientations[2]);
 
     // Takes the Euler vector to get the rotation's axis
     Vec3 rA, rB, rC;
@@ -522,18 +522,11 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
     rB = dQB.toEulerVector();
     rC = dQC.toEulerVector();
 
-//    std::cout << "elementIndex = " << elementIndex << std::endl;
-//    std::cout << "rA = " << rA << std::endl;
-//    std::cout << "rB = " << rB << std::endl;
-//    std::cout << "rC = " << rC << std::endl;
-
     // Computes translation in Z (expressed in initial triangle frame)
     VecCoord p0 = *this->mstate->getX0();
     Vec3 uA = tinfo->Qframe0.inverseRotate(p[a].getCenter() - p0[a].getCenter());
     Vec3 uB = tinfo->Qframe0.inverseRotate(p[b].getCenter() - p0[b].getCenter());
     Vec3 uC = tinfo->Qframe0.inverseRotate(p[c].getCenter() - p0[c].getCenter());
-
-//    std::cout << "uC = " << uC << std::endl;
     
     // Writes the computed displacements
     Disp[6] = uA[2];    // z displacement in A
@@ -909,10 +902,6 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, con
     	f[a] += Deriv(-fa1, -fa2);
     	f[b] += Deriv(-fb1, -fb2);
     	f[c] += Deriv(-fc1, -fc2);
-
-//        std::cout << "fc2 local in triangle " << elementIndex << " = " << tinfo->Qframe.inverseRotate(fc2) << std::endl;
-//        std::cout << "fc global " << elementIndex << " = " << f[c] << std::endl;
-
     }
 
 	triangleInfo.endEdit();
