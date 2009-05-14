@@ -82,7 +82,20 @@ protected:
 	typedef helper::fixed_array <Vec3, 3> RenderingTriangle;                ///> contains the 3 summets of a triangle
 	typedef sofa::helper::vector<RenderingTriangle> ListTriangles;          ///> vector of triangles
 
-	class TriangleInformation
+	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
+
+        // List of initial subdivided vertices
+        sofa::helper::vector<Vec3> initialSubVertices;
+        // List of subdivided triangles
+        sofa::helper::vector<Vec3> subTriangles;
+        // List of base triangles for each subdivided vertex
+        sofa::helper::vector< sofa::helper::vector<int> > subVerticesTriangles;
+        // Barycentric coordinates (x,y) for each subdivided vertex
+        sofa::helper::vector< Vec3 > subVerticesBary;
+
+public:
+
+    	class TriangleInformation
         {
             public:
 
@@ -136,22 +149,7 @@ protected:
                 }
         };
 
-	TriangleData<TriangleInformation> triangleInfo;
-
-	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
-
-        // List of initial subdivided vertices
-        sofa::helper::vector<Vec3> initialSubVertices;
-        // List of subdivided triangles
-        sofa::helper::vector<Vec3> subTriangles;
-        // List of base triangles for each subdivided vertex
-        sofa::helper::vector< sofa::helper::vector<int> > subVerticesTriangles;
-        // Barycentric coordinates (x,y) for each subdivided vertex
-        sofa::helper::vector< Vec3 > subVerticesBary;
-
-public:
-
-    TriangularBendingFEMForceField();
+        TriangularBendingFEMForceField();
 
 	virtual ~TriangularBendingFEMForceField();
 	virtual void init();
@@ -160,17 +158,19 @@ public:
 	virtual void addDForce (VecDeriv& df, const VecDeriv& dx);
 	virtual double getPotentialEnergy(const VecCoord& x);
 	virtual void handleTopologyChange();
-	virtual void draw();
-	virtual void drawAll();
+
+        sofa::core::componentmodel::topology::BaseMeshTopology* getTopology() {return _topology;}
+        TriangleData<TriangleInformation> getTriangleInfo() {return triangleInfo;}
 
 	Data<Real> f_poisson;
 	Data<Real> f_young;
         Data<bool> f_bending;
         Data <Real> f_thickness;
-        Data<int> subdivisions;
 
 
 protected :
+
+        TriangleData<TriangleInformation> triangleInfo;
 
 	void computeDisplacement(Displacement &Disp, Index elementIndex, const VecCoord &p);
         void computeDisplacementBending(Displacement &Disp, Index elementIndex, const VecCoord &p);
@@ -192,12 +192,6 @@ protected :
 	void initTriangle(int i, Index&a, Index&b, Index&c);
 	void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
 	void accumulateForce(VecDeriv& f, const VecCoord & p, Index elementIndex);
-
-        void subdivide(int triangle, sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> subTriangles, sofa::helper::vector<Vec3> &newSubTriangles);
-        void addVertexAndFindIndex(int triangle, sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
-        void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c);
-        void computeNewXYZ(sofa::helper::vector<Vec3> &subVertices);
-        void drawSubTriangles(const sofa::helper::vector<Vec3> &subVertices, const sofa::helper::vector<Vec3> &subTriangles);
 };
 
 
