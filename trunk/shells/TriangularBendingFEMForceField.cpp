@@ -324,7 +324,7 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
     Vec<3,Real> strain, stress;
     MaterialStiffness K;
     Displacement D;
-    Vec3 x_2;
+    Vec3 x_a, x_b, x_c;
     unsigned int nbTriangles = _topology->getNbTriangles();
 
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
@@ -337,17 +337,17 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
         Index b = _topology->getTriangle(i)[1];
         Index c = _topology->getTriangle(i)[2];
 
-        x_2 = tinfo->Qframe.inverseRotate(dx[a].getVCenter());
-        D[0] = x_2[0];
-        D[1] = x_2[1];
+        x_a = tinfo->Qframe.inverseRotate(dx[a].getVCenter());
+        D[0] = x_a[0];
+        D[1] = x_a[1];
 
-        x_2 = tinfo->Qframe.inverseRotate(dx[b].getVCenter());
-        D[2] = x_2[0];
-        D[3] = x_2[1];
+        x_b = tinfo->Qframe.inverseRotate(dx[b].getVCenter());
+        D[2] = x_b[0];
+        D[3] = x_b[1];
 
-        x_2 = tinfo->Qframe.inverseRotate(dx[c].getVCenter());
-        D[4] = x_2[0];
-        D[5] = x_2[1];
+        x_c = tinfo->Qframe.inverseRotate(dx[c].getVCenter());
+        D[4] = x_c[0];
+        D[5] = x_c[1];
 
         Displacement F;
 
@@ -377,22 +377,19 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
             // Bending displacements
             Vec3 u;
             u = tinfo->Qframe.inverseRotate(dx[a].getVOrientation());
-            D[6] = 0;
+            D[6] = x_a[2];
             D[7] = u[0];
             D[8] = u[1];
 
             u = tinfo->Qframe.inverseRotate(dx[b].getVOrientation());
-            D[9] = 0;
+            D[9] = x_b[2];
             D[10] = u[0];
             D[11] = u[1];
 
             u = tinfo->Qframe.inverseRotate(dx[c].getVOrientation());
-            D[12] = 0;
+            D[12] = x_c[2];
             D[13] = u[0];
             D[14] = u[1];
-
-            // Computes Z
-            // TODO: add computation for z displacements
 
             computeStrainBending(i, D);
             computeStressBending(i);
@@ -500,19 +497,60 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
     Vec3 uA = tinfo->Qframe0.inverseRotate(p[a].getCenter() - p0[a].getCenter());
     Vec3 uB = tinfo->Qframe0.inverseRotate(p[b].getCenter() - p0[b].getCenter());
     Vec3 uC = tinfo->Qframe0.inverseRotate(p[c].getCenter() - p0[c].getCenter());
+
+//    // Computes translation in Z for point A
+//    Vec3 mBC0 = (p0[b].getCenter() + p0[c].getCenter()) * 0.5;
+//    Vec3 A0 = p0[a].getCenter() - mBC0;
+//    Vec3 mBC = (p[b].getCenter() + p[c].getCenter()) * 0.5;
+//    Vec3 A = p[a].getCenter() - mBC;
+//    Real alpha = acos( A*A0 / (A.norm()*A0.norm()) );
+//    Real zA = sin(alpha) * A.norm();
+//
+//    // Computes translation in Z for point B
+//    Vec3 mAC0 = (p0[a].getCenter() + p0[c].getCenter()) * 0.5;
+//    Vec3 B0 = p0[b].getCenter() - mAC0;
+//    Vec3 mAC = (p[a].getCenter() + p[c].getCenter()) * 0.5;
+//    Vec3 B = p[b].getCenter() - mAC;
+//    alpha = acos( B*B0 / (B.norm()*B0.norm()) );
+//    Real zB = sin(alpha) * B.norm();
+//
+//    // Computes translation in Z for point C
+//    Vec3 mAB0 = (p0[a].getCenter() + p0[b].getCenter()) * 0.5;
+//    Vec3 C0 = p0[c].getCenter() - mAB0;
+//    Vec3 mAB = (p[a].getCenter() + p[b].getCenter()) * 0.5;
+//    Vec3 C = p[c].getCenter() - mAB;
+//    Real cosAlpha = C*C0 / (C.norm()*C0.norm());
+//    alpha = acos( cosAlpha );
+//    Real zC = sin(alpha) * C.norm();
+
+
+
+    std::cout << "triangle " << elementIndex << " :" << std::endl;
+//    std::cout << "p[a].getCenter() = " << p[a].getCenter() << std::endl;
+//    std::cout << "p[b].getCenter() = " << p[b].getCenter() << std::endl;
+    std::cout << "p[c].getCenter() = " << p[c].getCenter() << std::endl;
+
+//    std::cout << "uA[2] = " << uA[2] << std::endl;
+//    std::cout << "uB[2] = " << uB[2] << std::endl;
+//    std::cout << "uC[2] = " << uC[2] << std::endl;
+
     
     // Writes the computed displacements
-    Disp[6] = uA[2];    // z displacement in A
-    Disp[7] = rA[0];    // x rotation in A
-    Disp[8] = rA[1];    // y rotation in A
+    Disp[6] = uA[2];      // z displacement in A
+    Disp[7] = rA[0];      // x rotation in A
+    Disp[8] = rA[1];      // y rotation in A
 
-    Disp[9]  = uB[2];   // z displacement in B
-    Disp[10] = rB[0];   // x rotation in B
-    Disp[11] = rB[1];   // y rotation in B
+    Disp[9]  = uB[2];     // z displacement in B
+    Disp[10] = rB[0];     // x rotation in B
+    Disp[11] = rB[1];     // y rotation in B
 
-    Disp[12] = uC[2];   // z displacement in C
-    Disp[13] = rC[0];   // x rotation in C
-    Disp[14] = rC[1];   // y rotation in C
+    Disp[12] = uC[2];     // z displacement in C
+    Disp[13] = rC[0];     // x rotation in C
+    Disp[14] = rC[1];     // y rotation in C
+
+//    std::cout << "Disp[6] = " << Disp[6] << std::endl;
+//    std::cout << "Disp[9] = " << Disp[9] << std::endl;
+//    std::cout << "Disp[12] = " << Disp[12] << std::endl;
 
     // Writes the vector u of displacements for the bending formulation
     for (unsigned int i = 0; i< tinfo->u.size(); i++)
