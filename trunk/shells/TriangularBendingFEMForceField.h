@@ -79,19 +79,9 @@ protected:
 	typedef Mat<6, 3, Real> StrainDisplacement;				///< the strain-displacement matrix
 	typedef sofa::helper::vector<StrainDisplacement> VecStrainDisplacement;	///< a vector of strain-displacement matrices
 	typedef Mat<3, 3, Real > Transformation;				///< matrix for rigid transformations like rotations
-	typedef helper::fixed_array <Vec3, 3> RenderingTriangle;                ///> contains the 3 summets of a triangle
-	typedef sofa::helper::vector<RenderingTriangle> ListTriangles;          ///> vector of triangles
 
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
 
-        // List of initial subdivided vertices
-        sofa::helper::vector<Vec3> initialSubVertices;
-        // List of subdivided triangles
-        sofa::helper::vector<Vec3> subTriangles;
-        // List of base triangles for each subdivided vertex
-        sofa::helper::vector< sofa::helper::vector<int> > subVerticesTriangles;
-        // Barycentric coordinates (x,y) for each subdivided vertex
-        sofa::helper::vector< Vec3 > subVerticesBary;
 
 public:
 
@@ -174,26 +164,26 @@ protected :
 
         TriangleData<TriangleInformation> triangleInfo;
 
-	void computeDisplacement(Displacement &Disp, Index elementIndex, const VecCoord &p);
-        void computeDisplacementBending(Displacement &Disp, Index elementIndex, const VecCoord &p);
-	void computeStrainDisplacement( StrainDisplacement &J, Vec3 a, Vec3 b, Vec3 c );
-        void computeStrainDisplacementBending(const Index elementIndex, Vec3& /*a*/, Vec3& b, Vec3& c );
-        void tensorFlatPlate(Mat<3, 9, Real>& D, Vec3 &P);
+	void computeDisplacement(Displacement &Disp, const Index elementIndex, const VecCoord &p);
+        void computeDisplacementBending(Displacement &Disp, const Index elementIndex, const VecCoord &p);
+	void computeStrainDisplacement( StrainDisplacement &J, const Vec3& a, const Vec3& b, const Vec3& c );
+        void computeStrainDisplacementBending(const Index elementIndex, const Vec3& /*a*/, const Vec3& b, const Vec3& c );
+        void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
 	void computeStrain(Vec<3,Real> &strain, const StrainDisplacement &J, const Displacement &D);
         void computeStrainBending(const Index& elementIndex, const Displacement &D);
-	void computeStress(Vec<3,Real> &stress, MaterialStiffness &K, Vec<3,Real> &strain);
+	void computeStress(Vec<3,Real> &stress, const MaterialStiffness &K, const Vec<3,Real> &strain);
         void computeStressBending(const Index& elementIndex);
-	void computeForce(Displacement &F, Index elementIndex, const VecCoord &p);
+	void computeForce(Displacement &F, const Index elementIndex, const VecCoord &p);
 
 	static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
 	/// f += Kx where K is the stiffness matrix and x a displacement
 	virtual void applyStiffness( VecDeriv& f, Real h, const VecDeriv& dx );
-	virtual void computeMaterialStiffness(int i, Index& a, Index& b, Index& c);
+	virtual void computeMaterialStiffness(const int i);
 
-	void initTriangle(int i, Index&a, Index&b, Index&c);
+	void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
 	void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
-	void accumulateForce(VecDeriv& f, const VecCoord & p, Index elementIndex);
+	void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
 };
 
 

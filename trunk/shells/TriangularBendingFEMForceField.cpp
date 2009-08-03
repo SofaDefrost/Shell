@@ -45,8 +45,6 @@
 #endif
 
 
-// #define DEBUG_TRIANGLEFEM
-
 namespace sofa
 {
 	namespace component
@@ -87,7 +85,7 @@ void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFunction(int
         Index c = t[2];
 
         ff->initTriangle(triangleIndex, a, b, c);
-        ff->computeMaterialStiffness(triangleIndex, a, b, c);
+        ff->computeMaterialStiffness(triangleIndex);
     }
 }
 
@@ -137,7 +135,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
     if (_topology->getNbTriangles()==0)
     {
-            serr << "ERROR(TriangularBendingFEMForceField): object must have a Triangular Set Topology."<<sendl;
+            serr << "TriangularBendingFEMForceField: object must have a Triangular Set Topology."<<sendl;
             return;
     }
 
@@ -173,7 +171,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 template <class DataTypes>
     double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/)
 {
-    serr<<"TriangularBendingFEMForceField::getPotentialEnergy-not-implemented !!!"<<sendl;
+    serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
     return 0;
 }
 
@@ -183,11 +181,6 @@ template <class DataTypes>
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c)
 {
-
-#ifdef DEBUG_TRIANGLEFEM
-    sout << "TriangularBendingFEMForceField::computeRotation" << sendl;
-#endif
-
     // First vector on first edge
     // Second vector in the plane of the two first edges
     // Third vector orthogonal to first and second
@@ -224,18 +217,13 @@ void TriangularBendingFEMForceField<DataTypes>::computeRotation(Quat &Qframe, co
 // --- Store the initial position of the nodes
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::initTriangle(int i, Index&a, Index&b, Index&c)
+void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const Index&a, const Index&b, const Index&c)
 {
-
-#ifdef DEBUG_TRIANGLEFEM
-    sout << "TriangularBendingFEMForceField::initLarge"<<sendl;
-#endif
-
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
 
-    VecCoord& p0 = *this->mstate->getX0();   // gets vertices of rest position
-    VecCoord& p = *this->mstate->getX();     // gets vertices of initial position
+    const VecCoord& p0 = *this->mstate->getX0();   // gets vertices of rest position
+    const VecCoord& p = *this->mstate->getX();     // gets vertices of initial position
 
     // Rotation from triangle to world at rest and initial positions (respectively)
     Quat Qframe0, Qframe;
@@ -293,10 +281,6 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(int i, Index&a, Ind
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Real h, const VecDeriv& dx )
 {
-#ifdef DEBUG_TRIANGLEFEM
-    sout << "TriangularBendingFEMForceField::applyStiffness"<<sendl;
-#endif
-
     Mat<6,3,Real> J;
     Vec<3,Real> strain, stress;
     MaterialStiffness K;
@@ -306,14 +290,18 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
 
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
+    Index a, b, c;
+    Vec3 fa1, fa2, fb1, fb2, fc1, fc2;
+    Vec <9, Real> force;
     for(unsigned int i=0; i<nbTriangles; i++)
     {
         TriangleInformation *tinfo = &triangleInf[i];
 
-        Index a = _topology->getTriangle(i)[0];
-        Index b = _topology->getTriangle(i)[1];
-        Index c = _topology->getTriangle(i)[2];
+        a = _topology->getTriangle(i)[0];
+        b = _topology->getTriangle(i)[1];
+        c = _topology->getTriangle(i)[2];
 
+        // Computes displacements
         x_a = tinfo->Qframe.inverseRotate(dx[a].getVCenter());
         D[0] = x_a[0];
         D[1] = x_a[1];
@@ -326,17 +314,19 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
         D[4] = x_c[0];
         D[5] = x_c[1];
 
-        Displacement F;
-
+        // Material matrix
         K = triangleInf[i].materialMatrix;
+        // Strain-displacement matrix
         J = triangleInf[i].strainDisplacementMatrix;
-
+        // Computes strain from displacements
         computeStrain(strain, J, D);
 
+        // Applies a coefficient if requested
         MaterialStiffness temp = f_membraneRatio.getValue()*(tinfo->materialMatrix);
         computeStress(stress, temp, strain);
-//        computeStress(stress, tinfo->materialMatrix, strain);
 
+        // Computes local forces
+        Displacement F;
         F[0] = J[0][0] * stress[0] + /* J[0][1] * KJtD[1] + */ J[0][2] * stress[2];
         F[1] = /* J[1][0] * KJtD[0] + */ J[1][1] * stress[1] + J[1][2] * stress[2];
         F[2] = J[2][0] * stress[0] + /* J[2][1] * KJtD[1] + */ J[2][2] * stress[2];
@@ -344,10 +334,12 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
         F[4] = /* J[4][0] * KJtD[0] + J[4][1] * KJtD[1] + */ J[4][2] * stress[2];
         F[5] = /* J[5][0] * KJtD[0] + */ J[5][1] * stress[1] /* + J[5][2] * KJtD[2] */ ;
 
+        // In global frame
         v[a].getVCenter() += tinfo->Qframe.rotate(Vec3(-h*F[0], -h*F[1], 0));
         v[b].getVCenter() += tinfo->Qframe.rotate(Vec3(-h*F[2], -h*F[3], 0));
         v[c].getVCenter() += tinfo->Qframe.rotate(Vec3(-h*F[4], -h*F[5], 0));
 
+        // If bending is requested
         if (f_bending.getValue())
         {
             // Bending displacements
@@ -376,23 +368,23 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
             bt3.transpose( tinfo->b3 );
 
             // z, x, y for each point
-            Vec <9, Real> force;
             Real t = f_thickness.getValue();
             force = (bt1 * tinfo->bendingStress1 + bt2 * tinfo->bendingStress2 + bt3 * tinfo->bendingStress3) * tinfo->thirdSurface * t * t * t;
 
             for (unsigned int j = 0; j< force.size(); j++)
-            F[j+6] = force[j];
-
+            {
+                F[j+6] = force[j];
+            }
+            
             // Go back into global frame
-            Vec3 fa1 = tinfo->Qframe.rotate(Vec3(0.0, 0.0, h*F[6]));
-            Vec3 fa2 = tinfo->Qframe.rotate(Vec3(h*F[7], h*F[8], 0.0));
+            fa1 = tinfo->Qframe.rotate(Vec3(0.0, 0.0, h*F[6]));
+            fa2 = tinfo->Qframe.rotate(Vec3(h*F[7], h*F[8], 0.0));
 
-            Vec3 fb1 = tinfo->Qframe.rotate(Vec3(0.0, 0.0, h*F[9]));
-            Vec3 fb2 = tinfo->Qframe.rotate(Vec3(h*F[10], h*F[11], 0.0));
+            fb1 = tinfo->Qframe.rotate(Vec3(0.0, 0.0, h*F[9]));
+            fb2 = tinfo->Qframe.rotate(Vec3(h*F[10], h*F[11], 0.0));
 
-            Vec3 fc1 = tinfo->Qframe.rotate(Vec3(0.0, 0.0, h*F[12]));
-            Vec3 fc2 = tinfo->Qframe.rotate(Vec3(h*F[13], h*F[14], 0.0));
-
+            fc1 = tinfo->Qframe.rotate(Vec3(0.0, 0.0, h*F[12]));
+            fc2 = tinfo->Qframe.rotate(Vec3(h*F[13], h*F[14], 0.0));
 
             v[a] += Deriv(-fa1, -fa2);
             v[b] += Deriv(-fb1, -fb2);
@@ -409,7 +401,7 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
 // --- expressed in the co-rotational frame of reference
 // -------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeDisplacement(Displacement &Disp, Index elementIndex, const VecCoord &p)
+void TriangularBendingFEMForceField<DataTypes>::computeDisplacement(Displacement &Disp, const Index elementIndex, const VecCoord &p)
 {
     Index a = _topology->getTriangle(elementIndex)[0];
     Index b = _topology->getTriangle(elementIndex)[1];
@@ -443,7 +435,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacement(Displacement
 // --- expressed in the co-rotational frame of reference
 // -------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displacement &Disp, Index elementIndex, const VecCoord &p)
+void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displacement &Disp, const Index elementIndex, const VecCoord &p)
 {
     Index a = _topology->getTriangle(elementIndex)[0];
     Index b = _topology->getTriangle(elementIndex)[1];
@@ -481,7 +473,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
     Disp[13] = rC[0];     // x rotation in C
     Disp[14] = rC[1];     // y rotation in C
 
-    // Writes the vector u of displacements for the bending formulation
+    // Writes the vector u of displacements (used by the mechanical mapping)
     for (unsigned int i = 0; i< tinfo->u.size(); i++)
     {
         tinfo->u[i] = Disp[6+i];
@@ -494,7 +486,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
 // --- Compute the strain-displacement matrix where (a, b, c) are the coordinates of the 3 nodes of a triangle
 // ------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacement( StrainDisplacement &J, Vec3 /*a*/, Vec3 b, Vec3 c )
+void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacement( StrainDisplacement &J, const Vec3& /*a*/, const Vec3& b, const Vec3& c )
 {
     Real determinant;
     determinant = b[0] * c[1];
@@ -537,7 +529,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacement( Strai
 // --- Compute the bending strain-displacement matrix where (a, b, c) are the coordinates of the 3 nodes of a triangle
 // ------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementBending(const Index elementIndex, Vec3& a, Vec3& b, Vec3& c)
+void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementBending(const Index elementIndex, const Vec3& a, const Vec3& b, const Vec3& c)
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
@@ -595,7 +587,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementBending
 // --- Computes the strain tensor used in flat-plate theory in a given point
 // --------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::tensorFlatPlate(Mat<3, 9, Real>& D, Vec3 &P)
+void TriangularBendingFEMForceField<DataTypes>::tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P)
 {
 #ifdef DEBUG_TRIANGLEFEM
     sout << "TriangleBendingFEMForceField::tensorFlatPlate"<<sendl;
@@ -662,7 +654,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainBending(const Index
 // --- Stress = K * Strain = KJtD = KBd
 // --------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeStress(Vec3 &stress, MaterialStiffness &K, Vec<3,Real> &strain)
+void TriangularBendingFEMForceField<DataTypes>::computeStress(Vec3 &stress, const MaterialStiffness &K, const Vec<3,Real> &strain)
 {
     // Optimisations: The following values are 0 (per computeMaterialStiffnesses )
     // K[0][2]  K[1][2]  K[2][0] K[2][1]
@@ -693,7 +685,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeStressBending(const Index
 // ---	Compute material stiffness
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(int i, Index &/*a*/, Index &/*b*/, Index &/*c*/)
+void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(const int i)
 {
 	helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
@@ -718,7 +710,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(int i, 
 // ---	Compute F = J * stress;
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, Index elementIndex, const VecCoord &p)
+void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, const Index elementIndex, const VecCoord &p)
 {
     Displacement D;
     StrainDisplacement J;
@@ -805,14 +797,9 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, In
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &p, Index elementIndex )
+void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &p, const Index elementIndex )
 {
-#ifdef DEBUG_TRIANGLEFEM
-    sout << "TriangularBendingFEMForceField::accumulateForce"<<sendl;
-#endif
-
     Displacement F;
-
     Index a = _topology->getTriangle(elementIndex)[0];
     Index b = _topology->getTriangle(elementIndex)[1];
     Index c = _topology->getTriangle(elementIndex)[2];
