@@ -73,7 +73,7 @@ public:
 
 protected:
 
-	typedef Vec<15, Real> Displacement;                                      ///< the displacement vector
+	typedef Vec<15, Real> Displacement;                                     ///< the displacement vector
 	typedef Mat<3, 3, Real> MaterialStiffness;				///< the matrix of material stiffness
 	typedef sofa::helper::vector<MaterialStiffness> VecMaterialStiffness;   ///< a vector of material stiffness matrices
 	typedef Mat<6, 3, Real> StrainDisplacement;				///< the strain-displacement matrix
@@ -100,7 +100,7 @@ public:
             public:
 
                 helper::fixed_array <Vec3, 2> restLocalPositions;
-                helper::fixed_array <Quat, 3> initialOrientations;
+                helper::fixed_array <Quat, 3> restLocalOrientations;
                 helper::fixed_array <Quat, 3> previousOrientations;
 
                 /// material stiffness matrices of each tetrahedron
@@ -160,12 +160,14 @@ public:
 	virtual void handleTopologyChange();
 
         sofa::core::componentmodel::topology::BaseMeshTopology* getTopology() {return _topology;}
-        TriangleData<TriangleInformation> getTriangleInfo() {return triangleInfo;}
+        TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}
 
 	Data<Real> f_poisson;
 	Data<Real> f_young;
         Data<bool> f_bending;
         Data <Real> f_thickness;
+        Data <Real> f_membraneRatio;
+        Data <Real> f_bendingRatio;
 
 
 protected :
