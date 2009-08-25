@@ -53,6 +53,14 @@ using sofa::helper::vector;
 using namespace sofa::component::topology;
 
 
+/// This class can be overridden if needed for additionnal storage within template specializations.
+template<class DataTypes>
+class TriangularBendingFEMForceFieldInternalData
+{
+public:
+};
+
+
 template<class DataTypes>
 class TriangularBendingFEMForceField : public core::componentmodel::behavior::ForceField<DataTypes>, public virtual core::objectmodel::BaseObject
 {
@@ -82,6 +90,8 @@ protected:
 
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
 
+        TriangularBendingFEMForceFieldInternalData<DataTypes> data;
+        friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
 
 public:
 
