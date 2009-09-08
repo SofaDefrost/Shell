@@ -1,0 +1,1176 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+		D7BA7D76DAB5DD13389D6332 = {
+			buildActionMask = 2147483647;
+			files = (
+				);
+			generatedFileNames = (
+				);
+			isa = PBXShellScriptBuildPhase;
+			name = "Qt Qmake";
+			neededFileNames = (
+				);
+			shellPath = "/bin/sh";
+			shellScript = "make\ -C\ /Users/Olivier/sofa-dev/trunk/Sofa/applications/plugins/shells\ -f\ PluginShells.xcodeproj/qt_makeqmake.mak";
+		};
+		DAD40AD31BF52583A55FB938 = {
+			isa = PBXFileReference;
+			name = "TriangularBendingFEMForceField.cpp";
+			path = "forcefield/TriangularBendingFEMForceField.cpp";
+			refType = 4;
+			lastKnownFileType = "sourcecode.cpp.cpp";
+		};
+		C36E39F965AFA8566F953E96 = {
+			fileRef = "DAD40AD31BF52583A55FB938";
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					);
+			};
+		};
+		76505573B4084AF58E387D27 = {
+			isa = PBXFileReference;
+			name = "BendingPlateMechanicalMapping.cpp";
+			path = "mapping/BendingPlateMechanicalMapping.cpp";
+			refType = 4;
+			lastKnownFileType = "sourcecode.cpp.cpp";
+		};
+		71D499F3A8DBC2001B9F52FE = {
+			fileRef = "76505573B4084AF58E387D27";
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					);
+			};
+		};
+		B20BD0BCD613C2689E00E1DD = {
+			isa = PBXFileReference;
+			name = "TriangularBendingFEMForceField.h";
+			path = "forcefield/TriangularBendingFEMForceField.h";
+			refType = 4;
+		};
+		F7174594D8B7DB385D33A1FD = {
+			isa = PBXFileReference;
+			name = "TriangularBendingFEMForceField.inl";
+			path = "forcefield/TriangularBendingFEMForceField.inl";
+			refType = 4;
+		};
+		9D5073DD537D837FA5133F7E = {
+			isa = PBXFileReference;
+			name = "BendingPlateMechanicalMapping.h";
+			path = "mapping/BendingPlateMechanicalMapping.h";
+			refType = 4;
+		};
+		0F61EB82A32C77D4EFE5F39E = {
+			isa = PBXFileReference;
+			name = "BendingPlateMechanicalMapping.inl";
+			path = "mapping/BendingPlateMechanicalMapping.inl";
+			refType = 4;
+		};
+		73482B64CF78409379F7B185 = {
+			isa = PBXFileReference;
+			name = "shells.pro";
+			path = "shells.pro";
+			refType = 4;
+		};
+		883D7615C4D2DE3FA1218F12 = {
+			isa = PBXGroup;
+			children = (
+				"0C020975B40E1794E43D6650",
+				"CB3F1106AA8C3B8680124CAF");
+			name = "Headers";
+			refType = 4;
+		};
+		0C020975B40E1794E43D6650 = {
+			isa = PBXGroup;
+			children = (
+				"B20BD0BCD613C2689E00E1DD",
+				"F7174594D8B7DB385D33A1FD");
+			name = "forcefield";
+			refType = 4;
+		};
+		CB3F1106AA8C3B8680124CAF = {
+			isa = PBXGroup;
+			children = (
+				"9D5073DD537D837FA5133F7E",
+				"0F61EB82A32C77D4EFE5F39E");
+			name = "mapping";
+			refType = 4;
+		};
+		62956F49A4883268AC667772 = {
+			isa = PBXGroup;
+			children = (
+				"DAD40AD31BF52583A55FB938");
+			name = "forcefield";
+			refType = 4;
+		};
+		7D1770F56487283CF7A9DD0A = {
+			isa = PBXGroup;
+			children = (
+				"76505573B4084AF58E387D27");
+			name = "mapping";
+			refType = 4;
+		};
+		FB61758D0F0FDA4BA867C3D5 = {
+			isa = PBXGroup;
+			children = (
+				"62956F49A4883268AC667772",
+				"7D1770F56487283CF7A9DD0A");
+			name = "Sources";
+			refType = 4;
+		};
+		7CABE3C80E79AD2B307756D2 = {
+			isa = PBXGroup;
+			children = (
+				"73482B64CF78409379F7B185");
+			name = "Sources [qmake]";
+			refType = 4;
+		};
+		A0A52A2ADF7A1E2A99738674 = {
+			buildActionMask = 2147483647;
+			files = (
+				);
+			generatedFileNames = (
+				"C36E39F965AFA8566F953E96",
+				"71D499F3A8DBC2001B9F52FE");
+			isa = PBXShellScriptBuildPhase;
+			name = "Qt Preprocessors";
+			neededFileNames = (
+				"C36E39F965AFA8566F953E96",
+				"71D499F3A8DBC2001B9F52FE");
+			shellPath = "/bin/sh";
+			shellScript = "make\ -C\ /Users/Olivier/sofa-dev/trunk/Sofa/applications/plugins/shells\ -f\ PluginShells.xcodeproj/qt_preprocess.mak";
+		};
+		C29B8785722055ED95EF7B57 = {
+			buildActionMask = 2147483647;
+			files = (
+				"C36E39F965AFA8566F953E96",
+				"71D499F3A8DBC2001B9F52FE");
+			isa = PBXSourcesBuildPhase;
+			name = "Build Sources";
+		};
+		8DD599518E701754FEA8BAA9 = {
+			isa = PBXFileReference;
+			name = "sofacomponentmastersolver";
+			path = "../../../lib/macx/libsofacomponentmastersolver.dylib";
+			refType = 4;
+		};
+		622D73EFE859E9144F6C3387 = {
+			fileRef = "8DD599518E701754FEA8BAA9";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3CDBA4508DEA4097DA145184 = {
+			isa = PBXFileReference;
+			name = "sofacomponentfem";
+			path = "../../../lib/macx/libsofacomponentfem.dylib";
+			refType = 4;
+		};
+		58F85C6481BB0E290B28F365 = {
+			fileRef = "3CDBA4508DEA4097DA145184";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		5A38A8AB789A562852200A25 = {
+			isa = PBXFileReference;
+			name = "sofacomponentinteractionforcefield";
+			path = "../../../lib/macx/libsofacomponentinteractionforcefield.dylib";
+			refType = 4;
+		};
+		38847BAE52B1923583A2B3A8 = {
+			fileRef = "5A38A8AB789A562852200A25";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		68B6256727360B160E64F16C = {
+			isa = PBXFileReference;
+			name = "sofacomponentcontextobject";
+			path = "../../../lib/macx/libsofacomponentcontextobject.dylib";
+			refType = 4;
+		};
+		2887B7B86A02616758DA5795 = {
+			fileRef = "68B6256727360B160E64F16C";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		85E1D421CE6ADAFE6BE29766 = {
+			isa = PBXFileReference;
+			name = "sofacomponentbehaviormodel";
+			path = "../../../lib/macx/libsofacomponentbehaviormodel.dylib";
+			refType = 4;
+		};
+		4D15D51426D7C949DF08988A = {
+			fileRef = "85E1D421CE6ADAFE6BE29766";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		AEDBA6729AA47A61FEE45041 = {
+			isa = PBXFileReference;
+			name = "sofacomponentengine";
+			path = "../../../lib/macx/libsofacomponentengine.dylib";
+			refType = 4;
+		};
+		B93BC7F63C7510BCBD525972 = {
+			fileRef = "AEDBA6729AA47A61FEE45041";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		75F2B101E1077B3FBA3D6485 = {
+			isa = PBXFileReference;
+			name = "sofacomponentlinearsolver";
+			path = "../../../lib/macx/libsofacomponentlinearsolver.dylib";
+			refType = 4;
+		};
+		9B992CBB699660E72FCB4722 = {
+			fileRef = "75F2B101E1077B3FBA3D6485";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6C2F9AFB80A80DE4FF2AEF38 = {
+			isa = PBXFileReference;
+			name = "sofacomponentodesolver";
+			path = "../../../lib/macx/libsofacomponentodesolver.dylib";
+			refType = 4;
+		};
+		F8F54640617EBF1775A6F261 = {
+			fileRef = "6C2F9AFB80A80DE4FF2AEF38";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		1E69FB9AD2673DB0D2AC7F59 = {
+			isa = PBXFileReference;
+			name = "sofacomponentbase";
+			path = "../../../lib/macx/libsofacomponentbase.dylib";
+			refType = 4;
+		};
+		430DD66B8D1AC29D5FD9727A = {
+			fileRef = "1E69FB9AD2673DB0D2AC7F59";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A25D8199AB602485DB070BEE = {
+			isa = PBXFileReference;
+			name = "sofacomponentloader";
+			path = "../../../lib/macx/libsofacomponentloader.dylib";
+			refType = 4;
+		};
+		BC3DA724E61F27F25B692AE6 = {
+			fileRef = "A25D8199AB602485DB070BEE";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		B52E59C66717907FC2D79FB0 = {
+			isa = PBXFileReference;
+			name = "sofacomponentcontroller";
+			path = "../../../lib/macx/libsofacomponentcontroller.dylib";
+			refType = 4;
+		};
+		FE201ED46F7970BBC46544A1 = {
+			fileRef = "B52E59C66717907FC2D79FB0";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		2221711021EADC848B3B1A76 = {
+			isa = PBXFileReference;
+			name = "sofacomponentvisualmodel";
+			path = "../../../lib/macx/libsofacomponentvisualmodel.dylib";
+			refType = 4;
+		};
+		EE3F274222BB3AE360E2A138 = {
+			fileRef = "2221711021EADC848B3B1A76";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		157DD474E93019AAB9919FFE = {
+			isa = PBXFileReference;
+			name = "sofacomponentmass";
+			path = "../../../lib/macx/libsofacomponentmass.dylib";
+			refType = 4;
+		};
+		B32F26564341DCF8C14EF4FB = {
+			fileRef = "157DD474E93019AAB9919FFE";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3266DF9575E74CEC6A7E26E4 = {
+			isa = PBXFileReference;
+			name = "sofacomponentconstraint";
+			path = "../../../lib/macx/libsofacomponentconstraint.dylib";
+			refType = 4;
+		};
+		9E2C76DB2DA606822AFCE8DB = {
+			fileRef = "3266DF9575E74CEC6A7E26E4";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		83F00459A4B3510C9F255F9C = {
+			isa = PBXFileReference;
+			name = "sofacomponentcollision";
+			path = "../../../lib/macx/libsofacomponentcollision.dylib";
+			refType = 4;
+		};
+		EA00753A09320AA17D29B1F6 = {
+			fileRef = "83F00459A4B3510C9F255F9C";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4551BEE0F2E250E88E8FFCCF = {
+			isa = PBXFileReference;
+			name = "sofacomponentmisc";
+			path = "../../../lib/macx/libsofacomponentmisc.dylib";
+			refType = 4;
+		};
+		39EA189345D246829862C9F8 = {
+			fileRef = "4551BEE0F2E250E88E8FFCCF";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		2562D25CD1DFD72BCF7DECEE = {
+			isa = PBXFileReference;
+			name = "sofacomponent";
+			path = "../../../lib/macx/libsofacomponent.dylib";
+			refType = 4;
+		};
+		7386DE498D853109C37BC293 = {
+			fileRef = "2562D25CD1DFD72BCF7DECEE";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		C891A010B7A5DA61A0CC3D5A = {
+			isa = PBXFileReference;
+			name = "sofasimulation";
+			path = "../../../lib/macx/libsofasimulation.dylib";
+			refType = 4;
+		};
+		D1F7BD189AF3E4539C87831F = {
+			fileRef = "C891A010B7A5DA61A0CC3D5A";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0C2110C4449C98ED215CD80E = {
+			isa = PBXFileReference;
+			name = "sofatree";
+			path = "../../../lib/macx/libsofatree.dylib";
+			refType = 4;
+		};
+		6DB737675D90BFFE5C8F5B22 = {
+			fileRef = "0C2110C4449C98ED215CD80E";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		B105C110AF02F4E8C0D97544 = {
+			isa = PBXFileReference;
+			name = "sofaautomatescheduler";
+			path = "../../../lib/macx/libsofaautomatescheduler.dylib";
+			refType = 4;
+		};
+		5CFD751BD8E30C7277BD1B74 = {
+			fileRef = "B105C110AF02F4E8C0D97544";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		8DD599518E701754FEA8BAA9 = {
+			isa = PBXFileReference;
+			name = "sofacomponentmastersolver";
+			path = "../../../lib/macx/libsofacomponentmastersolver.dylib";
+			refType = 4;
+		};
+		622D73EFE859E9144F6C3387 = {
+			fileRef = "8DD599518E701754FEA8BAA9";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3CDBA4508DEA4097DA145184 = {
+			isa = PBXFileReference;
+			name = "sofacomponentfem";
+			path = "../../../lib/macx/libsofacomponentfem.dylib";
+			refType = 4;
+		};
+		58F85C6481BB0E290B28F365 = {
+			fileRef = "3CDBA4508DEA4097DA145184";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		5A38A8AB789A562852200A25 = {
+			isa = PBXFileReference;
+			name = "sofacomponentinteractionforcefield";
+			path = "../../../lib/macx/libsofacomponentinteractionforcefield.dylib";
+			refType = 4;
+		};
+		38847BAE52B1923583A2B3A8 = {
+			fileRef = "5A38A8AB789A562852200A25";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		68B6256727360B160E64F16C = {
+			isa = PBXFileReference;
+			name = "sofacomponentcontextobject";
+			path = "../../../lib/macx/libsofacomponentcontextobject.dylib";
+			refType = 4;
+		};
+		2887B7B86A02616758DA5795 = {
+			fileRef = "68B6256727360B160E64F16C";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		85E1D421CE6ADAFE6BE29766 = {
+			isa = PBXFileReference;
+			name = "sofacomponentbehaviormodel";
+			path = "../../../lib/macx/libsofacomponentbehaviormodel.dylib";
+			refType = 4;
+		};
+		4D15D51426D7C949DF08988A = {
+			fileRef = "85E1D421CE6ADAFE6BE29766";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		AEDBA6729AA47A61FEE45041 = {
+			isa = PBXFileReference;
+			name = "sofacomponentengine";
+			path = "../../../lib/macx/libsofacomponentengine.dylib";
+			refType = 4;
+		};
+		B93BC7F63C7510BCBD525972 = {
+			fileRef = "AEDBA6729AA47A61FEE45041";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		75F2B101E1077B3FBA3D6485 = {
+			isa = PBXFileReference;
+			name = "sofacomponentlinearsolver";
+			path = "../../../lib/macx/libsofacomponentlinearsolver.dylib";
+			refType = 4;
+		};
+		9B992CBB699660E72FCB4722 = {
+			fileRef = "75F2B101E1077B3FBA3D6485";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6C2F9AFB80A80DE4FF2AEF38 = {
+			isa = PBXFileReference;
+			name = "sofacomponentodesolver";
+			path = "../../../lib/macx/libsofacomponentodesolver.dylib";
+			refType = 4;
+		};
+		F8F54640617EBF1775A6F261 = {
+			fileRef = "6C2F9AFB80A80DE4FF2AEF38";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		1E69FB9AD2673DB0D2AC7F59 = {
+			isa = PBXFileReference;
+			name = "sofacomponentbase";
+			path = "../../../lib/macx/libsofacomponentbase.dylib";
+			refType = 4;
+		};
+		430DD66B8D1AC29D5FD9727A = {
+			fileRef = "1E69FB9AD2673DB0D2AC7F59";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A25D8199AB602485DB070BEE = {
+			isa = PBXFileReference;
+			name = "sofacomponentloader";
+			path = "../../../lib/macx/libsofacomponentloader.dylib";
+			refType = 4;
+		};
+		BC3DA724E61F27F25B692AE6 = {
+			fileRef = "A25D8199AB602485DB070BEE";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		B52E59C66717907FC2D79FB0 = {
+			isa = PBXFileReference;
+			name = "sofacomponentcontroller";
+			path = "../../../lib/macx/libsofacomponentcontroller.dylib";
+			refType = 4;
+		};
+		FE201ED46F7970BBC46544A1 = {
+			fileRef = "B52E59C66717907FC2D79FB0";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		2221711021EADC848B3B1A76 = {
+			isa = PBXFileReference;
+			name = "sofacomponentvisualmodel";
+			path = "../../../lib/macx/libsofacomponentvisualmodel.dylib";
+			refType = 4;
+		};
+		EE3F274222BB3AE360E2A138 = {
+			fileRef = "2221711021EADC848B3B1A76";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		157DD474E93019AAB9919FFE = {
+			isa = PBXFileReference;
+			name = "sofacomponentmass";
+			path = "../../../lib/macx/libsofacomponentmass.dylib";
+			refType = 4;
+		};
+		B32F26564341DCF8C14EF4FB = {
+			fileRef = "157DD474E93019AAB9919FFE";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3266DF9575E74CEC6A7E26E4 = {
+			isa = PBXFileReference;
+			name = "sofacomponentconstraint";
+			path = "../../../lib/macx/libsofacomponentconstraint.dylib";
+			refType = 4;
+		};
+		9E2C76DB2DA606822AFCE8DB = {
+			fileRef = "3266DF9575E74CEC6A7E26E4";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		83F00459A4B3510C9F255F9C = {
+			isa = PBXFileReference;
+			name = "sofacomponentcollision";
+			path = "../../../lib/macx/libsofacomponentcollision.dylib";
+			refType = 4;
+		};
+		EA00753A09320AA17D29B1F6 = {
+			fileRef = "83F00459A4B3510C9F255F9C";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4551BEE0F2E250E88E8FFCCF = {
+			isa = PBXFileReference;
+			name = "sofacomponentmisc";
+			path = "../../../lib/macx/libsofacomponentmisc.dylib";
+			refType = 4;
+		};
+		39EA189345D246829862C9F8 = {
+			fileRef = "4551BEE0F2E250E88E8FFCCF";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		2562D25CD1DFD72BCF7DECEE = {
+			isa = PBXFileReference;
+			name = "sofacomponent";
+			path = "../../../lib/macx/libsofacomponent.dylib";
+			refType = 4;
+		};
+		7386DE498D853109C37BC293 = {
+			fileRef = "2562D25CD1DFD72BCF7DECEE";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		C891A010B7A5DA61A0CC3D5A = {
+			isa = PBXFileReference;
+			name = "sofasimulation";
+			path = "../../../lib/macx/libsofasimulation.dylib";
+			refType = 4;
+		};
+		D1F7BD189AF3E4539C87831F = {
+			fileRef = "C891A010B7A5DA61A0CC3D5A";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0C2110C4449C98ED215CD80E = {
+			isa = PBXFileReference;
+			name = "sofatree";
+			path = "../../../lib/macx/libsofatree.dylib";
+			refType = 4;
+		};
+		6DB737675D90BFFE5C8F5B22 = {
+			fileRef = "0C2110C4449C98ED215CD80E";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		B105C110AF02F4E8C0D97544 = {
+			isa = PBXFileReference;
+			name = "sofaautomatescheduler";
+			path = "../../../lib/macx/libsofaautomatescheduler.dylib";
+			refType = 4;
+		};
+		5CFD751BD8E30C7277BD1B74 = {
+			fileRef = "B105C110AF02F4E8C0D97544";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		CD41BE0CDCFA519964FB4DFF = {
+			isa = PBXFileReference;
+			name = "sofahelper";
+			path = "../../../lib/macx/libsofahelper.dylib";
+			refType = 4;
+		};
+		350A1B9090276EE81C67AE19 = {
+			fileRef = "CD41BE0CDCFA519964FB4DFF";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3D3EA6EF954FD7AB48E8D395 = {
+			isa = PBXFileReference;
+			name = "sofadefaulttype";
+			path = "../../../lib/macx/libsofadefaulttype.dylib";
+			refType = 4;
+		};
+		769366D92F6CE0C14E5D8CEE = {
+			fileRef = "3D3EA6EF954FD7AB48E8D395";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		B17E323277D4B05A548150E8 = {
+			isa = PBXFileReference;
+			name = "sofacore";
+			path = "../../../lib/macx/libsofacore.dylib";
+			refType = 4;
+		};
+		300601B9FBE3503D244EBBB2 = {
+			fileRef = "B17E323277D4B05A548150E8";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		CD41BE0CDCFA519964FB4DFF = {
+			isa = PBXFileReference;
+			name = "sofahelper";
+			path = "../../../lib/macx/libsofahelper.dylib";
+			refType = 4;
+		};
+		350A1B9090276EE81C67AE19 = {
+			fileRef = "CD41BE0CDCFA519964FB4DFF";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3D3EA6EF954FD7AB48E8D395 = {
+			isa = PBXFileReference;
+			name = "sofadefaulttype";
+			path = "../../../lib/macx/libsofadefaulttype.dylib";
+			refType = 4;
+		};
+		769366D92F6CE0C14E5D8CEE = {
+			fileRef = "3D3EA6EF954FD7AB48E8D395";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		B17E323277D4B05A548150E8 = {
+			isa = PBXFileReference;
+			name = "sofacore";
+			path = "../../../lib/macx/libsofacore.dylib";
+			refType = 4;
+		};
+		300601B9FBE3503D244EBBB2 = {
+			fileRef = "B17E323277D4B05A548150E8";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DA18A6831232F53228631AD1 = {
+			isa = PBXFrameworkReference;
+			name = "OpenGL.framework";
+			path = "/System/Library/Frameworks/OpenGL.framework";
+			refType = 0;
+		};
+		BCEF71E1EDFB18DA77DC750B = {
+			fileRef = "DA18A6831232F53228631AD1";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		998A1319FFA084ADB552E479 = {
+			isa = PBXFrameworkReference;
+			name = "GLUT.framework";
+			path = "/System/Library/Frameworks/GLUT.framework";
+			refType = 0;
+		};
+		41569C8A8920C770CF409E9A = {
+			fileRef = "998A1319FFA084ADB552E479";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F7A126C015C160C3B92F0BCB = {
+			isa = PBXFileReference;
+			name = "tinyxml";
+			path = "../../../lib/macx/libtinyxml.dylib";
+			refType = 4;
+		};
+		23B3907BFB22984356091AD3 = {
+			fileRef = "F7A126C015C160C3B92F0BCB";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		C10019A3670BE2C12FE9DC9D = {
+			isa = PBXFileReference;
+			name = "newmat";
+			path = "../../../lib/macx/libnewmat.dylib";
+			refType = 4;
+		};
+		664EA8BC2DFF600297516800 = {
+			fileRef = "C10019A3670BE2C12FE9DC9D";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		7DEE3E63B8EFC26BBD4C6EAC = {
+			isa = PBXFileReference;
+			name = "miniFlowVR";
+			path = "../../../lib/macx/libminiFlowVR.dylib";
+			refType = 4;
+		};
+		3F3598F1F825DAF9D63C1BED = {
+			fileRef = "7DEE3E63B8EFC26BBD4C6EAC";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DA18A6831232F53228631AD1 = {
+			isa = PBXFrameworkReference;
+			name = "OpenGL.framework";
+			path = "/System/Library/Frameworks/OpenGL.framework";
+			refType = 0;
+		};
+		BCEF71E1EDFB18DA77DC750B = {
+			fileRef = "DA18A6831232F53228631AD1";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		998A1319FFA084ADB552E479 = {
+			isa = PBXFrameworkReference;
+			name = "GLUT.framework";
+			path = "/System/Library/Frameworks/GLUT.framework";
+			refType = 0;
+		};
+		41569C8A8920C770CF409E9A = {
+			fileRef = "998A1319FFA084ADB552E479";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F7A126C015C160C3B92F0BCB = {
+			isa = PBXFileReference;
+			name = "tinyxml";
+			path = "../../../lib/macx/libtinyxml.dylib";
+			refType = 4;
+		};
+		23B3907BFB22984356091AD3 = {
+			fileRef = "F7A126C015C160C3B92F0BCB";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		C10019A3670BE2C12FE9DC9D = {
+			isa = PBXFileReference;
+			name = "newmat";
+			path = "../../../lib/macx/libnewmat.dylib";
+			refType = 4;
+		};
+		664EA8BC2DFF600297516800 = {
+			fileRef = "C10019A3670BE2C12FE9DC9D";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		7DEE3E63B8EFC26BBD4C6EAC = {
+			isa = PBXFileReference;
+			name = "miniFlowVR";
+			path = "../../../lib/macx/libminiFlowVR.dylib";
+			refType = 4;
+		};
+		3F3598F1F825DAF9D63C1BED = {
+			fileRef = "7DEE3E63B8EFC26BBD4C6EAC";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		ED1E82605DD74B483AF3C982 = {
+			children = (
+				"8DD599518E701754FEA8BAA9",
+				"3CDBA4508DEA4097DA145184",
+				"5A38A8AB789A562852200A25",
+				"68B6256727360B160E64F16C",
+				"85E1D421CE6ADAFE6BE29766",
+				"AEDBA6729AA47A61FEE45041",
+				"75F2B101E1077B3FBA3D6485",
+				"6C2F9AFB80A80DE4FF2AEF38",
+				"1E69FB9AD2673DB0D2AC7F59",
+				"A25D8199AB602485DB070BEE",
+				"B52E59C66717907FC2D79FB0",
+				"2221711021EADC848B3B1A76",
+				"157DD474E93019AAB9919FFE",
+				"3266DF9575E74CEC6A7E26E4",
+				"83F00459A4B3510C9F255F9C",
+				"4551BEE0F2E250E88E8FFCCF",
+				"2562D25CD1DFD72BCF7DECEE",
+				"C891A010B7A5DA61A0CC3D5A",
+				"0C2110C4449C98ED215CD80E",
+				"B105C110AF02F4E8C0D97544",
+				"8DD599518E701754FEA8BAA9",
+				"3CDBA4508DEA4097DA145184",
+				"5A38A8AB789A562852200A25",
+				"68B6256727360B160E64F16C",
+				"85E1D421CE6ADAFE6BE29766",
+				"AEDBA6729AA47A61FEE45041",
+				"75F2B101E1077B3FBA3D6485",
+				"6C2F9AFB80A80DE4FF2AEF38",
+				"1E69FB9AD2673DB0D2AC7F59",
+				"A25D8199AB602485DB070BEE",
+				"B52E59C66717907FC2D79FB0",
+				"2221711021EADC848B3B1A76",
+				"157DD474E93019AAB9919FFE",
+				"3266DF9575E74CEC6A7E26E4",
+				"83F00459A4B3510C9F255F9C",
+				"4551BEE0F2E250E88E8FFCCF",
+				"2562D25CD1DFD72BCF7DECEE",
+				"C891A010B7A5DA61A0CC3D5A",
+				"0C2110C4449C98ED215CD80E",
+				"B105C110AF02F4E8C0D97544",
+				"CD41BE0CDCFA519964FB4DFF",
+				"3D3EA6EF954FD7AB48E8D395",
+				"B17E323277D4B05A548150E8",
+				"CD41BE0CDCFA519964FB4DFF",
+				"3D3EA6EF954FD7AB48E8D395",
+				"B17E323277D4B05A548150E8",
+				"DA18A6831232F53228631AD1",
+				"998A1319FFA084ADB552E479",
+				"F7A126C015C160C3B92F0BCB",
+				"C10019A3670BE2C12FE9DC9D",
+				"7DEE3E63B8EFC26BBD4C6EAC",
+				"DA18A6831232F53228631AD1",
+				"998A1319FFA084ADB552E479",
+				"F7A126C015C160C3B92F0BCB",
+				"C10019A3670BE2C12FE9DC9D",
+				"7DEE3E63B8EFC26BBD4C6EAC");
+			isa = PBXGroup;
+			name = "External Frameworks and Libraries";
+			path = "";
+			refType = 4;
+		};
+		2A1043669E6E5A7426EA502A = {
+			buildActionMask = 2147483647;
+			files = (
+				"622D73EFE859E9144F6C3387",
+				"58F85C6481BB0E290B28F365",
+				"38847BAE52B1923583A2B3A8",
+				"2887B7B86A02616758DA5795",
+				"4D15D51426D7C949DF08988A",
+				"B93BC7F63C7510BCBD525972",
+				"9B992CBB699660E72FCB4722",
+				"F8F54640617EBF1775A6F261",
+				"430DD66B8D1AC29D5FD9727A",
+				"BC3DA724E61F27F25B692AE6",
+				"FE201ED46F7970BBC46544A1",
+				"EE3F274222BB3AE360E2A138",
+				"B32F26564341DCF8C14EF4FB",
+				"9E2C76DB2DA606822AFCE8DB",
+				"EA00753A09320AA17D29B1F6",
+				"39EA189345D246829862C9F8",
+				"7386DE498D853109C37BC293",
+				"D1F7BD189AF3E4539C87831F",
+				"6DB737675D90BFFE5C8F5B22",
+				"5CFD751BD8E30C7277BD1B74",
+				"622D73EFE859E9144F6C3387",
+				"58F85C6481BB0E290B28F365",
+				"38847BAE52B1923583A2B3A8",
+				"2887B7B86A02616758DA5795",
+				"4D15D51426D7C949DF08988A",
+				"B93BC7F63C7510BCBD525972",
+				"9B992CBB699660E72FCB4722",
+				"F8F54640617EBF1775A6F261",
+				"430DD66B8D1AC29D5FD9727A",
+				"BC3DA724E61F27F25B692AE6",
+				"FE201ED46F7970BBC46544A1",
+				"EE3F274222BB3AE360E2A138",
+				"B32F26564341DCF8C14EF4FB",
+				"9E2C76DB2DA606822AFCE8DB",
+				"EA00753A09320AA17D29B1F6",
+				"39EA189345D246829862C9F8",
+				"7386DE498D853109C37BC293",
+				"D1F7BD189AF3E4539C87831F",
+				"6DB737675D90BFFE5C8F5B22",
+				"5CFD751BD8E30C7277BD1B74",
+				"350A1B9090276EE81C67AE19",
+				"769366D92F6CE0C14E5D8CEE",
+				"300601B9FBE3503D244EBBB2",
+				"350A1B9090276EE81C67AE19",
+				"769366D92F6CE0C14E5D8CEE",
+				"300601B9FBE3503D244EBBB2",
+				"BCEF71E1EDFB18DA77DC750B",
+				"41569C8A8920C770CF409E9A",
+				"23B3907BFB22984356091AD3",
+				"664EA8BC2DFF600297516800",
+				"3F3598F1F825DAF9D63C1BED",
+				"BCEF71E1EDFB18DA77DC750B",
+				"41569C8A8920C770CF409E9A",
+				"23B3907BFB22984356091AD3",
+				"664EA8BC2DFF600297516800",
+				"3F3598F1F825DAF9D63C1BED");
+			isa = PBXFrameworksBuildPhase;
+			name = "Frameworks & Libraries";
+		};
+		F6069D5A5DA8AA28EDB8B3C6 = {
+			name = "Project Copy";
+			buildActionMask = 2147483647;
+			dstPath = "/Users/Olivier/sofa-dev/trunk/Sofa/lib/sofa-plugins";
+			dstSubfolderSpec = 0;
+			files = (
+"07E0DFA73EB56DCB9E28CDD9");
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		07E0DFA73EB56DCB9E28CDD9 = {
+			fileRef = "872ABB82B2F49EB14DBA1D0B";
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		05596AB53D8D521C69802C27 = {
+			children = (
+				"FB61758D0F0FDA4BA867C3D5",
+				"883D7615C4D2DE3FA1218F12",
+				"7CABE3C80E79AD2B307756D2",
+				"ED1E82605DD74B483AF3C982");
+			isa = PBXGroup;
+			name = "PluginShells";
+			path = "";
+			refType = 4;
+		};
+		872ABB82B2F49EB14DBA1D0B = {
+			isa = PBXFileReference;
+			explicitFileType = "compiled.mach-o.dylib";
+			path = "libPluginShells.dylib";
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		068F80C7519D0528FB08E821 = {
+			children = (
+				"872ABB82B2F49EB14DBA1D0B");
+			isa = PBXGroup;
+			name = "Products";
+			refType = 4;
+		};
+		B3113D1601E2188FC58F072D = {
+			buildPhases = (
+				"D7BA7D76DAB5DD13389D6332",
+				"A0A52A2ADF7A1E2A99738674",
+				"F6069D5A5DA8AA28EDB8B3C6",
+				"C29B8785722055ED95EF7B57",
+				"2A1043669E6E5A7426EA502A");
+			buildSettings = {
+				CC = "/usr/bin/gcc";
+				CPLUSPLUS = "/usr/bin/g++";
+				HEADER_SEARCH_PATHS = (
+					"../../../include",
+					"../../../framework",
+					"../../../modules",
+					"../../../applications",
+					"../../../extlibs/miniBoost",
+					"../../../extlibs/tinyxml",
+					"../../../extlibs/newmat",
+					"../../../extlibs/qwt-5.2.0/src",
+					"../../../extlibs/miniFlowVR/include",
+					"../../../extlibs",
+					"/usr/local/include",
+					"/System/Library/Frameworks/CarbonCore.framework/Headers",
+					"/usr/local/Trolltech/Qt-4.6.0/mkspecs/macx-xcode");
+				LIBRARY_SEARCH_PATHS = (
+					"/System/Library/Frameworks/",
+					"../../../lib/macx",
+					"../../../lib/sofa-plugins",
+					"/Users/Olivier/sofa-dev/trunk/Sofa/lib/macx");
+				OPTIMIZATION_CFLAGS = (
+					);
+				OTHER_CFLAGS = (
+					"-pipe",
+					"-O2",
+					"-Wall",
+					"-W",
+					"-fPIC",
+					"-DSOFA_QT4",
+					"-DSOFA_DEV",
+					"-DSOFA_GUI_QTVIEWER",
+					"-DSOFA_GUI_GLUT",
+					"-DSOFA_DUMP_VISITOR_INFO",
+					"-DSOFA_HAVE_ZLIB",
+					"-DSOFA_HAVE_PNG",
+					"-DSOFA_HAVE_GLEW",
+					"-DNDEBUG",
+					"-DSOFA_XML_PARSER_TINYXML",
+					"-DSOFA_GUI_QT",
+					"-DMINI_FLOWVR",
+					"-DSOFA_BUILD_SHELLS");
+				OTHER_CPLUSPLUSFLAGS = (
+					"-pipe",
+					"-O2",
+					"-Wall",
+					"-W",
+					"-fPIC",
+					"-DSOFA_QT4",
+					"-DSOFA_DEV",
+					"-DSOFA_GUI_QTVIEWER",
+					"-DSOFA_GUI_GLUT",
+					"-DSOFA_DUMP_VISITOR_INFO",
+					"-DSOFA_HAVE_ZLIB",
+					"-DSOFA_HAVE_PNG",
+					"-DSOFA_HAVE_GLEW",
+					"-DNDEBUG",
+					"-DSOFA_XML_PARSER_TINYXML",
+					"-DSOFA_GUI_QT",
+					"-DMINI_FLOWVR",
+					"-DSOFA_BUILD_SHELLS");
+				LEXFLAGS = "";
+				YACCFLAGS = "-d";
+				OTHER_REZFLAGS = "";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "";
+				PREBINDING = NO;
+				BUILD_ROOT = "/Users/Olivier/sofa-dev/trunk/Sofa/applications/plugins/shells";
+				OTHER_LDFLAGS = (
+						"-headerpad_max_install_names",
+						"-L/System/Library/Frameworks/",
+						"-Wl,-rpath,@loader_path",
+						"-Wl,-rpath,@executable_path/../lib/macx",
+						"-Wl,-rpath,@executable_path/../../../../lib/macx",
+						"-single_module",
+						"-dynamiclib",
+						"-install_name\ \ \ \ @rpath/libPluginShells.dylib.1",
+						"-L../../../lib/macx",
+						"-L../../../lib/sofa-plugins",
+						"-lsofacomponentforcefield",
+						"-lsofacomponentmapping",
+						"-lsofacomponentforcefield",
+						"-lsofacomponentmapping",
+						"-lpthread",
+						"-lz",
+						"-lpng",
+						"-lGLEW",
+						"-lpthread",
+						"-lz",
+						"-lpng",
+						"-lGLEW");
+				INSTALL_DIR = "/Users/Olivier/sofa-dev/trunk/Sofa/applications/plugins/shells/../../../lib/sofa-plugins/";
+				INSTALL_PATH = "";
+				DYLIB_CURRENT_VERSION = "1.0.0";
+				DYLIB_COMPATIBILITY_VERSION = "1.0";
+				MACOSX_DEPLOYMENT_TARGET = "10.5";
+				OBJROOT = "OBJ/release/";
+				LIBRARY_STYLE = "DYNAMIC";
+				PRODUCT_NAME = "libPluginShells";
+			};
+			conditionalBuildSettings = {
+			};
+			dependencies = (
+				);
+			productReference = "872ABB82B2F49EB14DBA1D0B";
+			shouldUseHeadermap = 1;
+			isa = PBXNativeTarget;
+			name = "libPluginShells";
+			productName = "libPluginShells";
+			productType = "com.apple.product-type.library.dynamic";
+			startupPath = "<<ProjectDirectory>>";
+			productInstallPath = "../../../lib/sofa-plugins/";
+		};
+		8DB1DD96F65B1BF1FFC506E0 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = "NO";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = "YES";
+				GCC_OPTIMIZATION_LEVEL = "0";
+			};
+			name = "Debug";
+		};
+		2C641C3335766025DD51B7BD = {
+			buildRules = (
+				);
+			buildSettings = {
+				COPY_PHASE_STRIP = "NO";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = "YES";
+				GCC_OPTIMIZATION_LEVEL = "0";
+			};
+			isa = "PBXBuildStyle";
+			name = "Debug";
+		};
+		95E1EB2E5DDD587BE5B3E548 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = "YES";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = "NO";
+			};
+			name = "Release";
+		};
+		26DE8D2AEA4B3714B41E931F = {
+			buildRules = (
+				);
+			buildSettings = {
+				COPY_PHASE_STRIP = "YES";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = "NO";
+			};
+			isa = "PBXBuildStyle";
+			name = "Release";
+		};
+		2A951308CDB28F104D0A4BD2 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"8DB1DD96F65B1BF1FFC506E0",
+				"95E1EB2E5DDD587BE5B3E548");
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationIsName = "Release";
+		};
+		91B15E841AA80083484172DE = {
+			buildStyles = (
+				"2C641C3335766025DD51B7BD",
+				"26DE8D2AEA4B3714B41E931F");
+			hasScannedForEncodings = 1;
+			isa = PBXProject;
+			mainGroup = "05596AB53D8D521C69802C27";
+			buildConfigurationList = "2A951308CDB28F104D0A4BD2";
+			projectDirPath = "";
+			targets = (
+				"B3113D1601E2188FC58F072D");
+		};
+	};
+	rootObject = "91B15E841AA80083484172DE";
+}

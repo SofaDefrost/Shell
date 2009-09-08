@@ -1,0 +1,19 @@
+
+************************************
+*         PluginShells.txt         *
+************************************
+
+
+
+AUTHOR :
+ - Olivier Comas
+
+
+
+
+LICENCE :
+ - None
+
+
+
+OTHER COMMENTS :
