@@ -81,12 +81,10 @@ public:
 
 protected:
 
-	typedef Vec<6, Real> Displacement;                                     ///< the displacement vector
-        typedef Vec<9, Real> DisplacementBending;
+	typedef Vec<6, Real> Displacement;                                      ///< the displacement vector
+        typedef Vec<9, Real> DisplacementBending;                               ///< the displacement vector for bending
 	typedef Mat<3, 3, Real> MaterialStiffness;				///< the matrix of material stiffness
-	typedef sofa::helper::vector<MaterialStiffness> VecMaterialStiffness;   ///< a vector of material stiffness matrices
 	typedef Mat<6, 3, Real> StrainDisplacement;				///< the strain-displacement matrix
-	typedef sofa::helper::vector<StrainDisplacement> VecStrainDisplacement;	///< a vector of strain-displacement matrices
 	typedef Mat<3, 3, Real > Transformation;				///< matrix for rigid transformations like rotations
         typedef Mat<6, 6, Real> StiffnessMatrix;
 
@@ -108,6 +106,10 @@ public:
                 MaterialStiffness materialMatrix;
                 // the strain-displacement matrices vector
                 StrainDisplacement strainDisplacementMatrix;
+                // Indices of each vertex
+                Index a, b, c;
+                // Local coordinates
+                Vec3 localB, localC;
                 // bending strain-displacement matrices at each Gauss point
                 Mat<3, 9, Real> b1;
                 Mat<3, 9, Real> b2;
@@ -127,7 +129,9 @@ public:
                 Vec3 bendingStress1;
                 Vec3 bendingStress2;
                 Vec3 bendingStress3;
-
+                // Stiffness matrix K = J * M * Jt
+                StiffnessMatrix stiffnessMatrix;
+                
                 // Third of the surface
                 Real thirdSurface;
                 // Variables needed for drawing the shell
@@ -175,8 +179,8 @@ protected :
 
         TriangleData<TriangleInformation> triangleInfo;
 
-	void computeDisplacement(Displacement &Disp, const Index elementIndex, const VecCoord &p);
-        void computeDisplacementBending(Displacement &Disp, const Index elementIndex, const VecCoord &p);
+	void computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex);
+        void computeDisplacementBending(Displacement &Disp, const Index elementIndex, const VecCoord &x);
 	void computeStrainDisplacementMatrix(StrainDisplacement &J, const Vec3& b, const Vec3& c);
         void computeStrainDisplacementBending(const Index elementIndex, const Vec3& /*a*/, const Vec3& b, const Vec3& c );
         void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
@@ -185,7 +189,7 @@ protected :
 	void computeStress(Vec<3,Real> &stress, const MaterialStiffness &K, const Vec<3,Real> &strain);
         void computeStressBending(const Index& elementIndex);
         void computeStiffnessMatrix(StiffnessMatrix &K, const StrainDisplacement &J, const MaterialStiffness &M);
-	void computeForce(Displacement &F, const Displacement& D, const Index elementIndex, const VecCoord &x);
+	void computeForce(Displacement &F, const Displacement& D, const Index elementIndex);
 
 	static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 

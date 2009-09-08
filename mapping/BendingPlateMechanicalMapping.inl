@@ -58,7 +58,7 @@ BendingPlateMechanicalMapping<BaseMapping>::~BendingPlateMechanicalMapping()
 template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::init()
 {
-    std::cout << "BendingPlateMechanicalMapping<BaseMapping>::init()" << std::endl;
+//    std::cout << "BendingPlateMechanicalMapping<BaseMapping>::init()" << std::endl;
 
     this->Inherit::init();
 
@@ -213,11 +213,11 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     triangularBendingForcefield = NULL;
     this->getContext()->get(triangularBendingForcefield);
 
-    ConstantForceField<InDataTypes>* ptr;
-    this->getContext()->get(ptr, 2);
-    std::cout << "ConstantForceField init() = " << ptr << std::endl;
+//    ConstantForceField<InDataTypes>* ptr;
+//    this->getContext()->get(ptr, 2);
+//    std::cout << "ConstantForceField init() = " << ptr << std::endl;
 
-    std::cout << "triangularBendingForcefield init = " << triangularBendingForcefield << std::endl;
+//    std::cout << "triangularBendingForcefield init = " << triangularBendingForcefield << std::endl;
 
     if (!triangularBendingForcefield)
         return;
@@ -436,7 +436,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::computeBaryCoefs(Vec3 &baryCoef
 template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& out, const typename In::VecCoord& in )
 {
-    std::cout << "---------------- Apply ----------------------------" << std::endl;
+//    std::cout << "---------------- Apply ----------------------------" << std::endl;
 
 //    sofa::helper::system::thread::ctime_t start, stop;
 //    sofa::helper::system::thread::CTime timer;
@@ -473,8 +473,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
         for (unsigned int t=0; t<inTriangles.size();t++)
         {
             tinfo = &triangleInf[t];
-            listCoeffs[t] = tinfo->invC.multiplyBySparseVector(tinfo->u + tinfo->u_flat, nonNullIndices, 6);
-    //        listCoeffs[t] = tinfo->invC * (tinfo->u + tinfo->u_flat);
+//            listCoeffs[t] = tinfo->invC.multiplyBySparseVector(tinfo->u + tinfo->u_flat, nonNullIndices, 6);
+            listCoeffs[t] = tinfo->invC * (tinfo->u + tinfo->u_flat);
         }
 
         Vec3 a, b, c, baryCoord, vertexLocal, out0;
@@ -531,7 +531,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
 template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv& out, const typename In::VecDeriv& in )
 {
-    std::cout << "---------------- ApplyJ ----------------------------" << std::endl;
+//    std::cout << "---------------- ApplyJ ----------------------------" << std::endl;
 
 //    sofa::helper::system::thread::ctime_t start, stop;
 //    sofa::helper::system::thread::CTime timer;
@@ -553,9 +553,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv&
     {
         serr << "No TriangularBendingForcefield has been found" << sendl;
         this->getContext()->get(triangularBendingForcefield);
-        std::cout << "triangularBendingForcefield applyJ = " << triangularBendingForcefield << std::endl;
-        return;
-        std::cout << "balabla" << std::endl;
+        return;        
     }
     else
     {
@@ -593,10 +591,10 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv&
             v_u[4] = va_b_local[0];   v_u[5] = va_b_local[1];
             v_u[7] = va_c_local[0];   v_u[8] = va_c_local[1];
 
-            if (t == 0)
-            {
-                std::cout << "v_u = " << v_u << std::endl;
-            }
+//            if (t == 0)
+//            {
+//                std::cout << "v_u = " << v_u << std::endl;
+//            }
 
     //        listCoeffs[t] = tinfo->invC.multiplyBySparseVector(v_u, nonNullIndices, 6);
             listCoeffs[t] = tinfo->invC * v_u;
@@ -660,7 +658,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv&
 template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv& out, const typename Out::VecDeriv& in )
 {
-    std::cout << "---------------- ApplyJT ----------------------------" << std::endl;
+//    std::cout << "---------------- ApplyJT ----------------------------" << std::endl;
 
 //    sofa::helper::system::thread::ctime_t start, stop;
 //    sofa::helper::system::thread::CTime timer;

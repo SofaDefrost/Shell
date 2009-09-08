@@ -153,7 +153,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
     /// Prepare to store info in the triangle array
     triangleInf.resize(_topology->getNbTriangles());
 
-    for (int i=0;i<_topology->getNbTriangles();++i)
+    for (int i=0; i<_topology->getNbTriangles(); ++i)
     {
         TRQSTriangleCreationFunction(i, (void*) this, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
     }
@@ -180,16 +180,16 @@ template <class DataTypes>
 // Computes the quaternion that embodies the rotation from triangle to world
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c)
+void TriangularBendingFEMForceField<DataTypes>::computeRotation(Quat& Qframe, const VecCoord &x, const Index &a, const Index &b, const Index &c)
 {
     // First vector on first edge
     // Second vector in the plane of the two first edges
     // Third vector orthogonal to first and second
 
-    Vec3 edgex = p[b].getCenter() - p[a].getCenter();
+    Vec3 edgex = x[b].getCenter() - x[a].getCenter();
     edgex.normalize();
 
-    Vec3 edgey = p[c].getCenter() - p[a].getCenter();
+    Vec3 edgey = x[c].getCenter() - x[a].getCenter();
     edgey.normalize();
 
     Vec3 edgez;
@@ -223,8 +223,14 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
 
-    const VecCoord& p0 = *this->mstate->getX0();   // gets vertices of rest position
-    const VecCoord& p = *this->mstate->getX();     // gets vertices of initial position
+    // Store indices of each vertex
+    tinfo->a = a;
+    tinfo->b = b;
+    tinfo->c = c;
+
+    // Gets vertices of rest and initial positions respectively
+    const VecCoord& p0 = *this->mstate->getX0();   
+    const VecCoord& p = *this->mstate->getX();
 
     // Rotation from triangle to world at rest and initial positions (respectively)
     Quat Qframe0, Qframe;
@@ -407,23 +413,23 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
 // --- expressed in the co-rotational frame of reference
 // -------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeDisplacement(Displacement &Disp, const Index elementIndex, const VecCoord &p)
+void TriangularBendingFEMForceField<DataTypes>::computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex)
 {
-    Index a = _topology->getTriangle(elementIndex)[0];
-    Index b = _topology->getTriangle(elementIndex)[1];
-    Index c = _topology->getTriangle(elementIndex)[2];
-
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
-    // Positions in local frame
-    Vec3 AB = tinfo->Qframe.inverseRotate(p[b].getCenter()-p[a].getCenter());
-    Vec3 AC = tinfo->Qframe.inverseRotate(p[c].getCenter()-p[a].getCenter());
+    Index a = tinfo->a;
+    Index b = tinfo->b;
+    Index c = tinfo->c;
+
+    // Compute local postions of vertices b and c in the co-rotational frame (a is always (0,0,0))
+    tinfo->localB = tinfo->Qframe.inverseRotate(x[b].getCenter()-x[a].getCenter());
+    tinfo->localC = tinfo->Qframe.inverseRotate(x[c].getCenter()-x[a].getCenter());
 
     // In-plane local displacements
     Vec3 uAB, uAC;
-    uAB = AB - tinfo->restLocalPositions[0];
-    uAC = AC - tinfo->restLocalPositions[1];
+    uAB = tinfo->localB - tinfo->restLocalPositions[0];
+    uAC = tinfo->localC - tinfo->restLocalPositions[1];
 
     Disp[0] = 0;
     Disp[1] = 0;
@@ -730,63 +736,23 @@ void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(const i
 // ---	Compute F = J * stress;
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, const Displacement& D, const Index elementIndex, const VecCoord &x)
+void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, const Displacement& D, const Index elementIndex)
 {
-    StrainDisplacement J;
-    Vec3 strain;
-    Vec3 stress;
-
-    Index a = _topology->getTriangle(elementIndex)[0];
-    Index b = _topology->getTriangle(elementIndex)[1];
-    Index c = _topology->getTriangle(elementIndex)[2];
-
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
-    // Co-rotational method using rotation matrix (rotation from triangle to world)
-    Quat Qframe;
-    computeRotation(Qframe, x, a, b, c);
-    tinfo->Qframe = Qframe;
-
-    // Compute local postions of vertices b and c in the co-rotational frame (a is always (0,0,0))
-    Vec3 B = Qframe.inverseRotate(x[b].getCenter()-x[a].getCenter());
-    Vec3 C = Qframe.inverseRotate(x[c].getCenter()-x[a].getCenter());
-
     // Compute strain-displacement matrix J
-    computeStrainDisplacementMatrix(J, B, C);
+    StrainDisplacement J;
+    computeStrainDisplacementMatrix(J, tinfo->localB, tinfo->localC);
+    tinfo->strainDisplacementMatrix = J;
 
+    // Compute stiffness matrix K = J*material*Jt
     StiffnessMatrix K;
     computeStiffnessMatrix(K, J, tinfo->materialMatrix);
+    tinfo->stiffnessMatrix = K;
 
+    // Compute forces
     F = K * D;
-
-//    computeStrain(strain, J, D);
-
-//    MaterialStiffness temp = f_membraneRatio.getValue()*(tinfo->materialMatrix);
-//    computeStress(stress, temp, strain);
-//    computeStress(stress, tinfo->materialMatrix, strain);
-
-    // Compute F = J * stress;
-    // Optimisations: The following values are 0 (per computeStrainDisplacement )
-    // J[0][1] J[1][0] J[2][1] J[3][0] J[4][0] J[4][1] J[5][0] J[5][2]
-
-//    F[0] = J[0][0] * stress[0] + /* J[0][1] * KJtD[1] + */ J[0][2] * stress[2];
-//    F[1] = /* J[1][0] * KJtD[0] + */ J[1][1] * stress[1] + J[1][2] * stress[2];
-//    F[2] = J[2][0] * stress[0] + /* J[2][1] * KJtD[1] + */ J[2][2] * stress[2];
-//    F[3] = /* J[3][0] * KJtD[0] + */ J[3][1] * stress[1] + J[3][2] * stress[2];
-//    F[4] = /* J[4][0] * KJtD[0] + J[4][1] * KJtD[1] + */ J[4][2] * stress[2];
-//    F[5] = /* J[5][0] * KJtD[0] + */ J[5][1] * stress[1] /* + J[5][2] * KJtD[2] */ ;
-
-    // Stores newly computed values for next time
-    tinfo->strainDisplacementMatrix = J;
-    tinfo->strain = strain;
-    tinfo->stress = stress;
-
-    // bending forces
-    if (f_bending.getValue())
-    {
-
-    }
 
     triangleInfo.endEdit();
 }
@@ -885,22 +851,28 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, co
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &x, const Index elementIndex)
 {
-    Index a = _topology->getTriangle(elementIndex)[0];
-    Index b = _topology->getTriangle(elementIndex)[1];
-    Index c = _topology->getTriangle(elementIndex)[2];
-
-    // then compute displacement in this frame
-    Displacement D;
-    computeDisplacement(D, elementIndex, x);
-
-    // Computes force on element (in the co-rotational space)
-    Displacement F;
-    computeForce(F, D, elementIndex, x);
-
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
-    // Transforms force back into global ref. frame
+    // Get the indices of the 3 vertices for the current triangle
+    const Index& a = tinfo->a;
+    const Index& b = tinfo->b;
+    const Index& c = tinfo->c;
+
+    // Compute the quaternion that embodies the rotation between the triangle and world frames (co-rotational method)
+    Quat Qframe;
+    computeRotation(Qframe, x, a, b, c);
+    tinfo->Qframe = Qframe;
+
+    // Compute displacement into the triangle's frame
+    Displacement D;
+    computeDisplacement(D, x, elementIndex);
+
+    // Compute forces on this element (in the co-rotational space)
+    Displacement F;
+    computeForce(F, D, elementIndex);
+
+    // Transform forces back into global reference frame
     f[a].getVCenter() -= tinfo->Qframe.rotate(Vec3(F[0], F[1], 0));
     f[b].getVCenter() -= tinfo->Qframe.rotate(Vec3(F[2], F[3], 0));
     f[c].getVCenter() -= tinfo->Qframe.rotate(Vec3(F[4], F[5], 0));
