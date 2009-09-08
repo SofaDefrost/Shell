@@ -99,7 +99,7 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 : f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson ratio in Hooke's law"))
 , f_young(initData(&f_young,(Real)3000.,"youngModulus","Young modulus in Hooke's law"))
 , f_bending(initData(&f_bending,false,"bending","Adds bending"))
-, f_thickness(initData(&f_thickness,(Real)1.,"thickness","Thickness of the plates"))
+, f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
 , f_membraneRatio(initData(&f_membraneRatio,(Real)1.0,"membraneRatio","In plane forces ratio"))
 , f_bendingRatio(initData(&f_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
 {
@@ -253,11 +253,6 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
         // Computes vector displacement u for initial position (in case of the latter is different than the rest_position)
         Displacement Disp;
         computeDisplacementBending(Disp, i, p);
-      
-        // Initialise the previous orientations of each vertex with the initial ones
-        tinfo->previousOrientations[0] = p[a].getOrientation();
-        tinfo->previousOrientations[1] = p[b].getOrientation();
-        tinfo->previousOrientations[2] = p[c].getOrientation();
 
         // Evaluates the difference between the rest position and the flat position to allow the use of a deformed rest shape and creates a vector u_flat matching this difference
         Quat dQA_flat = qDiff(p0[a].getOrientation(), Qframe0);     // Rotation from Qframe0 to p0[a].getOrientation()
@@ -346,19 +341,29 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness( VecDeriv& v, Rea
             // Bending displacements
             Vec3 u;
             u = tinfo->Qframe.inverseRotate(dx[a].getVOrientation());
-            D[6] = x_a[2];
+//            D[6] = x_a[2];
+            D[6] = 0;
             D[7] = u[0];
             D[8] = u[1];
 
             u = tinfo->Qframe.inverseRotate(dx[b].getVOrientation());
-            D[9] = x_b[2];
+//            D[9] = x_b[2];
+            D[9] = 0;
             D[10] = u[0];
             D[11] = u[1];
-
+            
             u = tinfo->Qframe.inverseRotate(dx[c].getVOrientation());
-            D[12] = x_c[2];
+//            D[12] = x_c[2];
+            D[12] = 0;
             D[13] = u[0];
             D[14] = u[1];
+
+            if (i == 0)
+            {
+                std::cout << "vAx = " << D[7] << ", vAy = " << D[8] << std::endl;
+                std::cout << "vBx = " << D[10] << ", vBy = " << D[11] << std::endl;
+                std::cout << "vCx = " << D[13] << ", vCy = " << D[14] << std::endl;
+            }
 
             computeStrainBending(i, D);
             computeStressBending(i);
@@ -733,7 +738,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, co
     // then compute displacement in this frame
     computeDisplacement(D, elementIndex, p);
 
-    // and compute postions of b, c in the co-rotational frame (a is always (0,0,0))
+    // and compute postions of a, b and c in the co-rotational frame (a is always (0,0,0))
     Vec3 A = Vec3(0.0, 0.0, 0.0);
     Vec3 B = Qframe.inverseRotate(p[b].getCenter()-p[a].getCenter());
     Vec3 C = Qframe.inverseRotate(p[c].getCenter()-p[a].getCenter());
@@ -806,7 +811,7 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, con
     Index c = _topology->getTriangle(elementIndex)[2];
 
     // Computes force on element (in the co-rotational space)
-    computeForce( F, elementIndex, p);
+    computeForce(F, elementIndex, p);
 
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
@@ -842,13 +847,21 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, con
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::addForce(VecDeriv& f, const VecCoord& x, const VecDeriv& /*v*/)
 {
+//    sofa::helper::system::thread::ctime_t start, stop;
+//    sofa::helper::system::thread::CTime timer;
+//
+//    start = timer.getTime();
+
     int nbTriangles=_topology->getNbTriangles();
     f.resize(x.size());
 
-    for ( int i=0; i<nbTriangles; i+=1)
+    for (int i=0; i<nbTriangles; i++)
     {
         accumulateForce(f, x, i);
     }
+
+//    stop = timer.getTime();
+//    std::cout << "---------- time addForce = " << stop-start << std::endl;
 }
 
 // --------------------------------------------------------------------------------------
@@ -857,10 +870,18 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(VecDeriv& f, const VecC
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::addDForce(VecDeriv& df, const VecDeriv& dx)
 {
+    sofa::helper::system::thread::ctime_t start, stop;
+    sofa::helper::system::thread::CTime timer;
+
+    start = timer.getTime();
+
     Real h=1;
     df.resize(dx.size());
 
     applyStiffness( df,h,dx );
+
+    stop = timer.getTime();
+//    std::cout << "time addDForce = " << stop-start << std::endl;
 }
 
 } // namespace forcefield

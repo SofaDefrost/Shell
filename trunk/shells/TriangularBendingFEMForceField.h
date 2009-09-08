@@ -22,8 +22,8 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#ifndef SOFA_COMPONENT_FORCEFIELD_TRIANGULARBENDINGFEMFORCEFIELD_H
-#define SOFA_COMPONENT_FORCEFIELD_TRIANGULARBENDINGFEMFORCEFIELD_H
+#ifndef SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_H
+#define SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_H
 
 #if !defined(__GNUC__) || (__GNUC__ > 3 || (_GNUC__ == 3 && __GNUC_MINOR__ > 3))
 #pragma once
@@ -37,7 +37,7 @@
 #include <newmat/newmat.h>
 #include <newmat/newmatap.h>
 
-
+#include <sofa/helper/system/thread/CTime.h>
 
 namespace sofa
 {
@@ -101,7 +101,6 @@ public:
 
                 helper::fixed_array <Vec3, 2> restLocalPositions;
                 helper::fixed_array <Quat, 3> restLocalOrientations;
-                helper::fixed_array <Quat, 3> previousOrientations;
 
                 /// material stiffness matrices of each tetrahedron
                 MaterialStiffness materialMatrix;
@@ -197,7 +196,7 @@ protected :
 };
 
 
-#if defined(WIN32) && !defined(SOFA_COMPONENT_FORCEFIELD_TRIANGULARBENDINGFEMFORCEFIELD_CPP)
+#if defined(WIN32) && !defined(SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_CPP)
 #pragma warning(disable : 4231)
 #ifndef SOFA_FLOAT
 extern template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<defaulttype::Rigid3dTypes>;
