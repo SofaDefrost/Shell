@@ -35,7 +35,7 @@
 <!--            </Node>-->
 
             <Node name="SubTriangles">
-<!--                <TriangleSetTopologyContainer  name="subTrianglesTopo" filename="mesh/square3.msh"/>-->
+<!--                <TriangleSetTopologyContainer  name="subTrianglesTopo" filename="applications/plugins/shells/mesh/square3.msh"/>-->
                 <TriangleSetTopologyContainer  name="subTrianglesTopo"/>
                 <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="0"/>
                 <MechanicalObject  name="subPoints" />
