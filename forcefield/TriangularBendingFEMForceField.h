@@ -85,8 +85,10 @@ protected:
         typedef Vec<9, Real> DisplacementBending;                               ///< the displacement vector for bending
 	typedef Mat<3, 3, Real> MaterialStiffness;				///< the matrix of material stiffness
 	typedef Mat<6, 3, Real> StrainDisplacement;				///< the strain-displacement matrix
+        typedef Mat<3, 9, Real> StrainDisplacementBending;
 	typedef Mat<3, 3, Real > Transformation;				///< matrix for rigid transformations like rotations
         typedef Mat<6, 6, Real> StiffnessMatrix;
+        typedef Mat<9, 9, Real> StiffnessMatrixBending;
 
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
 
@@ -106,31 +108,37 @@ public:
                 MaterialStiffness materialMatrix;
                 // the strain-displacement matrices vector
                 StrainDisplacement strainDisplacementMatrix;
+                // the strain-displacement matrices vector
+                StrainDisplacementBending strainDisplacementMatrix1;
+                StrainDisplacementBending strainDisplacementMatrix2;
+                StrainDisplacementBending strainDisplacementMatrix3;
                 // Indices of each vertex
                 Index a, b, c;
                 // Local coordinates
                 Vec3 localB, localC;
                 // bending strain-displacement matrices at each Gauss point
-                Mat<3, 9, Real> b1;
-                Mat<3, 9, Real> b2;
-                Mat<3, 9, Real> b3;
+//                Mat<3, 9, Real> b1;
+//                Mat<3, 9, Real> b2;
+//                Mat<3, 9, Real> b3;
                 // Transformation rotation;
-                Quat Qframe0;
+//                Quat Qframe0;
                 Quat Qframe;
                 // strain vector
-                Vec3 strain;
+//                Vec3 strain;
                 // strain caused by bending at each Gauss point
-                Vec3 bendingStrain1;
-                Vec3 bendingStrain2;
-                Vec3 bendingStrain3;
+//                Vec3 bendingStrain1;
+//                Vec3 bendingStrain2;
+//                Vec3 bendingStrain3;
                 // stress vector
-                Vec3 stress;
+//                Vec3 stress;
                 // stress caused by bending at each Gauss point
-                Vec3 bendingStress1;
-                Vec3 bendingStress2;
-                Vec3 bendingStress3;
+//                Vec3 bendingStress1;
+//                Vec3 bendingStress2;
+//                Vec3 bendingStress3;
                 // Stiffness matrix K = J * M * Jt
                 StiffnessMatrix stiffnessMatrix;
+                // Stiffness matrix for bending K = Jt * M * J
+                StiffnessMatrixBending stiffnessMatrixBending;
                 
                 // Third of the surface
                 Real thirdSurface;
@@ -163,6 +171,7 @@ public:
 	virtual void addDForce (VecDeriv& df, const VecDeriv& dx);
 	virtual double getPotentialEnergy(const VecCoord& x);
 	virtual void handleTopologyChange();
+        virtual void draw();
 
         sofa::core::componentmodel::topology::BaseMeshTopology* getTopology() {return _topology;}
         TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}
@@ -180,26 +189,30 @@ protected :
         TriangleData<TriangleInformation> triangleInfo;
 
 	void computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex);
-        void computeDisplacementBending(Displacement &Disp, const Index elementIndex, const VecCoord &x);
+        void computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, const Index elementIndex);
 	void computeStrainDisplacementMatrix(StrainDisplacement &J, const Vec3& b, const Vec3& c);
-        void computeStrainDisplacementBending(const Index elementIndex, const Vec3& /*a*/, const Vec3& b, const Vec3& c );
+        void computeStrainDisplacementMatrixBending(TriangleInformation *tinfo, const Vec3& b, const Vec3& c);
         void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
-	void computeStrain(Vec<3,Real> &strain, const StrainDisplacement &J, const Displacement &D);
-        void computeStrainBending(const Index& elementIndex, const Displacement &D);
-	void computeStress(Vec<3,Real> &stress, const MaterialStiffness &K, const Vec<3,Real> &strain);
-        void computeStressBending(const Index& elementIndex);
+//	void computeStrain(Vec<3,Real> &strain, const StrainDisplacement &J, const Displacement &D);
+//        void computeStrainBending(const Index& elementIndex, const DisplacementBending &D);
+//	void computeStress(Vec<3,Real> &stress, const MaterialStiffness &K, const Vec<3,Real> &strain);
+//        void computeStressBending(const Index& elementIndex);
         void computeStiffnessMatrix(StiffnessMatrix &K, const StrainDisplacement &J, const MaterialStiffness &M);
+        void computeStiffnessMatrixBending(StiffnessMatrixBending &K, TriangleInformation *tinfo);
 	void computeForce(Displacement &F, const Displacement& D, const Index elementIndex);
+        void computeForceBending(DisplacementBending &F, const DisplacementBending& D, const Index elementIndex);
 
 	static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
 	/// f += Kx where K is the stiffness matrix and x a displacement
-	virtual void applyStiffness( VecDeriv& f, Real h, const VecDeriv& dx );
+	virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex);
 	virtual void computeMaterialStiffness(const int i);
 
 	void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
 	void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
 	void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
+
+        void testAddDforce(void);
 };
 
 
