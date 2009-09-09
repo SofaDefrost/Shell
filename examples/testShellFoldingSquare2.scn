@@ -1,0 +1,53 @@
+<Node name="root" dt="0.01" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" gravity="0 0 10">
+    <CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <CollisionResponse response="default" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+    <CollisionGroup />
+
+    <Node name="Square">
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.0" />
+        <CGLinearSolver iterations="75" tolerance="1e-15" threshold="1e-15"/>
+        <RegularGrid name="gridTopo" min="0 0 0" max="1 1 0" nx="3" ny="3" nz="1"/>
+        <MechanicalObject template="Rigid" />
+        <UniformMass mass="0.01 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.05" totalmass="1"/>
+
+        <BoxConstraint box="0.45 0 -0.01  0.55 1.0 0.01"/>
+
+        <FixedRotationConstraint FixedZRotation="true" />
+
+        <Node>
+            <TriangleSetTopologyContainer  name="trianglesTopo"/>
+            <TriangleSetTopologyModifier   name="Modifier" />
+            <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
+            <MechanicalObject  name="basePoints" template="Rigid"/>
+<!--            <WriteState filename="FoldingSquare.state" writeX="1" writeV="0"/>-->
+            <IdentityMapping />
+            <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1" />
+
+<!--            <Node>-->
+<!--                <MechanicalObject name="basePointsVec3" template="Vec3d"/>-->
+<!--                <IdentityMapping/>-->
+<!--                <Node name="VisualBasePoints">-->
+<!--                    <OglModel name="Visual" color="green"/>-->
+<!--                    <IdentityMapping object1="basePointsVec3" object2="Visual"/>-->
+<!--                </Node>-->
+<!--            </Node>-->
+
+            <Node name="SubTriangles">
+<!--                <TriangleSetTopologyContainer  name="subTrianglesTopo" filename="mesh/square3.msh"/>-->
+                <TriangleSetTopologyContainer  name="subTrianglesTopo"/>
+                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="0"/>
+                <MechanicalObject  name="subPoints" />
+                <BendingPlateMechanicalMapping />
+                <Node name="visual">
+                    <OglModel name="Visual" color="red"/>
+                    <IdentityMapping object1="subPoints" object2="Visual"/>
+                </Node>
+            </Node>
+
+        </Node>
+
+    </Node>
+
+</Node>
