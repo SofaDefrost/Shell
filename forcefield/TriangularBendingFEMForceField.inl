@@ -133,7 +133,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
     this->Inherited::init();
     
 //    Quat q;
-//    q.axisToQuat(Vec3(1, 0, 0), 0.523598776);
+//    q.axisToQuat(Vec3(1, 0, 0), 0.01);
 //    std::cout << "quat = " << q << std::endl;
 
     _topology = getContext()->getMeshTopology();
@@ -326,28 +326,26 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, cons
         DisplacementBending Disp_bending;
         Vec3 u;
         u = tinfo->Qframe.inverseRotate(dx[a].getVOrientation());
-//        Disp_bending[0] = x_a[2];
-        Disp_bending[0] = 0;
+        Disp_bending[0] = x_a[2];
+//        Disp_bending[0] = 0;
         Disp_bending[1] = u[0];
         Disp_bending[2] = u[1];
 
         u = tinfo->Qframe.inverseRotate(dx[b].getVOrientation());
-//        Disp_bending[3] = x_b[2];
-        Disp_bending[3] = 0;
+        Disp_bending[3] = x_b[2];
+//        Disp_bending[3] = 0;
         Disp_bending[4] = u[0];
         Disp_bending[5] = u[1];
 
         u = tinfo->Qframe.inverseRotate(dx[c].getVOrientation());
-//        Disp_bending[6] = x_c[2];
-        Disp_bending[6] = 0;
+        Disp_bending[6] = x_c[2];
+//        Disp_bending[6] = 0;
         Disp_bending[7] = u[0];
         Disp_bending[8] = u[1];
 
         // Compute dF
         DisplacementBending dF_bending;
-        Real t = f_thickness.getValue();
-        dF_bending = tinfo->stiffnessMatrixBending * Disp_bending * tinfo->thirdSurface * t*t*t ;
-
+        dF_bending = tinfo->stiffnessMatrixBending * Disp_bending;
 
         // Go back into global frame
         Vec3 fa1, fa2, fb1, fb2, fc1, fc2;
@@ -540,11 +538,6 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrixB
     tinfo->strainDisplacementMatrix1 = D1 * invC;
     tinfo->strainDisplacementMatrix2 = D2 * invC;
     tinfo->strainDisplacementMatrix3 = D3 * invC;
-
-//    tinfo->b1 = D1 * invC;
-//    tinfo->b2 = D2 * invC;
-//    tinfo->b3 = D3 * invC;
-
 }
 
 
@@ -602,75 +595,19 @@ void TriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBending(St
     J2t.transpose(tinfo->strainDisplacementMatrix2);
     J3t.transpose(tinfo->strainDisplacementMatrix3);
 
-
+    // K = (surface/3)*(t^3)*(J1t*material*J1 + J2t*material*J2 + J3t*material*J3)
     K = J1t * tinfo->materialMatrix * tinfo->strainDisplacementMatrix1 +
         J2t * tinfo->materialMatrix * tinfo->strainDisplacementMatrix2 +
         J3t * tinfo->materialMatrix * tinfo->strainDisplacementMatrix3;
 
+    // Compute the area of the triangle (1/2*(x2*y3))
+    Real thirdSurface = 1./6*(tinfo->localB[0]*tinfo->localC[1]);
+    tinfo->thirdSurface = thirdSurface;
+
+    // Compute forces
+    Real t = f_thickness.getValue();
+    K *= tinfo->thirdSurface * t*t*t;
 }
-
-
-// --------------------------------------------------------------------------------------------------------
-// --- Strain = StrainDisplacement * Displacement = JtD = Bd
-// --------------------------------------------------------------------------------------------------------
-//template <class DataTypes>
-//void TriangularBendingFEMForceField<DataTypes>::computeStrain(Vec3 &strain, const StrainDisplacement &J, const Displacement &D)
-//{
-//	Mat<3,6,Real> Jt;
-//	Jt.transpose(J);
-//
-//        strain[0] = Jt[0][0] * D[0] + /* Jt[0][1] * Depl[1] + */ Jt[0][2] * D[2] /* + Jt[0][3] * Depl[3] + Jt[0][4] * Depl[4] + Jt[0][5] * Depl[5] */ ;
-//        strain[1] = /* Jt[1][0] * Depl[0] + */ Jt[1][1] * D[1] + /* Jt[1][2] * Depl[2] + */ Jt[1][3] * D[3] + /* Jt[1][4] * Depl[4] + */ Jt[1][5] * D[5];
-//        strain[2] = Jt[2][0] * D[0] + Jt[2][1] * D[1] + Jt[2][2] * D[2] +	Jt[2][3] * D[3] + Jt[2][4] * D[4] /* + Jt[2][5] * Depl[5] */ ;
-//
-//}
-
-// --------------------------------------------------------------------------------------------------------
-// --- Bending strain = BendingStrainDisplacement * Displacement
-// --------------------------------------------------------------------------------------------------------
-//template <class DataTypes>
-//void TriangularBendingFEMForceField<DataTypes>::computeStrainBending(const Index& elementIndex, const DisplacementBending &D)
-//{
-//    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-//    TriangleInformation *tinfo = &triangleInf[elementIndex];
-//
-//    tinfo->bendingStrain1 = tinfo->b1 * D;
-//    tinfo->bendingStrain2 = tinfo->b2 * D;
-//    tinfo->bendingStrain3 = tinfo->b3 * D;
-//
-//    triangleInfo.endEdit();
-//}
-
-// --------------------------------------------------------------------------------------------------------
-// --- Stress = K * Strain = KJtD = KBd
-// --------------------------------------------------------------------------------------------------------
-//template <class DataTypes>
-//void TriangularBendingFEMForceField<DataTypes>::computeStress(Vec3 &stress, const MaterialStiffness &K, const Vec<3,Real> &strain)
-//{
-//    // Optimisations: The following values are 0 (per computeMaterialStiffnesses )
-//    // K[0][2]  K[1][2]  K[2][0] K[2][1]
-//    stress[0] = K[0][0] * strain[0] + K[0][1] * strain[1] + K[0][2] * strain[2];
-//    stress[1] = K[1][0] * strain[0] + K[1][1] * strain[1] + K[1][2] * strain[2];
-//    stress[2] = K[2][0] * strain[0] + K[2][1] * strain[1] + K[2][2] * strain[2];
-//}
-
-// --------------------------------------------------------------------------------------------------------
-// --- Bending stress = K * BendingStrain
-// --------------------------------------------------------------------------------------------------------
-//template <class DataTypes>
-//void TriangularBendingFEMForceField<DataTypes>::computeStressBending(const Index& elementIndex)
-//{
-//    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-//    TriangleInformation *tinfo = &triangleInf[elementIndex];
-//
-//    MaterialStiffness materialMatrix = f_bendingRatio.getValue()*(tinfo->materialMatrix);
-//    computeStress(tinfo->bendingStress1, materialMatrix, tinfo->bendingStrain1);
-//    computeStress(tinfo->bendingStress2, materialMatrix, tinfo->bendingStrain2);
-//    computeStress(tinfo->bendingStress3, materialMatrix, tinfo->bendingStrain3);
-//
-//    triangleInfo.endEdit();
-//}
-
 
 // --------------------------------------------------------------------------------------
 // ---	Compute material stiffness
@@ -740,104 +677,12 @@ void TriangularBendingFEMForceField<DataTypes>::computeForceBending(Displacement
     StiffnessMatrixBending K_bending;
     computeStiffnessMatrixBending(K_bending, tinfo);
     tinfo->stiffnessMatrixBending = K_bending;
-    
-    // Compute the area of the triangle (1/2*(x2*y3))
-    Real thirdSurface = 1./6*(tinfo->localB[0]*tinfo->localC[1]);
-    tinfo->thirdSurface = thirdSurface;
 
     // Compute forces
-    Real t = f_thickness.getValue();
-    F_bending = K_bending * D_bending * thirdSurface * t*t*t;
+    F_bending = K_bending * D_bending;
 
     triangleInfo.endEdit();
 }
-
-//// --------------------------------------------------------------------------------------
-//// ---	Compute F = J * stress;
-//// --------------------------------------------------------------------------------------
-//template <class DataTypes>
-//void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, const Index elementIndex, const VecCoord &p)
-//{
-//    Displacement D;
-//    StrainDisplacement J;
-//    Vec3 strain;
-//    Vec3 stress;
-//
-//    Index a = _topology->getTriangle(elementIndex)[0];
-//    Index b = _topology->getTriangle(elementIndex)[1];
-//    Index c = _topology->getTriangle(elementIndex)[2];
-//
-//    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-//    TriangleInformation *tinfo = &triangleInf[elementIndex];
-//
-//    // Co-rotational method using rotation matrix (rotation from triangle to world)
-//    Quat Qframe;
-//    computeRotation(Qframe, p, a, b, c);
-//    tinfo->Qframe = Qframe;
-//
-//    // then compute displacement in this frame
-//    computeDisplacement(D, elementIndex, p);
-//
-//    // and compute postions of a, b and c in the co-rotational frame (a is always (0,0,0))
-//    Vec3 A = Vec3(0.0, 0.0, 0.0);
-//    Vec3 B = Qframe.inverseRotate(p[b].getCenter()-p[a].getCenter());
-//    Vec3 C = Qframe.inverseRotate(p[c].getCenter()-p[a].getCenter());
-//
-//    computeStrainDisplacement(J, A, B, C);
-//    computeStrain(strain, J, D);
-//
-//    MaterialStiffness temp = f_membraneRatio.getValue()*(tinfo->materialMatrix);
-//    computeStress(stress, temp, strain);
-////    computeStress(stress, tinfo->materialMatrix, strain);
-//
-//    // Compute F = J * stress;
-//    // Optimisations: The following values are 0 (per computeStrainDisplacement )
-//    // J[0][1] J[1][0] J[2][1] J[3][0] J[4][0] J[4][1] J[5][0] J[5][2]
-//
-//    F[0] = J[0][0] * stress[0] + /* J[0][1] * KJtD[1] + */ J[0][2] * stress[2];
-//    F[1] = /* J[1][0] * KJtD[0] + */ J[1][1] * stress[1] + J[1][2] * stress[2];
-//    F[2] = J[2][0] * stress[0] + /* J[2][1] * KJtD[1] + */ J[2][2] * stress[2];
-//    F[3] = /* J[3][0] * KJtD[0] + */ J[3][1] * stress[1] + J[3][2] * stress[2];
-//    F[4] = /* J[4][0] * KJtD[0] + J[4][1] * KJtD[1] + */ J[4][2] * stress[2];
-//    F[5] = /* J[5][0] * KJtD[0] + */ J[5][1] * stress[1] /* + J[5][2] * KJtD[2] */ ;
-//
-//    // Stores newly computed values for next time
-//    tinfo->strainDisplacementMatrix = J;
-//    tinfo->strain = strain;
-//    tinfo->stress = stress;
-//
-//    // bending forces
-//    if (f_bending.getValue())
-//    {
-//        computeDisplacementBending(D, elementIndex, p);
-//
-//        // Computes the area of the triangle (1/2*(x2*y3))
-//        Real thirdSurface = 1./6*(B[0]*C[1]);
-//        tinfo->thirdSurface = thirdSurface;
-//
-//        computeStrainDisplacementBending(elementIndex, A, B, C);
-//        computeStrainBending(elementIndex, D);
-//        computeStressBending(elementIndex);
-//
-//        Mat<9, 3, Real> bt1, bt2, bt3;
-//        bt1.transpose( tinfo->b1 );
-//        bt2.transpose( tinfo->b2 );
-//        bt3.transpose( tinfo->b3 );
-//
-//        // z, x, y for each point
-//        Vec <9, Real> force;
-//        Real t = f_thickness.getValue();
-//        force = (bt1 * tinfo->bendingStress1 + bt2 * tinfo->bendingStress2 + bt3 * tinfo->bendingStress3) * tinfo->thirdSurface * t * t * t;
-//
-//        for (unsigned int i = 0; i< force.size(); i++)
-//        {
-//            F[i+6] = force[i];
-//        }
-//    }
-//
-//    triangleInfo.endEdit();
-//}
-
 
 // --------------------------------------------------------------------------------------
 // ---
@@ -947,6 +792,117 @@ void TriangularBendingFEMForceField<DataTypes>::addDForce(VecDeriv& df, const Ve
 }
 
 
+template<class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSpace(StiffnessMatrixGlobalSpace &K_gs, TriangleInformation *tinfo)
+{
+    // Stiffness matrix of current triangle
+    const StiffnessMatrix &K = tinfo->stiffnessMatrix;
+
+    // Firstly, add all degrees of freedom (we add the unused translation in z)
+    StiffnessMatrixGlobalSpace K_9x9;
+    unsigned int ig = 0;
+    unsigned int jg = 0;
+    for (unsigned int i=0; i<6; i++)
+    {
+        jg = 0;
+        
+        for (unsigned int j=0; j<6; j++)
+        {
+            K_9x9[ig][jg] = K[i][j];
+            jg++;
+
+            // Add a zero every 2 column
+            if (jg==2 || jg==5 || jg==8)
+            {
+                K_9x9[ig][jg] = 0;
+                jg++;
+            }
+        }
+
+        ig++;
+
+        // Add an empty row every 2 row
+        if (ig==2 || ig==5 || ig==8)
+        {
+            for (jg=0; jg<9; jg++)
+            {
+                K_9x9[ig][jg] = 0;
+            }
+            ig++;
+        }
+    }
+
+
+    // Extend rotation matrix and its transpose
+    Transformation R, Rt;
+    tinfo->Qframe.toMatrix(R);
+    Rt.transpose(R);
+
+    Mat<9, 9, Real> R9x9, Rt9x9;
+
+    for(unsigned int i=0;i<3;++i)
+    {
+        for(unsigned int j=0;j<3;++j)
+        {
+            R9x9[i][j] = R9x9[i+3][j+3] = R9x9[i+6][j+6] = R[i][j];
+            Rt9x9[i][j] = Rt9x9[i+3][j+3] = Rt9x9[i+6][j+6] = Rt[i][j];
+        }
+    }
+
+
+    // Then we put the stifness matrix into the global frame
+//    K_gs = R9x9 * K_9x9 * Rt9x9;
+    K_gs = Rt9x9 * K_9x9 * R9x9;
+
+}
+
+
+template<class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset)
+{
+    StiffnessMatrixGlobalSpace K_gs;
+
+    // Build Matrix Block for this ForceField
+    unsigned int i, j ,n1, n2, row, column, ROW, COLUMN;
+    Index node1, node2;
+
+    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+
+    for(int IT=0 ; IT != _topology->getNbTriangles() ; ++IT)
+    {
+            TriangleInformation *tinfo = &triangleInf[IT];
+            const Triangle t = _topology->getTriangle(IT);
+            
+            convertStiffnessMatrixToGlobalSpace(K_gs, tinfo);
+
+            // find index of node 1
+            for (n1=0; n1<3; n1++)
+            {
+                    node1 = t[n1];
+
+                    for(i=0; i<3; i++)
+                    {
+                            ROW = offset+3*node1+i;
+                            row = 3*n1+i;
+                            // find index of node 2
+                            for (n2=0; n2<3; n2++)
+                            {
+                                    node2 = t[n2];
+
+                                    for (j=0; j<3; j++)
+                                    {
+                                            COLUMN = offset+3*node2+j;
+                                            column = 3*n2+j;
+                                            mat->add(ROW, COLUMN, K_gs[row][column]);
+                                    }
+                            }
+                    }
+            }
+    }
+
+    triangleInfo.endEdit();
+}
+
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
 {
@@ -963,7 +919,7 @@ void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
     dx2.resize(x1.size());
     v.resize(x1.size());
 
-    dx1[x1.size()-1] = Coord(Vec3(0.0, 0, 0.0002), Quat(0, 0, 0, 1));
+    dx1[x1.size()-1] = Coord(Vec3(0.0, 0.0, 0.0), Quat(0.00499998, 0, 0, 0.999988));
 
     for (unsigned int i=0; i<x1.size(); i++)
     x2[i] = x1[i] + dx1[i];
@@ -976,7 +932,7 @@ void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
     std::cout << "df = f2-f1 = " << df << std::endl;
 
     df.clear();
-    dx2[x1.size()-1] = Deriv(Vec3(0.0, 0, 0.0002), Vec3(0, 0, 0));
+    dx2[x1.size()-1] = Deriv(Vec3(0.0, 0, 0.0), Vec3(0.01, 0, 0));
     addDForce(df, dx2);
 
     std::cout << "df from addDforce = " << df << std::endl;
@@ -986,7 +942,7 @@ void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::draw()
 {
-    testAddDforce();
+//    testAddDforce();
 }
 
 } // namespace forcefield
