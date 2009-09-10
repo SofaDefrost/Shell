@@ -23,7 +23,7 @@
     <Node name="one_triangle">
         <EulerImplicitSolver />
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
-        <TriangleSetTopologyContainer name="initial_triangle_topo" filename="applications/plugins/shells/mesh/oneTriangle_yz.obj" />
+        <TriangleSetTopologyContainer name="initial_triangle_topo" filename="../mesh/oneTriangle_yz.obj" />
         <MechanicalObject name="triangle" template="Rigid" position="@../initial_triangle/Vertex2Frame.frames"/>
         <UniformMass mass="0.1 0.1 [ 0.05 0 0 , 0 0.1 0,  0 0 0.1 ]" showAxisSizeFactor="0.1" totalmass="1" />
         
@@ -38,7 +38,7 @@
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="sub_triangle_topo"/>
-<!--            <TriangleSetTopologyContainer  name="sub_triangle_topo" filename="applications/plugins/shells/mesh/oneTriangle_yz_sub.obj"/>-->
+<!--            <TriangleSetTopologyContainer  name="sub_triangle_topo" filename="../mesh/oneTriangle_yz_sub.obj"/>-->
             <TriangleSubdivisionTopologicalMapping object1="initial_triangle_topo" object2="sub_triangle_topo" subdivisions="2"/>
             <MechanicalObject  name="subPoints" template="Vec3d"/>
 <!--            <ConstantForceField points="3" forces="0.2 0 0"/>-->

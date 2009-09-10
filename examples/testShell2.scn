@@ -19,7 +19,7 @@
     <Node name="one_triangle">
         <EulerImplicitSolver />
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
-        <TriangleSetTopologyContainer name="trianglesTopo" filename="applications/plugins/shells/mesh/oneTriangle.obj" />
+        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/oneTriangle.obj" />
         <MechanicalObject name="tri" template="Rigid" />
 <!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1"  position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0.258819 0 0 0.965926"/>-->
 

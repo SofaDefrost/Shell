@@ -21,7 +21,7 @@
 <!--        <EulerImplicitSolver />-->
 <!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
         <RungeKutta4Solver/>
-        <TriangleSetTopologyContainer name="trianglesTopo" filename="applications/plugins/shells/mesh/anotherTriangle.obj" />
+        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/anotherTriangle.obj" />
         <MechanicalObject name="tri" template="Rigid"/>
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.5" totalmass="1" />
 
