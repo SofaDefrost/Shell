@@ -89,7 +89,7 @@ protected:
 	typedef Mat<3, 3, Real > Transformation;				///< matrix for rigid transformations like rotations
         typedef Mat<6, 6, Real> StiffnessMatrix;
         typedef Mat<9, 9, Real> StiffnessMatrixBending;
-        typedef Mat<9, 9, Real> StiffnessMatrixGlobalSpace;
+        typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
 
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
 

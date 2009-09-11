@@ -5,7 +5,7 @@
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
     <CollisionGroup />
 
-    <MultiStepMasterSolver collisionSteps="1" integrationSteps="100"/>
+<!--    <MultiStepMasterSolver collisionSteps="1" integrationSteps="100"/>-->
 
     <Node name="pointA">
         <Object type="MechanicalObject" template="Rigid" name="fixedPoint" position="0 1 0 -0 -0 -0.707107 0.707107"/>
@@ -18,9 +18,10 @@
     </Node>
 
     <Node name="one_triangle">
-<!--        <EulerImplicitSolver />-->
+        <EulerImplicitSolver />
 <!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-        <RungeKutta4Solver/>
+        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+<!--        <RungeKutta4Solver/>-->
         <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/anotherTriangle.obj" />
         <MechanicalObject name="tri" template="Rigid"/>
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.5" totalmass="1" />
@@ -28,7 +29,7 @@
         <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
         <AttachConstraint name="Constraint" object2="tri" object1="pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />
 <!--        <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="true" />-->
-        <ConstantForceField points="2" forces="0 0 0.3 0 0 0"/>
+        <ConstantForceField points="2" forces="0 0 1 0 0 0"/>
         <FixedRotationConstraint FixedZRotation="true"/>
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" thickness="0.1"/>
 
