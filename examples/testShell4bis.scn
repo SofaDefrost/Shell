@@ -23,8 +23,8 @@
     <Node name="one_triangle">
         <EulerImplicitSolver />
 <!--        <StaticSolver/>-->
-        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
-<!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
+        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
         <TriangleSetTopologyContainer name="initial_triangle_topo" filename="../mesh/oneTriangle_yz.obj" />
         <MechanicalObject name="triangle" template="Rigid" position="@../initial_triangle/Vertex2Frame.frames"/>
         <UniformMass mass="0.1 0.1 [ 0.05 0 0 , 0 0.1 0,  0 0 0.1 ]" showAxisSizeFactor="0.1" totalmass="0.01" />

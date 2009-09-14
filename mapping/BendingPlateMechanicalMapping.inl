@@ -195,12 +195,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
         return;
     }
 
-    // List of non-null indices within the displacemente vector u
-    nonNullIndices = new int[6];
-    nonNullIndices[0] = 1;  nonNullIndices[1] = 2;
-    nonNullIndices[2] = 4;  nonNullIndices[3] = 5;
-    nonNullIndices[4] = 7;  nonNullIndices[5] = 8;
-
     // Stores initial orientation for each vertex
     InVecCoord& x = *this->fromModel->getX();
     previousOrientation.resize(x.size());
@@ -212,12 +206,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     // Retrieves Forcefield to compute deflection at runtime
     triangularBendingForcefield = NULL;
     this->getContext()->get(triangularBendingForcefield);
-
-//    ConstantForceField<InDataTypes>* ptr;
-//    this->getContext()->get(ptr, 2);
-//    std::cout << "ConstantForceField init() = " << ptr << std::endl;
-
-//    std::cout << "triangularBendingForcefield init = " << triangularBendingForcefield << std::endl;
 
     if (!triangularBendingForcefield)
         return;
@@ -301,7 +289,7 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
             PQ = Q-P;
 
             Real distance = PQ.norm2();
-            Real threshold = 0.000001;
+            Real threshold = 0.00000001;
             if (distance < minimumDistance - threshold)
             {
                 // We deal with a new minimum, so clear the previous list
@@ -370,7 +358,7 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
         double beta  = (b[1]*A[0][0] - b[0]*A[1][0])/det;
 
         // If point is on one of the edge, returns
-        Real threshold = 0.000001;
+        Real threshold = 0.00000001;
         if (alpha + threshold >= 0 && beta + threshold >= 0 && alpha + beta - threshold <= 1 )
         {
             const Vector3 PQ = AB * alpha + AC * beta - AP;
@@ -473,7 +461,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
         for (unsigned int t=0; t<inTriangles.size();t++)
         {
             tinfo = &triangleInf[t];
-//            listCoeffs[t] = tinfo->invC.multiplyBySparseVector(tinfo->u + tinfo->u_flat, nonNullIndices, 6);
             listCoeffs[t] = tinfo->invC * (tinfo->u + tinfo->u_flat);
         }
 
@@ -591,12 +578,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv&
             v_u[4] = va_b_local[0];   v_u[5] = va_b_local[1];
             v_u[7] = va_c_local[0];   v_u[8] = va_c_local[1];
 
-//            if (t == 0)
-//            {
-//                std::cout << "v_u = " << v_u << std::endl;
-//            }
-
-    //        listCoeffs[t] = tinfo->invC.multiplyBySparseVector(v_u, nonNullIndices, 6);
             listCoeffs[t] = tinfo->invC * v_u;
         }
 
@@ -763,37 +744,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv&
             }
         }
 
-
-        // HACK TO PREVENT ROTATION AROUND Z AXIS
-    //    InVecCoord& x = *this->fromModel->getX();
-    //    for (unsigned int i=0; i<out.size(); i++)
-    //    {
-    //        // Current orientations
-    //        Quat Q = x[i].getOrientation();
-    //
-    //        // Previous orientations
-    //        Quat Q_prev = previousOrientation[i];
-    //
-    //        Vec3 edgez, edgex_prev, edgex, edgey;
-    //        Mat<3, 3, Real > R;
-    //
-    //        edgez = Q.rotate(Vec3(0.0, 0.0, 1.0));
-    //        edgex_prev = Q_prev.rotate(Vec3(1.0, 0.0, 0.0));
-    //        edgey = cross(edgez, edgex_prev);
-    //        edgex = cross(edgey, edgez);
-    //        R[0][0] = edgex[0];    R[0][1] = edgex[1];    R[0][2] = edgex[2];
-    //        R[1][0] = edgey[0];    R[1][1] = edgey[1];    R[1][2] = edgey[2];
-    //        R[2][0] = edgez[0];    R[2][1] = edgez[1];    R[2][2] = edgez[2];
-    //
-    //        Quat newOrientation;
-    //        newOrientation.fromMatrix(R.transposed());
-    //        x[i].getOrientation() = newOrientation;
-    //
-    //        // Stores orientations for next iteration
-    //        previousOrientation[i] = newOrientation;
-    //    }
-
-    //    std::cout << "------------------------------------" << std::endl;
     }
 
 

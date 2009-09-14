@@ -798,6 +798,7 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
     // Stiffness matrix of current triangle
     const StiffnessMatrix &K = tinfo->stiffnessMatrix;
 
+//    StiffnessMatrix K;
 //    for (unsigned int i=0; i<6; i++)
 //    {
 //        for (unsigned int j=0; j<6; j++)
@@ -820,41 +821,29 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
     StiffnessMatrixGlobalSpace K_18x18;
     unsigned int ig = 0;
     unsigned int jg = 0;
-    for (unsigned int i=0; i<6; i++)
+
+    // Copy the stiffness matrix by block 2x2 into global matrix (the new index of each bloc into global matrix is a combination of 0, 6 and 12 in indices)
+    for (unsigned int by=0; by<3; by++)
     {
-        jg = 0;
-        
-        for (unsigned int j=0; j<6; j++)
+        // Global row index
+        ig = 6*by;
+
+        for (unsigned int bx=0; bx<3; bx++)
         {
-            K_18x18[ig][jg] = K[i][j];
-            jg++;
+            // Global column index
+            jg = 6*bx;
 
-            // Add 4 zeros every 2 column
-            if (jg==2 || jg==8 || jg==14)
+            // Iterates over the indices of the bloc 2x2
+            for (unsigned int i=0; i<2; i++)
             {
-                for (unsigned int k=0; k<4; k++)
+                for (unsigned int j=0; j<2; j++)
                 {
-                    K_18x18[ig][jg] = 0;
-                    jg++;
+                    K_18x18[ig+i][jg+j] = K[2*bx+i][2*by+j];
                 }
-            }
-        }
-
-        ig++;
-
-        // Add 4 empty rows every 2 row
-        if (ig==2 || ig==8 || ig==14)
-        {
-            for (unsigned int k=0; k<4; k++)
-            {
-                for (jg=0; jg<18; jg++)
-                {
-                    K_18x18[ig][jg] = 0;
-                }
-                ig++;
             }
         }
     }
+
 
 //    std::cout << "stiffnessMatrix K_18x18 = " << std::endl;
 //    for (unsigned int i=0; i<18; i++)
@@ -929,7 +918,7 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
 //    {
 //        for (unsigned int j=0; j<18; j++)
 //        {
-//            std::cout << K_18x18[i][j] << "  " ;
+//            std::cout << K_18x18[i][j] + K_18x18_bending[i][j] << "  " ;
 //        }
 //        std::cout << std::endl;
 //    }
@@ -938,6 +927,11 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
     Transformation R, Rt;
     tinfo->Qframe.toMatrix(R);
     Rt.transpose(R);
+
+//    Vec3 v(1,0,0);
+//    Vec3 V;
+//    V = R * v;
+//    std::cout << "V = " << V << std::endl;
 
     StiffnessMatrixGlobalSpace R18x18, Rt18x18;
 
@@ -965,7 +959,6 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
     K_gs = R18x18 * (K_18x18+K_18x18_bending) * Rt18x18;
 
 //    K_gs = Rt18x18 * (K_18x18+K_18x18_bending) * R18x18;
-
 //    K_gs = (K_18x18+K_18x18_bending);
 
 //    StiffnessMatrixGlobalSpace K_gs2 = R18x18 * (K_18x18+K_18x18_bending) * Rt18x18;
@@ -1005,10 +998,84 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
 
     for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
+//        std::cout << "triangle " << t << std::endl;
+
             TriangleInformation *tinfo = &triangleInf[t];
             const Triangle triangle = _topology->getTriangle(t);
             
             convertStiffnessMatrixToGlobalSpace(K_gs, tinfo);
+
+//            if (t == 0)
+//            {
+//                for (unsigned int i=0; i<18; i++)
+//                {
+//                    for (unsigned int j=0; j<18; j++)
+//                    {
+//                        K_gs[i][j] = 1;
+//                    }
+//                }
+//
+//                std::cout << "Stiffness matrix of triangle 0" << std::endl;
+//                for (unsigned int i=6; i<12; i++)
+//                {
+//                    for (unsigned int j=6; j<12; j++)
+//                    {
+//                        std::cout << K_gs[i][j] << "  " ;
+//                    }
+//                    std::cout << std::endl;
+//                }
+//            }
+//            if (t == 1)
+//            {
+//                for (unsigned int i=0; i<18; i++)
+//                {
+//                    for (unsigned int j=0; j<18; j++)
+//                    {
+//                        K_gs[i][j] = 10;
+//                    }
+//                }
+//
+//                std::cout << "Stiffness matrix of triangle 1" << std::endl;
+//                for (unsigned int i=0; i<6; i++)
+//                {
+//                    for (unsigned int j=0; j<6; j++)
+//                    {
+//                        std::cout << K_gs[i][j] << "  " ;
+//                    }
+//                    std::cout << std::endl;
+//                }
+//            }
+//            if (t == 2)
+//            {
+//                for (unsigned int i=0; i<18; i++)
+//                {
+//                    for (unsigned int j=0; j<18; j++)
+//                    {
+//                        K_gs[i][j] = 100;
+//                    }
+//                }
+//
+//                std::cout << "Stiffness matrix of triangle 2" << std::endl;
+//                for (unsigned int i=12; i<18; i++)
+//                {
+//                    for (unsigned int j=12; j<18; j++)
+//                    {
+//                        std::cout << K_gs[i][j] << "  " ;
+//                    }
+//                    std::cout << std::endl;
+//                }
+//            }
+//            if (t == 3)
+//            {
+//                for (unsigned int i=0; i<18; i++)
+//                {
+//                    for (unsigned int j=0; j<18; j++)
+//                    {
+//                        K_gs[i][j] = 1000;
+//                    }
+//                }
+//            }
+
 
             // find index of node 1
             for (n1=0; n1<3; n1++)
@@ -1035,10 +1102,18 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
             }
     }
 
-//    std::cout << "Global matrix = " << std::endl;
-//    for (unsigned int i=0; i<18; i++)
+//    std::cout << "Global matrix (" << mat->rowSize() << "x" << mat->colSize() << ")" << std::endl;
+//    for (unsigned int i=0; i<mat->rowSize(); i++)
 //    {
-//        for (unsigned int j=0; j<18; j++)
+//        for (unsigned int j=0; j<mat->colSize(); j++)
+//        {
+//            std::cout << mat->element(i,j) << "  " ;
+//        }
+//        std::cout << std::endl;
+//    }
+//    for (unsigned int i=6; i<12; i++)
+//    {
+//        for (unsigned int j=6; j<12; j++)
 //        {
 //            std::cout << mat->element(i,j) << "  " ;
 //        }
