@@ -243,7 +243,7 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
     computeRotation(Qframe0, x0, a, b, c );
     computeRotation(Qframe, x, a, b, c );
     tinfo->Qframe = Qframe;
-
+    
     // The positions of each point is expressed into the local frame at rest position
     tinfo->restLocalPositions[0] = Qframe0.inverseRotate(x0[b].getCenter() - x0[a].getCenter());
     tinfo->restLocalPositions[1] = Qframe0.inverseRotate(x0[c].getCenter() - x0[a].getCenter());
@@ -251,11 +251,11 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
     if (f_bending.getValue())
     {
         // Computes inverse of C for initial position (in case of the latter is different than the rest_position)
-        Vec3 localB = Qframe.inverseRotate(x[b].getCenter()-x[a].getCenter());
-        Vec3 localC = Qframe.inverseRotate(x[c].getCenter()-x[a].getCenter());
-        computeStrainDisplacementMatrixBending(tinfo, localB, localC);
+        tinfo->localB = Qframe.inverseRotate(x[b].getCenter()-x[a].getCenter());
+        tinfo->localC = Qframe.inverseRotate(x[c].getCenter()-x[a].getCenter());
+        computeStrainDisplacementMatrixBending(tinfo, tinfo->localB, tinfo->localC);
 
-        // Local rest orientations
+        // Local rest orientations (Evaluates the difference between the rest position and the flat position to allow the use of a deformed rest shape)
         tinfo->restLocalOrientations[0] = qDiff(x0[a].getOrientation(), Qframe0);     // Rotation from Qframe0 to x0[a].getOrientation()
         tinfo->restLocalOrientations[1] = qDiff(x0[b].getOrientation(), Qframe0);     // Rotation from Qframe0 to x0[b].getOrientation()
         tinfo->restLocalOrientations[2] = qDiff(x0[c].getOrientation(), Qframe0);     // Rotation from Qframe0 to x0[c].getOrientation()
@@ -264,18 +264,14 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
         DisplacementBending Disp_bending;
         computeDisplacementBending(Disp_bending, x, i);
 
-        // Evaluates the difference between the rest position and the flat position to allow the use of a deformed rest shape and creates a vector u_flat matching this difference
-        Quat dQA_flat = qDiff(x0[a].getOrientation(), Qframe0);     // Rotation from Qframe0 to x0[a].getOrientation()
-        Quat dQB_flat = qDiff(x0[b].getOrientation(), Qframe0);     // Rotation from Qframe0 to x0[b].getOrientation()
-        Quat dQC_flat = qDiff(x0[c].getOrientation(), Qframe0);     // Rotation from Qframe0 to x0[c].getOrientation()
+        // Creates a vector u_flat matching this difference
         tinfo->u_flat.clear();
-        tinfo->u_flat[1] = dQA_flat.toEulerVector()[0];
-        tinfo->u_flat[2] = dQA_flat.toEulerVector()[1];
-        tinfo->u_flat[4] = dQB_flat.toEulerVector()[0];
-        tinfo->u_flat[5] = dQB_flat.toEulerVector()[1];
-        tinfo->u_flat[7] = dQC_flat.toEulerVector()[0];
-        tinfo->u_flat[8] = dQC_flat.toEulerVector()[1];
-
+        tinfo->u_flat[1] = tinfo->restLocalOrientations[0].toEulerVector()[0];
+        tinfo->u_flat[2] = tinfo->restLocalOrientations[0].toEulerVector()[1];
+        tinfo->u_flat[4] = tinfo->restLocalOrientations[1].toEulerVector()[0];
+        tinfo->u_flat[5] = tinfo->restLocalOrientations[1].toEulerVector()[1];
+        tinfo->u_flat[7] = tinfo->restLocalOrientations[2].toEulerVector()[0];
+        tinfo->u_flat[8] = tinfo->restLocalOrientations[2].toEulerVector()[1];
     }
     triangleInfo.endEdit();
 }
@@ -445,6 +441,9 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
 
     // Stores the vector u of displacements (used by the mechanical mapping for rendering)
     tinfo->u = Disp;
+
+//    std::cout << "element " << elementIndex << std::endl;
+//    std::cout << "Disp = " << Disp << std::endl;
 
     triangleInfo.endEdit();
 }
@@ -928,6 +927,8 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
     tinfo->Qframe.toMatrix(R);
     Rt.transpose(R);
 
+//    std::cout << "tinfo->Qframe = " << tinfo->Qframe.toEulerVector() << std::endl;
+
 //    Vec3 v(1,0,0);
 //    Vec3 V;
 //    V = R * v;
@@ -1015,15 +1016,15 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
 //                    }
 //                }
 //
-//                std::cout << "Stiffness matrix of triangle 0" << std::endl;
-//                for (unsigned int i=6; i<12; i++)
-//                {
-//                    for (unsigned int j=6; j<12; j++)
-//                    {
-//                        std::cout << K_gs[i][j] << "  " ;
-//                    }
-//                    std::cout << std::endl;
-//                }
+////                std::cout << "Stiffness matrix of triangle 0" << std::endl;
+////                for (unsigned int i=6; i<12; i++)
+////                {
+////                    for (unsigned int j=6; j<12; j++)
+////                    {
+////                        std::cout << K_gs[i][j] << "  " ;
+////                    }
+////                    std::cout << std::endl;
+////                }
 //            }
 //            if (t == 1)
 //            {
@@ -1035,15 +1036,15 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
 //                    }
 //                }
 //
-//                std::cout << "Stiffness matrix of triangle 1" << std::endl;
-//                for (unsigned int i=0; i<6; i++)
-//                {
-//                    for (unsigned int j=0; j<6; j++)
-//                    {
-//                        std::cout << K_gs[i][j] << "  " ;
-//                    }
-//                    std::cout << std::endl;
-//                }
+////                std::cout << "Stiffness matrix of triangle 1" << std::endl;
+////                for (unsigned int i=0; i<6; i++)
+////                {
+////                    for (unsigned int j=0; j<6; j++)
+////                    {
+////                        std::cout << K_gs[i][j] << "  " ;
+////                    }
+////                    std::cout << std::endl;
+////                }
 //            }
 //            if (t == 2)
 //            {
@@ -1055,15 +1056,15 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
 //                    }
 //                }
 //
-//                std::cout << "Stiffness matrix of triangle 2" << std::endl;
-//                for (unsigned int i=12; i<18; i++)
-//                {
-//                    for (unsigned int j=12; j<18; j++)
-//                    {
-//                        std::cout << K_gs[i][j] << "  " ;
-//                    }
-//                    std::cout << std::endl;
-//                }
+////                std::cout << "Stiffness matrix of triangle 2" << std::endl;
+////                for (unsigned int i=12; i<18; i++)
+////                {
+////                    for (unsigned int j=12; j<18; j++)
+////                    {
+////                        std::cout << K_gs[i][j] << "  " ;
+////                    }
+////                    std::cout << std::endl;
+////                }
 //            }
 //            if (t == 3)
 //            {
