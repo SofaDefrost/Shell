@@ -196,12 +196,12 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     }
 
     // Stores initial orientation for each vertex
-    InVecCoord& x = *this->fromModel->getX();
-    previousOrientation.resize(x.size());
-    for (unsigned int i=0; i<previousOrientation.size(); i++)
-    {
-        previousOrientation[i] = x[i].getOrientation();
-    }
+//    InVecCoord& x = *this->fromModel->getX();
+//    previousOrientation.resize(x.size());
+//    for (unsigned int i=0; i<previousOrientation.size(); i++)
+//    {
+//        previousOrientation[i] = x[i].getOrientation();
+//    }
 
     // Retrieves Forcefield to compute deflection at runtime
     triangularBendingForcefield = NULL;
