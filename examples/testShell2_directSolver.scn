@@ -19,20 +19,20 @@
     <Node name="one_triangle">
         <EulerImplicitSolver />
 <!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-<!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
 <!--        <SparseTAUCSSolver name="Solver" symmetric="true" options="taucs.factor.indefinite=true taucs.factor.ordering=metis" printLog="false" />-->
 <!--        <CholeskySolver name="Cholesky Preconditioner" printLog="false" />-->
-        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
         
         <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/oneTriangle.obj" />
         <MechanicalObject name="tri" template="Rigid" />
 <!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1"  position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0.258819 0 0 0.965926"/>-->
 
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.5" totalmass="1" />
+        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.5" totalmass="0.01" />
         <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
         <AttachConstraint name="Constraint" object2="tri" object1="pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />
 <!--        <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="true" />-->
-        <ConstantForceField points="2" forces="100 0 0 0 0 0"/>
+        <ConstantForceField points="2" forces="0 500 0 0 0 0"/>
         <FixedRotationConstraint FixedZRotation="true"/>
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1"/>
             

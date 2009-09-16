@@ -7,12 +7,13 @@
 
     <Node name="Square">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.0" />
-        <CGLinearSolver iterations="75" tolerance="1e-15" threshold="1e-15"/>
-<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
+<!--        <CGLinearSolver iterations="75" tolerance="1e-15" threshold="1e-15"/>-->
+<!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
 <!--        <CholeskySolver name="Cholesky Preconditioner" printLog="false" />-->
-        <RegularGrid name="gridTopo" min="0 0 0" max="0.01 0.01 0" nx="10" ny="10" nz="1"/>
+        <RegularGrid name="gridTopo" min="0 0 0" max="0.01 0.01 0" nx="5" ny="5" nz="1"/>
         <MechanicalObject template="Rigid" />
-        <UniformMass mass="0.01 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.005" totalmass="0.1"/>
+        <UniformMass mass="0.01 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.002" totalmass="0.0012"/>
 
         <BoxConstraint box="0.004 0 -0.0001  0.006 0.01 0.0001"/>
 
@@ -23,11 +24,11 @@
             <TriangleSetTopologyModifier   name="Modifier" />
             <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
             <MechanicalObject  name="basePoints" template="Rigid"/>
-<!--            <WriteState filename="FoldingSquare.state" writeX="1" writeV="0"/>-->
+<!--            <WriteState filename="FoldedSquare.state" writeX="1" writeV="0"/>-->
             <IdentityMapping />
             <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1e6" poissonRatio="0.42" thickness="0.001" />
 
-            <ConstantForceField points="0-99" forces="0 0 0.3 0 0 0"/>
+            <ConstantForceField points="0-24" forces="0 0 0.07 0 0 0"/>
 
 <!--            <Node>-->
 <!--                <MechanicalObject name="basePointsVec3" template="Vec3d"/>-->
@@ -41,7 +42,7 @@
             <Node name="SubTriangles">
 <!--                <TriangleSetTopologyContainer  name="subTrianglesTopo" filename="applications/plugins/shells/mesh/square3.msh"/>-->
                 <TriangleSetTopologyContainer  name="subTrianglesTopo"/>
-                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="2"/>
+                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="0"/>
                 <MechanicalObject  name="subPoints" />
                 <BendingPlateMechanicalMapping />
                 <Node name="visual">
