@@ -1,0 +1,69 @@
+<Node name="root" dt="0.02" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
+    <CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <CollisionResponse response="default" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+    <CollisionGroup />
+
+    <Node name="pointA">
+       <MechanicalObject template="Rigid" name="fixedPoint" position="0 0 0 0 0 0 1"/>
+    </Node>
+
+    <Node name="pointB">
+       <MechanicalObject template="Rigid" name="fixedPoint" position="0.01 0 0 0 0 0 1"/>
+    </Node>
+
+    <Node name="pointC">
+       <MechanicalObject template="Rigid" name="fixedPoint" position="0.02 0 0 0 0 0 1"/>
+   </Node>
+
+   <Node name="pointD">
+       <MechanicalObject template="Rigid" name="fixedPoint" position="0.03 0 0 0 0 0 1"/>
+   </Node>
+
+    <Node name="pointE">
+       <MechanicalObject template="Rigid" name="fixedPoint" position="0.04 0 0 0 0 0 1"/>
+    </Node>
+
+    <Node name="4trianglesAgain">
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
+<!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+<!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+        <TriangleSetTopologyContainer name="baseTriangles" filename="../mesh/7small_triangles.obj"/>
+        <MechanicalObject name="tri" template="Rigid" debugViewIndices="false" debugViewIndicesScale="0.0007"/>
+        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.002" totalmass="0.0001" />
+        <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
+        <AttachConstraint name="Constraint" object2="tri" object1="pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />
+        <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="false" />
+        <AttachConstraint name="Constraint" object2="tri" object1="pointD/fixedPoint" indices1="0" indices2="3" freeRotations="false" />
+        <AttachConstraint name="Constraint" object2="tri" object1="pointE/fixedPoint" indices1="0" indices2="4" freeRotations="false" />
+        <FixedRotationConstraint FixedZRotation="true"/>
+<!--        <FixedConstraint indices="5-8"/>-->
+        <ConstantForceField points="9-11" forces="0 0 0.002 0 0 0"/>
+        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.001"/>
+
+<!--        <Node>-->
+<!--            <MechanicalObject name="basePointsVec3" template="Vec3d"/>-->
+<!--            <IdentityMapping/>-->
+<!--            <Node name="VisualBasePoints">-->
+<!--                <OglModel name="Visual" color="green"/>-->
+<!--                <IdentityMapping object1="basePointsVec3" object2="Visual"/>-->
+<!--            </Node>-->
+<!--        </Node>-->
+
+        <Node name="SubTriangles">
+            <TriangleSetTopologyContainer  name="subTriangles"/>
+            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="2"/>
+            <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003"/>
+<!--            <ConstantForceField points="5 9" forces="0 0 3"/>-->
+            <BendingPlateMechanicalMapping/>
+            <Triangle />
+            <Node>
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping object1="subPoints" object2="Visual"/>
+            </Node>
+        </Node>
+
+    </Node>
+</Node>
