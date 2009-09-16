@@ -37,45 +37,104 @@ Results with bending only and a 9x9 grid:
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
     <CollisionGroup />
 
+
     <Node name="Square1" activated="true">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
-        <CGLinearSolver iterations="75" tolerance="1e-15" threshold="1e-15"/>
+<!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
 <!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
-        <RegularGrid name="gridTopo" min="-0.005 -0.005 0" max="0.005 0.005 0" nx="8" ny="8" nz="1" />
+        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/square3x3.obj"/>
         <MechanicalObject template="Rigid" />
+
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.00012" />
 
-        <BoxROI name="box1" box="-0.0051 -0.0051 -0.0001 0.0051 -0.0049 0.0001" drawSize="0"/>
-        <FixedConstraint indices="@box1.indices" drawSize="0"/>
-        <BoxROI name="box2" box="-0.0051 0.0049 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>
-        <FixedConstraint indices="@box2.indices" drawSize="0"/>
-        <BoxROI name="box3" box="-0.0051 -0.0051 -0.0001 -0.0049 0.0051 0.0001" drawSize="0"/>
-        <FixedConstraint indices="@box3.indices" drawSize="0"/>
-        <BoxROI name="box4" box="0.0049 -0.0051 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>
+<!--        <BoxROI name="box1" box="-0.0051 -0.0051 -0.0001 0.0051 -0.0049 0.0001" drawSize="0"/>-->
+<!--        <FixedConstraint indices="@box1.indices" drawSize="0"/>-->
+<!--        <BoxROI name="box2" box="-0.0051 0.0049 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>-->
+<!--        <FixedConstraint indices="@box2.indices" drawSize="0"/>-->
+<!--        <BoxROI name="box3" box="-0.0051 -0.0051 -0.0001 -0.0049 0.0051 0.0001" drawSize="0"/>-->
+<!--        <FixedConstraint indices="@box3.indices" drawSize="0"/>-->
+<!--        <BoxROI name="box4" box="0.0049 -0.0051 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>-->
+<!--        <FixedConstraint indices="@box4.indices" drawSize="0"/>-->
 
-        <FixedConstraint indices="@box4.indices" drawSize="0"/>
-        <ConstantForceField points="0-63" forces="0 0 1 0 0 0"/>
+        <FixedConstraint indices="0-3 5-8"/>
         <FixedRotationConstraint FixedZRotation="true"/>
+        <ConstantForceField points="0-8" forces="0 0 50 0 0 0"/>
+
+        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.001" />
+
+<!--        <Node>-->
+<!--            <MechanicalObject name="basePointsVec3" template="Vec3d"/>-->
+<!--            <IdentityMapping/>-->
+<!--            <Node name="VisualBasePoints">-->
+<!--                <OglModel name="Visual" color="green"/>-->
+<!--                <IdentityMapping object1="basePointsVec3" object2="Visual"/>-->
+<!--            </Node>-->
+<!--        </Node>-->
+
+        <Node name="SubTriangles">
+            <TriangleSetTopologyContainer name="subTrianglesTopo"/>
+            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="2"/>
+            <MechanicalObject name="subPoints" />
+            <BendingPlateMechanicalMapping />
+            <Triangle/>
+            <Node name="visual">
+                <OglModel name="Visual" color="green"/>
+                <IdentityMapping object1="subPoints" object2="Visual"/>
+            </Node>
+        </Node>
+
+    </Node>
+
+
+
+
+
+
+
+    <Node name="Square2" activated="false">
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
+<!--        <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>-->
+<!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+        <RegularGrid name="gridTopo" min="-0.005 -0.005 0" max="0.005 0.005 0" nx="3" ny="3" nz="1" />
+        <MechanicalObject template="Rigid" />
 
         <Node>
             <TriangleSetTopologyContainer name="trianglesTopo"/>
             <TriangleSetTopologyModifier name="Modifier" />
             <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
-            <MechanicalObject name="basePoints" template="Rigid"/>
-            <IdentityMapping />
+<!--            <MechanicalObject name="basePoints" template="Rigid"/>-->
+<!--            <IdentityMapping />-->
+
+            <OglModel/>
+
+            <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.00012" />
+
+            <BoxROI name="box1" box="-0.0051 -0.0051 -0.0001 0.0051 -0.0049 0.0001" drawSize="0"/>
+            <FixedConstraint indices="@box1.indices" drawSize="0"/>
+            <BoxROI name="box2" box="-0.0051 0.0049 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>
+            <FixedConstraint indices="@box2.indices" drawSize="0"/>
+            <BoxROI name="box3" box="-0.0051 -0.0051 -0.0001 -0.0049 0.0051 0.0001" drawSize="0"/>
+            <FixedConstraint indices="@box3.indices" drawSize="0"/>
+            <BoxROI name="box4" box="0.0049 -0.0051 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>
+
+            <FixedConstraint indices="@box4.indices" drawSize="0"/>
+            <ConstantForceField points="0-8" forces="0 0 0.001 0 0 0"/>
+<!--            <FixedRotationConstraint FixedZRotation="true"/>-->
+
             <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.001" />
             
-            <Node name="SubTriangles">
-                <TriangleSetTopologyContainer name="subTrianglesTopo"/>
-                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="0"/>
-                <MechanicalObject name="subPoints" />
-                <BendingPlateMechanicalMapping />
-                <Node name="visual">
-                    <OglModel name="Visual" color="green"/>
-                    <IdentityMapping object1="subPoints" object2="Visual"/>
-                </Node>
-            </Node>
+<!--            <Node name="SubTriangles">-->
+<!--                <TriangleSetTopologyContainer name="subTrianglesTopo"/>-->
+<!--                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="2"/>-->
+<!--                <MechanicalObject name="subPoints" />-->
+<!--                <BendingPlateMechanicalMapping />-->
+<!--                <Node name="visual">-->
+<!--                    <OglModel name="Visual" color="green"/>-->
+<!--                    <IdentityMapping object1="subPoints" object2="Visual"/>-->
+<!--                </Node>-->
+<!--            </Node>-->
         </Node>
     </Node>
 
