@@ -30,7 +30,7 @@
     </Node>
 
     <Node name="4triangles">
-        <EulerImplicitSolver />
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
 <!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
         <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
 <!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
@@ -40,7 +40,7 @@
         <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
         <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="false" />
         <FixedRotationConstraint FixedZRotation="true"/>
-        <ConstantForceField points="5" forces="0 0 0.1 0 0 0"/>
+        <ConstantForceField points="5" forces="0 0 1 0 0 0"/>
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.49" thickness="0.1"/>
 
 <!--        <Node>-->
