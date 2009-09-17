@@ -1,0 +1,28 @@
+<Node name="root" dt="0.01" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
+    <CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <CollisionResponse response="default" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+    <CollisionGroup />
+
+    <Node name="SquareOBJ">
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
+        <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
+        <RegularGrid name="gridTopo" min="-0.005 -0.005 0" max="0.005 0.005 0" nx="5" ny="5" nz="1" />
+        <MechanicalObject template="Rigid" />
+
+        <Node>
+            <TriangleSetTopologyContainer name="trianglesTopo"/>
+            <TriangleSetTopologyModifier name="Modifier" />
+            <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
+
+            <OglModel/>
+
+            <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.00012" />
+
+            <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.001" />
+
+        </Node>
+    </Node>
+
+</Node>

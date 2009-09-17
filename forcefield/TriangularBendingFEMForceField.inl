@@ -792,8 +792,8 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
 
     // Firstly, add all degrees of freedom (we add the unused translation in z)
     StiffnessMatrixGlobalSpace K_18x18;
-    unsigned int ig = 0;
-    unsigned int jg = 0;
+    K_18x18.clear();
+    unsigned int ig, jg;
 
     // Copy the stiffness matrix by block 2x2 into 18x18 matrix (the new index of each bloc into global matrix is a combination of 0, 6 and 12 in indices)
     for (unsigned int bx=0; bx<3; bx++)
