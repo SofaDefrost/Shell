@@ -537,110 +537,110 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv&
 //
 //    start = timer.getTime();
 
-//    if (!inputTopo || !outputTopo)
-//    {
-//        serr << "BendingPlateMechanicalMapping applyJ() was called before init()" << sendl;
-//        return;
-//    }
-//    if (inputTopo->getNbTriangles() <= 0)
-//    {
-//        serr << "BendingPlateMechanicalMapping applyJ() requires an input triangular topology" << sendl;
-//        return;
-//    }
-//
-//    if (!triangularBendingForcefield)
-//    {
-//        serr << "No TriangularBendingForcefield has been found" << sendl;
-//        this->getContext()->get(triangularBendingForcefield);
-//        return;
-//    }
-//    else
-//    {
-//        helper::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
-//        TriangleInformation *tinfo = NULL;
-//
-//         // List of 'in' positions
-//        const InVecCoord &inVertices = *this->fromModel->getX();
-//
-//        // List of 'out' positions
-//        const OutVecCoord &outVertices = *this->toModel->getX();
-//
-//        // List of in triangles
-//        const SeqTriangles& inTriangles = inputTopo->getTriangles();
-//
-//        // Computes the coefficients ci for each triangle
-//        Vec3 va_a, va_b, va_c, va_a_local, va_b_local, va_c_local;
-//        Vec <9, Real> v_u;
-//        for (unsigned int t=0; t<inTriangles.size();t++)
-//        {
-//            Triangle triangle = triangularBendingForcefield->getTopology()->getTriangle(t);
-//            tinfo = &triangleInf[t];
-//
-//            // Gets the angular velocities of each vertex
-//            va_a = in[ triangle[0] ].getVOrientation();
-//            va_b = in[ triangle[1] ].getVOrientation();
-//            va_c = in[ triangle[2] ].getVOrientation();
-//            // In local frame
-//            va_a_local = tinfo->Qframe.inverseRotate(va_a);
-//            va_b_local = tinfo->Qframe.inverseRotate(va_b);
-//            va_c_local = tinfo->Qframe.inverseRotate(va_c);
-//            // Fills in du/dt
-//            v_u.clear();
-//            v_u[1] = va_a_local[0];   v_u[2] = va_a_local[1];
-//            v_u[4] = va_b_local[0];   v_u[5] = va_b_local[1];
-//            v_u[7] = va_c_local[0];   v_u[8] = va_c_local[1];
-//
-//            listCoeffs[t] = tinfo->invC * v_u;
-//        }
-//
-//
-//        // Iterates over out vertices to update coordinates
-//        Vec3 v_a, v_b, v_c, baryCoord, a, vertexLocal;
-//        Vec <9, Real> coeff;
-//        Real v_z;
-//        for (unsigned int i=0; i<out.size(); i++)
-//        {
-//            // Gets the first triangle that the vertex belongs to
-//            Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
-//
-//            // Gets the linear velocities of each vertex
-//            v_a = in[ triangle[0] ].getVCenter();
-//            v_b = in[ triangle[1] ].getVCenter();
-//            v_c = in[ triangle[2] ].getVCenter();
-//
-//            baryCoord = barycentricCoordinates[i][0];
-//            out[i] = v_a*baryCoord[0] + v_b*baryCoord[1] + v_c*baryCoord[2];
-//
-//            Vec3 Uz(0.0, 0.0, 0.0);
-//            Real w = 0;
-//            for (unsigned int t=0; t<listBaseTriangles[i].size();t++)
-//            {
-//                triangle = triangularBendingForcefield->getTopology()->getTriangle(listBaseTriangles[i][t]);
-//                tinfo = &triangleInf[listBaseTriangles[i][t]];
-//
-//                // Local coordinates needed to compute deflection
-//                a = inVertices[ triangle[0] ].getCenter();
-//                vertexLocal = tinfo->Qframe.inverseRotate(outVertices[i]-a);
-//
-//                // Retrieves coefficients ci
-//                coeff = listCoeffs[listBaseTriangles[i][t]];
-//
-//                // Adds deflection velocity
-//                v_z = coeff[0] + coeff[1]*vertexLocal[0] + coeff[2]*vertexLocal[1] + coeff[3]*vertexLocal[0]*vertexLocal[0] + coeff[4]*vertexLocal[0]*vertexLocal[1] + coeff[5]*vertexLocal[1]*vertexLocal[1] + coeff[6]*vertexLocal[0]*vertexLocal[0]*vertexLocal[0] + coeff[7]*vertexLocal[0]*vertexLocal[1]*vertexLocal[1] + coeff[8]*vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
-//                w += v_z;
-//
-//            }
-//
-//            // Position in Qframe
-//            Vec3 out0 = tinfo->Qframe.inverseRotate(out[i]);
-//            // Computed deflection w in Qframe
-//            out0[2] += w/listBaseTriangles[i].size();
-//            out[i] = tinfo->Qframe.rotate(out0);
-//        }
-//
-//        triangularBendingForcefield->getTriangleInfo().endEdit();
-//
-//    }
+    if (!inputTopo || !outputTopo)
+    {
+        serr << "BendingPlateMechanicalMapping applyJ() was called before init()" << sendl;
+        return;
+    }
+    if (inputTopo->getNbTriangles() <= 0)
+    {
+        serr << "BendingPlateMechanicalMapping applyJ() requires an input triangular topology" << sendl;
+        return;
+    }
+
+    if (!triangularBendingForcefield)
+    {
+        serr << "No TriangularBendingForcefield has been found" << sendl;
+        this->getContext()->get(triangularBendingForcefield);
+        return;
+    }
+    else
+    {
+        helper::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
+        TriangleInformation *tinfo = NULL;
+
+         // List of 'in' positions
+        const InVecCoord &inVertices = *this->fromModel->getX();
+
+        // List of 'out' positions
+        const OutVecCoord &outVertices = *this->toModel->getX();
+
+        // List of in triangles
+        const SeqTriangles& inTriangles = inputTopo->getTriangles();
+
+        // Computes the coefficients ci for each triangle
+        Vec3 va_a, va_b, va_c, va_a_local, va_b_local, va_c_local;
+        Vec <9, Real> v_u;
+        for (unsigned int t=0; t<inTriangles.size();t++)
+        {
+            Triangle triangle = triangularBendingForcefield->getTopology()->getTriangle(t);
+            tinfo = &triangleInf[t];
+
+            // Gets the angular velocities of each vertex
+            va_a = in[ triangle[0] ].getVOrientation();
+            va_b = in[ triangle[1] ].getVOrientation();
+            va_c = in[ triangle[2] ].getVOrientation();
+            // In local frame
+            va_a_local = tinfo->Qframe.inverseRotate(va_a);
+            va_b_local = tinfo->Qframe.inverseRotate(va_b);
+            va_c_local = tinfo->Qframe.inverseRotate(va_c);
+            // Fills in du/dt
+            v_u.clear();
+            v_u[1] = va_a_local[0];   v_u[2] = va_a_local[1];
+            v_u[4] = va_b_local[0];   v_u[5] = va_b_local[1];
+            v_u[7] = va_c_local[0];   v_u[8] = va_c_local[1];
+
+            listCoeffs[t] = tinfo->invC * v_u;
+        }
+
+
+        // Iterates over out vertices to update coordinates
+        Vec3 v_a, v_b, v_c, baryCoord, a, vertexLocal;
+        Vec <9, Real> coeff;
+        Real v_z;
+        for (unsigned int i=0; i<out.size(); i++)
+        {
+            // Gets the first triangle that the vertex belongs to
+            Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
+
+            // Gets the linear velocities of each vertex
+            v_a = in[ triangle[0] ].getVCenter();
+            v_b = in[ triangle[1] ].getVCenter();
+            v_c = in[ triangle[2] ].getVCenter();
+
+            baryCoord = barycentricCoordinates[i][0];
+            out[i] = v_a*baryCoord[0] + v_b*baryCoord[1] + v_c*baryCoord[2];
+
+            Vec3 Uz(0.0, 0.0, 0.0);
+            Real w = 0;
+            for (unsigned int t=0; t<listBaseTriangles[i].size();t++)
+            {
+                triangle = triangularBendingForcefield->getTopology()->getTriangle(listBaseTriangles[i][t]);
+                tinfo = &triangleInf[listBaseTriangles[i][t]];
+
+                // Local coordinates needed to compute deflection
+                a = inVertices[ triangle[0] ].getCenter();
+                vertexLocal = tinfo->Qframe.inverseRotate(outVertices[i]-a);
+
+                // Retrieves coefficients ci
+                coeff = listCoeffs[listBaseTriangles[i][t]];
+
+                // Adds deflection velocity
+                v_z = coeff[0] + coeff[1]*vertexLocal[0] + coeff[2]*vertexLocal[1] + coeff[3]*vertexLocal[0]*vertexLocal[0] + coeff[4]*vertexLocal[0]*vertexLocal[1] + coeff[5]*vertexLocal[1]*vertexLocal[1] + coeff[6]*vertexLocal[0]*vertexLocal[0]*vertexLocal[0] + coeff[7]*vertexLocal[0]*vertexLocal[1]*vertexLocal[1] + coeff[8]*vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
+                w += v_z;
+
+            }
+
+            // Position in Qframe
+            Vec3 out0 = tinfo->Qframe.inverseRotate(out[i]);
+            // Computed deflection w in Qframe
+            out0[2] += w/listBaseTriangles[i].size();
+            out[i] = tinfo->Qframe.rotate(out0);
+        }
+
+        triangularBendingForcefield->getTriangleInfo().endEdit();
+
+    }
 
 //    stop = timer.getTime();
 //    std::cout << "time applyJ = " << stop-start << std::endl;
@@ -658,105 +658,105 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv&
 //
 //    start = timer.getTime();
 
-//    if (!inputTopo || !outputTopo)
-//    {
-//        serr << "BendingPlateMechanicalMapping applyJT() was called before init()" << sendl;
-//        return;
-//    }
-//    if (inputTopo->getNbTriangles() <= 0)
-//    {
-//        serr << "BendingPlateMechanicalMapping applyJT() requires an input triangular topology" << sendl;
-//        return;
-//    }
-//
-//    if (!triangularBendingForcefield)
-//    {
-//        serr << "No TriangularBendingForcefield has been found" << sendl;
-//        this->getContext()->get(triangularBendingForcefield);
-//        return;
-//    }
-//    else
-//    {
-//        helper::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
-//        TriangleInformation *tinfo = NULL;
-//
-//        // List of in triangles
-//        const SeqTriangles& inTriangles = inputTopo->getTriangles();
-//
-//        sofa::helper::vector< Mat<9, 9, Real> > vecTransposedInvC;
-//        for (unsigned int t=0; t<inTriangles.size();t++)
-//        {
-//            tinfo = &triangleInf[t];
-//            vecTransposedInvC.push_back(tinfo->invC.transposed());
-//        }
-//
-//        // List of 'in' positions
-//        const OutVecCoord &inVertices = *this->toModel->getX();
-//
-//        // List of 'out' positions (mechanical points)
-//        const InVecCoord &outVertices = *this->fromModel->getX();
-//
-//        // Iterates over in vertices
-//        Triangle triangle;
-//        Vec3 baryCoord, inLocal, a, vertexLocal, torqueA, torqueB, torqueC;
-//        Real Fz;
-//        Vec<9, Real> polynomDeflection, a_u;
-//        for (unsigned int i=0; i<in.size(); i++)
-//        {
-//            triangle = inTriangles[ listBaseTriangles[i][0] ];
-//            tinfo = &triangleInf[listBaseTriangles[i][0]];
-//
-//            // Linear acceleration
-//            baryCoord = barycentricCoordinates[i][0];
-//            out[ triangle[0] ].getVCenter() += in[i] * baryCoord[0];
-//            out[ triangle[1] ].getVCenter() += in[i] * baryCoord[1];
-//            out[ triangle[2] ].getVCenter() += in[i] * baryCoord[2];
-//
-//            // Iterates over triangles
-//            for (unsigned int t=0; t<listBaseTriangles[i].size();t++)
-//            {
-//                triangle = triangularBendingForcefield->getTopology()->getTriangle(listBaseTriangles[i][t]);
-//                tinfo = &triangleInf[listBaseTriangles[i][t]];
-//
-//                // Applied force into local frame
-//                inLocal = tinfo->Qframe.inverseRotate(in[i]);
-//                Fz = inLocal[2];
-//
-//                if (Fz != 0)
-//                {
-//                    // Local coordinates needed to compute deflection
-//                    a = outVertices[ triangle[0] ].getCenter();
-//                    vertexLocal = tinfo->Qframe.inverseRotate(inVertices[i]-a);
-//
-//                    // Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
-//                    polynomDeflection[0] = 1;
-//                    polynomDeflection[1] = vertexLocal[0];
-//                    polynomDeflection[2] = vertexLocal[1];
-//                    polynomDeflection[3] = vertexLocal[0]*vertexLocal[0];
-//                    polynomDeflection[4] = vertexLocal[0]*vertexLocal[1];
-//                    polynomDeflection[5] = vertexLocal[1]*vertexLocal[1];
-//                    polynomDeflection[6] = vertexLocal[0]*vertexLocal[0]*vertexLocal[0];
-//                    polynomDeflection[7] = vertexLocal[0]*vertexLocal[1]*vertexLocal[1];
-//                    polynomDeflection[8] = vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
-//
-//                    polynomDeflection *= Fz;
-//
-//                    // Moments at each point
-//                    a_u = (vecTransposedInvC[ listBaseTriangles[i][t] ] * polynomDeflection) / listBaseTriangles[i].size();
-//
-//                    // Moments into global frame
-//                    torqueA = tinfo->Qframe.rotate(Vec3(a_u[1], a_u[2], 0));
-//                    torqueB = tinfo->Qframe.rotate(Vec3(a_u[4], a_u[5], 0));
-//                    torqueC = tinfo->Qframe.rotate(Vec3(a_u[7], a_u[8], 0));
-//
-//                    out[ triangle[0] ].getVOrientation() += torqueA;
-//                    out[ triangle[1] ].getVOrientation() += torqueB;
-//                    out[ triangle[2] ].getVOrientation() += torqueC;
-//                }
-//            }
-//        }
-//
-//    }
+    if (!inputTopo || !outputTopo)
+    {
+        serr << "BendingPlateMechanicalMapping applyJT() was called before init()" << sendl;
+        return;
+    }
+    if (inputTopo->getNbTriangles() <= 0)
+    {
+        serr << "BendingPlateMechanicalMapping applyJT() requires an input triangular topology" << sendl;
+        return;
+    }
+
+    if (!triangularBendingForcefield)
+    {
+        serr << "No TriangularBendingForcefield has been found" << sendl;
+        this->getContext()->get(triangularBendingForcefield);
+        return;
+    }
+    else
+    {
+        helper::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
+        TriangleInformation *tinfo = NULL;
+
+        // List of in triangles
+        const SeqTriangles& inTriangles = inputTopo->getTriangles();
+
+        sofa::helper::vector< Mat<9, 9, Real> > vecTransposedInvC;
+        for (unsigned int t=0; t<inTriangles.size();t++)
+        {
+            tinfo = &triangleInf[t];
+            vecTransposedInvC.push_back(tinfo->invC.transposed());
+        }
+
+        // List of 'in' positions
+        const OutVecCoord &inVertices = *this->toModel->getX();
+
+        // List of 'out' positions (mechanical points)
+        const InVecCoord &outVertices = *this->fromModel->getX();
+
+        // Iterates over in vertices
+        Triangle triangle;
+        Vec3 baryCoord, inLocal, a, vertexLocal, torqueA, torqueB, torqueC;
+        Real Fz;
+        Vec<9, Real> polynomDeflection, a_u;
+        for (unsigned int i=0; i<in.size(); i++)
+        {
+            triangle = inTriangles[ listBaseTriangles[i][0] ];
+            tinfo = &triangleInf[listBaseTriangles[i][0]];
+
+            // Linear acceleration
+            baryCoord = barycentricCoordinates[i][0];
+            out[ triangle[0] ].getVCenter() += in[i] * baryCoord[0];
+            out[ triangle[1] ].getVCenter() += in[i] * baryCoord[1];
+            out[ triangle[2] ].getVCenter() += in[i] * baryCoord[2];
+
+            // Iterates over triangles
+            for (unsigned int t=0; t<listBaseTriangles[i].size();t++)
+            {
+                triangle = triangularBendingForcefield->getTopology()->getTriangle(listBaseTriangles[i][t]);
+                tinfo = &triangleInf[listBaseTriangles[i][t]];
+
+                // Applied force into local frame
+                inLocal = tinfo->Qframe.inverseRotate(in[i]);
+                Fz = inLocal[2];
+
+                if (Fz != 0)
+                {
+                    // Local coordinates needed to compute deflection
+                    a = outVertices[ triangle[0] ].getCenter();
+                    vertexLocal = tinfo->Qframe.inverseRotate(inVertices[i]-a);
+
+                    // Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
+                    polynomDeflection[0] = 1;
+                    polynomDeflection[1] = vertexLocal[0];
+                    polynomDeflection[2] = vertexLocal[1];
+                    polynomDeflection[3] = vertexLocal[0]*vertexLocal[0];
+                    polynomDeflection[4] = vertexLocal[0]*vertexLocal[1];
+                    polynomDeflection[5] = vertexLocal[1]*vertexLocal[1];
+                    polynomDeflection[6] = vertexLocal[0]*vertexLocal[0]*vertexLocal[0];
+                    polynomDeflection[7] = vertexLocal[0]*vertexLocal[1]*vertexLocal[1];
+                    polynomDeflection[8] = vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
+
+                    polynomDeflection *= Fz;
+
+                    // Moments at each point
+                    a_u = (vecTransposedInvC[ listBaseTriangles[i][t] ] * polynomDeflection) / listBaseTriangles[i].size();
+
+                    // Moments into global frame
+                    torqueA = tinfo->Qframe.rotate(Vec3(a_u[1], a_u[2], 0));
+                    torqueB = tinfo->Qframe.rotate(Vec3(a_u[4], a_u[5], 0));
+                    torqueC = tinfo->Qframe.rotate(Vec3(a_u[7], a_u[8], 0));
+
+                    out[ triangle[0] ].getVOrientation() += torqueA;
+                    out[ triangle[1] ].getVOrientation() += torqueB;
+                    out[ triangle[2] ].getVOrientation() += torqueC;
+                }
+            }
+        }
+
+    }
 
 
 //    stop = timer.getTime();

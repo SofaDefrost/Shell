@@ -33,7 +33,7 @@
 
 <!--        <FixedConstraint indices="0-4 20-24 5 10 15 9 14 19"/>-->
 
-        <FixedRotationConstraint FixedZRotation="true"/>
+<!--        <FixedRotationConstraint FixedZRotation="true"/>-->
         <ConstantForceField points="0-8" forces="0 0 0.05 0 0 0"/>
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.0001"/>
 
@@ -48,8 +48,8 @@
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subTriangles"/>
-            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="0"/>
-            <MechanicalObject  name="subPoints" debugViewIndices="true" debugViewIndicesScale="0.0003"/>
+            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="2"/>
+            <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003"/>
             <BendingPlateMechanicalMapping/>
             <Triangle />
             <Node>
