@@ -206,10 +206,10 @@ protected :
 #if defined(WIN32) && !defined(SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_CPP)
 #pragma warning(disable : 4231)
 #ifndef SOFA_FLOAT
-extern template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<defaulttype::Rigid3dTypes>;
+extern template class TriangularBendingFEMForceField<defaulttype::Rigid3dTypes>;
 #endif
 #ifndef SOFA_DOUBLE
-extern template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<defaulttype::Rigid3fTypes>;
+extern template class TriangularBendingFEMForceField<defaulttype::Rigid3fTypes>;
 #endif
 #endif
 

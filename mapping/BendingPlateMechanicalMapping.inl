@@ -60,8 +60,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
 {
 //    std::cout << "BendingPlateMechanicalMapping<BaseMapping>::init()" << std::endl;
 
-    this->Inherit::init();
-
     // Retrieves topology
     inputTopo = this->fromModel->getContext()->getMeshTopology();
     outputTopo = this->toModel->getContext()->getMeshTopology();
@@ -71,37 +69,39 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
         OutVecCoord &outVertices = *this->toModel->getX();
         listBaseTriangles.clear();
         barycentricCoordinates.clear();
+        listCoeffs.clear();
         listBaseTriangles.resize(outVertices.size());
         barycentricCoordinates.resize(outVertices.size());
         listCoeffs.resize(inputTopo->getNbTriangles());
 
+        // Retrieves 'in' vertices and triangles
+        InVecCoord &inVertices = *this->fromModel->getX();
+        const SeqTriangles &inTriangles = inputTopo->getTriangles();
+
         // Iterates over 'out' vertices
+        Real minimumDistanceVertices, minimumDistanceEdges, minimumDistanceTriangles, minimumDistance;
+        int caseToProcess, triangleID;
+        Vec3 vertexBaryCoord;
         for (unsigned int i=0; i<outVertices.size(); i++)
         {
             // Iterates over 'in' vertices
-            Real minimumDistanceVertices;
             sofa::helper::vector<unsigned int> listClosestVertices;
             minimumDistanceVertices = FindClosestPoints(outVertices[i], listClosestVertices);
             
             // Iterates over 'in' edges
-            Real minimumDistanceEdges;
             sofa::helper::vector<unsigned int> listClosestEdges;
             minimumDistanceEdges = FindClosestEdges(outVertices[i], listClosestEdges);
 
             // Iterates over 'in' triangles
-            Real minimumDistanceTriangles;
             sofa::helper::vector<unsigned int> listClosestTriangles;
             minimumDistanceTriangles = FindClosestTriangles(outVertices[i], listClosestTriangles);
 
             // Finds out which type of primitive is the closest
-            Real minimumDistance = std::min(minimumDistanceVertices, std::min(minimumDistanceEdges, minimumDistanceTriangles));
+            minimumDistance = std::min(minimumDistanceVertices, std::min(minimumDistanceEdges, minimumDistanceTriangles));
 
-            // Retrieves 'in' vertices and triangles
-            InVecCoord &inVertices = *this->fromModel->getX();
-            const SeqTriangles &inTriangles = inputTopo->getTriangles();
 
             // Adds the list of triangles attached to the found primitives
-            int caseToProcess = 0;
+            caseToProcess = 0;
             if ( minimumDistance == minimumDistanceVertices )
                 caseToProcess = 1;
             if ( minimumDistance == minimumDistanceEdges )
@@ -118,7 +118,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
                         TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex( listClosestVertices[j] );
                         for (unsigned int t=0; t<trianglesAroundVertex.size(); t++)
                         {
-                            int triangleID = trianglesAroundVertex[t];
+                            triangleID = trianglesAroundVertex[t];
                             listBaseTriangles[i].push_back(triangleID);
 
                             // Computes barycentric coordinates within each triangles
@@ -126,7 +126,15 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
                             Vec3 v2 = inVertices[ inTriangles[triangleID][1] ].getCenter();
                             Vec3 v3 = inVertices[ inTriangles[triangleID][2] ].getCenter();
 
-                            Vec3 vertexBaryCoord;
+//                            // Computes triangle's normal
+//                            Vec3 M = (Vec3) (v2-v1).cross(v3-v1);
+//                            double norm2_M = M*(M);
+//                            Vec3 N =  M/norm2_M;
+//
+//                            // Computes projection of the vertex onto this triangle
+//                            const Vec3 AP = outVertices[i]-v1;
+//                            Vec3 proj = outVertices[i] - N*(AP*N);
+
                             computeBaryCoefs(vertexBaryCoord, outVertices[i], v1, v2, v3);
 
                             // Adds the barycentric coordinates to the list
@@ -144,7 +152,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
                         TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge( listClosestEdges[j] );
                         for (unsigned int t=0; t<trianglesAroundEdge.size(); t++)
                         {
-                            int triangleID = trianglesAroundEdge[t];
+                            triangleID = trianglesAroundEdge[t];
                             listBaseTriangles[i].push_back(triangleID);
 
                             // Computes barycentric coordinates within each triangles
@@ -152,7 +160,15 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
                             Vec3 v2 = inVertices[ inTriangles[triangleID][1] ].getCenter();
                             Vec3 v3 = inVertices[ inTriangles[triangleID][2] ].getCenter();
 
-                            Vec3 vertexBaryCoord;
+//                            // Computes triangle's normal
+//                            Vec3 M = (Vec3) (v2-v1).cross(v3-v1);
+//                            double norm2_M = M*(M);
+//                            Vec3 N =  M/norm2_M;
+//
+//                            // Computes projection of the vertex onto this triangle
+//                            const Vec3 AP = outVertices[i]-v1;
+//                            Vec3 proj = outVertices[i] - N*(AP*N);
+
                             computeBaryCoefs(vertexBaryCoord, outVertices[i], v1, v2, v3);
 
                             // Adds the barycentric coordinates to the list
@@ -173,7 +189,15 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
                         Vec3 v2 = inVertices[ inTriangles[listClosestTriangles[j]][1] ].getCenter();
                         Vec3 v3 = inVertices[ inTriangles[listClosestTriangles[j]][2] ].getCenter();
 
-                        Vec3 vertexBaryCoord;
+//                        // Computes triangle's normal
+//                        Vec3 M = (Vec3) (v2-v1).cross(v3-v1);
+//                        double norm2_M = M*(M);
+//                        Vec3 N =  M/norm2_M;
+//
+//                        // Computes projection of the vertex onto this triangle
+//                        const Vec3 AP = outVertices[i]-v1;
+//                        Vec3 proj = outVertices[i] - N*(AP*N);
+
                         computeBaryCoefs(vertexBaryCoord, outVertices[i], v1, v2, v3);
 
                         // Adds the barycentric coordinates to the list
@@ -195,13 +219,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
         return;
     }
 
-    // Stores initial orientation for each vertex
-//    InVecCoord& x = *this->fromModel->getX();
-//    previousOrientation.resize(x.size());
-//    for (unsigned int i=0; i<previousOrientation.size(); i++)
-//    {
-//        previousOrientation[i] = x[i].getOrientation();
-//    }
 
     // Retrieves Forcefield to compute deflection at runtime
     triangularBendingForcefield = NULL;
@@ -210,6 +227,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     if (!triangularBendingForcefield)
         return;
 
+    // Call of apply() and applyJ()
+    this->Inherit::init();
 }
 
 
@@ -226,7 +245,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::reinit()
 template <class BaseMapping>
 typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestPoints(const Vec3& point1, sofa::helper::vector<unsigned int>& listClosestVertices)
 {
-    InVecCoord &inVertices = *this->fromModel->getX();
+    const InVecCoord &inVertices = *this->fromModel->getX();
     Real minimumDistance = 10e12;
 
     for (unsigned int v=0; v<inVertices.size(); v++)
@@ -234,8 +253,8 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
         Vec3 point2 = inVertices[v].getCenter();
         Real distance = (point2 - point1).norm2();
 
-        Real threshold = 0.00000001;
-        if ( distance < minimumDistance - threshold )
+        Real threshold = 1e-12;
+        if (distance < minimumDistance)
         {
             // We deal with a new minimum, so clear the previous list
             listClosestVertices.clear();
@@ -244,7 +263,7 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
             // Updates the minimum's value
             minimumDistance = distance;
         }
-        else if ( fabs(distance-minimumDistance) < threshold )
+        else if ( distance-minimumDistance < threshold )
         {
             // Adds the new minimum
             listClosestVertices.push_back(v);
@@ -261,7 +280,7 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
 template <class BaseMapping>
 typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestEdges(const Vec3& point, sofa::helper::vector<unsigned int>& listClosestEdges)
 {
-    InVecCoord &inVertices = *this->fromModel->getX();
+    const InVecCoord &inVertices = *this->fromModel->getX();
     const SeqEdges &inEdges = inputTopo->getEdges();
     Real minimumDistance = 10e12;
 
@@ -289,8 +308,8 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
             PQ = Q-P;
 
             Real distance = PQ.norm2();
-            Real threshold = 0.00000001;
-            if (distance < minimumDistance - threshold)
+            Real threshold = 1e-12;
+            if (distance < minimumDistance)
             {
                 // We deal with a new minimum, so clear the previous list
                 listClosestEdges.clear();
@@ -299,7 +318,7 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
                 // Updates the minimum's value
                 minimumDistance = distance;
             }
-            else if ( fabs(distance-minimumDistance) < threshold )
+            else if ( distance-minimumDistance < threshold )
             {
                 // Adds the new minimum
                 listClosestEdges.push_back(e);
@@ -318,7 +337,7 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
 template <class BaseMapping>
 typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestTriangles(const Vec3& point, sofa::helper::vector<unsigned int>& listClosestTriangles)
 {
-    InVecCoord &inVertices = *this->fromModel->getX();
+    const InVecCoord &inVertices = *this->fromModel->getX();
     const SeqTriangles &inTriangles = inputTopo->getTriangles();
     Real minimumDistance = 10e12;
 
@@ -358,13 +377,13 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
         double beta  = (b[1]*A[0][0] - b[0]*A[1][0])/det;
 
         // If point is on one of the edge, returns
-        Real threshold = 0.00000001;
-        if (alpha + threshold >= 0 && beta + threshold >= 0 && alpha + beta - threshold <= 1 )
+        Real threshold = 1e-12;
+        if (alpha >= 0 && beta >= 0 && alpha + beta <= 1 )
         {
             const Vector3 PQ = AB * alpha + AC * beta - AP;
 
             Real distance = PQ.norm2();
-            if (distance < minimumDistance - threshold)
+            if (distance < minimumDistance)
             {
                 // We deal with a new minimum, so clear the previous list
                 listClosestTriangles.clear();
@@ -373,7 +392,7 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
                 // Updates the minimum's value
                 minimumDistance = distance;
             }
-            else if ( fabs(distance-minimumDistance) < threshold )
+            else if ( distance-minimumDistance < threshold )
             {
                 // Adds the new minimum
                 listClosestTriangles.push_back(t);
@@ -479,6 +498,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
             c = in[ triangle[2] ].getCenter();
 
             baryCoord = barycentricCoordinates[i][0];
+//            std::cout << "baryCoord for vertex " << i << ":    " << baryCoord << std::endl;
             out[i] = a*baryCoord[0] + b*baryCoord[1] + c*baryCoord[2];
 
             Vec3 Uz(0.0, 0.0, 0.0);
@@ -505,7 +525,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
 //                Mat<3, 3, Real > R;
 //                tinfo->Qframe.toMatrix(R);
 //                std::cout << "R = " << R << std::endl;
-                
+
                 w += tinfo->Qframe.rotate(Vec3(0, 0, z));
             }
 
@@ -520,7 +540,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
 
         triangularBendingForcefield->getTriangleInfo().endEdit();
     }
-    
+
 //    stop = timer.getTime();
 //    std::cout << "time apply = " << stop-start << std::endl;
 }
