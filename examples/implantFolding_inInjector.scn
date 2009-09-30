@@ -78,18 +78,18 @@
         <Node name="Injecteur">
         <EulerImplicitSolver rayleighMass="0.5" rayleighStiffness="1.5"/>
         <CGLinearSolver iterations="5" tolerance="1e-15" threshold="1e-15"/>
-        <MechanicalObject name="rigid" template="Rigid"  position="0 0 0 0 0 0 1" free_velocity="-0.0005 0 0 0 0 0" velocity="-0.0005 0 0 0 0 0"/>
+        <MechanicalObject name="rigid" template="Rigid"  position="0 0 0 0 0 0 1" free_velocity="0.0005 0 0 0 0 0" velocity="0.0005 0 0 0 0 0"/>
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.0001" />
         <UncoupledConstraintCorrection   compliance="0 0 0 0 0 0 0"/>
         <Node name="Collision">
-            <TriangleSetTopologyContainer name="tubeTriangles" filename="../mesh/injector.obj" />
-            <MechanicalObject name="tube" template="Vec3d" dx="0.036" dz="-0.0011"/>
+            <TriangleSetTopologyContainer name="tubeTriangles" filename="../mesh/injector3.obj" />
+            <MechanicalObject name="tube" template="Vec3d" dx="0.188" dz="-0.00125"/>
             <Triangle />
             <Line />
             <Point />
             <RigidMapping />
             <Node name="Visual">
-                <OglModel name="Visual"  color="0 0 1 0.3"  dx="0.036" dz="-0.0011"/>
+                <OglModel name="Visual"  color="0 0 1 0.3"  dx="0.188" dz="-0.00125"/>
                 <IdentityMapping object1="tube" object2="Visual" />
             </Node>
         </Node>
