@@ -1,0 +1,61 @@
+<Node name="root" dt="0.0001" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
+
+    <Node name="SmallSquare" activated="false">
+        <EulerImplicitSolver/>
+<!--        <StaticSolver/>-->
+        <CGLinearSolver iterations="500" tolerance="1e-15" threshold="1e-15"/>
+        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/square5x5.obj"/>
+        <MechanicalObject name="tri" template="Rigid"/>
+
+        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.1" />
+
+        <FixedConstraint indices="0-4 20-24 5 10 15 9 14 19"/>
+        <ConstantForceField points="6 7 8 11 12 13 16 17 18" forces="0 0 100 0 0 0"/>
+        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e3" poissonRatio="0.42" thickness="0.001" />
+
+        <Node name="SubTriangles">
+            <TriangleSetTopologyContainer name="subTrianglesTopo"/>
+            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="4"/>
+            <MechanicalObject name="subPoints" />
+            <BendingPlateMechanicalMapping />
+            <Triangle/>
+            <Node name="visual">
+                <OglModel name="Visual" color="green"/>
+                <IdentityMapping object1="subPoints" object2="Visual"/>
+            </Node>
+        </Node>
+
+    </Node>
+
+
+
+
+    <Node name="BigSquare" activated="true">
+        <EulerImplicitSolver/>
+<!--        <StaticSolver/>-->
+        <CGLinearSolver iterations="500" tolerance="1e-15" threshold="1e-15"/>
+        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/square5x5big.obj"/>
+        <MechanicalObject name="tri" template="Rigid"/>
+
+        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.1" />
+
+        <FixedConstraint indices="0-4 20-24 5 10 15 9 14 19"/>
+        <ConstantForceField points="6 7 8 11 12 13 16 17 18" forces="0 0 100 0 0 0"/>
+        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.7e6" poissonRatio="0.42" thickness="0.001" />
+
+        <Node name="SubTriangles">
+            <TriangleSetTopologyContainer name="subTrianglesTopo"/>
+            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="4"/>
+            <MechanicalObject name="subPoints" />
+            <BendingPlateMechanicalMapping />
+            <Triangle/>
+            <Node name="visual">
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping object1="subPoints" object2="Visual"/>
+            </Node>
+        </Node>
+
+    </Node>
+
+
+</Node>
