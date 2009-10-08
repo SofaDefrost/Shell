@@ -44,7 +44,7 @@
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="sub_triangle_topo"/>
 <!--            <TriangleSetTopologyContainer  name="sub_triangle_topo" filename="../mesh/oneTriangle_yz_sub.obj"/>-->
-            <TriangleSubdivisionTopologicalMapping object1="initial_triangle_topo" object2="sub_triangle_topo" subdivisions="0"/>
+            <TriangleSubdivisionTopologicalMapping object1="initial_triangle_topo" object2="sub_triangle_topo" subdivisions="1"/>
             <MechanicalObject  name="subPoints" template="Vec3d"/>
             <BendingPlateMechanicalMapping/>
             <Triangle />
@@ -52,10 +52,10 @@
                 <OglModel name="Visual" color="red"/>
                 <IdentityMapping object1="subPoints" object2="Visual"/>
             </Node>
-            <Node>
-                <DrawV name="VelocityVisual"/>
-                <IdentityMapping object1="subPoints" object2="VelocityVisual"/>
-            </Node>
+<!--            <Node>-->
+<!--                <DrawV name="VelocityVisual"/>-->
+<!--                <IdentityMapping object1="subPoints" object2="VelocityVisual"/>-->
+<!--            </Node>-->
         </Node>
 
     </Node>

@@ -35,7 +35,7 @@
 <!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
         <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
         <TriangleSetTopologyContainer name="baseTriangles" filename="../mesh/4triangles_bis.obj"/>
-        <MechanicalObject name="tri" template="Rigid" debugViewIndices="false" debugViewIndicesScale="0.0007"/>
+        <MechanicalObject name="tri" template="Rigid" debugViewIndices="true" debugViewIndicesScale="0.0007"/>
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.2" totalmass="0.1" />
         <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
         <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="false" />
@@ -54,8 +54,8 @@
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subTriangles"/>
-            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="2"/>
-            <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003"/>
+            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="1"/>
+            <MechanicalObject  name="subPoints" debugViewIndices="true" debugViewIndicesScale="0.0003"/>
 <!--            <ConstantForceField points="5 9" forces="0 0 3"/>-->
             <BendingPlateMechanicalMapping/>
             <Triangle />

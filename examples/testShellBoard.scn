@@ -68,7 +68,7 @@ Results with bending only and a 9x9 grid:
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
 <!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
 <!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
-        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/rectangularBoard.obj"/>
+        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/textured_board.obj"/>
         <MechanicalObject name="tri" template="Rigid" />
 
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.1" />
@@ -108,20 +108,18 @@ Results with bending only and a 9x9 grid:
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer name="subTrianglesTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="4"/>
+            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="0"/>
             <MechanicalObject name="subPoints" />
             <BendingPlateMechanicalMapping />
             <Triangle/>
             <Node name="visual">
-                <OglModel name="Visual" color="red"/>
-                <IdentityMapping object1="subPoints" object2="Visual"/>
-            </Node>
+<!--               <OglModel name="Visual" color="green"/>-->
+               <OglModel name="Visual" filename="../mesh/textured_board.obj" texturename="../textures/board.png" />
+               <IdentityMapping object1="subPoints" object2="Visual"/>
+           </Node>
         </Node>
 
     </Node>
-
-
-
 
 
 
