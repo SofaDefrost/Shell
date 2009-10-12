@@ -1,0 +1,225 @@
+<Node name="root" dt="0.01" gravity="0 -9 0" showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0">
+	<Object type="CollisionPipeline" verbose="0" />
+	<Object type="BruteForceDetection" name="N2" />
+	<Object type="CollisionResponse"  response="default" />
+	<Object type="MinProximityIntersection" name="Proximity" alarmDistance="0.2" contactDistance="0.2" />
+	<Object type="CollisionGroup" />
+	<Object type="LightManager" />
+	<Object type="SpotLight" name="light1" color="1 1 1" position="0 0 -100" direction="0 0 1" />
+	
+	<Node name ="group">
+
+		<Node name="articulatedObject2">
+			
+			<Node name="6D_DOFs1">
+<!--
+				<Node name="Refract_" showVisualModels="1">
+				    <Object type="OglShader" vertFilename="shaders/refractShader.vert" fragFilename="shaders/refractShader.frag" />
+				    <Object type="OglFloat3Variable" id="worldSphereCenter" value="0 5 -4.78095"/>
+				    <Object type="OglFloat3Variable" id="lightCenterProj" value="0 5 -8.38201"/>
+				    <Object type="OglFloatVariable" id="refractCoeff" value="1.0"/>
+				    <Object type="OglFloatVariable" id="sphereRadius" value="3.60106"/>
+				    <Object type="OglFloatVariable" id="lightProjRadius" value="2.5"/>
+					<Object type="OglTexture2D" texture2DFilename="data/textures/choroid2.bmp" textureUnit="1" id="sphereTexture" />
+					<Object type="OglModel" name="Lens"  fileMesh="data/mesh/flat_lens.obj"  dz="-0.85" castshadow="0" premultipliedAlpha="true"/>
+				</Node>
+-->
+				<Node name="Iris_">
+					<Object type="OglModel" scale="1000" name="Iris"  fileMesh="data/mesh/iris.obj" texturename="data/textures/iris.bmp" />
+				</Node>
+				
+				<Node name="Sclera_">
+					<Object type="OglShader" vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
+					<Object type="OglShaderDefineMacro" id="TEXTURE_UNIT_0" />
+					<Object type="OglShaderDefineMacro" id="PHONG" />
+					<Object type="OglFloatVariable" id="altitude" value="0.1"/>
+					<Object type="OglFloatVariable" id="border_gamma" value="4.0"/>
+					<Object type="OglFloatVariable" id="border_alpha" value="1.0"/>
+					<Object type="OglIntVariable" id="axis" value="2"/>
+					<Object type="OglFloatVector4Variable" id="colors" value="1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 1.0"/>
+					<Object type="OglTexture2D" texture2DFilename="textures/lights4-small-noise.bmp" textureUnit="1" id="planeTexture" />
+					
+					<Object type="OglModel" scale="1000" name="Sclera" fileMesh="data/mesh/sclera.obj" texturename="data/textures/sclera.bmp" castshadow="0" premultipliedAlpha="true" />
+				</Node>
+	
+				<Node name="Choroid_">
+					<Object type="OglModel" scale="1000" name="Choroid" fileMesh="data/mesh/choroid.obj" normals="0" texturename="data/textures/choroid.bmp" castshadow="0"/>
+				</Node> 
+				 
+				<Node name="Ciliary_">
+					<Object type="OglModel" scale="1000" name="Ciliary"  fileMesh="data/mesh/ciliary_processes.obj" texturename="data/textures/ciliary.bmp" castshadow="0"/>
+				</Node>
+				
+				<!--<Node name="Capsule">
+					<Object type="OglModel" name="Capsule"  fileMesh="data/mesh/eye_lens_capsule_with_hole_2.obj" castshadow="0" />
+				</Node>
+				-->
+<!--				<Node name="Cornea_">-->
+<!--					<Object type="OglShader" vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />-->
+<!--					<Object type="OglShaderDefineMacro" id="PLANE_ENVIRONMENT_MAPPING" />-->
+<!--					<Object type="OglFloatVariable" id="altitude" value="0.0000001"/>-->
+<!--					<Object type="OglTexture2D" texture2DFilename="textures/lights4-small-noise.bmp" textureUnit="2" id="planeTexture"/>-->
+<!--					<Object type="OglModel" scale="1000" name="Cornea"  fileMesh="data/mesh/cornea.obj" premultipliedAlpha="true"-->
+<!--						material="texture Ambient 1 0.2 0.2 0.2 1.0 Diffuse 1 1.0 1.0 1.0 0.8 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 500"/>-->
+<!--						/>-->
+<!--				</Node>-->
+			</Node>
+		</Node>
+
+		<Node name="LensKernelRigid">
+			
+		<Node name="LensKernel">
+			<Object type="TetrahedronSetTopologyContainer" name="Container" fileTopology="data/mesh/lens_kernel.msh"/>
+			<Object type="TetrahedronSetTopologyModifier"/>
+			<Object type="MechanicalObject" scale="1000.0" />
+			<Object type="TetrahedronSetTopologyAlgorithms" template="Vec3d" />
+			<Object type="TetrahedronSetGeometryAlgorithms" template="Vec3d" />
+
+			<Object type="TetrahedralCorotationalFEMForceField" name="FEM" youngModulus="2000" poissonRatio="0.45" method="large" />
+			<Object type="UniformMass" totalmass="0.01" />
+
+			<Node name="TetraTopology2">
+				<Object type="TetrahedronSetTopologyContainer" name="Container2"/>
+				<Object type="TetrahedronSetTopologyModifier"/>
+				<Object type="TetrahedronSetTopologyAlgorithms" template="Vec3d" />
+				<Object type="TetrahedronSetGeometryAlgorithms" template="Vec3d" />
+				<Object type="SimpleTesselatedTetraTopologicalMapping" object1="../../Container" object2="Container2"/>
+				<Object type="MechanicalObject"/>
+				<Object type="SimpleTesselatedTetraMechanicalMapping"/>
+	 			<Object type="Triangle" contactStiffness="1000" contactFriction="0" />
+
+				<Node name="LensCM">
+					<include href="Objects/TriangleSetTopology.xml" />
+					<Object type="Tetra2TriangleTopologicalMapping" object1="../../Container2" object2="Container"/>
+	
+					<Node name="LensVM"  showVisualModels="1">
+						<Object type="OglShader" vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
+						<Object type="OglFloatVariable" id="altitude" value="0.2"/>
+						<Object type="OglFloatVariable" id="border_alpha" value="0.4"/>
+						<Object type="OglFloatVariable" id="border_gamma" value="1.0"/>
+						<Object type="OglIntVariable" id="axis" value="2"/>
+						<Object type="OglTexture2D" texture2DFilename="textures/lights4-small-noise.bmp" textureUnit="1" id="planeTexture"  />
+						<Object type="OglModel" name="LensVM"  color="0.65 0.55 0.45 0.03" />        
+						<Object type="IdentityMapping" object1="../../.." object2="LensVM" />
+					</Node>
+				</Node> 
+				<Node name="LensVM">
+						<Object type="OglShader" geometryVerticesOut="12" geometryInputType="10" geometryOutputType="5" vertFilename="shaders/PT.vert" geoFilename="shaders/PT.geo" fragFilename="shaders/PT.frag"/>
+						<Object type="OglFloat3Variable" id="fragmentColor" value="0.7 0.6 0.6" />
+						<Object type="OglFloatVariable" id="fragmentOpacity" value="3.0"/>
+						<Object type="OglFloatVector4Variable" id="MappingTable" value="
+																						1 0 0 0 
+																						0 0 0 1 
+																						0 1 0 0 
+																						0 0 1 0 
+																						
+																						1 0 0 0 
+																						0 0 0 1 
+																						0 0 1 0 
+																						0 1 0 0 
+																						
+																						1 0 0 0 
+																						0 0 1 0 
+																						0 1 0 0 
+																						0 0 0 1 
+																						
+																						1 0 0 0 
+																						0 0 1 0 
+																						0 0 0 1 
+																						0 1 0 0 
+																						
+																						1 0 0 0 
+																						0 1 0 0 
+																						0 0 0 1 
+																						0 0 1 0 
+																						
+																						1 0 0 0 
+																						0 1 0 0 
+																						0 0 1 0 
+																						0 0 0 1 
+																						
+																						0 0 1 0 
+																						1 0 0 0 
+																						0 0 0 1 
+																						0 1 0 0 
+																						
+																						0 0 0 1 
+																						1 0 0 0 
+																						0 0 1 0 
+																						0 1 0 0" />
+							<Object type="OglFloatVector4Variable" id="RunSelectTable" value="
+																					0. 1. 0. 0.
+																					0. 0. 0. 0.
+																					0. 0. 1. 0.
+																					0. 0. 1. 0.
+																					1. 0. 0. 0.
+																					1. 0. 0. 0.
+																					0. 0. 0. 1.
+																					0. 0. 0. 1.
+																					0. 0. 1. 0.
+																					0. 1. 0. 0." />
+							<Object type="OglTetrahedralModel"  />
+				</Node>
+			</Node>
+		</Node>
+		
+		<OObject type="InteractionEllipsoidForceField" name="InteractionEllipsoidForceFieldOnLens" object1="LensKernelRigid\LensKernel" object2="articulatedObject2\6D_DOFs1\Ellipsoid_" object2_dof_index="0" stiffness="-8000" inside="-1" damping="0.0" center="0.0 0.0 0.0" vradius="1.35 1.35 0.35" color="1 0 0 1" />
+		
+	</Node>
+		
+	</Node>
+	
+<!--	<Node name="Implant" >-->
+<!--		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />-->
+<!--		<OglShaderDefineMacro id="BORDER_OPACIFYING" />-->
+<!--		<OglShaderDefineMacro id="PHONG" />-->
+<!--		<OglShaderDefineMacro id="DOUBLE_SIDED" />-->
+<!--		<OglFloatVariable id="coeffAngle" value="0.1"/>-->
+<!--		<OglFloatVariable id="border_alpha" value="1.0"/>-->
+<!--		<OglFloatVariable id="border_gamma" value="4.0"/>-->
+<!--		<OglModel scale="1000" premultipliedAlpha="true" name="LensVM"  filename="data/mesh/cataract_deployment.obj" -->
+<!--		material="texture Ambient 1 0.5 0.5 0.0 1.0 Diffuse 1 0.2 0.2 0.0 0.2 Specular 1 0.8 0.8 0.8 1.0 Emissive 0 0.25 0.05 0.05 0.0 Shininess 1 25"/>-->
+<!--	</Node>-->
+	
+<!--	<Node name="Injector">		-->
+<!--		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />-->
+<!--		<OglShaderDefineMacro id="PHONG" />-->
+<!--	-->
+<!--		<OglModel scale="1000" name="Inject"       fileMesh="data/mesh/injector_visual.obj" -->
+<!--			material="texture Ambient 1 0.0 0.0 0.0 1.0 Diffuse 1 0.2 0.2 0.2 1.0 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 10"-->
+<!--		/>-->
+<!--	</Node>-->
+
+
+        <Node name="Visual">
+            <OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
+            <OglShaderDefineMacro id="PHONG" />
+            <Object type="OglModel" name="visual_instrument" fileMesh="data/mesh/phaco_collis.obj" normals="0" scale="10" ry="90" rz="90" dx="-3.5" dz="-5" color="1.0 1.0 1.0 1.0" />
+        </Node>
+
+	<Node name="Clamps">		
+		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
+		<OglShaderDefineMacro id="PHONG" />
+	
+		<OglModel scale="1000" name="Clamps"       fileMesh="data/mesh/clamps.obj" 
+			material="texture Ambient 1 0.0 0.0 0.0 1.0 Diffuse 1 0.2 0.2 0.2 1.0 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 10"
+		/>
+	</Node>
+
+	<Node name="CompleteEyeAnatomicalModel_Skin">
+		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
+		<OglShaderDefineMacro id="PHONG" />
+		<OglShaderDefineMacro id="BUMP_MAPPING" />
+		<OglShaderDefineMacro id="TEXTURE_UNIT_0" />
+		
+		<OglFloatVariable id="bumpFactor" value="1.0" />
+		<OglTexture2D name="color" id="colorTexture" texture2DFilename="data/textures/face_color.jpg" textureUnit="1" repeat="true"/>
+		<OglTexture2D name="bump" id="normalMap" texture2DFilename="data/textures/face_normalMap.jpg" textureUnit="2" repeat="true"/>
+		<OglModel scale="1000"  name="Skin" fileMesh="data/mesh/face.obj"  putOnlyTexCoords="true" /> 
+	</Node>
+
+	
+</Node>
+
+
+
