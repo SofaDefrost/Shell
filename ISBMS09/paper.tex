@@ -44,6 +44,26 @@ Our idea is to create a shell element by combining a classic two-dimensional ele
 
 \section{Plate model's description}
 
+\subsection{Triangular elastic membrane}
+The computation of the triangular elastic membrane stiffness matrix can be simply derived from previous works dealing with tetrahedral co-rotational elements (see Muller \emph{et al.} \cite{Muller04}) for instance. The element stiffness matrix $\textbf{K}_e$ can be computed as follows:
+
+\begin{equation}
+\textbf{K}_e = \int_v \textbf{J} \boldsymbol\chi \textbf{J}^{T} dV
+\end{equation} 
+
+where $\textbf{J}$ is the strain-displacement matrix and $\boldsymbol\chi$ embodies the material's behaviour. In the simple case of Hooke's law we have:
+
+\begin{equation}
+\boldsymbol\chi = \frac{E}{12(1-\nu^2)}
+	\begin{bmatrix}
+	1 & \nu & 0 \\
+ 	\nu & 1 & 0 \\
+	0 & 0 & \frac{1}{2} (1-\nu)
+	\end{bmatrix}
+\end{equation} 
+
+The stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element: $\textbf{K} = \textbf{R} \textbf{K}_e \textbf{R}^{T}$.
+
 \subsection{Thin plate theory}
 
 Since the computation of the membrane stiffness matrix is classic and presents no difficulty, we will only detail the bending part of the formulation. To calculate the stiffness matrix for the transverse deflections and rotations shown on figure \ref{fig-triangle}, we start with the assumed deflection $u_z$ of the form
@@ -184,6 +204,8 @@ Cataract surgery is the removal of the natural lens of the eye (also called \emp
 \label{fig-surgery}
 \end{center}
 \end{figure}
+
+% Ref suction : http://www.coastal-eye-care-maine.com/cataracts-surgery/cataract-surgery-maine.html
 
 %\begin{figure}[h]
 %\begin{center}

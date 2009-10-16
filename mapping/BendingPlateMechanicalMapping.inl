@@ -480,9 +480,11 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
         {
             tinfo = &triangleInf[t];
             listCoeffs[t] = tinfo->invC * (tinfo->u + tinfo->u_flat);
+
+//            std::cout << "listCoeffs " << t << " = " << listCoeffs[t] << std::endl;
         }
 
-        Vec3 a, b, c, baryCoord, vertexLocal, out0;
+        Vec3 a, b, c, baryCoord, vertexLocal;
         Vec<9, Real> coeffs;
         Real z;
         for (unsigned int i=0; i<out.size(); i++)
