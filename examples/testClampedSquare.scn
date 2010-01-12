@@ -45,7 +45,7 @@
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer name="subTrianglesTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="4"/>
+            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>
             <MechanicalObject name="subPoints" />
             <BendingPlateMechanicalMapping />
             <Triangle/>

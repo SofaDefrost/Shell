@@ -65,7 +65,9 @@ template<class DataTypes>
 class TriangularBendingFEMForceField : public core::componentmodel::behavior::ForceField<DataTypes>, public virtual core::objectmodel::BaseObject
 {
 public:
-  typedef core::componentmodel::behavior::ForceField<DataTypes> Inherited;
+        SOFA_CLASS(SOFA_TEMPLATE(TriangularBendingFEMForceField,DataTypes), SOFA_TEMPLATE(core::componentmodel::behavior::ForceField,DataTypes));
+
+        typedef core::componentmodel::behavior::ForceField<DataTypes> Inherited;
 	typedef typename DataTypes::VecCoord VecCoord;
 	typedef typename DataTypes::VecDeriv VecDeriv;
 	typedef typename DataTypes::VecReal VecReal;

@@ -3,7 +3,7 @@
     <CollisionPipeline verbose="0" />
     <BruteForceDetection name="N2" />
     <CollisionResponse />
-    <MinProximityIntersection name="Proximity" alarmDistance="0.00005" contactDistance="0.0001"/>
+    <MinProximityIntersection name="Proximity" alarmDistance="0.00005" contactDistance="0.00001"/>
     <CollisionGroup />
 
     <Node name="pointA">
@@ -17,6 +17,7 @@
         <CGLinearSolver name="CG Solver" />
         <MechanicalObject name="ArticulatedObject" template="Vec1d"/>
         <Node name="6D_DOFs1">
+
             <MechanicalObject name="6D_Dof" template="Rigid"/>
             <UniformMass totalmass="1" showAxisSizeFactor="0.001"/>
             <ArticulatedSystemMapping object1="ArticulatedObject" object2="6D_Dof"/>
@@ -36,7 +37,7 @@
         <Mesh name="lines" lines="0 1 1 2 2 3 3 4 4 5 5 6 6 7" />
 
         <AttachConstraint name="Constraint" object2="DOFs" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
-        <UniformMass mass="0.5 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.1 ]" totalMass="1" showAxisSizeFactor="0.01" printLog="false" />
+        <UniformMass mass="0.5 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.1 ]" totalMass="0.2" showAxisSizeFactor="0.01" printLog="false" />
         <BeamFEMForceField name="FEM" radius="0.01" youngModulus="1e6" />
 
 <!--        <RestShapeSpringsForceField points="7" stiffness="1e6" angularStiffness="1e6" external_rest_shape="../Motion/6D_DOFs1/6D_Dof" external_points="1"/>-->
@@ -51,9 +52,9 @@
             <CubeTopology nx="15" ny="2" nz="2" min="0 -0.1 -0.1" max="7 0.1 0.1" />
             <MechanicalObject />
             <BeamLinearMapping isMechanical="true" localCoord="true"/>
-            <Triangle contactStiffness="10000" />
-            <Line contactStiffness="10000"/>
-            <Point contactStiffness="10000"/>
+            <Triangle contactStiffness="1e7" />
+            <Line contactStiffness="1e7"/>
+            <Point contactStiffness="1e7"/>
         </Node>
     </Node>
 
@@ -73,7 +74,7 @@
         <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/fake_colon.obj"/>
         <MechanicalObject name="colon" template="Rigid" debugViewIndices="false" debugViewIndicesScale="0.0003" position="@../Rest_colon/RestVertex2Frame.frames" />
 
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.003" totalmass="1" />
+        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.003" totalmass="3" />
 
         <BoxROI name="box1" box="-0.065 -0.03 -0.03 -0.06 0.03 0.03" drawSize="0"/>
         <FixedConstraint indices="@box1.indices" drawSize="0"/>
@@ -85,12 +86,12 @@
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer name="subTrianglesTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="0"/>
+            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>
             <MechanicalObject name="subPoints" />
             <BendingPlateMechanicalMapping />
-            <Triangle/>
-            <Line/>
-            <Point/>
+            <Triangle contactStiffness="1e7" />
+            <Line contactStiffness="1e7"/>
+            <Point contactStiffness="1e7"/>
             <Node name="visual">
                 <OglModel name="Visual" color="red"/>
                 <IdentityMapping object1="subPoints" object2="Visual"/>

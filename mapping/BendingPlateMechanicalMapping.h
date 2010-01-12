@@ -55,6 +55,7 @@ template <class BasicMapping>
 class BendingPlateMechanicalMapping : public BasicMapping, public virtual core::objectmodel::BaseObject
 {
 public:
+    SOFA_CLASS(SOFA_TEMPLATE(BendingPlateMechanicalMapping,BasicMapping), BasicMapping);
     typedef BasicMapping Inherit;
     typedef typename Inherit::In In;
     typedef typename Inherit::Out Out;

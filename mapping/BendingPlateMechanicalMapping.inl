@@ -748,7 +748,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv&
                 {
                     // Local coordinates needed to compute deflection
                     a = outVertices[ triangle[0] ].getCenter();
-                    vertexLocal = tinfo->Qframe.inverseRotate(inVertices[i]-a);
+                    vertexLocal = tinfo->Qframe.inverseRotate(inVertices[i]-a); // WARNING: SHOULD NOT WE NEED TO PROJECT THE INVERTICES INTO THE TRIANGLE'S PLAN FIRST?
 
                     // Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
                     polynomDeflection[0] = 1;
