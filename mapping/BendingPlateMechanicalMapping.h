@@ -113,13 +113,6 @@ protected:
         sofa::helper::vector< sofa::helper::vector<int> > listBaseTriangles;
         // Contains the barycentric coordinates of the same vertex within all base triangles
         sofa::helper::vector< sofa::helper::vector<Vec3> > barycentricCoordinates;
-        // Coefficients ci for each triangle
-        sofa::helper::vector< Vec<9, Real> > listCoeffs;
-        // List of non-null indices within the displacemente vector u
-        int* nonNullIndices;
-
-        vector<Quat> previousOrientation;
-
 };
 
 } // namespace mapping

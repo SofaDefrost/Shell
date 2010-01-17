@@ -52,7 +52,6 @@ using namespace sofa::defaulttype;
 using sofa::helper::vector;
 using namespace sofa::component::topology;
 
-
 /// This class can be overridden if needed for additionnal storage within template specializations.
 template<class DataTypes>
 class TriangularBendingFEMForceFieldInternalData
@@ -78,8 +77,8 @@ public:
 	typedef Vec<3,Real> Vec3;
 
 	typedef sofa::core::componentmodel::topology::BaseMeshTopology::index_type Index;
-	typedef sofa::core::componentmodel::topology::BaseMeshTopology::Triangle Element;
-	typedef sofa::core::componentmodel::topology::BaseMeshTopology::SeqTriangles VecElement;
+	typedef sofa::core::componentmodel::topology::BaseMeshTopology::Triangle Shell;
+	typedef sofa::core::componentmodel::topology::BaseMeshTopology::SeqTriangles VecShell;
 
 protected:
 
@@ -131,7 +130,8 @@ public:
                 // Variables needed for drawing the shell
                 Vec<9, Real> u; // displacement vector
                 Mat<9, 9, Real> invC; // inverse of C (used in bending mode only)
-                Vec <9, Real> u_flat; // difference between the initial position and the flate position to allow the use of an initial deformed shape
+                Vec<9, Real> coefficients; // coefficients Ci computed from tinfo->invC * (tinfo->u + tinfo->u_flat)
+                Vec <9, Real> u_rest; // difference between the initial position and the flate position to allow the use of an initial deformed shape
 
                 TriangleInformation() { }
 
@@ -180,10 +180,6 @@ protected :
 	void computeStrainDisplacementMatrix(StrainDisplacement &J, const Vec3& b, const Vec3& c);
         void computeStrainDisplacementMatrixBending(TriangleInformation *tinfo, const Vec3& b, const Vec3& c);
         void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
-//	void computeStrain(Vec<3,Real> &strain, const StrainDisplacement &J, const Displacement &D);
-//        void computeStrainBending(const Index& elementIndex, const DisplacementBending &D);
-//	void computeStress(Vec<3,Real> &stress, const MaterialStiffness &K, const Vec<3,Real> &strain);
-//        void computeStressBending(const Index& elementIndex);
         void computeStiffnessMatrix(StiffnessMatrix &K, const StrainDisplacement &J, const MaterialStiffness &M);
         void computeStiffnessMatrixBending(StiffnessMatrixBending &K, TriangleInformation *tinfo);
 	void computeForce(Displacement &F, const Displacement& D, const Index elementIndex);
@@ -202,6 +198,9 @@ protected :
         void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixGlobalSpace &K_gs, TriangleInformation *tinfo);
 
         void testAddDforce(void);
+
+        void generateCylinder(void);
+        void measureError(void);
 };
 
 
