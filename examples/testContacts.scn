@@ -3,7 +3,7 @@
     <CollisionPipeline verbose="0" />
     <BruteForceDetection name="N2" />
     <CollisionResponse />
-    <MinProximityIntersection name="Proximity" alarmDistance="0.00005" contactDistance="0.00001"/>
+    <MinProximityIntersection name="Proximity" alarmDistance="0.005" contactDistance="0.001"/>
     <CollisionGroup />
 
     <Node name="pointA">
@@ -32,7 +32,8 @@
 
     <Node name="Beam">
         <EulerImplicit rayleighStiffness="0" printLog="false" />
-        <BTDLinearSolver template="NewMatBand" bandWidth="11"  printLog="false" verbose="false" />
+<!--        <BTDLinearSolver template="NewMatBand" bandWidth="11"  printLog="false" verbose="false" />-->
+        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
         <MechanicalObject template="Rigid" name="DOFs" position="-0.03 0 0 0 0 0 1    -0.02 0 0 0 0 0 1    -0.01 0 0 0 0 0 1    0 0 0 0 0 0 1    0.01 0 0 0 0 0 1     0.02 0 0 0 0 0 1     0.03 0 0 0 0 0 1     0.04 0 0 0 0 0 1" />
         <Mesh name="lines" lines="0 1 1 2 2 3 3 4 4 5 5 6 6 7" />
 
@@ -52,9 +53,9 @@
             <CubeTopology nx="15" ny="2" nz="2" min="0 -0.1 -0.1" max="7 0.1 0.1" />
             <MechanicalObject />
             <BeamLinearMapping isMechanical="true" localCoord="true"/>
-            <Triangle contactStiffness="1e7" />
-            <Line contactStiffness="1e7"/>
-            <Point contactStiffness="1e7"/>
+            <Triangle contactStiffness="1e4" bothSide="1"/>
+            <Line contactStiffness="1e4" bothSide="1"/>
+            <Point contactStiffness="1e4" bothSide="1"/>
         </Node>
     </Node>
 
@@ -62,7 +63,7 @@
 
 
     <Node name="Rest_colon">
-        <MeshLoader name="rest_shape" filename="../mesh/fake_colon.obj"/>
+        <MeshLoader name="rest_shape" filename="applications/plugins/shells/mesh/fake_colon.obj"/>
         <Mesh/>
         <Vertex2Frame name="RestVertex2Frame" template="Rigid" invertNormals="false" vertices="@rest_shape.vertices" normals="@rest_shape.normals" />
     </Node>
@@ -71,7 +72,7 @@
     <Node name="Fake_colon" activated="true">
         <EulerImplicitSolver/>
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
-        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/fake_colon.obj"/>
+        <TriangleSetTopologyContainer name="trianglesTopo" filename="applications/plugins/shells/mesh/fake_colon.obj"/>
         <MechanicalObject name="colon" template="Rigid" debugViewIndices="false" debugViewIndicesScale="0.0003" position="@../Rest_colon/RestVertex2Frame.frames" />
 
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.003" totalmass="3" />
@@ -89,9 +90,9 @@
             <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>
             <MechanicalObject name="subPoints" />
             <BendingPlateMechanicalMapping />
-            <Triangle contactStiffness="1e7" />
-            <Line contactStiffness="1e7"/>
-            <Point contactStiffness="1e7"/>
+            <Triangle contactStiffness="1e4" bothSide="1"/>
+            <Line contactStiffness="1e4" bothSide="1"/>
+            <Point contactStiffness="1e4" bothSide="1"/>
             <Node name="visual">
                 <OglModel name="Visual" color="red"/>
                 <IdentityMapping object1="subPoints" object2="Visual"/>
