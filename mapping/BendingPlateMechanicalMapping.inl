@@ -966,9 +966,10 @@ void BendingPlateMechanicalMapping<BaseMapping>::drawVisual()
 
         if(this->getContext()->getShowWireFrame())
         {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);            
             glEnable(GL_POLYGON_OFFSET_LINE);
             glColor4f(0.0, 0.0, 1.0, 1.0);
-            glBegin(GL_LINES);
+            glBegin(GL_TRIANGLES);
             for (unsigned int i=0; i<outTriangles.size(); i++)
             {
                 index = outTriangles[i][0];
