@@ -986,6 +986,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::drawVisual()
         }
         else
         {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glEnable(GL_POLYGON_OFFSET_FILL);
             glColor4f(0.0, 0.0, 0.0, 0.0);
             glBegin(GL_TRIANGLES);
