@@ -137,6 +137,9 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
 , f_membraneRatio(initData(&f_membraneRatio,(Real)1.0,"membraneRatio","In plane forces ratio"))
 , f_bendingRatio(initData(&f_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
+, refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
+, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
+, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
 {
 }
 
@@ -181,12 +184,16 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 //    q.axisToQuat(Vec3(0,0,1), 1.57079633);
 //    std::cout << "quat = " << q << std::endl;
 
-
 //    testAddDforce();
 
+
+    
 //    generateCylinder();
 
-//    measureError();
+    if (refineMesh.getValue())
+    {
+        refineCoarseMeshToTarget();
+    }
 }
 
 
@@ -194,10 +201,10 @@ template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
 {
     // Cylinder parameters
-    Real length = 0.1;
-    Real radius = 0.01;
-    unsigned int subLevelLength = 10;
-    unsigned int subLevelPerimeter = 8;
+    Real length = 0.2;    // 0.178
+    Real radius = 0.024;    // 0.019
+    unsigned int subLevelLength = 5;
+    unsigned int subLevelPerimeter = 4;
 
     // Creates vertices
     sofa::helper::vector<Vec3> listVertices;
@@ -207,27 +214,27 @@ void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
     {
         for (unsigned int j=0; j<subLevelPerimeter; j++)
         {
-            listVertices.push_back( Vec3(i*incrementingDistance, radius*cos(j*incrementingAngle), radius*sin(j*incrementingAngle)) );
+            listVertices.push_back( Vec3(radius*cos(j*incrementingAngle), radius*sin(j*incrementingAngle), i*incrementingDistance) );
         }
     }
 
     // Creates elements
-    VecShell listElements;
+    SeqTriangles listElements;
     for (unsigned int i=0; i<subLevelLength; i++)
     {
         for (unsigned int j=0; j<subLevelPerimeter-1; j++)
         {
-            listElements.push_back( Shell(subLevelPerimeter*i+j+1, subLevelPerimeter*i + (j+1) +1, subLevelPerimeter*(i+1) + j +1) );
-            listElements.push_back( Shell(subLevelPerimeter*(i+1) + (j+1) +1, subLevelPerimeter*(i+1) + j +1, subLevelPerimeter*i + (j+1) +1 ) );
+            listElements.push_back( Triangle(subLevelPerimeter*i + (j+1) +1, subLevelPerimeter*(i+1) + j +1, subLevelPerimeter*i+j+1) );
+            listElements.push_back( Triangle(subLevelPerimeter*(i+1) + j +1, subLevelPerimeter*i + (j+1) +1, subLevelPerimeter*(i+1) + (j+1) +1) );
         }
 
-        listElements.push_back( Shell(subLevelPerimeter*i+subLevelPerimeter, subLevelPerimeter*i+1, subLevelPerimeter*(i+1) + subLevelPerimeter) );
-        listElements.push_back( Shell(subLevelPerimeter*(i+1)+1, subLevelPerimeter*(i+1) + subLevelPerimeter, subLevelPerimeter*i+1 ) );
+        listElements.push_back( Triangle(subLevelPerimeter*i+1, subLevelPerimeter*(i+1) + subLevelPerimeter, subLevelPerimeter*i+subLevelPerimeter) );
+        listElements.push_back( Triangle(subLevelPerimeter*(i+1) + subLevelPerimeter, subLevelPerimeter*i+1, subLevelPerimeter*(i+1)+1) );
     }
 
     // Writes in Gmsh format
     ofstream myfile;
-    myfile.open ("cylinder.obj");
+    myfile.open ("cylinder_inner.obj");
     for (unsigned int vertex=0; vertex<listVertices.size(); vertex++)
     {
         myfile << "v " << listVertices[vertex] << "\n";
@@ -245,55 +252,462 @@ void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
 
 
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::measureError(void)
+void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
 {
+    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << _topologyHigh->getNbTriangles() << " triangles" << std::endl;
+    
+    // Level of subdivision
+    unsigned int levelSubdivision = 1;
+
+    // List of vertices
     const VecCoord& x = *this->mstate->getX();
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    // List of triangles
+    const SeqTriangles triangles = _topology->getTriangles();
 
-//    cout << "Quat 0 = " << x[0].getOrientation() << std::endl;
-//    cout << "Quat 1 = " << x[1].getOrientation() << std::endl;
-//    cout << "Quat 8 = " << x[8].getOrientation() << std::endl;
-//    cout << "Quat 9 = " << x[9].getOrientation() << std::endl;
+    // Creates new mesh
+    sofa::helper::vector<Vec3> subVertices;
+    SeqTriangles subTriangles;
 
-    Vec3 vertexLocal;
-    Real z;
-    for (int i=0; i<_topology->getNbTriangles(); ++i)
+    // Initialises list of subvertices and triangles with those of previous iteration
+    for (unsigned int i=0; i<x.size(); i++)
     {
-        TriangleInformation *tinfo = &triangleInf[i];
-
-        // Get the indices of the 3 vertices for the current triangle
-        const Index& a = tinfo->a;
-        const Index& b = tinfo->b;
-        const Index& c = tinfo->c;
-
-        // Computes coordinates of gravity centre
-        Vec3 G = (x[a].getCenter()+x[b].getCenter()+x[c].getCenter())/3;
-        
-        // Computes the coefficients Ci of triangle
-        tinfo->coefficients = tinfo->invC * (tinfo->u + tinfo->u_rest);
-        
-        // Computes local coordinates of G needed to compute deflection
-        vertexLocal = tinfo->Qframe.rotate(G-x[a].getCenter());
-
-        // Computes deflection and adds it
-        z = tinfo->coefficients[0] + tinfo->coefficients[1]*vertexLocal[0] + tinfo->coefficients[2]*vertexLocal[1] + tinfo->coefficients[3]*vertexLocal[0]*vertexLocal[0] + tinfo->coefficients[4]*vertexLocal[0]*vertexLocal[1] + tinfo->coefficients[5]*vertexLocal[1]*vertexLocal[1] + tinfo->coefficients[6]*vertexLocal[0]*vertexLocal[0]*vertexLocal[0] + tinfo->coefficients[7]*vertexLocal[0]*vertexLocal[1]*vertexLocal[1] + tinfo->coefficients[8]*vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
-        
-//        std::cout << "triangle " << i << ": " << z << std::endl;
-
-        G += tinfo->Qframe.rotate(Vec3(0, 0, z));
-
-//        std::cout << "triangle " << i << ": " << tinfo->Qframe.rotate(Vec3(0, 0, 1)) << std::endl;
-
-        Real distanceFromCenterLine = sqrt(G[1]*G[1]+G[2]*G[2]);
-        Real error = ( (0.01-distanceFromCenterLine)/0.01 )*100;
-//        std::cout << "triangle " << i << ": " << -error << " % " << std::endl;
-
-//        std::cout << "triangle " << i << ": " << tinfo->Qframe.toEulerVector() << std::endl;
-
+        subVertices.push_back(x[i].getCenter());
+    }
+    for (unsigned int t=0; t<triangles.size(); t++)
+    {
+        subTriangles.push_back(triangles[t]);
     }
 
-    triangleInfo.endEdit();
+
+    // Refines mesh
+    for (unsigned int n=0; n<levelSubdivision; n++)
+    {
+        // Subdivides each triangle into 4 smaller ones
+        subTriangles.clear();
+        for (unsigned int t=0; t<triangles.size(); t++)
+        {
+            Vec3 a = x[(int)triangles[t][0]].getCenter();
+            Vec3 b = x[(int)triangles[t][1]].getCenter();
+            Vec3 c = x[(int)triangles[t][2]].getCenter();
+
+            subdivide(a, b, c, subVertices, subTriangles);
+        }
+
+        // Adjusts position of each subvertex to get closer to actual surface before iterating again
+        for (unsigned int i=0; i<subVertices.size(); i++)
+        {
+            movePoint(subVertices[i]);
+        }
+    }
+
+
+    std::cout << "listVertices.size() = " << subVertices.size() << std::endl;
+    std::cout << "listElements.size() = " << subTriangles.size() << std::endl;
+
+    // Writes in Gmsh format
+    ofstream myfile;
+    myfile.open ("mesh_refined.obj");
+    for (unsigned int vertex=0; vertex<subVertices.size(); vertex++)
+    {
+        myfile << "v " << subVertices[vertex] << "\n";
+    }
+    for (unsigned int element=0; element<subTriangles.size(); element++)
+    {
+        myfile << "f " << subTriangles[element][0]+1 << " " << subTriangles[element][1]+1 << " " << subTriangles[element][2]+1 << "\n";
+    }
+    myfile.close();
+    std::cout << "Done" << std::endl;
 }
+
+// --------------------------------------------------------------------------------------
+// Subdivides each triangle into 4 by taking the middle of each edge
+// --------------------------------------------------------------------------------------
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::helper::vector<Vec3> &subVertices, SeqTriangles &subTriangles)
+{
+    // Global coordinates
+    Vec3 mAB, mAC, mBC;
+    mAB = (a+b)/2;
+    mAC = (a+c)/2;
+    mBC = (b+c)/2;
+
+    // Adds vertex if we deal with a new point
+    int indexAB, indexAC, indexBC;
+    addVertexAndFindIndex(subVertices, mAB, indexAB);
+    addVertexAndFindIndex(subVertices, mAC, indexAC);
+    addVertexAndFindIndex(subVertices, mBC, indexBC);
+
+    // Finds index of the 3 original vertices
+    int indexA, indexB, indexC;
+    addVertexAndFindIndex(subVertices, a, indexA);
+    addVertexAndFindIndex(subVertices, b, indexB);
+    addVertexAndFindIndex(subVertices, c, indexC);
+
+    // Adds the 4 subdivided triangles to the list
+    subTriangles.push_back(Triangle(indexA, indexAB, indexAC));
+    subTriangles.push_back(Triangle(indexAB, indexB, indexBC));
+    subTriangles.push_back(Triangle(indexAC, indexBC, indexC));
+    subTriangles.push_back(Triangle(indexBC, indexAC, indexAB));
+}
+
+
+// --------------------------------------------------------------------------------------
+// Adds a vertex if it is not already in the list
+// --------------------------------------------------------------------------------------
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index)
+{
+    bool alreadyHere = false;
+
+    for (unsigned v=0; v<subVertices.size(); v++)
+    {
+        if ( (subVertices[v]-vertex).norm() < 0.0000001)
+        {
+            alreadyHere = true;
+            index = v;
+        }
+    }
+    if (alreadyHere == false)
+    {
+        subVertices.push_back(vertex);
+        index = (int)subVertices.size()-1;
+    }
+}
+
+
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::movePoint(Vec3& pointToMove)
+{
+    sofa::helper::vector<Vec3> listClosestPoints;
+    FindClosestGravityPoints(pointToMove, listClosestPoints);
+    pointToMove = (listClosestPoints[0]+listClosestPoints[1]+listClosestPoints[2])/3;
+}
+
+
+// --------------------------------------------------------------------------------------
+// Finds the list of the 3 closest gravity points of targeted surface
+// --------------------------------------------------------------------------------------
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints)
+{
+    // Retrieves vertices of high resolution mesh
+    const VecCoord& x = targetVertices.getValue();
+    // Retrieves triangles of high resolution mesh
+    const SeqTriangles triangles = targetTriangles.getValue();
+
+    multimap<Real, Vec3> closestTrianglesData;
+
+    for (unsigned int t=0; t<triangles.size(); t++)
+    {
+        Vec3 pointTriangle1 = x[ triangles[t][0] ].getCenter();
+        Vec3 pointTriangle2 = x[ triangles[t][1] ].getCenter();
+        Vec3 pointTriangle3 = x[ triangles[t][2] ].getCenter();
+
+        Vec3 G = (pointTriangle1+pointTriangle2+pointTriangle3)/3;
+
+        // Distance between the point and current triangle
+        Real distance = (G-point).norm2();
+
+        // Stores distances (automatically sorted)
+        closestTrianglesData.insert( make_pair<Real,Vec3>(distance,G));
+    }
+
+    // Returns the 3 closest points
+    int count = 0;
+    typename multimap<Real,Vec3>::iterator it;
+    for (it = closestTrianglesData.begin(); it!=closestTrianglesData.end(); it++)
+    {
+        if (count < 3)
+        {
+            listClosestPoints.push_back((*it).second);
+        }
+        count++;
+    }
+
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Finds the intersection between the normal of subvertex and targeted surface
+//
+// http://en.wikipedia.org/wiki/Line-plane_intersection
+// A triangle with its 3 vertices P1, P2 and P3 defines a plan. A subvertex P and its normal
+// defines a line. The intersection can be parametered with t (distance along the line from P)
+// and (u,v) the coordinates within the triangles (u along side P0P1 and v along P0P2).
+//
+// ---------------------------------------------------------------------------------------------
+//template <class DataTypes>
+//void TriangularBendingFEMForceField<DataTypes>::FindTriangleInNormalDirection(const Vec3 &Point, const Vec3 &normal, Index &triangleIndex, Real &error)
+//{
+//    // List of vertices
+//    MechanicalState<RigidTypes>* mStateHigh = dynamic_cast<MechanicalState<RigidTypes>*> (_topologyHigh->getContext()->getMechanicalState());
+//    const VecCoord& x = *mStateHigh->getX();
+//    // List of triangles
+//    const SeqTriangles triangles = _topologyHigh->getTriangles();
+//
+//    helper::vector<Index> triangleIndices;
+//    Real minimumDistance = 10e12;
+//    Real distance;
+//    for (unsigned int t=0; t<triangles.size(); t++)
+//    {
+//        Vec3 P0 = x[ triangles[t][0] ].getCenter();
+//        Vec3 P1 = x[ triangles[t][1] ].getCenter();
+//        Vec3 P2 = x[ triangles[t][2] ].getCenter();
+//
+//        Mat<3, 3, Real> M, invM;
+//        Vec3 P0P1 = P1-P0;
+//        Vec3 P0P2 = P2-P0;
+//        M[0][0] = -normal[0];   M[0][1] = P0P1[0];   M[0][2] = P0P2[0];
+//        M[1][0] = -normal[1];   M[1][1] = P0P1[1];   M[1][2] = P0P2[1];
+//        M[2][0] = -normal[2];   M[2][1] = P0P1[2];   M[2][2] = P0P2[2];
+//
+//        Vec3 P0Point = Point-P0;
+//
+//        // Intersection containts (t, u, v)
+//        Vec3 intersection;
+//        invM.invert(M);
+//        intersection = invM*P0Point;
+//
+//        // If intersection is within triangle
+//        if (intersection[1] >= 0 && intersection[2] >= 0 && intersection[1] + intersection[2] <= 1)
+//        {
+//            // Distance from the point
+//            distance = P0Point.norm2();
+//
+//            // We test the distance to only keep the closest one
+//            if (distance < minimumDistance)
+//            {
+//                // We set the new minimum
+//                minimumDistance = distance;
+//
+//                triangleIndex = t;
+//                error = intersection[0];
+//            }
+//        }
+//    }
+//}
+
+//template <class DataTypes>
+//void TriangularBendingFEMForceField<DataTypes>::FindClosestTriangles(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints)
+//{
+//    // List of vertices
+//    MechanicalState<RigidTypes>* mStateHigh = dynamic_cast<MechanicalState<RigidTypes>*> (_topologyHigh->getContext()->getMechanicalState());
+//    const VecCoord& x = *mStateHigh->getX();
+//    // List of triangles
+//    const SeqTriangles triangles = _topologyHigh->getTriangles();
+//
+//    multimap<Real, Vec3> closestTrianglesData;
+//
+//    for (unsigned int t=0; t<triangles.size(); t++)
+//    {
+//        Vec3 pointTriangle1 = x[ triangles[t][0] ].getCenter();
+//        Vec3 pointTriangle2 = x[ triangles[t][1] ].getCenter();
+//        Vec3 pointTriangle3 = x[ triangles[t][2] ].getCenter();
+//
+//        const Vector3 AB = pointTriangle2-pointTriangle1;
+//        const Vector3 AC = pointTriangle3-pointTriangle1;
+//        const Vector3 AP = point-pointTriangle1;
+//        Matrix2 A;
+//        Vector2 b;
+//
+//        // We want to find alpha,beta so that:
+//        // AQ = AB*alpha+AC*beta
+//        // PQ.AB = 0 and PQ.AC = 0
+//        // (AQ-AP).AB = 0 and (AQ-AP).AC = 0
+//        // AQ.AB = AP.AB and AQ.AC = AP.AC
+//        //
+//        // (AB*alpha+AC*beta).AB = AP.AB and
+//        // (AB*alpha+AC*beta).AC = AP.AC
+//        //
+//        // AB.AB*alpha + AC.AB*beta = AP.AB and
+//        // AB.AC*alpha + AC.AC*beta = AP.AC
+//        //
+//        // A . [alpha beta] = b
+//        A[0][0] = AB*AB;
+//        A[1][1] = AC*AC;
+//        A[0][1] = A[1][0] = AB*AC;
+//        b[0] = AP*AB;
+//        b[1] = AP*AC;
+//        const double det = determinant(A);
+//
+//        double alpha = (b[0]*A[1][1] - b[1]*A[0][1])/det;
+//        double beta  = (b[1]*A[0][0] - b[0]*A[1][0])/det;
+//
+//        // If point is on one of the edge, returns
+//        if (alpha >= 0 && beta >= 0 && alpha + beta <= 1 )
+//        {
+//            // Distance between the point and current triangle
+//            const Vector3 PQ = AB * alpha + AC * beta - AP;
+//            Real distance = PQ.norm2();
+//
+//            // Closest point for current triangle
+//            const Vector3 AQ = AB * alpha + AC * beta;
+//
+//            // Stores those data (automatically sorted)
+//            closestTrianglesData.insert( make_pair<Real,Vec3>(distance,pointTriangle1+AQ));
+//        }
+//    }
+//
+//    // Returns the 3 closest points
+//    int count = 0;
+//    typename multimap<Real,Vec3>::iterator it;
+//    for (it = closestTrianglesData.begin(); it!=closestTrianglesData.end(); it++)
+//    {
+//        if (count < 3)
+//        {
+//            listClosestPoints.push_back((*it).second);
+//
+//            if (i == 87)
+//            std::cout << "distance = " << (*it).first << " and projected point = " << (*it).second << std::endl;
+//        }
+//        count++;
+//    }
+//
+//}
+
+
+//template <class DataTypes>
+//void TriangularBendingFEMForceField<DataTypes>::buildRigids(const sofa::helper::vector<Vec3> &subVertices, const SeqTriangles &subTriangles, VecCoord &subRigids)
+//{
+//    /**
+//     * Computes normal at each subvertex
+//     */
+//    helper::vector<Vec3> normals;
+//    for (unsigned int i=0; i<subVertices.size(); i++)
+//    {
+//        normals.push_back(Vec3(0, 0, 0));
+//    }
+//
+//    for (unsigned int t=0; t<subTriangles.size(); t++)
+//    {
+//        Vec3 a = subVertices[ subTriangles[t][0] ];
+//        Vec3 b = subVertices[ subTriangles[t][1] ];
+//        Vec3 c = subVertices[ subTriangles[t][2] ];
+//
+//        Vec3 z = cross(b-a, c-a);
+//        z.normalize();
+//
+//        normals[ subTriangles[t][0] ] += z;
+//        normals[ subTriangles[t][1] ] += z;
+//        normals[ subTriangles[t][2] ] += z;
+//    }
+//
+//    for (unsigned int i=0; i<normals.size(); i++)
+//    {
+//        normals[i].normalize();
+//    }
+//
+//
+//    /**
+//     * Builds a rigid from this normal
+//     */
+//    subRigids.resize(subVertices.size());
+//    for (unsigned int i=0 ; i<subRigids.size() ; i++)
+//    {
+//        Quat q;
+//        Vec3 zAxis = normals[i];
+//        zAxis.normalize();
+//        Vec3 xAxis;
+//        Vec3 yAxis(1.0, 0.0, 0.0);
+//        if ( fabs(dot(yAxis, zAxis)) > 0.7)
+//                yAxis = Vec3(0.0, 0.0, 1.0);
+//
+//        xAxis = yAxis.cross(zAxis);
+//        xAxis.normalize();
+//        yAxis = zAxis.cross(xAxis);
+//        yAxis.normalize();
+//
+//        subRigids[i].getOrientation() = q.createQuaterFromFrame(xAxis, yAxis, zAxis);
+//        subRigids[i].getCenter() = subVertices[i];
+//
+//        subRigidsToDraw.push_back(subRigids[i]);
+//    }
+//}
+
+
+//template <class DataTypes>
+//void TriangularBendingFEMForceField<DataTypes>::addDeflection(const Index&a, const Index&b, const Index&c, const VecCoord &subRigids, Vec3 &G)
+//{
+//    /**
+//     *  Builds rotation matrix for current triangle
+//     */
+//    Quat Qframe;
+//    computeRotation(Qframe, subRigids, a, b, c);
+//    vectorQframe.push_back(Qframe);
+//
+//    /**
+//     *  Computes vector u of deformations
+//     */
+//    // Local orientations (evaluates the difference between actual and flat positions)
+//    Quat orientationA = qDiffZ(subRigids[a].getOrientation(), Qframe);
+//    Quat orientationB = qDiffZ(subRigids[b].getOrientation(), Qframe);
+//    Quat orientationC = qDiffZ(subRigids[c].getOrientation(), Qframe);
+//    // Creates a vector u matching this difference
+//    Vec <9, Real> u;
+//    u.clear();
+//    u[1] = orientationA.toEulerVector()[0];
+//    u[2] = orientationA.toEulerVector()[1];
+//    u[4] = orientationB.toEulerVector()[0];
+//    u[5] = orientationB.toEulerVector()[1];
+//    u[7] = orientationC.toEulerVector()[0];
+//    u[8] = orientationC.toEulerVector()[1];
+//
+//
+//    /**
+//     *  Computes the inverse of C matrix
+//     */
+//    // It gives the coefficients c1, c2, ..., c9 of the deflection function given by:
+//    // Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*(x*y^2 + x^2*y) + c9*y^3
+//    // Source: Tocher's deflection function presented by Przemieniecki
+//    // Corrected deflection to get a symmetrical deformation: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
+//    Mat<9, 9, Real> C;
+//    C.clear();
+//
+//    // Positions of B and C into local triangle's frame
+//    Vec3 localB = Qframe.rotate(subRigids[b].getCenter()-subRigids[a].getCenter());
+//    Vec3 localC = Qframe.rotate(subRigids[c].getCenter()-subRigids[a].getCenter());
+//
+//    // Corrected
+//    C(0,0) = 1;
+//    C(1,2) = 1;
+//    C(2,1) = -1;
+//    C(3,0) = 1; 	C(3,1) = localB[0]; 		C(3,3) = localB[0]*localB[0];         C(3,6) = localB[0]*localB[0]*localB[0];
+//    C(4,2) = 1; 	C(4,4) = localB[0];
+//    C(5,1) = -1; 	C(5,3) = -2*localB[0];      C(5,6) = -3*localB[0]*localB[0];
+//    C(6,0) = 1;         C(6,1) = localC[0];		C(6,2) = localC[1];              C(6,3) = localC[0]*localC[0];             C(6,4) = localC[0]*localC[1];		C(6,5) = localC[1]*localC[1];
+//    C(6,6) = localC[0]*localC[0]*localC[0];			C(6,7) = localC[0]*localC[1]*localC[1];    C(6,8) = localC[1]*localC[1]*localC[1];
+//    C(7,2) = 1;		C(7,4) = localC[0];		C(7,5) = 2*localC[1];            C(7,7) = 2*localC[0]*localC[1];           C(7,8) = 3*localC[1]*localC[1];
+//    C(8,1) = -1;	C(8,3) = -2*localC[0];	C(8,4) = -localC[1];             C(8,6) = -3*localC[0]*localC[0];          C(8,7) = -localC[1]*localC[1];
+//
+//    // Inverse of C
+//    Mat<9, 9, Real> invC;
+//    invC.invert(C);
+//
+//    // Computes the coefficients Ci of triangle
+//    Vec<9, Real> coefficients = invC * u;
+//
+//    // Computes local coordinates of G needed to compute deflection
+//    Vec3 vertexLocal = Qframe.rotate(G-subRigids[a].getCenter());
+//
+//    // Computes deflection and adds it
+//    Real z = coefficients[0] + coefficients[1]*vertexLocal[0] + coefficients[2]*vertexLocal[1] + coefficients[3]*vertexLocal[0]*vertexLocal[0] + coefficients[4]*vertexLocal[0]*vertexLocal[1] + coefficients[5]*vertexLocal[1]*vertexLocal[1] + coefficients[6]*vertexLocal[0]*vertexLocal[0]*vertexLocal[0] + coefficients[7]*vertexLocal[0]*vertexLocal[1]*vertexLocal[1] + coefficients[8]*vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
+//
+//    G += Qframe.inverseRotate(Vec3(0, 0, z));
+//}
+
+
+//template <class DataTypes>
+//void TriangularBendingFEMForceField<DataTypes>::measureError(helper::vector<Vec3> &vectorG)
+//{
+//    for (unsigned int i=0; i<vectorG.size(); i++)
+//    {
+//        Index indexTriangle;
+//        Real error;
+//        Vec3 normal = vectorQframe[i].inverseRotate(Vec3(0,0,1));
+//        FindTriangleInNormalDirection(vectorG[i], normal, indexTriangle, error);
+//        vectorDistance.push_back(error);
+//    }
+//}
 
 
 // --------------------------------------------------------------------------------------
@@ -1174,12 +1588,6 @@ void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
 
     std::cout << "df from addDforce = " << df << std::endl;
     std::cout << " " << std::endl;
-}
-
-template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::draw()
-{
-//    testAddDforce();
 }
 
 } // namespace forcefield

@@ -39,6 +39,8 @@
 
 #include <sofa/helper/system/thread/CTime.h>
 
+#include <sofa/helper/gl/BasicShapes.h>
+
 namespace sofa
 {
 
@@ -51,6 +53,7 @@ namespace forcefield
 using namespace sofa::defaulttype;
 using sofa::helper::vector;
 using namespace sofa::component::topology;
+using namespace sofa::core::componentmodel::behavior;
 
 /// This class can be overridden if needed for additionnal storage within template specializations.
 template<class DataTypes>
@@ -77,8 +80,8 @@ public:
 	typedef Vec<3,Real> Vec3;
 
 	typedef sofa::core::componentmodel::topology::BaseMeshTopology::index_type Index;
-	typedef sofa::core::componentmodel::topology::BaseMeshTopology::Triangle Shell;
-	typedef sofa::core::componentmodel::topology::BaseMeshTopology::SeqTriangles VecShell;
+	typedef sofa::core::componentmodel::topology::BaseMeshTopology::Triangle Triangle;
+	typedef sofa::core::componentmodel::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
 
 protected:
 
@@ -93,6 +96,7 @@ protected:
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
 
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
+        sofa::core::componentmodel::topology::BaseMeshTopology* _topologyHigh;
 
         TriangularBendingFEMForceFieldInternalData<DataTypes> data;
         friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
@@ -158,7 +162,6 @@ public:
         virtual void addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset);
 	virtual double getPotentialEnergy(const VecCoord& x);
 	virtual void handleTopologyChange();
-        virtual void draw();
 
         sofa::core::componentmodel::topology::BaseMeshTopology* getTopology() {return _topology;}
         TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}
@@ -169,7 +172,9 @@ public:
         Data <Real> f_thickness;
         Data <Real> f_membraneRatio;
         Data <Real> f_bendingRatio;
-
+        Data<bool> refineMesh;
+        Data<VecCoord> targetVertices;
+        Data<SeqTriangles> targetTriangles;
 
 protected :
 
@@ -200,7 +205,11 @@ protected :
         void testAddDforce(void);
 
         void generateCylinder(void);
-        void measureError(void);
+        void refineCoarseMeshToTarget(void);
+        void subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::helper::vector<Vec3> &subVertices, SeqTriangles &subTriangles);
+        void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
+        void movePoint(Vec3& pointToMove);
+        void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
 };
 
 

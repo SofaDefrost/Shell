@@ -47,6 +47,9 @@ BendingPlateMechanicalMapping<BaseMapping>::BendingPlateMechanicalMapping(In* fr
 : Inherit(from, to)
 , inputTopo(NULL)
 , outputTopo(NULL)
+, measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
+, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
+, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
 {
 }
 
@@ -223,8 +226,32 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     if (!triangularBendingForcefield)
         return;
 
+    // Retrieves topological mapping to retrieve list of edges (for rendering of wireframe)
+    triangleSubdivisionTopologicalMapping = NULL;
+    this->getContext()->get(triangleSubdivisionTopologicalMapping);
+    if (!triangleSubdivisionTopologicalMapping)
+        return;
+
     // Call of apply() and applyJ()
     this->Inherit::init();
+
+
+    // Retrieves high resolution mesh topology and measures the error
+    if (measureError.getValue())
+    {
+        MeasureError();
+    }
+    else
+    {
+        OutVecCoord &outVertices = *this->toModel->getX();
+        for (unsigned int i=0; i<outVertices.size(); i++)
+        {
+            vectorError.push_back(0);
+            normals.push_back(Vec3(0,0,0));
+        }
+    }
+
+
 }
 
 
@@ -234,6 +261,127 @@ void BendingPlateMechanicalMapping<BaseMapping>::reinit()
     std::cout << "BendingPlateMechanicalMapping<BaseMapping>::reinit()" << std::endl;
     init();
 }
+
+
+template <class BaseMapping>
+void BendingPlateMechanicalMapping<BaseMapping>::MeasureError()
+{
+    // Retrieves vertices of high resolution mesh
+    const InVecCoord& highResVertices = targetVertices.getValue();
+    // Retrieves triangles of high resolution mesh
+    const SeqTriangles highRestriangles = targetTriangles.getValue();
+
+    // Computes normal for each subvertex
+//    helper::vector<Vec3> normals;
+    ComputeNormals(normals);
+    
+    // Finds the triangle on high res mesh towards normal direction for each point and measure the distance to it
+    FindTriangleInNormalDirection(highResVertices, highRestriangles, normals);
+}
+
+
+template <class BaseMapping>
+void BendingPlateMechanicalMapping<BaseMapping>::ComputeNormals(helper::vector<Vec3> &normals)
+{
+    // Retrieves vertices and triangles of subdivided coarse mesh
+    OutVecCoord &outVertices = *this->toModel->getX();
+    const SeqTriangles &outTriangles = outputTopo->getTriangles();
+
+    /**
+     * Computes normal at each subvertex
+     */
+    for (unsigned int i=0; i<outVertices.size(); i++)
+    {
+        normals.push_back(Vec3(0, 0, 0));
+    }
+
+    for (unsigned int t=0; t<outTriangles.size(); t++)
+    {
+        Vec3 a = outVertices[ outTriangles[t][0] ];
+        Vec3 b = outVertices[ outTriangles[t][1] ];
+        Vec3 c = outVertices[ outTriangles[t][2] ];
+
+        Vec3 z = cross(b-a, c-a);
+        z.normalize();
+
+        normals[ outTriangles[t][0] ] += z;
+        normals[ outTriangles[t][1] ] += z;
+        normals[ outTriangles[t][2] ] += z;
+    }
+
+    for (unsigned int i=0; i<normals.size(); i++)
+    {
+        normals[i].normalize();
+    }
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Finds the intersection between the normal of subvertex and targeted surface
+//
+// http://en.wikipedia.org/wiki/Line-plane_intersection
+// A triangle with its 3 vertices P1, P2 and P3 defines a plan. A subvertex P and its normal
+// defines a line. The intersection can be parametered with t (distance along the line from P)
+// and (u,v) the coordinates within the triangles (u along side P0P1 and v along P0P2).
+//
+// ---------------------------------------------------------------------------------------------
+template <class BaseMapping>
+void BendingPlateMechanicalMapping<BaseMapping>::FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals)
+{
+    OutVecCoord &outVertices = *this->toModel->getX();
+    
+    Real minimumDistance, distance, error;
+    Vec3 point, normal;
+
+    // Iterates over each subvertex
+    for (unsigned int i=0; i<outVertices.size(); i++)
+    {
+        point = outVertices[i];
+        normal = normals[i];
+        
+        minimumDistance = 10e12;
+        for (unsigned int t=0; t<highRestriangles.size(); t++)
+        {
+            Vec3 P0 = highResVertices[ highRestriangles[t][0] ].getCenter();
+            Vec3 P1 = highResVertices[ highRestriangles[t][1] ].getCenter();
+            Vec3 P2 = highResVertices[ highRestriangles[t][2] ].getCenter();
+
+            Mat<3, 3, Real> M, invM;
+            Vec3 P0P1 = P1-P0;
+            Vec3 P0P2 = P2-P0;
+            M[0][0] = -normal[0];   M[0][1] = P0P1[0];   M[0][2] = P0P2[0];
+            M[1][0] = -normal[1];   M[1][1] = P0P1[1];   M[1][2] = P0P2[1];
+            M[2][0] = -normal[2];   M[2][1] = P0P1[2];   M[2][2] = P0P2[2];
+
+            Vec3 P0point = point-P0;
+
+            // Intersection containts (t, u, v)
+            Vec3 intersection;
+            invM.invert(M);
+            intersection = invM*P0point;
+
+            // If intersection is within triangle
+            if (intersection[1] >= 0 && intersection[2] >= 0 && intersection[1] + intersection[2] <= 1)
+            {
+                // Distance from the point
+                distance = P0point.norm2();
+
+                // We test the distance to only keep the closest one
+                if (distance < minimumDistance)
+                {
+                    // We set the new minimum
+                    minimumDistance = distance;
+
+                    error = intersection[0];
+                }
+            }
+        }
+
+        // Stores the error
+        vectorError.push_back(error);
+    }
+}
+
 
 // --------------------------------------------------------------------------------------
 // Finds the list of the closest points to a point
@@ -778,6 +926,124 @@ template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecConst& /*out*/, const typename Out::VecConst& /*in*/ )
 {
 
+}
+
+
+template <class BaseMapping>
+void BendingPlateMechanicalMapping<BaseMapping>::drawVisual()
+{
+    OutVecCoord &outVertices = *this->toModel->getX();
+
+    Real maximum = 0;
+    if (measureError.getValue())
+    {
+        // Normalises the error
+        for (unsigned int i=0; i<vectorError.size(); i++)
+        {
+            if (fabs(vectorError[i])>maximum)
+            {
+                maximum = fabs(vectorError[i]);
+            }
+        }
+        for (unsigned int i=0; i<vectorError.size(); i++)
+        {
+            vectorError[i] = vectorError[i]/maximum;
+        }
+    }
+
+    
+    if(this->getContext()->getShowBehaviorModels())
+    {
+        glDisable(GL_LIGHTING);
+
+        const SeqEdges &outEdges = triangleSubdivisionTopologicalMapping->getSubEdges();
+//        const SeqEdges &outEdges = outputTopo->getEdges();
+        const SeqTriangles &outTriangles = outputTopo->getTriangles();
+        unsigned int index;
+
+        glEnable(GL_DEPTH_TEST);
+        glPolygonOffset(1.0, 1.0);
+
+        if(this->getContext()->getShowWireFrame())
+        {
+            glEnable(GL_POLYGON_OFFSET_LINE);
+            glColor4f(0.0, 0.0, 1.0, 1.0);
+            glBegin(GL_LINES);
+            for (unsigned int i=0; i<outTriangles.size(); i++)
+            {
+                index = outTriangles[i][0];
+                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+
+                index = outTriangles[i][1];
+                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+
+                index = outTriangles[i][2];
+                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+            }
+            glEnd();
+            glDisable(GL_POLYGON_OFFSET_LINE);
+        }
+        else
+        {
+            glEnable(GL_POLYGON_OFFSET_FILL);
+            glColor4f(0.0, 0.0, 0.0, 0.0);
+            glBegin(GL_TRIANGLES);
+            for (unsigned int i=0; i<outTriangles.size(); i++)
+            {
+                index = outTriangles[i][0];
+                glTexCoord1f((float)vectorError[index]);
+                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+
+                index = outTriangles[i][1];
+                glTexCoord1f((float)vectorError[index]);
+                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+
+                index = outTriangles[i][2];
+                glTexCoord1f((float)vectorError[index]);
+                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+            }
+            glEnd();
+            glDisable(GL_POLYGON_OFFSET_FILL);
+        }
+
+        // Render shells' contours (subdivision of edges)
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+        glBegin(GL_LINES);
+        for (unsigned int i=0; i<outEdges.size(); i++)
+        {
+            index = outEdges[i][0];
+            glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+
+            index = outEdges[i][1];
+            glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+        }
+        glEnd();
+
+    }
+    else
+    {
+        glBegin(GL_LINES);
+        for (unsigned int i=0; i<outVertices.size(); i++)
+        {
+            float alpha = vectorError[i];
+
+            float scale = 3.0;
+            alpha = scale * alpha;
+
+            if (alpha<0.0)
+            {
+                glColor4f(-alpha, 0.0, 1.0+alpha, 1.0);
+            }
+            else
+            {
+                glColor4f(0.0, alpha, 1.0-alpha, 1.0);
+            }
+
+            helper::gl::glVertexT(outVertices[i]);
+            helper::gl::glVertexT(outVertices[i]+normals[i]*vectorError[i]*maximum);
+        }
+        glEnd();
+    }
 }
 
 

@@ -28,6 +28,7 @@
 #include <sofa/core/componentmodel/behavior/MechanicalMapping.h>
 #include <sofa/core/componentmodel/behavior/MechanicalState.h>
 #include <sofa/helper/vector.h>
+#include <sofa/core/VisualModel.h>
 
 #include "../forcefield/TriangularBendingFEMForceField.h"
 #include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
@@ -52,7 +53,7 @@ using namespace sofa::component::topology;
 using namespace sofa::helper::system::thread;
 
 template <class BasicMapping>
-class BendingPlateMechanicalMapping : public BasicMapping, public virtual core::objectmodel::BaseObject
+class BendingPlateMechanicalMapping : public BasicMapping, public core::VisualModel, public virtual core::objectmodel::BaseObject
 {
 public:
     SOFA_CLASS(SOFA_TEMPLATE(BendingPlateMechanicalMapping,BasicMapping), BasicMapping);
@@ -87,6 +88,7 @@ public:
 
     void init();
     void reinit();
+    virtual void drawVisual();
     
     virtual ~BendingPlateMechanicalMapping();
     
@@ -96,11 +98,26 @@ public:
     void applyJT( typename In::VecConst& out, const typename Out::VecConst& in );
 
 protected:
+
+        Data<bool> measureError;
+        Data<InVecCoord> targetVertices;
+        Data<SeqTriangles> targetTriangles;
+
+        helper::vector<Real> vectorError;
+        helper::vector<Vec3> normals;
+
 	core::componentmodel::topology::BaseMeshTopology* inputTopo;
 	core::componentmodel::topology::BaseMeshTopology* outputTopo;
 
         // Pointer on the forcefield associated with the in topology
         TriangularBendingFEMForceField<InDataTypes>* triangularBendingForcefield;
+
+        // Pointer on the topological mapping to retrieve the list of edges
+        TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
+
+        void MeasureError();
+        void ComputeNormals(helper::vector<Vec3> &normals);
+        void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals);
 
         // Computes the barycentric coordinates of a vertex within a triangle
         void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c);

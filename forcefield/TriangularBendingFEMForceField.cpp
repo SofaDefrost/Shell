@@ -52,7 +52,8 @@ int TriangularBendingFEMForceFieldClass = core::RegisterObject("Triangular finit
 .add< TriangularBendingFEMForceField<Rigid3dTypes> >()
 #endif
 #ifndef SOFA_DOUBLE
-.add< TriangularBendingFEMForceField<Rigid3fTypes> >()
+        // WARNING: THE TEMPLATE BELOW HAS BEEN CHANGED ONLY BECAUSE MACROS SOFA_FLOAT AND SOFA_DOUBLE DO NOT WORK
+//.add< TriangularBendingFEMForceField<Rigid3fTypes> >()
 #endif
 ;
 
@@ -60,7 +61,8 @@ int TriangularBendingFEMForceFieldClass = core::RegisterObject("Triangular finit
 template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<Rigid3dTypes>;
 #endif
 #ifndef SOFA_DOUBLE
-template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<Rigid3fTypes>;
+    // WARNING: THE TEMPLATE BELOW HAS BEEN CHANGED ONLY BECAUSE MACROS SOFA_FLOAT AND SOFA_DOUBLE DO NOT WORK
+//template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<Rigid3fTypes>;
 #endif
 
 

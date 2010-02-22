@@ -5,29 +5,40 @@
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
     <CollisionGroup />
 
-    <Node name="pointA">
-        <MechanicalObject template="Rigid" name="fixedPoint" position="0 0 0 0 0 0 1"/>
-    </Node>
-    <Node name="pointB">
-        <MechanicalObject template="Rigid" name="fixedPoint" position="1 0 0 0 0 0 1"/>
-    </Node>
+<!--    <Node name="pointA">-->
+<!--        <MechanicalObject template="Rigid" name="fixedPoint" position="0 0 0 0 0 0 1"/>-->
+<!--    </Node>-->
+<!--    <Node name="pointB">-->
+<!--        <MechanicalObject template="Rigid" name="fixedPoint" position="1 0 0 0 0 0 1"/>-->
+<!--    </Node>-->
     <Node name="pointC">
-        <MechanicalObject template="Rigid" name="fixedPoint" position="0.5 0.9 0 0 0 0 1"/>
+        <MechanicalObject template="Rigid" name="fixedPoint" position="0.5 0.9 0 0 0 0.707107 0.707107"/>
     </Node>
 
 
     <Node name="one_triangle">
         <EulerImplicitSolver />
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
-        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/oneTriangle.obj" />
-        <MechanicalObject name="tri" template="Rigid" />
-<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1"  position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0.258819 0 0 0.965926"/>-->
+        <TriangleSetTopologyContainer name="trianglesTopo" filename="applications/plugins/shells/mesh/oneTriangle.obj" />
 
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.5" totalmass="1" />
-        <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
-        <AttachConstraint name="Constraint" object2="tri" object1="pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />
-<!--        <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="true" />-->
-        <ConstantForceField points="2" forces="0 0 0 0.3 0 0"/>
+        <!--                No rotation - flat rest position                -->
+<!--        <MechanicalObject name="tri" template="Rigid" />-->
+
+        <!--                No rotation - deformed rest position                -->
+<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"  position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"/>-->
+
+        <!--        Rotation of Pi/2 around z        -->
+        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"  position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"/>
+
+        <!--        Rotation of Pi/2 around z + torque on vertex 2 around local x       -->
+<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"  position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"/>-->
+
+        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.3" totalmass="1" />
+<!--        <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />-->
+<!--        <AttachConstraint name="Constraint" object2="tri" object1="pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />-->
+        <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="true" />
+        <FixedConstraint indices="0-1" drawSize="0"/>
+        <ConstantForceField points="2" forces="0 0 0 0.5 0 0"/>
         <FixedRotationConstraint FixedZRotation="true"/>
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1"/>
             

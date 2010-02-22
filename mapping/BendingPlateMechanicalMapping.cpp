@@ -54,8 +54,9 @@ int BendingPlateMechanicalMappingClass = core::RegisterObject("Mechanical mappin
 
 #endif
 #ifndef SOFA_DOUBLE
-.add< BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3fTypes>, MechanicalState<Vec3fTypes> > > >()
-.add< BendingPlateMechanicalMapping< Mapping< State<Rigid3fTypes>, MappedModel<Vec3fTypes> > > >()
+        // WARNING: THE TEMPLATE BELOW BEEN CHANGED ONLY BECAUSE MACROS SOFA_FLOAT AND SOFA_DOUBLE DO NOT WORK
+//.add< BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3fTypes>, MechanicalState<Vec3fTypes> > > >()
+//.add< BendingPlateMechanicalMapping< Mapping< State<Rigid3fTypes>, MappedModel<Vec3fTypes> > > >()
 #endif
 
 #ifndef SOFA_FLOAT
@@ -74,8 +75,9 @@ template class BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState
 template class BendingPlateMechanicalMapping< Mapping< State<Rigid3dTypes>, MappedModel<Vec3dTypes> > >;
 #endif
 #ifndef SOFA_DOUBLE
-template class BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3fTypes>, MechanicalState<Vec3fTypes> > >;
-template class BendingPlateMechanicalMapping< Mapping< State<Rigid3fTypes>, MappedModel<Vec3fTypes> > >;
+// WARNING: THE TEMPLATE BELOW BEEN CHANGED ONLY BECAUSE MACROS SOFA_FLOAT AND SOFA_DOUBLE DO NOT WORK
+//template class BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3fTypes>, MechanicalState<Vec3fTypes> > >;
+//template class BendingPlateMechanicalMapping< Mapping< State<Rigid3fTypes>, MappedModel<Vec3fTypes> > >;
 #endif
 
 #ifndef SOFA_FLOAT

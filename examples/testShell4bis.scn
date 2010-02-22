@@ -24,10 +24,11 @@
         <EulerImplicitSolver />
 <!--        <StaticSolver/>-->
 <!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
-<!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
-        <TriangleSetTopologyContainer name="initial_triangle_topo" filename="../mesh/oneTriangle_yz.obj" />
+        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
+<!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+        <TriangleSetTopologyContainer name="initial_triangle_topo" filename="applications/plugins/shells/mesh/oneTriangle_yz.obj" />
         <MechanicalObject name="basePoints" template="Rigid" position="@../initial_triangle/Vertex2Frame.frames"/>
+<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0.5 -0.5 -0.5 0.5     0 0 1 0.5 -0.5 -0.5 0.5     0 0.9 0.5 0.549125 -0.44549 -0.44126 0.55253"  position="0 0 0 0.5 -0.5 -0.5 0.5     0 0 1 0.5 -0.5 -0.5 0.5     0 0.9 0.5 0.549125 -0.44549 -0.44126 0.55253"/>-->
 
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0,  0 0 0.05 ]" showAxisSizeFactor="0.3" totalmass="0.01" />
 
@@ -35,16 +36,16 @@
 
         <AttachConstraint name="Constraint" object2="basePoints" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
         <AttachConstraint name="Constraint" object2="basePoints" object1="pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />
-<!--        <AttachConstraint name="Constraint" object2="basePoints" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="true" />-->
+        <AttachConstraint name="Constraint" object2="basePoints" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="true" />
 
-        <ConstantForceField points="2" forces="-1 0 0 0 0 0"/>
+        <ConstantForceField points="2" forces="0 0 0 0 0 0.5"/>
         <FixedRotationConstraint FixedZRotation="true"/>
-        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.49" thickness="0.1"/>
+        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1"/>
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="sub_triangle_topo"/>
-<!--            <TriangleSetTopologyContainer  name="sub_triangle_topo" filename="../mesh/oneTriangle_yz_sub.obj"/>-->
-            <TriangleSubdivisionTopologicalMapping object1="initial_triangle_topo" object2="sub_triangle_topo" subdivisions="0"/>
+<!--            <TriangleSetTopologyContainer  name="sub_triangle_topo" filename="applications/plugins/shells/mesh/oneTriangle_yz_sub.obj"/>-->
+            <TriangleSubdivisionTopologicalMapping object1="initial_triangle_topo" object2="sub_triangle_topo" subdivisions="5"/>
             <MechanicalObject  name="subPoints" template="Vec3d"/>
             <BendingPlateMechanicalMapping/>
             <Triangle />
