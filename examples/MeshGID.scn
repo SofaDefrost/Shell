@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<Node name="root" dt="0.02" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
+    <CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <CollisionResponse response="default" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+	
+	<Node >
+		<EulerImplicitSolver />
+		<CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
+		<include href="Mesh_test.xml" filename="Mesh_test.xml"  />
+		<MechanicalObject name="tetras" debugViewIndices="false" debugViewIndicesScale="0.0007"/>
+		<UniformMass />
+		<TetrahedronFEMForceField/>
+		
+		<OglModel />
+	</Node>
+	
+	
+	
+		
+</Node>
