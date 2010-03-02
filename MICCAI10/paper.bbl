@@ -1,0 +1,96 @@
+\begin{thebibliography}{10}
+
+\bibitem{Liu03}
+Liu, G., Quek, S.:
+\newblock Finite Element Method: A Practical Course.
+\newblock Butterworth (2003)
+
+\bibitem{Provot95}
+Provot, X.:
+\newblock Deformation constraints in a mass-spring model to describe rigid
+  cloth behavior.
+\newblock In: Graphics Interface '95. (1995)  147--154
+
+\bibitem{Hammer08}
+Hammer, P.E., Perrinb, D.P., del Nidob, P.J., Howe, R.D.:
+\newblock Image-based mass-spring model of mitral valve closure for surgical
+  planning.
+\newblock In: Proc. of SPIE Medical Imaging. Volume 6918. (2008)
+
+\bibitem{Yu08}
+Yu, H., Geng, Z.:
+\newblock An improved mass-spring model to simulate draping cloth.
+\newblock IEEE International Conference on Intelligent Computation Technology
+  and Automation \textbf{1} (2008)  568--571
+
+\bibitem{Taskiran05}
+Taskiran, H.D., G{\"u}d{\"u}kbay, U.:
+\newblock Physically-based simulation of hair strips in real-time.
+\newblock In: WSCG (Short Papers). (2005)  153--156
+
+\bibitem{Wang07}
+Wang, F., Duratti, L., Samur, E., Spaelter, U., Bleuler, H.:
+\newblock A {C}omputer-{B}ased {R}eal-{T}ime {S}imulation of {I}nterventional
+  {R}adiology.
+\newblock In: The 29th {A}nnual {I}nternational {C}onference of the {IEEE}
+  {E}ngineering in {M}edicine and {B}iology {S}ociety ({IEEE}-{EMBS}). (2007)
+  1742--1745
+
+\bibitem{Choi07}
+Choi, M.G., Woo, S.Y., Ko, H.S.:
+\newblock Real-time simulation of thin shells.
+\newblock In: ACM SIGGRAPH/Eurographics symposium on Computer animation. (2007)
+   349--354
+
+\bibitem{Bridson03}
+Bridson, R., Marino, S., Fedkiw, R.:
+\newblock Simulation of clothing with folds and wrinkles.
+\newblock In: Symposium on Computer Animation. (2003)  28--36
+
+\bibitem{Grinspun03}
+Grinspun, E., Hirani, A.N., Desbrun, M., Schr\"{o}der, P.:
+\newblock Discrete shells.
+\newblock In: Proceedings of the Symposium on Computer Animation. (2003)
+  62--67
+
+\bibitem{Wicke05}
+Wicke, M., Steinemann, D., Gross, M.:
+\newblock Efficient animation of point-sampled thin shells.
+\newblock In: Computer Graphics Forum (Eurographics 2005). Volume~24. (2005)
+  667--676
+
+\bibitem{Thomaszewski06}
+Thomaszewski, B., Wacker, M., Strasser, W.:
+\newblock A consistent bending model for cloth simulation with corotational
+  subdivision finite elements.
+\newblock In: ACM SIGGRAPH/Eurographics Symposium on Computer Animation. (2006)
+   107--116
+
+\bibitem{Felippa00}
+Felippa, C.A.:
+\newblock A systematic approach to the element independent corotational
+  dynamics of finite elements.
+\newblock Technical Report CU-CAS-00-03, Center for Aerospace Structures (2000)
+
+\bibitem{Muller04}
+Muller, M., Gross, M.:
+\newblock Interactive virtual materials.
+\newblock In: Proceedings of Graphics Interface (GI 2004). (2004)  239--246
+
+\bibitem{Przemieniecki68}
+Przemieniecki, J.:
+\newblock Theory of matrix structural analysis.
+\newblock McGraw-Hill (1985)
+
+\bibitem{SOFA}
+Allard, J., Cotin, S., Faure, F., Bensoussan, P.J., Poyer, F., Duriez, C.,
+  Delingette, H., Grisoni, L.:
+\newblock Sofa - an open source framework for medical simulation.
+\newblock In: Medicine Meets Virtual Reality. (2007)  13--18
+
+\bibitem{Zhongnian86}
+Zhongnian, X.:
+\newblock A simple and efficient triangular fem for plate bending.
+\newblock Acta Mechanica Sinica \textbf{2}(2) (1986)  185--192
+
+\end{thebibliography}
