@@ -190,6 +190,20 @@ void TriangularBendingFEMForceField<DataTypes>::init()
     
 //    generateCylinder();
 
+    const VecCoord& x = *this->mstate->getX();
+    for (unsigned int i = 0; i<x.size(); i++)
+    {
+        Vec3 pos = x[i].getCenter();
+
+        if (pos[1] == 4.953 && pos[2] == 5.175)
+        {
+            std::cout << "indice central point top = " << i << std::endl;
+            indexTop = i;
+        }
+        if (pos[1] == -4.953 && pos[2] == 5.175)
+            std::cout << "indice central point bottom = " << i << std::endl;
+    }
+    
     if (refineMesh.getValue())
     {
         refineCoarseMeshToTarget();
@@ -200,11 +214,11 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
 {
-    // Cylinder parameters
-    Real length = 0.2;    // 0.178
-    Real radius = 0.024;    // 0.019
-    unsigned int subLevelLength = 5;
-    unsigned int subLevelPerimeter = 4;
+    // Outer cylinder parameters
+    Real length = 10.35;    // 0.178
+    Real radius = 4.953;    // 0.019
+    unsigned int subLevelLength = 32;
+    unsigned int subLevelPerimeter = 64;
 
     // Creates vertices
     sofa::helper::vector<Vec3> listVertices;
@@ -224,17 +238,68 @@ void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
     {
         for (unsigned int j=0; j<subLevelPerimeter-1; j++)
         {
-            listElements.push_back( Triangle(subLevelPerimeter*i + (j+1) +1, subLevelPerimeter*(i+1) + j +1, subLevelPerimeter*i+j+1) );
-            listElements.push_back( Triangle(subLevelPerimeter*(i+1) + j +1, subLevelPerimeter*i + (j+1) +1, subLevelPerimeter*(i+1) + (j+1) +1) );
+            listElements.push_back( Triangle(subLevelPerimeter*(i+1) + j +1, subLevelPerimeter*i + (j+1) +1, subLevelPerimeter*i+j+1) );
+            listElements.push_back( Triangle(subLevelPerimeter*i + (j+1) +1, subLevelPerimeter*(i+1) + j +1, subLevelPerimeter*(i+1) + (j+1) +1) );
         }
 
-        listElements.push_back( Triangle(subLevelPerimeter*i+1, subLevelPerimeter*(i+1) + subLevelPerimeter, subLevelPerimeter*i+subLevelPerimeter) );
-        listElements.push_back( Triangle(subLevelPerimeter*(i+1) + subLevelPerimeter, subLevelPerimeter*i+1, subLevelPerimeter*(i+1)+1) );
+        listElements.push_back( Triangle(subLevelPerimeter*(i+1) + subLevelPerimeter, subLevelPerimeter*i+1, subLevelPerimeter*i+subLevelPerimeter) );
+        listElements.push_back( Triangle(subLevelPerimeter*i+1, subLevelPerimeter*(i+1) + subLevelPerimeter, subLevelPerimeter*(i+1)+1) );
     }
 
+
+    // Inner cylinder parameters
+//    radius = 4.859;    // 0.019
+//
+//    unsigned int NbVertices = listVertices.size();
+//
+//    // Creates vertices
+//    incrementingAngle = -2*M_PI/subLevelPerimeter;
+//    incrementingDistance = length/subLevelLength;
+//    for (unsigned int i=0; i<subLevelLength+1; i++)
+//    {
+//        for (unsigned int j=0; j<subLevelPerimeter; j++)
+//        {
+//            listVertices.push_back( Vec3(radius*cos(j*incrementingAngle), radius*sin(j*incrementingAngle), i*incrementingDistance) );
+//        }
+//    }
+//
+//    // Creates elements
+//    for (unsigned int i=0; i<subLevelLength; i++)
+//    {
+//        for (unsigned int j=0; j<subLevelPerimeter-1; j++)
+//        {
+//            listElements.push_back( Triangle(subLevelPerimeter*i + (j+1) +1 + NbVertices, subLevelPerimeter*(i+1) + j +1 + NbVertices, subLevelPerimeter*i+j+1 + NbVertices) );
+//            listElements.push_back( Triangle(subLevelPerimeter*(i+1) + j +1 + NbVertices, subLevelPerimeter*i + (j+1) +1 + NbVertices, subLevelPerimeter*(i+1) + (j+1) +1 + NbVertices) );
+//        }
+//
+//        listElements.push_back( Triangle(subLevelPerimeter*i+1 + NbVertices, subLevelPerimeter*(i+1) + subLevelPerimeter + NbVertices, subLevelPerimeter*i+subLevelPerimeter + NbVertices) );
+//        listElements.push_back( Triangle(subLevelPerimeter*(i+1) + subLevelPerimeter + NbVertices, subLevelPerimeter*i+1 + NbVertices, subLevelPerimeter*(i+1)+1 + NbVertices) );
+//    }
+//
+//
+//    // Connection of 2 cylinders at both ends
+//    for (unsigned int j=0; j<subLevelPerimeter-1; j++)
+//    {
+//        listElements.push_back( Triangle(j+1, j+NbVertices+1, j+NbVertices+1+1) );
+//        listElements.push_back( Triangle(j+1, j+NbVertices+1+1, j+1+1) );
+//    }
+//    listElements.push_back( Triangle(subLevelPerimeter, subLevelPerimeter-1+NbVertices+1, NbVertices+1) );
+//    listElements.push_back( Triangle(subLevelPerimeter, NbVertices+1, 1) );
+//
+//    Real shift = subLevelLength*subLevelPerimeter;
+//    for (unsigned int j=0; j<subLevelPerimeter-1; j++)
+//    {
+//        listElements.push_back( Triangle(shift+j+1, shift+j+NbVertices+1, shift+j+NbVertices+1+1) );
+//        listElements.push_back( Triangle(shift+j+1, shift+j+NbVertices+1+1, shift+j+1+1) );
+//    }
+//    listElements.push_back( Triangle(shift+subLevelPerimeter, shift+subLevelPerimeter-1+NbVertices+1, shift+NbVertices+1) );
+//    listElements.push_back( Triangle(shift+subLevelPerimeter, shift+NbVertices+1, shift+1) );
+//
+
+    
     // Writes in Gmsh format
     ofstream myfile;
-    myfile.open ("cylinder_inner.obj");
+    myfile.open ("pinchedCylinder.obj");
     for (unsigned int vertex=0; vertex<listVertices.size(); vertex++)
     {
         myfile << "v " << listVertices[vertex] << "\n";
@@ -245,7 +310,27 @@ void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
     }
     myfile.close();
 
-    std::cout << "cylinder.obj has been written" << std::endl;
+//    ofstream myfile;
+//    myfile.open ("aorta_2cylinders.msh");
+//    myfile << "$MeshFormat \n";
+//    myfile << "2.1 0 8 \n";
+//    myfile << "$EndMeshFormat \n";
+//    myfile << "$Nodes \n";
+//    myfile << listVertices.size() << "\n";
+//    for (unsigned int vertex=0; vertex<listVertices.size(); vertex++)
+//    {
+//        myfile << vertex+1 << " " << listVertices[vertex] << "\n";
+//    }
+//    myfile << "$EndNodes \n";
+//    myfile << "$Elements \n";
+//    myfile << listElements.size() << "\n";
+//    for (unsigned int element=0; element<listElements.size(); element++)
+//    {
+//        myfile << element+1 << " 2 0 " << listElements[element] << "\n";
+//    }
+//    myfile << "$EndElements \n";
+//    myfile.close();
+
     std::cout << "listVertices.size() = " << listVertices.size() << std::endl;
     std::cout << "listElements.size() = " << listElements.size() << std::endl;
 }
@@ -816,6 +901,10 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
         tinfo->localC = Qframe.rotate(x[c].getCenter()-x[a].getCenter());
         computeStrainDisplacementMatrixBending(tinfo, tinfo->localB, tinfo->localC);
         
+        // Computes triangles' surface
+        StrainDisplacement J;
+        computeStrainDisplacementMatrix(J, i, tinfo->localB, tinfo->localC);
+
         // Local rest orientations (Evaluates the difference between the rest position and the flat position to allow the use of a deformed rest shape)
         tinfo->restLocalOrientations[0] = qDiffZ(x0[a].getOrientation(), Qframe0);
         tinfo->restLocalOrientations[1] = qDiffZ(x0[b].getOrientation(), Qframe0);
@@ -1008,7 +1097,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(Displ
 // --- Compute the strain-displacement matrix where (a, b, c) are the local coordinates of the 3 nodes of a triangle
 // ------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrix(StrainDisplacement &J, const Vec3& b, const Vec3& c)
+void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrix(StrainDisplacement &J, const Index elementIndex, const Vec3& b, const Vec3& c)
 {
     Real determinant;
     determinant = b[0] * c[1];
@@ -1043,6 +1132,10 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrix(
     J[5][0] = 0;
     J[5][1] = x21;
     J[5][2] = y12;
+
+    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    triangleInf[elementIndex].area = 0.5*determinant;
+    triangleInfo.endEdit();
 
 }
 
@@ -1154,14 +1247,6 @@ void TriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBending(St
     K = J1t * tinfo->materialMatrix * tinfo->strainDisplacementMatrix1 +
         J2t * tinfo->materialMatrix * tinfo->strainDisplacementMatrix2 +
         J3t * tinfo->materialMatrix * tinfo->strainDisplacementMatrix3;
-
-    // Compute the area of the triangle (1/2*(x2*y3))
-    Real thirdSurface = 1./6*(tinfo->localB[0]*tinfo->localC[1]);
-    tinfo->thirdSurface = thirdSurface;
-
-    // Compute forces
-    Real t = f_thickness.getValue();
-    K *= tinfo->thirdSurface * t*t*t;
 }
 
 // --------------------------------------------------------------------------------------
@@ -1174,7 +1259,19 @@ void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(const i
 
 	TriangleInformation *tinfo = &triangleInf[i];
 
-	tinfo->materialMatrix[0][0] = 1;
+//	tinfo->materialMatrix[0][0] = 1;
+//	tinfo->materialMatrix[0][1] = f_poisson.getValue();
+//	tinfo->materialMatrix[0][2] = 0;
+//	tinfo->materialMatrix[1][0] = f_poisson.getValue();
+//	tinfo->materialMatrix[1][1] = 1;
+//	tinfo->materialMatrix[1][2] = 0;
+//	tinfo->materialMatrix[2][0] = 0;
+//	tinfo->materialMatrix[2][1] = 0;
+//	tinfo->materialMatrix[2][2] = 0.5f * (1 - f_poisson.getValue());
+//
+//	tinfo->materialMatrix *= (f_young.getValue() / (12 *  (1 - f_poisson.getValue() * f_poisson.getValue())));
+
+        tinfo->materialMatrix[0][0] = 1;
 	tinfo->materialMatrix[0][1] = f_poisson.getValue();
 	tinfo->materialMatrix[0][2] = 0;
 	tinfo->materialMatrix[1][0] = f_poisson.getValue();
@@ -1182,9 +1279,12 @@ void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(const i
 	tinfo->materialMatrix[1][2] = 0;
 	tinfo->materialMatrix[2][0] = 0;
 	tinfo->materialMatrix[2][1] = 0;
-	tinfo->materialMatrix[2][2] = 0.5f * (1 - f_poisson.getValue());
+	tinfo->materialMatrix[2][2] = 0.5 * (1 - f_poisson.getValue());
 
-	tinfo->materialMatrix *= (f_young.getValue() / (12 * (1 - f_poisson.getValue() * f_poisson.getValue())));
+	tinfo->materialMatrix *= ( f_young.getValue() / (1 - f_poisson.getValue() * f_poisson.getValue()) );
+
+        Real t = f_thickness.getValue();
+        tinfo->materialMatrix *= t ;
 
 	triangleInfo.endEdit();
 }
@@ -1201,16 +1301,27 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, co
 
     // Compute strain-displacement matrix J
     StrainDisplacement J;
-    computeStrainDisplacementMatrix(J, tinfo->localB, tinfo->localC);
+    computeStrainDisplacementMatrix(J, elementIndex, tinfo->localB, tinfo->localC);
     tinfo->strainDisplacementMatrix = J;
 
     // Compute stiffness matrix K = J*material*Jt
     StiffnessMatrix K;
     computeStiffnessMatrix(K, J, tinfo->materialMatrix);
+    K *= triangleInf[elementIndex].area;
     tinfo->stiffnessMatrix = K;
 
     // Compute forces
     F = K * D;
+
+//    Mat<3,6,Real> Jt;
+//    Jt.transpose(J);
+//
+//    Vec<3, Real> Strain, Stress;
+//    Strain = Jt*D;
+//    Stress = tinfo->materialMatrix * Strain;
+//
+//    std::cout << elementIndex << ":    Sxx = " << Stress[0] << std::endl;
+
 
     triangleInfo.endEdit();
 }
@@ -1231,6 +1342,8 @@ void TriangularBendingFEMForceField<DataTypes>::computeForceBending(Displacement
     // Compute stiffness matrix K = Jt * material * J
     StiffnessMatrixBending K_bending;
     computeStiffnessMatrixBending(K_bending, tinfo);
+    Real t = f_thickness.getValue();
+    K_bending *= t*t*t*(triangleInf[elementIndex].area)/3;
     tinfo->stiffnessMatrixBending = K_bending;
 
     // Compute forces
@@ -1318,6 +1431,11 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(VecDeriv& f, const VecC
     {
         accumulateForce(f, x, i);
     }
+
+//    const VecCoord& x0 = *this->mstate->getX0();
+//    std::cout << "displacement vertex " << indexTop << ": " << x[indexTop].getCenter()-x0[indexTop].getCenter() << std::endl;
+
+    std::cout << "displacement centre: " << x[12].getCenter() << std::endl;
 
 //    stop = timer.getTime();
 //    std::cout << "---------- time addForce = " << stop-start << std::endl;

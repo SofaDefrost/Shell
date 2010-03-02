@@ -222,7 +222,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     // Retrieves Forcefield to compute deflection at runtime
     triangularBendingForcefield = NULL;
     this->getContext()->get(triangularBendingForcefield);
-
     if (!triangularBendingForcefield)
         return;
 
@@ -251,7 +250,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
         }
     }
 
-
+    // Initialises shader
+    shader.InitShaders("applications/plugins/shells/shaders/errorMap.vert", "applications/plugins/shells/shaders/errorMap.frag");
 }
 
 
@@ -930,7 +930,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecConst&
 
 
 template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::drawVisual()
+void BendingPlateMechanicalMapping<BaseMapping>::draw()
 {
     OutVecCoord &outVertices = *this->toModel->getX();
 
@@ -951,7 +951,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::drawVisual()
         }
     }
 
-    
+    shader.TurnOn();
+
     if(this->getContext()->getShowBehaviorModels())
     {
         glDisable(GL_LIGHTING);
@@ -966,7 +967,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::drawVisual()
 
         if(this->getContext()->getShowWireFrame())
         {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);            
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glEnable(GL_POLYGON_OFFSET_LINE);
             glColor4f(0.0, 0.0, 1.0, 1.0);
             glBegin(GL_TRIANGLES);
@@ -1046,6 +1047,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::drawVisual()
         }
         glEnd();
     }
+
+    shader.TurnOff();
 }
 
 

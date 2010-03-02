@@ -129,8 +129,8 @@ public:
                 // Stiffness matrix for bending K = Jt * M * J
                 StiffnessMatrixBending stiffnessMatrixBending;
                 
-                // Third of the surface
-                Real thirdSurface;
+                // Surface
+                Real area;
                 // Variables needed for drawing the shell
                 Vec<9, Real> u; // displacement vector
                 Mat<9, 9, Real> invC; // inverse of C (used in bending mode only)
@@ -176,13 +176,15 @@ public:
         Data<VecCoord> targetVertices;
         Data<SeqTriangles> targetTriangles;
 
+        unsigned int indexTop;
+
 protected :
 
         TriangleData<TriangleInformation> triangleInfo;
 
 	void computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex);
         void computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, const Index elementIndex);
-	void computeStrainDisplacementMatrix(StrainDisplacement &J, const Vec3& b, const Vec3& c);
+	void computeStrainDisplacementMatrix(StrainDisplacement &J, const Index elementIndex, const Vec3& b, const Vec3& c);
         void computeStrainDisplacementMatrixBending(TriangleInformation *tinfo, const Vec3& b, const Vec3& c);
         void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
         void computeStiffnessMatrix(StiffnessMatrix &K, const StrainDisplacement &J, const MaterialStiffness &M);

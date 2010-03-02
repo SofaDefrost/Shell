@@ -28,7 +28,8 @@
 #include <sofa/core/componentmodel/behavior/MechanicalMapping.h>
 #include <sofa/core/componentmodel/behavior/MechanicalState.h>
 #include <sofa/helper/vector.h>
-#include <sofa/core/VisualModel.h>
+#include <sofa/helper/gl/GLSLShader.h>
+//#include <sofa/core/VisualModel.h>
 
 #include "../forcefield/TriangularBendingFEMForceField.h"
 #include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
@@ -53,7 +54,8 @@ using namespace sofa::component::topology;
 using namespace sofa::helper::system::thread;
 
 template <class BasicMapping>
-class BendingPlateMechanicalMapping : public BasicMapping, public core::VisualModel, public virtual core::objectmodel::BaseObject
+class BendingPlateMechanicalMapping : public BasicMapping, public virtual core::objectmodel::BaseObject
+// public core::VisualModel,
 {
 public:
     SOFA_CLASS(SOFA_TEMPLATE(BendingPlateMechanicalMapping,BasicMapping), BasicMapping);
@@ -88,7 +90,8 @@ public:
 
     void init();
     void reinit();
-    virtual void drawVisual();
+    virtual void draw();
+//    virtual void drawVisual();
     
     virtual ~BendingPlateMechanicalMapping();
     
@@ -98,6 +101,8 @@ public:
     void applyJT( typename In::VecConst& out, const typename Out::VecConst& in );
 
 protected:
+
+        helper::gl::GLSLShader shader;
 
         Data<bool> measureError;
         Data<InVecCoord> targetVertices;

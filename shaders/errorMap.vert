@@ -11,7 +11,7 @@ void main()
     {
         gl_FrontColor = gl_Color;
     }
-    // otherwise render as a colour map
+    // otherwise render as a colour map (max neg error = green, zero error = blue, max pos error = red)
     else
     {
         float scale = 3.0;

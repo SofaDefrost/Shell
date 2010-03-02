@@ -8,7 +8,7 @@
     <Node name="SquareOBJ">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
         <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
-        <RegularGrid name="gridTopo" min="-0.005 -0.005 0" max="0.005 0.005 0" nx="9" ny="9" nz="1" />
+        <RegularGrid name="gridTopo" min="0 0 0" max="8 2 0" nx="9" ny="3" nz="1" />
         <MechanicalObject template="Rigid" />
 
         <Node>
