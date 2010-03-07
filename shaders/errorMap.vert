@@ -2,7 +2,7 @@ void main()
 {
     gl_Position = ftransform();
 
-    float alpha = gl_MultiTexCoord0.s;
+    vec3 colour = gl_MultiTexCoord0.xyz;
 
     float wireframeOn = gl_Color[3];
 
@@ -11,19 +11,9 @@ void main()
     {
         gl_FrontColor = gl_Color;
     }
-    // otherwise render as a colour map (max neg error = green, zero error = blue, max pos error = red)
+    // otherwise render as a colour map
     else
     {
-        float scale = 3.0;
-        alpha = scale * alpha;
-
-        if (alpha<0.0)
-        {
-            gl_FrontColor = vec4(-alpha, 0.0, 1.0+alpha, 1.0);
-        }
-        else
-        {
-            gl_FrontColor = vec4(0.0, alpha, 1.0-alpha, 1.0);
-        }
+        gl_FrontColor.xyz = colour;
     }
 }

@@ -138,8 +138,8 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , f_membraneRatio(initData(&f_membraneRatio,(Real)1.0,"membraneRatio","In plane forces ratio"))
 , f_bendingRatio(initData(&f_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
 , refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
-, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
-, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
+//, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
+//, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
 {
 }
 
@@ -203,11 +203,34 @@ void TriangularBendingFEMForceField<DataTypes>::init()
         if (pos[1] == -4.953 && pos[2] == 5.175)
             std::cout << "indice central point bottom = " << i << std::endl;
     }
-    
+
+
+    std::cout << "TriangularBendingFEMForceField:: retrieves target topology" << std::endl;
+
+    // Retrieves vertices of high resolution mesh
+//    verticesTarget = targetVertices.getValue();
+//    // Retrieves triangles of high resolution mesh
+//    trianglesTarget = targetTriangles.getValue();
+
+    _topologyHigh = NULL;
+    getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
+    if (_topologyHigh != NULL)
+    {
+        trianglesTarget = _topologyHigh->getTriangles();
+
+        MechanicalState<DataTypes>* mStateHigh = dynamic_cast<MechanicalState<DataTypes>*> (_topologyHigh->getContext()->getMechanicalState());
+        verticesTarget = *mStateHigh->getX();
+
+        std::cout << "vertices = " << verticesTarget.size() << std::endl;
+        std::cout << "triangles = " << trianglesTarget.size() << std::endl;
+    }
+
+
     if (refineMesh.getValue())
     {
         refineCoarseMeshToTarget();
     }
+
 }
 
 
@@ -217,8 +240,8 @@ void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
     // Outer cylinder parameters
     Real length = 10.35;    // 0.178
     Real radius = 4.953;    // 0.019
-    unsigned int subLevelLength = 32;
-    unsigned int subLevelPerimeter = 64;
+    unsigned int subLevelLength = 2;
+    unsigned int subLevelPerimeter = 3;
 
     // Creates vertices
     sofa::helper::vector<Vec3> listVertices;
@@ -339,7 +362,10 @@ void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
 {
-    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << _topologyHigh->getNbTriangles() << " triangles" << std::endl;
+//    const SeqTriangles trianglesHigh = targetTriangles.getValue();
+//    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << trianglesHigh.size() << " triangles" << std::endl;
+
+    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << trianglesTarget.size() << " triangles" << std::endl;
     
     // Level of subdivision
     unsigned int levelSubdivision = 1;
@@ -476,9 +502,12 @@ template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints)
 {
     // Retrieves vertices of high resolution mesh
-    const VecCoord& x = targetVertices.getValue();
-    // Retrieves triangles of high resolution mesh
-    const SeqTriangles triangles = targetTriangles.getValue();
+//    const VecCoord& x = targetVertices.getValue();
+//    // Retrieves triangles of high resolution mesh
+//    const SeqTriangles triangles = targetTriangles.getValue();
+
+    const VecCoord& x = verticesTarget;
+    const SeqTriangles triangles = trianglesTarget;
 
     multimap<Real, Vec3> closestTrianglesData;
 

@@ -48,8 +48,8 @@ BendingPlateMechanicalMapping<BaseMapping>::BendingPlateMechanicalMapping(In* fr
 , inputTopo(NULL)
 , outputTopo(NULL)
 , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
-, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
-, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
+//, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
+//, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
 {
 }
 
@@ -235,9 +235,46 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     this->Inherit::init();
 
 
+    std::cout << "BendingPlateMechanicalMapping:: retrieves target topology" << std::endl;
+
+    // Retrieves vertices of high resolution mesh
+//    const InVecCoord& verticesTarget = targetVertices.getValue();
+//    // Retrieves triangles of high resolution mesh
+//    const SeqTriangles trianglesTarget = targetTriangles.getValue();
+
+    _topologyHigh = NULL;
+    getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
+    if (_topologyHigh != NULL)
+    {
+        trianglesTarget = _topologyHigh->getTriangles();
+
+        MechanicalState<InDataTypes>* mStateHigh = dynamic_cast<MechanicalState<InDataTypes>*> (_topologyHigh->getContext()->getMechanicalState());
+        verticesTarget = *mStateHigh->getX();
+
+        std::cout << "vertices = " << verticesTarget.size() << std::endl;
+        std::cout << "triangles = " << trianglesTarget.size() << std::endl;
+    }
+
+
     // Retrieves high resolution mesh topology and measures the error
     if (measureError.getValue())
     {
+        // List of colours for colour map
+        ifstream inFile;
+        inFile.open("applications/plugins/shells/Nice.map", ios::in);
+
+        Vec3 colour;
+        for (int i = 0; i < 256; i++)
+        {
+            inFile >> colour[0];
+            inFile >> colour[1];
+            inFile >> colour[2];
+
+            colourMapping.push_back(colour);
+        }
+        // Closes the file
+        inFile.close();
+
         MeasureError();
     }
     else
@@ -252,6 +289,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
 
     // Initialises shader
     shader.InitShaders("applications/plugins/shells/shaders/errorMap.vert", "applications/plugins/shells/shaders/errorMap.frag");
+
 }
 
 
@@ -267,10 +305,13 @@ template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::MeasureError()
 {
     // Retrieves vertices of high resolution mesh
-    const InVecCoord& highResVertices = targetVertices.getValue();
-    // Retrieves triangles of high resolution mesh
-    const SeqTriangles highRestriangles = targetTriangles.getValue();
+//    const InVecCoord& highResVertices = targetVertices.getValue();
+//    // Retrieves triangles of high resolution mesh
+//    const SeqTriangles highRestriangles = targetTriangles.getValue();
 
+    const InVecCoord& highResVertices = verticesTarget;
+    const SeqTriangles highRestriangles = trianglesTarget;
+   
     // Computes normal for each subvertex
 //    helper::vector<Vec3> normals;
     ComputeNormals(normals);
@@ -935,6 +976,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
     OutVecCoord &outVertices = *this->toModel->getX();
 
     Real maximum = 0;
+    helper::vector<Vec3> colours;
     if (measureError.getValue())
     {
         // Normalises the error
@@ -947,7 +989,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
         }
         for (unsigned int i=0; i<vectorError.size(); i++)
         {
-            vectorError[i] = vectorError[i]/maximum;
+            colours.push_back( colourMapping[ (int)((fabs(vectorError[i])/maximum)*255) ] );
         }
     }
 
@@ -994,15 +1036,15 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
             for (unsigned int i=0; i<outTriangles.size(); i++)
             {
                 index = outTriangles[i][0];
-                glTexCoord1f((float)vectorError[index]);
+                glTexCoord3i(colours[index][0], colours[index][1], colours[index][2]);
                 glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
 
                 index = outTriangles[i][1];
-                glTexCoord1f((float)vectorError[index]);
+                glTexCoord3i(colours[index][0], colours[index][1], colours[index][2]);
                 glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
 
                 index = outTriangles[i][2];
-                glTexCoord1f((float)vectorError[index]);
+                glTexCoord3i(colours[index][0], colours[index][1], colours[index][2]);
                 glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
             }
             glEnd();
@@ -1028,22 +1070,10 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
         glBegin(GL_LINES);
         for (unsigned int i=0; i<outVertices.size(); i++)
         {
-            float alpha = vectorError[i];
-
-            float scale = 3.0;
-            alpha = scale * alpha;
-
-            if (alpha<0.0)
-            {
-                glColor4f(-alpha, 0.0, 1.0+alpha, 1.0);
-            }
-            else
-            {
-                glColor4f(0.0, alpha, 1.0-alpha, 1.0);
-            }
+            glColor3f(colours[i][0], colours[i][1], colours[i][2]);
 
             helper::gl::glVertexT(outVertices[i]);
-            helper::gl::glVertexT(outVertices[i]+normals[i]*vectorError[i]*maximum);
+            helper::gl::glVertexT(outVertices[i]+normals[i]*vectorError[i]);
         }
         glEnd();
     }

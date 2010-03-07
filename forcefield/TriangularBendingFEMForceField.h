@@ -96,7 +96,10 @@ protected:
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
 
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
+
         sofa::core::componentmodel::topology::BaseMeshTopology* _topologyHigh;
+        VecCoord verticesTarget;
+        SeqTriangles trianglesTarget;
 
         TriangularBendingFEMForceFieldInternalData<DataTypes> data;
         friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
@@ -173,8 +176,8 @@ public:
         Data <Real> f_membraneRatio;
         Data <Real> f_bendingRatio;
         Data<bool> refineMesh;
-        Data<VecCoord> targetVertices;
-        Data<SeqTriangles> targetTriangles;
+//        Data<VecCoord> targetVertices;
+//        Data<SeqTriangles> targetTriangles;
 
         unsigned int indexTop;
 

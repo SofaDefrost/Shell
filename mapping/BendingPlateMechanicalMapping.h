@@ -105,8 +105,13 @@ protected:
         helper::gl::GLSLShader shader;
 
         Data<bool> measureError;
-        Data<InVecCoord> targetVertices;
-        Data<SeqTriangles> targetTriangles;
+//        Data<InVecCoord> targetVertices;
+//        Data<SeqTriangles> targetTriangles;
+
+        sofa::core::componentmodel::topology::BaseMeshTopology* _topologyHigh;
+        InVecCoord verticesTarget;
+        SeqTriangles trianglesTarget;
+        helper::vector<Vec3> colourMapping;
 
         helper::vector<Real> vectorError;
         helper::vector<Vec3> normals;
