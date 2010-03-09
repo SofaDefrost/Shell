@@ -7,6 +7,7 @@
 %\usepackage{amsmath}
 %\usepackage{multirow}
 %\renewcommand*\arraystretch{1.25} % extra vertical space in cells
+\usepackage{amsmath}
 
 \begin{document}
 
@@ -21,12 +22,28 @@
 \end{abstract}
 
 \section{Introduction}
-Cadavers and live animal surgery are often used in the training of surgeons. But ethics concerns and high costs are progressively leading to the elimination of these methods in favor of more modern and effective alternatives. Medical simulators offer an efficient teaching method for physicians. Numerous surgical interventions involve manipulation and deformation of thin anatomical structures and hollow organs. Examples include the interaction between the catheter and the blood vessels during interventional radiology, the deformation of the colon in colonoscopy or the interaction with a beating heart. Simulators of those interventions must showcase a physically realistic behaviour of thin structures to be accepted by the medical community. This is even crucial in the case of colonoscopy for instance as the practitioner only guides himself through the force feedback that he receives from the interaction between the colonoscope and the colon. Although volumic organs are quite accurately simulated in recent simulators hollow organs are poorly modelled, which limits the type of medical procedures that a simulator can provide. 
 
-We aim to fill this gap by offering a framework able to handle all the steps from meshing to realistic simulation of hollow organs. Not only we propose an efficient yet simple co-rotational finite element formulation for triangular shells but we also present a method to generate a mesh of any hollow organ with shell-type curved elements in an attempt to optimise even more the computation of deformations by using fewer elements. % Finally we show the pertinence of our approach by coupling tetrahedral and shell elements in an advanced liver model. 
+Human body is composed of various deformable anatomical structures. 
+Realistic modeling of organ deformations is a challenging research field that leads the way to numerous clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation.
+In all these cases, the clinician needs fast update of the deformation model to obtain a real-time display of the computed deformations.  
+To realize this kind of interactive systems, one face the trade-off problem between accuracy of the model and the need of fast computations. 
+
+An other key challenge of real-time human soft-tissue modeling is the variousness of the mechanical behaviors. 
+It seems unrealistic to target a unique model for all tissues even if there are obvious advantages to make maximum use of optimized generic models.
+Yet most of previous work focus on volume models that are able to capture the behavior of volume organs like liver \cite{} or brain tissues \cite{}.
+In contrast, this paper seeks to propose a solution for simulating, in real-time, deformation of thin anatomical structures, whose volume is negligible compared to their surface area.
+Examples of such anatomical structures include hollow structures, like the wall of blood vessels or the colon but also the envelope of volume organs, like the capsule of Glisson.
+
+
+In the following of this paper, we present a framework for realistic and real-time simulation of thin organs.
+Our method, presented in section \ref{sec:model} is based on shell theory and computes the internal forces using Finite Element Modeling (FEM) on curved triangles.
+The design of the elements relies on a polynomial interpolation that is also use to capture the interactions with other models, including volume models.
+We also present an automatic process to obtain meshes from image based reconstruction in an attempt to optimize  the computation using fewer elements  (see section \ref{sec:mesh}).
+The benefits of our approach (meshing of a curved surface, fast computation and possible interactions with volume models) are illustrated using various examples presented in section \ref{sec:results}. 
+
 
 \section{A physical model for thin structures}
-
+\label{sec:model}
 \subsection{Related work}
 
 Development of a satisfactory physical model that runs in real-time but produces visually convincing animation of thin objects is challenging. Rather than resorting to shell theory which involves the most complex formulations in continuum mechanics, previous works have often relied on discrete formulations. Early approaches only considered in-plane deformation, and often relied on mass-spring models. More recent works have considered adding bending through angular springs. For instance Wang et al.~\cite{Wang07} successfully used a network of linear and angular springs to describe bending and twisting of catheters and guidewires in an interventional radiology simulator. Yet, such models are limited in their ability to describe certain behaviour, as they do not rely on continuum mechanics. Another limitation of such models is the difficulty to derive spring stiffness (in particular for angular springs) from elastic properties (Young's modulus and Poisson's ratio). For these reasons, other approaches have been proposed. 
@@ -42,7 +59,7 @@ A complete description of our co-rotational triangular shell finite element mode
 The element stiffness matrix $\textbf{K}_e$ can be computed as follows:
 
 \begin{equation}
-\textbf{K}_e = \int_v \textbf{J} \boldsymbol\chi \textbf{J}^{T} dV
+\textbf{K}_e = \int_v \textbf{J} \boldsymbol{\chi} \textbf{J}^{T} dV
 \end{equation}
 where $\textbf{J}$ is the strain-displacement matrix and $\boldsymbol\chi$ embodies the material's behaviour. The stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element: $\textbf{K} = \textbf{R}^{T} \textbf{K}_e \textbf{R} $ where $\textbf{R}$ describes the rotation of the (triangular) element with respect to its initial configuration.
 
@@ -91,7 +108,7 @@ The stiffness matrix $\textbf{K}_e$ for an element is then classically obtained 
 where $\boldsymbol\chi$ is the material matrix. The stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element as in the membrane case. 
 
 \section{Meshing a curved surface}
-
+\label{sec:mesh}
 \subsection{Related work}
 
 A key component of finite element methods is the mesh of the simulated object being used. While a sufficient number of elements is needed to accurately describe the geometry, too many of them will yield a computationally expensive simulation and solving the system in real-time may no longer be possible. Literature about volumic mesh generation algorithms is fairly dense. However, there are only a few that are concerned about the generation of meshes over curved surfaces. One of the most widely used techniques for the creation of surface meshes is the plane to surface transformation method \cite{Zienkiewicz71}, mesh is first generated on a two-dimensional domain and then mapped onto the surface. If this method gives reasonably good meshes on smooth surfaces, the results are usually quite poor with more complex curved surfaces. The finite elements may be generated directly on the curved surfaces based on the advancing front technique \cite{Lo85,Lau96}. The main issue with this approach is that an analytical description of the geometry is needed, which is not the case in medical simulation. Another method consists of using an a priori error estimator to build an adaptive mesh generation \cite{Baumann97}. However, the tolerance of this indicator should be chosen depending on the desired accuracy of the finite element solution, and therefore requires some knowledge about the problem in order to choose an effective tolerance. In \cite{Bechet02} the authors start from an existing triangular mesh created with a CAD software and refine and smooth the mesh based on element quality and surface curvature. While all those methods allow their authors to get satisfactory meshes over curved surfaces according to their needs, they all make use of flat elements to mesh geometries and do not generate actual shells. 
@@ -132,6 +149,7 @@ The first step in the process of generating a shell-based mesh is an aggressive 
 \end{figure}
 
 \section{Results}
+\label{sec:results}
 \subsection{Meshing of anatomical structures (error maps)}
 
 
@@ -139,6 +157,14 @@ The first step in the process of generating a shell-based mesh is an aggressive 
 \subsection{Deformations}
 \subsubsection{Computation times on 3 examples}
 \subsubsection{Coupling between tetrahedra and shells for more advanced modelling}
+\begin{figure}
+\centering
+\includegraphics[height=4cm]{images/stent_begin.png}
+\includegraphics[height=4cm]{images/stent_end.png}
+\caption {Avant... Apres...}
+\label{fig-stent}
+\end{figure}
+
 
 \section{Conclusion}
 \section*{Acknowledgments}
