@@ -52,6 +52,7 @@ using namespace sofa::defaulttype;
 using namespace sofa::component::forcefield;
 using namespace sofa::component::topology;
 using namespace sofa::helper::system::thread;
+using namespace core::componentmodel::topology;
 
 template <class BasicMapping>
 class BendingPlateMechanicalMapping : public BasicMapping, public virtual core::objectmodel::BaseObject
@@ -65,8 +66,9 @@ public:
     typedef typename Out::VecCoord OutVecCoord;
     typedef typename Out::VecDeriv OutVecDeriv;
     typedef typename Out::Coord OutCoord;
-    typedef typename Out::Deriv OutDeriv;   
-    typedef typename std::map<unsigned int, OutDeriv>::const_iterator OutConstraintIterator;        
+    typedef typename Out::Deriv OutDeriv;
+    typedef typename Out::DataTypes OutDataTypes;
+//    typedef typename std::map<unsigned int, OutDeriv>::const_iterator OutConstraintIterator;
 
     typedef typename In::VecCoord InVecCoord;
     typedef typename In::VecDeriv InVecDeriv;
@@ -74,10 +76,10 @@ public:
     typedef typename In::Deriv InDeriv;
     typedef typename In::DataTypes InDataTypes;
 
-    typedef core::componentmodel::topology::BaseMeshTopology::Edge	Edge;
-    typedef core::componentmodel::topology::BaseMeshTopology::SeqEdges	SeqEdges;
-    typedef core::componentmodel::topology::BaseMeshTopology::Triangle	Triangle;
-    typedef core::componentmodel::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
+    typedef BaseMeshTopology::Edge	Edge;
+    typedef BaseMeshTopology::SeqEdges	SeqEdges;
+    typedef BaseMeshTopology::Triangle	Triangle;
+    typedef BaseMeshTopology::SeqTriangles SeqTriangles;
 
     typedef typename Out::Real Real;
     typedef Vec<3, Real> Vec3;
@@ -108,16 +110,17 @@ protected:
 //        Data<InVecCoord> targetVertices;
 //        Data<SeqTriangles> targetTriangles;
 
-        sofa::core::componentmodel::topology::BaseMeshTopology* _topologyHigh;
-        InVecCoord verticesTarget;
+        BaseMeshTopology* _topologyHigh;
+        OutVecCoord verticesTarget;
         SeqTriangles trianglesTarget;
+        
         helper::vector<Vec3> colourMapping;
+        helper::vector<Vec3> coloursPerVertex;
+        helper::vector<Real> vectorErrorCoarse;
+        helper::vector<Real> vectorErrorTarget;
 
-        helper::vector<Real> vectorError;
-        helper::vector<Vec3> normals;
-
-	core::componentmodel::topology::BaseMeshTopology* inputTopo;
-	core::componentmodel::topology::BaseMeshTopology* outputTopo;
+	BaseMeshTopology* inputTopo;
+	BaseMeshTopology* outputTopo;
 
         // Pointer on the forcefield associated with the in topology
         TriangularBendingFEMForceField<InDataTypes>* triangularBendingForcefield;
@@ -125,16 +128,18 @@ protected:
         // Pointer on the topological mapping to retrieve the list of edges
         TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
 
+        void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
         void MeasureError();
+        Real DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError);
         void ComputeNormals(helper::vector<Vec3> &normals);
         void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals);
 
         // Computes the barycentric coordinates of a vertex within a triangle
         void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c);
 
-        Real FindClosestPoints(const Vec3& point1, sofa::helper::vector<unsigned int>& listClosestVertices);
-        Real FindClosestEdges(const Vec3& point, sofa::helper::vector<unsigned int>& listClosestEdges);
-        Real FindClosestTriangles(const Vec3& point, sofa::helper::vector<unsigned int>& listClosestTriangles);
+        Real FindClosestPoints(sofa::helper::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices);
+        Real FindClosestEdges(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges);
+        Real FindClosestTriangles(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
 
         // Contains the list of base triangles a vertex belongs to
         sofa::helper::vector< sofa::helper::vector<int> > listBaseTriangles;

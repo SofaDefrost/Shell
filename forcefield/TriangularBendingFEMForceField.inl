@@ -191,21 +191,24 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 //    generateCylinder();
 
     const VecCoord& x = *this->mstate->getX();
-    for (unsigned int i = 0; i<x.size(); i++)
-    {
-        Vec3 pos = x[i].getCenter();
+//    for (unsigned int i = 0; i<x.size(); i++)
+//    {
+//        Vec3 pos = x[i].getCenter();
+//
+//        if (pos[1] == 4.953 && pos[2] == 5.175)
+//        {
+//            std::cout << "indice central point top = " << i << std::endl;
+//            indexTop = i;
+//        }
+//        if (pos[1] == -4.953 && pos[2] == 5.175)
+//            std::cout << "indice central point bottom = " << i << std::endl;
+//    }
 
-        if (pos[1] == 4.953 && pos[2] == 5.175)
-        {
-            std::cout << "indice central point top = " << i << std::endl;
-            indexTop = i;
-        }
-        if (pos[1] == -4.953 && pos[2] == 5.175)
-            std::cout << "indice central point bottom = " << i << std::endl;
-    }
+    std::cout << "TriangularBendingFEMForceField retrieves coarse topology" << std::endl;
+    std::cout << "number of vertices = " << x.size() << std::endl;
+    std::cout << "number of triangles = " << _topology->getTriangles().size() << std::endl;
 
-
-    std::cout << "TriangularBendingFEMForceField:: retrieves target topology" << std::endl;
+    std::cout << "TriangularBendingFEMForceField retrieves target topology" << std::endl;
 
     // Retrieves vertices of high resolution mesh
 //    verticesTarget = targetVertices.getValue();
@@ -218,11 +221,15 @@ void TriangularBendingFEMForceField<DataTypes>::init()
     {
         trianglesTarget = _topologyHigh->getTriangles();
 
-        MechanicalState<DataTypes>* mStateHigh = dynamic_cast<MechanicalState<DataTypes>*> (_topologyHigh->getContext()->getMechanicalState());
+        MechanicalState<Vec3Types>* mStateHigh = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyHigh->getContext()->getMechanicalState());
         verticesTarget = *mStateHigh->getX();
 
-        std::cout << "vertices = " << verticesTarget.size() << std::endl;
-        std::cout << "triangles = " << trianglesTarget.size() << std::endl;
+        std::cout << "number of vertices = " << verticesTarget.size() << std::endl;
+        std::cout << "number of triangles = " << trianglesTarget.size() << std::endl;
+    }
+    else
+    {
+        std::cout << "WARNING(TriangularBendingFEMForceField): no target high resolution mesh found" << std::endl;
     }
 
 
@@ -506,16 +513,16 @@ void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const V
 //    // Retrieves triangles of high resolution mesh
 //    const SeqTriangles triangles = targetTriangles.getValue();
 
-    const VecCoord& x = verticesTarget;
+    const helper::vector<Vec3> x = verticesTarget;
     const SeqTriangles triangles = trianglesTarget;
 
     multimap<Real, Vec3> closestTrianglesData;
 
     for (unsigned int t=0; t<triangles.size(); t++)
     {
-        Vec3 pointTriangle1 = x[ triangles[t][0] ].getCenter();
-        Vec3 pointTriangle2 = x[ triangles[t][1] ].getCenter();
-        Vec3 pointTriangle3 = x[ triangles[t][2] ].getCenter();
+        Vec3 pointTriangle1 = x[ triangles[t][0] ];
+        Vec3 pointTriangle2 = x[ triangles[t][1] ];
+        Vec3 pointTriangle3 = x[ triangles[t][2] ];
 
         Vec3 G = (pointTriangle1+pointTriangle2+pointTriangle3)/3;
 

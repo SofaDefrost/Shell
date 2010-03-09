@@ -74,7 +74,14 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
         barycentricCoordinates.resize(outVertices.size());
 
         // Retrieves 'in' vertices and triangles
-        InVecCoord &inVertices = *this->fromModel->getX();
+        InVecCoord &inVerticesRigid = *this->fromModel->getX();
+        // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
+        OutVecCoord inVertices;
+        for (unsigned int i=0; i<inVerticesRigid.size(); i++)
+        {
+            inVertices.push_back(inVerticesRigid[i].getCenter());
+        }
+        const SeqEdges &inEdges = inputTopo->getEdges();
         const SeqTriangles &inTriangles = inputTopo->getTriangles();
 
         // Iterates over 'out' vertices
@@ -85,15 +92,15 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
         {
             // Iterates over 'in' vertices
             sofa::helper::vector<unsigned int> listClosestVertices;
-            minimumDistanceVertices = FindClosestPoints(outVertices[i], listClosestVertices);
+            minimumDistanceVertices = FindClosestPoints(listClosestVertices, outVertices[i], inVertices);
             
             // Iterates over 'in' edges
             sofa::helper::vector<unsigned int> listClosestEdges;
-            minimumDistanceEdges = FindClosestEdges(outVertices[i], listClosestEdges);
+            minimumDistanceEdges = FindClosestEdges(listClosestEdges, outVertices[i], inVertices, inEdges);
 
             // Iterates over 'in' triangles
             sofa::helper::vector<unsigned int> listClosestTriangles;
-            minimumDistanceTriangles = FindClosestTriangles(outVertices[i], listClosestTriangles);
+            minimumDistanceTriangles = FindClosestTriangles(listClosestTriangles, outVertices[i], inVertices, inTriangles);
 
             // Finds out which type of primitive is the closest
             minimumDistance = std::min(minimumDistanceVertices, std::min(minimumDistanceEdges, minimumDistanceTriangles));
@@ -121,9 +128,9 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
                             listBaseTriangles[i].push_back(triangleID);
 
                             // Computes barycentric coordinates within each triangles
-                            Vec3 v1 = inVertices[ inTriangles[triangleID][0] ].getCenter();
-                            Vec3 v2 = inVertices[ inTriangles[triangleID][1] ].getCenter();
-                            Vec3 v3 = inVertices[ inTriangles[triangleID][2] ].getCenter();
+                            Vec3 v1 = inVertices[ inTriangles[triangleID][0] ];
+                            Vec3 v2 = inVertices[ inTriangles[triangleID][1] ];
+                            Vec3 v3 = inVertices[ inTriangles[triangleID][2] ];
 
 //                            // Computes triangle's normal
 //                            Vec3 M = (Vec3) (v2-v1).cross(v3-v1);
@@ -155,9 +162,9 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
                             listBaseTriangles[i].push_back(triangleID);
 
                             // Computes barycentric coordinates within each triangles
-                            Vec3 v1 = inVertices[ inTriangles[triangleID][0] ].getCenter();
-                            Vec3 v2 = inVertices[ inTriangles[triangleID][1] ].getCenter();
-                            Vec3 v3 = inVertices[ inTriangles[triangleID][2] ].getCenter();
+                            Vec3 v1 = inVertices[ inTriangles[triangleID][0] ];
+                            Vec3 v2 = inVertices[ inTriangles[triangleID][1] ];
+                            Vec3 v3 = inVertices[ inTriangles[triangleID][2] ];
 
 //                            // Computes triangle's normal
 //                            Vec3 M = (Vec3) (v2-v1).cross(v3-v1);
@@ -184,9 +191,9 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
                         listBaseTriangles[i].push_back(listClosestTriangles[j]);
 
                         // Computes barycentric coordinates within each triangles
-                        Vec3 v1 = inVertices[ inTriangles[listClosestTriangles[j]][0] ].getCenter();
-                        Vec3 v2 = inVertices[ inTriangles[listClosestTriangles[j]][1] ].getCenter();
-                        Vec3 v3 = inVertices[ inTriangles[listClosestTriangles[j]][2] ].getCenter();
+                        Vec3 v1 = inVertices[ inTriangles[listClosestTriangles[j]][0] ];
+                        Vec3 v2 = inVertices[ inTriangles[listClosestTriangles[j]][1] ];
+                        Vec3 v3 = inVertices[ inTriangles[listClosestTriangles[j]][2] ];
 
 //                        // Computes triangle's normal
 //                        Vec3 M = (Vec3) (v2-v1).cross(v3-v1);
@@ -238,7 +245,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     std::cout << "BendingPlateMechanicalMapping:: retrieves target topology" << std::endl;
 
     // Retrieves vertices of high resolution mesh
-//    const InVecCoord& verticesTarget = targetVertices.getValue();
+//    const OutVecCoord& verticesTarget = targetVertices.getValue();
 //    // Retrieves triangles of high resolution mesh
 //    const SeqTriangles trianglesTarget = targetTriangles.getValue();
 
@@ -248,11 +255,15 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     {
         trianglesTarget = _topologyHigh->getTriangles();
 
-        MechanicalState<InDataTypes>* mStateHigh = dynamic_cast<MechanicalState<InDataTypes>*> (_topologyHigh->getContext()->getMechanicalState());
+        MechanicalState<Vec3Types>* mStateHigh = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyHigh->getContext()->getMechanicalState());
         verticesTarget = *mStateHigh->getX();
 
-        std::cout << "vertices = " << verticesTarget.size() << std::endl;
-        std::cout << "triangles = " << trianglesTarget.size() << std::endl;
+        std::cout << "high res vertices = " << verticesTarget.size() << std::endl;
+        std::cout << "high res triangles = " << trianglesTarget.size() << std::endl;
+    }
+    else
+    {
+        std::cout << "WARNING(BendingPlateMechanicalMapping): no target high resolution mesh found" << std::endl;
     }
 
 
@@ -260,20 +271,13 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     if (measureError.getValue())
     {
         // List of colours for colour map
-        ifstream inFile;
-        inFile.open("applications/plugins/shells/Nice.map", ios::in);
-
         Vec3 colour;
-        for (int i = 0; i < 256; i++)
+        Real incr = (float)2/3/240; // (2/3) is chosen stop the gradient to blue
+        for (int i=0; i<240; i++)
         {
-            inFile >> colour[0];
-            inFile >> colour[1];
-            inFile >> colour[2];
-
+            HSL2RGB(colour, (float)2/3-i*incr, 0.8, 0.5);
             colourMapping.push_back(colour);
         }
-        // Closes the file
-        inFile.close();
 
         MeasureError();
     }
@@ -282,8 +286,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
         OutVecCoord &outVertices = *this->toModel->getX();
         for (unsigned int i=0; i<outVertices.size(); i++)
         {
-            vectorError.push_back(0);
-            normals.push_back(Vec3(0,0,0));
+            coloursPerVertex.push_back(Vec3(0.1, 0.1, 0.9));
         }
     }
 
@@ -301,126 +304,150 @@ void BendingPlateMechanicalMapping<BaseMapping>::reinit()
 }
 
 
+// Given H,S,L in range of 0-1
+// Returns a RGB colour in range of 0-255
+// http://www.geekymonkey.com/Programming/CSharp/RGB2HSL_HSL2RGB.htm
+template <class BaseMapping>
+void BendingPlateMechanicalMapping<BaseMapping>::HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l)
+{
+    Real v;
+    Real r,g,b;
+
+    r = l;   // default to gray
+    g = l;
+    b = l;
+    v = (l <= 0.5) ? (l * (1.0 + sl)) : (l + sl - l * sl);
+    if (v > 0)
+    {
+          Real m;
+          Real sv;
+          int sextant;
+          Real fract, vsf, mid1, mid2;
+
+          m = l + l - v;
+          sv = (v - m ) / v;
+          h *= 6.0;
+          sextant = (int)h;
+          fract = h - sextant;
+          vsf = v * sv * fract;
+          mid1 = m + vsf;
+          mid2 = v - vsf;
+          switch (sextant)
+          {
+                case 0:
+                      r = v;
+                      g = mid1;
+                      b = m;
+                      break;
+                case 1:
+                      r = mid2;
+                      g = v;
+                      b = m;
+                      break;
+                case 2:
+                      r = m;
+                      g = v;
+                      b = mid1;
+                      break;
+                case 3:
+                      r = m;
+                      g = mid2;
+                      b = v;
+                      break;
+                case 4:
+                      r = mid1;
+                      g = m;
+                      b = v;
+                      break;
+                case 5:
+                      r = v;
+                      g = m;
+                      b = mid2;
+                      break;
+          }
+    }
+
+    rgb[0] = r;
+    rgb[1] = g;
+    rgb[2] = b;
+}
+
+
 template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::MeasureError()
 {
-    // Retrieves vertices of high resolution mesh
-//    const InVecCoord& highResVertices = targetVertices.getValue();
-//    // Retrieves triangles of high resolution mesh
-//    const SeqTriangles highRestriangles = targetTriangles.getValue();
+    Real distance1;
+    std::cout << "Computing Hausdorff distance high res->coarse" << std::endl;
+    distance1 = DistanceHausdorff(_topologyHigh, outputTopo, vectorErrorTarget);
+    std::cout << "Hausdorff distance between high res mesh and coarse mesh = " << distance1 << std::endl;
 
-    const InVecCoord& highResVertices = verticesTarget;
-    const SeqTriangles highRestriangles = trianglesTarget;
-   
-    // Computes normal for each subvertex
-//    helper::vector<Vec3> normals;
-    ComputeNormals(normals);
-    
-    // Finds the triangle on high res mesh towards normal direction for each point and measure the distance to it
-    FindTriangleInNormalDirection(highResVertices, highRestriangles, normals);
+    Real average = 0;
+    for (unsigned int i=0; i<vectorErrorTarget.size(); i++)
+    {
+        average += vectorErrorTarget[i];
+    }
+    std::cout << "Mean Hausdorff distance = " << average/vectorErrorTarget.size() << std::endl;
+
+
+
+    Real distance2;
+    std::cout << "Computing Hausdorff distance coarse->high res" << std::endl;
+    distance2 = DistanceHausdorff(outputTopo, _topologyHigh, vectorErrorCoarse);
+    std::cout << "Hausdorff distance between coarse mesh and high res mesh = " << distance2 << std::endl;
+
+    average = 0;
+    for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+    {
+        average += vectorErrorCoarse[i];
+    }
+    std::cout << "Mean Hausdorff distance = " << average/vectorErrorCoarse.size() << std::endl;
+
 }
 
-
 template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::ComputeNormals(helper::vector<Vec3> &normals)
+typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError)
 {
-    // Retrieves vertices and triangles of subdivided coarse mesh
-    OutVecCoord &outVertices = *this->toModel->getX();
-    const SeqTriangles &outTriangles = outputTopo->getTriangles();
+    // Mesh 1
+    MechanicalState<Vec3Types>* mState1 = dynamic_cast<MechanicalState<Vec3Types>*> (topo1->getContext()->getMechanicalState());
+    const OutVecCoord &vertices1 = *mState1->getX();
 
-    /**
-     * Computes normal at each subvertex
-     */
-    for (unsigned int i=0; i<outVertices.size(); i++)
+    // Mesh 2
+    MechanicalState<Vec3Types>* mState2 = dynamic_cast<MechanicalState<Vec3Types>*> (topo2->getContext()->getMechanicalState());
+    const OutVecCoord &vertices2 = *mState2->getX();
+    const SeqEdges edges2 = topo2->getEdges();
+    const SeqTriangles triangles2 = topo2->getTriangles();
+
+    // Dummy list (lists of primitives are useless here)
+    sofa::helper::vector<unsigned int> listDummy;
+
+    // Iterates over 'mesh1' vertices
+    Real minimumDistanceVertices, minimumDistanceEdges, minimumDistanceTriangles, minimumDistance;
+    Real HausdorffDistance = -1;
+    for (unsigned int i=0; i<vertices1.size(); i++)
     {
-        normals.push_back(Vec3(0, 0, 0));
-    }
+        // Iterates over 'mesh2' vertices
+        minimumDistanceVertices = FindClosestPoints(listDummy, vertices1[i], vertices2);
 
-    for (unsigned int t=0; t<outTriangles.size(); t++)
-    {
-        Vec3 a = outVertices[ outTriangles[t][0] ];
-        Vec3 b = outVertices[ outTriangles[t][1] ];
-        Vec3 c = outVertices[ outTriangles[t][2] ];
+        // Iterates over 'mesh2' edges
+        minimumDistanceEdges = FindClosestEdges(listDummy, vertices1[i], vertices2, edges2);
 
-        Vec3 z = cross(b-a, c-a);
-        z.normalize();
+        // Iterates over 'mesh2' triangles
+        minimumDistanceTriangles = FindClosestTriangles(listDummy, vertices1[i], vertices2, triangles2);
 
-        normals[ outTriangles[t][0] ] += z;
-        normals[ outTriangles[t][1] ] += z;
-        normals[ outTriangles[t][2] ] += z;
-    }
+        // Finds out which type of primitive is the closest
+        minimumDistance = std::min(minimumDistanceVertices, std::min(minimumDistanceEdges, minimumDistanceTriangles));
+        // And stores the distance between the vertex of mesh1 and mesh2
+        vectorError.push_back(minimumDistance);
 
-    for (unsigned int i=0; i<normals.size(); i++)
-    {
-        normals[i].normalize();
-    }
-}
-
-
-// ---------------------------------------------------------------------------------------------
-// Finds the intersection between the normal of subvertex and targeted surface
-//
-// http://en.wikipedia.org/wiki/Line-plane_intersection
-// A triangle with its 3 vertices P1, P2 and P3 defines a plan. A subvertex P and its normal
-// defines a line. The intersection can be parametered with t (distance along the line from P)
-// and (u,v) the coordinates within the triangles (u along side P0P1 and v along P0P2).
-//
-// ---------------------------------------------------------------------------------------------
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals)
-{
-    OutVecCoord &outVertices = *this->toModel->getX();
-    
-    Real minimumDistance, distance, error;
-    Vec3 point, normal;
-
-    // Iterates over each subvertex
-    for (unsigned int i=0; i<outVertices.size(); i++)
-    {
-        point = outVertices[i];
-        normal = normals[i];
-        
-        minimumDistance = 10e12;
-        for (unsigned int t=0; t<highRestriangles.size(); t++)
+        // The maximum distance is the Hausdorff distance between mesh1 and mesh2
+        if (minimumDistance > HausdorffDistance)
         {
-            Vec3 P0 = highResVertices[ highRestriangles[t][0] ].getCenter();
-            Vec3 P1 = highResVertices[ highRestriangles[t][1] ].getCenter();
-            Vec3 P2 = highResVertices[ highRestriangles[t][2] ].getCenter();
-
-            Mat<3, 3, Real> M, invM;
-            Vec3 P0P1 = P1-P0;
-            Vec3 P0P2 = P2-P0;
-            M[0][0] = -normal[0];   M[0][1] = P0P1[0];   M[0][2] = P0P2[0];
-            M[1][0] = -normal[1];   M[1][1] = P0P1[1];   M[1][2] = P0P2[1];
-            M[2][0] = -normal[2];   M[2][1] = P0P1[2];   M[2][2] = P0P2[2];
-
-            Vec3 P0point = point-P0;
-
-            // Intersection containts (t, u, v)
-            Vec3 intersection;
-            invM.invert(M);
-            intersection = invM*P0point;
-
-            // If intersection is within triangle
-            if (intersection[1] >= 0 && intersection[2] >= 0 && intersection[1] + intersection[2] <= 1)
-            {
-                // Distance from the point
-                distance = P0point.norm2();
-
-                // We test the distance to only keep the closest one
-                if (distance < minimumDistance)
-                {
-                    // We set the new minimum
-                    minimumDistance = distance;
-
-                    error = intersection[0];
-                }
-            }
+            HausdorffDistance = minimumDistance;
         }
 
-        // Stores the error
-        vectorError.push_back(error);
     }
+
+    return HausdorffDistance;
 }
 
 
@@ -428,15 +455,12 @@ void BendingPlateMechanicalMapping<BaseMapping>::FindTriangleInNormalDirection(c
 // Finds the list of the closest points to a point
 // --------------------------------------------------------------------------------------
 template <class BaseMapping>
-typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestPoints(const Vec3& point1, sofa::helper::vector<unsigned int>& listClosestVertices)
+typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestPoints(sofa::helper::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices)
 {
-    const InVecCoord &inVertices = *this->fromModel->getX();
     Real minimumDistance = 10e12;
-
     for (unsigned int v=0; v<inVertices.size(); v++)
     {
-        Vec3 point2 = inVertices[v].getCenter();
-        Real distance = (point2 - point1).norm2();
+        Real distance = (inVertices[v] - point).norm2();
 
         Real threshold = 1e-12;
         if (distance < minimumDistance)
@@ -463,16 +487,13 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
 // Finds the list of the closest edges to a point
 // --------------------------------------------------------------------------------------
 template <class BaseMapping>
-typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestEdges(const Vec3& point, sofa::helper::vector<unsigned int>& listClosestEdges)
+typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestEdges(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges)
 {
-    const InVecCoord &inVertices = *this->fromModel->getX();
-    const SeqEdges &inEdges = inputTopo->getEdges();
     Real minimumDistance = 10e12;
-
     for (unsigned int e=0; e<inEdges.size(); e++)
     {
-        Vec3 pointEdge1 = inVertices[ inEdges[e][0] ].getCenter();
-        Vec3 pointEdge2 = inVertices[ inEdges[e][1] ].getCenter();
+        Vec3 pointEdge1 = inVertices[ inEdges[e][0] ];
+        Vec3 pointEdge2 = inVertices[ inEdges[e][1] ];
 
         const Vec3 AB = pointEdge2-pointEdge1;
         const Vec3 AP = point-pointEdge1;
@@ -520,17 +541,14 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
 // Finds the list of the closest triangles to a point
 // --------------------------------------------------------------------------------------
 template <class BaseMapping>
-typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestTriangles(const Vec3& point, sofa::helper::vector<unsigned int>& listClosestTriangles)
+typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestTriangles(sofa::helper::vector<unsigned int>& listClosestTriangles, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles)
 {
-    const InVecCoord &inVertices = *this->fromModel->getX();
-    const SeqTriangles &inTriangles = inputTopo->getTriangles();
     Real minimumDistance = 10e12;
-
     for (unsigned int t=0; t<inTriangles.size(); t++)
     {
-        Vec3 pointTriangle1 = inVertices[ inTriangles[t][0] ].getCenter();
-        Vec3 pointTriangle2 = inVertices[ inTriangles[t][1] ].getCenter();
-        Vec3 pointTriangle3 = inVertices[ inTriangles[t][2] ].getCenter();
+        Vec3 pointTriangle1 = inVertices[ inTriangles[t][0] ];
+        Vec3 pointTriangle2 = inVertices[ inTriangles[t][1] ];
+        Vec3 pointTriangle3 = inVertices[ inTriangles[t][2] ];
 
         const Vector3 AB = pointTriangle2-pointTriangle1;
         const Vector3 AC = pointTriangle3-pointTriangle1;
@@ -976,26 +994,30 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
     OutVecCoord &outVertices = *this->toModel->getX();
 
     Real maximum = 0;
-    helper::vector<Vec3> colours;
     if (measureError.getValue())
     {
         // Normalises the error
-        for (unsigned int i=0; i<vectorError.size(); i++)
+        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
         {
-            if (fabs(vectorError[i])>maximum)
+            if (fabs(vectorErrorCoarse[i])>maximum)
             {
-                maximum = fabs(vectorError[i]);
+                maximum = fabs(vectorErrorCoarse[i]);
             }
         }
-        for (unsigned int i=0; i<vectorError.size(); i++)
+        Real correctedError;
+//        maximum = 0.84;
+        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
         {
-            colours.push_back( colourMapping[ (int)((fabs(vectorError[i])/maximum)*255) ] );
+            correctedError = fabs(vectorErrorCoarse[i])*5;
+            if (correctedError > maximum)
+                correctedError = maximum;
+            coloursPerVertex.push_back( colourMapping[ (int)((correctedError/maximum)*239) ] );
         }
     }
 
     shader.TurnOn();
 
-    if(this->getContext()->getShowBehaviorModels())
+    if(this->getContext()->getShowForceFields())
     {
         glDisable(GL_LIGHTING);
 
@@ -1031,20 +1053,20 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glEnable(GL_POLYGON_OFFSET_FILL);
-            glColor4f(0.0, 0.0, 0.0, 0.0);
+//            glColor4f(0.0, 0.0, 0.0, 0.0);
             glBegin(GL_TRIANGLES);
             for (unsigned int i=0; i<outTriangles.size(); i++)
             {
                 index = outTriangles[i][0];
-                glTexCoord3i(colours[index][0], colours[index][1], colours[index][2]);
+                glColor4f(coloursPerVertex[index][0], coloursPerVertex[index][1], coloursPerVertex[index][2], 1.0);
                 glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
 
                 index = outTriangles[i][1];
-                glTexCoord3i(colours[index][0], colours[index][1], colours[index][2]);
+                glColor4f(coloursPerVertex[index][0], coloursPerVertex[index][1], coloursPerVertex[index][2], 1.0);
                 glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
 
                 index = outTriangles[i][2];
-                glTexCoord3i(colours[index][0], colours[index][1], colours[index][2]);
+                glColor4f(coloursPerVertex[index][0], coloursPerVertex[index][1], coloursPerVertex[index][2], 1.0);
                 glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
             }
             glEnd();
@@ -1053,6 +1075,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
 
         // Render shells' contours (subdivision of edges)
         glColor4f(1.0, 1.0, 1.0, 1.0);
+//        glColor4f(0.0, 0.0, 0.0, 1.0);
+//        glLineWidth(2.0);
         glBegin(GL_LINES);
         for (unsigned int i=0; i<outEdges.size(); i++)
         {
@@ -1064,18 +1088,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
         }
         glEnd();
 
-    }
-    else
-    {
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<outVertices.size(); i++)
-        {
-            glColor3f(colours[i][0], colours[i][1], colours[i][2]);
-
-            helper::gl::glVertexT(outVertices[i]);
-            helper::gl::glVertexT(outVertices[i]+normals[i]*vectorError[i]);
-        }
-        glEnd();
     }
 
     shader.TurnOff();

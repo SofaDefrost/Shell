@@ -98,11 +98,11 @@ protected:
 	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
 
         sofa::core::componentmodel::topology::BaseMeshTopology* _topologyHigh;
-        VecCoord verticesTarget;
+        helper::vector<Vec3> verticesTarget;
         SeqTriangles trianglesTarget;
 
-        TriangularBendingFEMForceFieldInternalData<DataTypes> data;
-        friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
+//        TriangularBendingFEMForceFieldInternalData<DataTypes> data;
+//        friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
 
 public:
 
