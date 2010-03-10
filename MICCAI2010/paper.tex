@@ -20,6 +20,7 @@
 
 \begin{document}
 
+
 \title{A Framework for Modelling Thin Objects: \\ from Meshing to Shell Finite Element Method}
 %\author{Olivier Comas, St\'ephane Cotin and Christian Duriez}
 %\institute{INRIA, Alcove team, Lille, France}
@@ -27,7 +28,10 @@
 \maketitle
 
 \begin{abstract}
-
+This paper presents a new modeling technique for the deformation of thin anatomical structures like membrane and hollow organs. 
+We show that the behavior of this type of tissue can be abstracted with a 2D modeling of their surface elastic resistance using shell theory. 
+In order to apply the shell theory in the particular context of medical simulation, our method propose to base the geometrical reconstruction of the organ on the shape functions of the shell element. 
+Moreover, we also use these continuous shape functions to handle the contacts and the interactions with other types of deformable tissues. The technique is illustrated using several examples including the simulation of angioplasty procedure.
 \end{abstract}
 
 \section{Introduction}
@@ -35,7 +39,7 @@
 Human body is composed of various deformable anatomical structures. Realistic modelling of organ deformations is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast update of the deformation model to obtain a real-time display of the computed deformations. To realise this kind of interactive systems, one faces the trade-off problem between accuracy of the model and the need of fast computations. 
 Another key challenge of real-time human soft-tissue modelling is the variousness of the mechanical behaviours. It seems unrealistic to target a unique model for all tissues even if there are obvious advantages to make maximum use of optimised generic models. Yet most of previous work focus on volume models that are able to capture the behavior of solid organs like liver \cite{} or brain tissues \cite{} \CD{TODO: biblio}. In contrast, this paper seeks to propose a solution for simulating, in real-time, deformation of thin anatomical structures, whose volume is negligible compared to their surface area. Examples of such anatomical structures include hollow structures, like the wall of blood vessels or the colon but also the envelope of solid organs, like the capsule of Glisson.
 
-Shell theory allows the modelling of  structure  deformations when the thickness is small compared to its other dimensions~\cite{Liu03}. The key idea is to model the physical shell as if it were a surface of zero thickness, but endowed with mechanical properties in the form of elastic resistance to stretching, twisting, bending and shearing forces.
+Shell theory allows the modelling of  structure  deformations when the thickness is small compared to its other dimensions~\cite{Liu03}. The key idea is to model the physical shell as if it were a surface of zero thickness, but endowed with mechanical properties in the form of elastic resistance to stretching, bending and shearing forces.
 Rather than resorting to shell theory, previous work on medical simulation often relies on mass-spring models (see \ref{Hammer08} \CD{voir fichier bib isbms} for instance).
 %Rather than resorting to shell theory which involves the most complex formulations in continuum mechanics, previous works have often relied on discrete formulations. Early approaches only considered in-plane deformation, and often relied on mass-spring models. More recent works have considered adding bending through angular springs. For instance Wang et al.~\cite{Wang07} successfully used a network of linear and angular springs to describe bending and twisting of catheters and guidewires in an interventional radiology simulator. \CD{C'est pas des shells si?} 
 Yet, such models are limited in their ability to describe certain behaviour, as they do not rely on continuum mechanics: it is difficult to derive spring stiffness (in particular for angular springs) from elastic properties (Young's modulus and Poisson's ratio).
@@ -58,6 +62,7 @@ Our method, presented in section~\ref{sec:model} is based on shell theory and co
 %\subsection{}
 
 A complete description and validation of our co-rotational triangular shell finite element model is available in one of our previous publication \cite{Comas2010ISBMS}. Therefore we will only remind briefly the key points. We improved and extended a plate model first introduced by Przemieniecki \cite{Przemieniecki68} to a co-rotational formulation. Co-rotational approaches offer a good trade-off between computational efficiency and accuracy by allowing small deformations but large displacements. Once combined with an in-plane membrane formulation we obtain an accurate, yet computationally efficient, shell finite element method featuring both membrane and bending energies. 
+
 
 \subsubsection{Triangular elastic membrane}
 
@@ -111,7 +116,7 @@ where $\boldsymbol\chi$ is the material matrix. The stiffness matrix in the glob
 
 \subsubsection{Mechanical interactions with the curved surface of shells}
 \label{sec:interactions}
-But the practical interest of modelling complex behaviours such as bending and twisting would remain fairly low for medical simulation if contacts were not handled properly. In our case the difficulty comes from different sources. First the collision detection must be carried out with the curved surface of shell elements as opposed to the classic detection on plane triangles. Then forces applied to a given triangle need to be distributed between linear forces and torques onto its three vertices.  As we will see, the same polynomial interpolation function \ref{eq-deflection} chosen to compute the bending energy in our FEM formulation is also used to capture the interactions between the curved surface and other objects. 
+But the practical interest of modelling complex behaviours such as bending and twisting would remain fairly low for medical simulation if contacts and constraints were not handled properly. In our case the difficulty comes from different sources. First the collision detection must be carried out with the curved surface of shell elements as opposed to the classic detection on plane triangles. Then forces applied to a given triangle need to be distributed between linear forces and torques onto its three vertices.  As we will see, the same polynomial interpolation function \ref{eq-deflection} chosen to compute the bending energy in our FEM formulation is also used to capture the interactions between the curved surface and other objects. 
 
 In order to detect the collision with the bent surface, we have chosen the subdivision approach. Therefore a finer mesh is created by adding vertices on the surface of each element. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using (\ref{eq-deflection}) and the displacements and slopes at the three vertices of the triangular element. This process of subdivision allows us to render each shell as a curved triangle (Fig.~\ref{fig-shell} ) and detect any collision with the curved surface of the shell using any of the classic collision detection algorithms working on flat triangles.
 \begin{figure}
