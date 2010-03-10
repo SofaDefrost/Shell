@@ -144,14 +144,30 @@ The first step in the process of generating a shell-based mesh is an aggressive 
 \end{figure}
 \begin{figure}
 \centering
-\includegraphics[height=4cm]{images/cylinderResults2}
+\includegraphics[height=4cm]{images/resultsCylinder}
 \caption {(Left) One-sided Hausdorff distance colour map of the coarse mesh rendered with shells. (Right) One-sided Hausdorff distance colour map after only one iteration of our algorithm. We can notice that differences with the target mesh have been subtantially reduced.}
 \label{fig-cylinderResults}
 \end{figure}
 
 \section{Results}
 \label{sec:results}
-\subsection{Meshing of anatomical structures (error maps)}
+\subsection{Meshing of anatomical structures}
+
+This approach has been applied to mesh more complex anatomical structures with curved shell elements. In each case the error is expressed as a percentage of the diagonal of the object's bounding box. 
+
+\begin{figure}
+\centering
+\includegraphics[height=4cm]{images/resultsLiver}
+\caption {Left: the targeteted high resolution liver mesh (8,000 triangles). Right: the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh (1,200 shells)}. 
+\label{fig-liver}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[height=4cm]{images/resultsAnevrism}
+\caption {Left: the targeteted high resolution anevrism mesh (28,368 triangles). Right: the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh (1,160 shells)}.
+\label{fig-anevrism}
+\end{figure}
 
 
 

@@ -1471,7 +1471,7 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(VecDeriv& f, const VecC
 //    const VecCoord& x0 = *this->mstate->getX0();
 //    std::cout << "displacement vertex " << indexTop << ": " << x[indexTop].getCenter()-x0[indexTop].getCenter() << std::endl;
 
-    std::cout << "displacement centre: " << x[12].getCenter() << std::endl;
+//    std::cout << "displacement centre: " << x[12].getCenter() << std::endl;
 
 //    stop = timer.getTime();
 //    std::cout << "---------- time addForce = " << stop-start << std::endl;

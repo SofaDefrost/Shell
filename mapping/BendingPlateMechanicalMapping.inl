@@ -1006,13 +1006,22 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
         }
         Real correctedError;
 //        maximum = 0.84;
+        int count = 0;
         for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
         {
+//            if (vectorErrorCoarse[i]>5.5)
+//            {
+//                count++;
+//                std::cout << "error of vertex " << i << " = " << vectorErrorCoarse[i] << std::endl;
+//            }
+
             correctedError = fabs(vectorErrorCoarse[i])*5;
             if (correctedError > maximum)
                 correctedError = maximum;
             coloursPerVertex.push_back( colourMapping[ (int)((correctedError/maximum)*239) ] );
         }
+
+//        std::cout << count << " vertices are above 5.5 out of " << vectorErrorCoarse.size() << std::endl;
     }
 
     shader.TurnOn();
@@ -1076,7 +1085,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
         // Render shells' contours (subdivision of edges)
         glColor4f(1.0, 1.0, 1.0, 1.0);
 //        glColor4f(0.0, 0.0, 0.0, 1.0);
-//        glLineWidth(2.0);
+        glLineWidth(0.5);
         glBegin(GL_LINES);
         for (unsigned int i=0; i<outEdges.size(); i++)
         {
