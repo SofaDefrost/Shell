@@ -32,30 +32,16 @@
 
 \section{Introduction}
 
-Human body is composed of various deformable anatomical structures. 
-Realistic modeling of organ deformations is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation.
-In all these cases, the clinician needs fast update of the deformation model to obtain a real-time display of the computed deformations.  
-To realize this kind of interactive systems, one face the trade-off problem between accuracy of the model and the need of fast computations. 
+Human body is composed of various deformable anatomical structures. Realistic modelling of organ deformations is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast update of the deformation model to obtain a real-time display of the computed deformations. To realise this kind of interactive systems, one faces the trade-off problem between accuracy of the model and the need of fast computations. 
 
-An other key challenge of real-time human soft-tissue modeling is the variousness of the mechanical behaviors. 
-It seems unrealistic to target a unique model for all tissues even if there are obvious advantages to make maximum use of optimized generic models.
-Yet most of previous work focus on volume models that are able to capture the behavior of volume organs like liver \cite{} or brain tissues \cite{} \CD{TODO: biblio}.
-In contrast, this paper seeks to propose a solution for simulating, in real-time, deformation of thin anatomical structures, whose volume is negligible compared to their surface area.
-Examples of such anatomical structures include hollow structures, like the wall of blood vessels or the colon but also the envelope of volume organs, like the capsule of Glisson.
+Another key challenge of real-time human soft-tissue modelling is the variousness of the mechanical behaviours. It seems unrealistic to target a unique model for all tissues even if there are obvious advantages to make maximum use of optimised generic models. Yet most of previous work focus on volume models that are able to capture the behavior of solid organs like liver \cite{} or brain tissues \cite{} \CD{TODO: biblio}. In contrast, this paper seeks to propose a solution for simulating, in real-time, deformation of thin anatomical structures, whose volume is negligible compared to their surface area. Examples of such anatomical structures include hollow structures, like the wall of blood vessels or the colon but also the envelope of solid organs, like the capsule of Glisson.
 
-
-In the following of this paper, we present a framework for realistic and real-time simulation of thin organs.
-Our method, presented in section \ref{sec:model} is based on shell theory and computes the internal forces using Finite Element Modeling (FEM) on curved triangles.
-The design of the elements relies on a polynomial interpolation that is also use to capture the interactions with other models, including volume models.
-We also present an automatic process to obtain meshes from image based reconstruction in an attempt to optimize  the computation using fewer elements  (see section \ref{sec:mesh}).
-The benefits of our approach (meshing of a curved surface, fast computation and possible interactions with volume models) are illustrated using various examples presented in section \ref{sec:results}. 
-
+In the following of this paper, we present a framework for realistic and real-time simulation of thin organs. Our method, presented in section~\ref{sec:model} is based on shell theory and computes the internal forces using Finite Element Modelling (FEM) on curved triangles. The design of the elements relies on a polynomial interpolation that is also used to capture the interactions with other models, including solid models. We also present an automatic process to obtain meshes from image based reconstruction in an attempt to optimise the computation using fewer elements (see section~\ref{sec:mesh}). The benefits of our approach (meshing of a curved surface, fast computation and possible interactions with solid models) are illustrated using various examples presented in section~\ref{sec:results}.
 
 \section{A physical model for thin structures}
 \label{sec:model}
 \subsection{Related work}  
 
-Development of a satisfactory physical model that runs in real-time but produces visually convincing animation of thin objects is challenging. \CD{utile?}
 Rather than resorting to shell theory which involves the most complex formulations in continuum mechanics, previous works have often relied on discrete formulations. Early approaches only considered in-plane deformation, and often relied on mass-spring models. More recent works have considered adding bending through angular springs. For instance Wang et al.~\cite{Wang07} successfully used a network of linear and angular springs to describe bending and twisting of catheters and guidewires in an interventional radiology simulator. \CD{C'est pas des shells si?} Yet, such models are limited in their ability to describe certain behaviour, as they do not rely on continuum mechanics. Another limitation of such models is the difficulty to derive spring stiffness (in particular for angular springs) from elastic properties (Young's modulus and Poisson's ratio). For these reasons, other approaches have been proposed. 
 
 Continuum mechanics provides many formulations able to accurately describe stresses occurring within thin objects. Most of them fall into one of the following two categories: plate theory or shell theory. Those theories have been a subject of interest in the mechanical community for decades. The difference between these two kinds of structures is very well explained by Liu et al.~\cite{Liu03} and can be summarized by the fact that plate bending elements can only carry transversal loads while shells can undergo more complex deformations. Considering the wide range of shapes and solicitations that can be applied to hollow organs, a thin plate model would not correctly capture their deformation and therefore a shell formulation was retained for this work.
@@ -63,7 +49,7 @@ Continuum mechanics provides many formulations able to accurately describe stres
 
 \subsection{Co-rotational triangular shell model}
 
-A complete description of our co-rotational triangular shell finite element model is available in one of our previous publication \cite{Comas2010ISBMS} \CD{Attention, il faut faire une citation anonyme !!}. Therefore we will only remind briefly the key points. We improved and extended a plate model first introduced by Przemieniecki \cite{Przemieniecki68} to a co-rotational formulation. Co-rotational approaches offer a good trade-off between computational efficiency and accuracy by allowing small deformations but large displacements. Once combined with an in-plane membrane formulation we obtain an accurate, yet computationally efficient, shell finite element method featuring both membrane and bending energies. 
+A complete description and validation of our co-rotational triangular shell finite element model is available in one of our previous publication \cite{Comas2010ISBMS}. Therefore we will only remind briefly the key points. We improved and extended a plate model first introduced by Przemieniecki \cite{Przemieniecki68} to a co-rotational formulation. Co-rotational approaches offer a good trade-off between computational efficiency and accuracy by allowing small deformations but large displacements. Once combined with an in-plane membrane formulation we obtain an accurate, yet computationally efficient, shell finite element method featuring both membrane and bending energies. 
 
 \subsubsection{Triangular elastic membrane}
 
@@ -88,13 +74,12 @@ To calculate the stiffness matrix for the transverse deflections and rotations s
  u_z = c_1 + c_2x + c_3y + c_4x^2 + c_5xy + c_6y^2 + c_7x^3 + c_8xy^2 + c_9y^3
 \label{eq-deflection}
 \end{equation} 
-
-where $c_1$, \ldots , $c_9$ are constants. Let us define the vector $\textbf{u} = \left\{u_1 u_2 \ldots u_9 \right\} $ of the displacements and slopes at the three corners of the triangular plate using the following notations:
+where $c_1$, \ldots , $c_9$ are constants. Using a third-degree polynomial expression allows us to reach a greater precision for both the computation of the bending energy and the interpolation within the surface of the shell. Let us define the vector $\textbf{u} = \left\{u_1 u_2 \ldots u_9 \right\} $ of the displacements and slopes at the three corners of the triangular plate using the following notations:
 \begin{equation}
 u_1 = (u_z)_{x_1,y_1} \hspace{1cm} u_2 = \left(\frac{\partial u_z}{\partial y}\right)_{x_1,y_1} \hspace{1cm} u_3 = - \left(\frac{\partial u_z}{\partial x}\right)_{x_1,y_1}
 \end{equation} 
 and so on for the two other vertices.
-We then can derive a matrix $C$ such as $\textbf{u} = \textbf{Cc}$ where $\textbf{c} = \left\{c_1 c_2 \ldots c_9 \right\} $.
+We then can derive a matrix $\textbf{C}$ such as $\textbf{u} = \textbf{Cc}$ where $\textbf{c} = \left\{c_1 c_2 \ldots c_9 \right\} $.
 
 We can calculate the strains from the flat-plate theory using:
 \begin{equation}
@@ -105,7 +90,6 @@ e_{yy} = -z \frac{\partial^2u_z}{\partial y^2}
 \hspace{1cm}
 e_{xy} = -2z \frac{\partial^2u_z}{\partial x \partial y}
 \end{equation} 
-
 Symbolically this may be expressed as $\textbf{e} = \textbf{Dc}$ where $\textbf{D}$ derives from equations~\ref{eq-deflection} and~\ref{eq-deformation}. Noting that $\textbf{c} = \textbf{C}^{-1}\textbf{u}$, we have:
 \begin{equation}
 \textbf{e} = \textbf{DC}^{-1}\textbf{u} = \textbf{bu}
@@ -117,31 +101,38 @@ The stiffness matrix $\textbf{K}_e$ for an element is then classically obtained 
 \end{equation} 
 where $\boldsymbol\chi$ is the material matrix. The stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element as in the membrane case. 
 
+\subsubsection{Mechanical interactions with the curved surface of shells}
+But the practical interest of modelling complex behaviours such as bending and twisting would remain fairly low for medical simulation if contacts were not handled properly. In our case the difficulty comes from different sources. First the collision detection must be carried out with the curved surface of shell elements as opposed to the classic detection on plane triangles. Then forces applied to a given triangle need to be distributed between linear forces and torques onto its three vertices.  As we will see, the same polynomial interpolation function \ref{eq-deflection} chosen to compute the bending energy in our FEM formulation is also used to capture the interactions between the curved surface and other objects. 
+
+In order to detect the collision with the bent surface, we have chosen the subdivision approach. Therefore a finer mesh is created by adding vertices on the surface of each element. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using (\ref{eq-deflection}) and the displacements and slopes at the three vertices of the triangular element. This process of subdivision allows us to render each shell as a curved triangle (Fig.~\ref{fig-shell} ) and detect any collision with the curved surface of the shell using any of the classic collision detection algorithms working on flat triangles.
+\begin{figure}
+\centering
+\includegraphics[height=3cm]{images/shell_curvature}
+\caption {The triangle formed by the three vertices of the shell has been recursively subdivided 3 times and the deflection of each new vertex was computed according to the same deflection function used in our shell finite element formulation. Sampling the actual surface of the shell allows rendering and more accurate collision detection.}
+\label{fig-shell}
+\end{figure}
+
+Once a collision has been detected, it must be processed by distributing the linear force received on the bent surface between the three vertices of the triangle. First the linear part of the force is simply transmitted on each node using the barycentric coordinates of the contact point's projection onto the triangle. 
+
+The main difficulty is to convert the normal component of the force applied to the bent surface into a torque at each of the three nodes. Our approach is the following: during force computation, we use the angle measured at each node to compute the local deflection of each subvertex within the triangle. Differentiating the formulation twice yields a relation between the torque applied at each node and the generated force in bending. We therefore need to invert the latter formulation to convert a bending force into torques at each vertex. We start by retrieving the normal component of the applied force vector $F_{\mathrm{z}}$. We project the application point of the force into the triangle's plane and compute its local coordinates $(x,y)$. We create the polynom $P = F_{\mathrm{z}}(1 \hspace{0.2cm} x \hspace{0.2cm} y \hspace{0.2cm} x^2 \hspace{0.2cm} xy \hspace{0.2cm} y^2 \hspace{0.2cm} x^3 \hspace{0.2cm} xy^2 \hspace{0.2cm} y^3)^T$. The moments at each vertex are then obtained with $\Omega = (\textbf{C}^{-1})^T P$.  Thus we are able to transmit any force coming from elaborate interactions with the curved surface of shells to the mechanical vertices used in our FEM formulation. 
+
 \section{Meshing a curved surface}
 \label{sec:mesh}
 \subsection{Related work}
 
-A key component of finite element methods is the mesh of the simulated object being used. While a sufficient number of elements is needed to accurately describe the geometry, too many of them will yield a computationally expensive simulation and solving the system in real-time may no longer be possible. Literature about volumic mesh generation algorithms is fairly dense. However, there are only a few that are concerned about the generation of meshes over curved surfaces. One of the most widely used techniques for the creation of surface meshes is the plane to surface transformation method \cite{Zienkiewicz71}, mesh is first generated on a two-dimensional domain and then mapped onto the surface. If this method gives reasonably good meshes on smooth surfaces, the results are usually quite poor with more complex curved surfaces. The finite elements may be generated directly on the curved surfaces based on the advancing front technique \cite{Lo85,Lau96}. The main issue with this approach is that an analytical description of the geometry is needed, which is not the case in medical simulation. Another method consists of using an a priori error estimator to build an adaptive mesh generation \cite{Baumann97}. However, the tolerance of this indicator should be chosen depending on the desired accuracy of the finite element solution, and therefore requires some knowledge about the problem in order to choose an effective tolerance. In \cite{Bechet02} the authors start from an existing triangular mesh created with a CAD software and refine and smooth the mesh based on element quality and surface curvature. While all those methods allow their authors to get satisfactory meshes over curved surfaces according to their needs, they all make use of flat elements to mesh geometries and do not generate actual shells. 
+Another key component of finite element methods is the mesh of the simulated object being used. While a sufficient number of elements is needed to accurately describe the geometry, too many of them will yield a computationally expensive simulation and solving the system in real-time may no longer be possible. Literature about volumic mesh generation algorithms is fairly dense. However, there are only a few that are concerned about the generation of meshes over curved surfaces. One of the most widely used techniques for the creation of surface meshes is the plane to surface transformation method \cite{Zienkiewicz71}, mesh is first generated on a two-dimensional domain and then mapped onto the surface. If this method gives reasonably good meshes on smooth surfaces, the results are usually quite poor with more complex curved surfaces. The finite elements may be generated directly on the curved surfaces based on the advancing front technique \cite{Lo85,Lau96}. The main issue with this approach is that an analytical description of the geometry is needed, which is not the case in medical simulation. Another method consists of using an a priori error estimator to build an adaptive mesh generation \cite{Baumann97}. However, the tolerance of this indicator should be chosen depending on the desired accuracy of the finite element solution, and therefore requires some knowledge about the problem in order to choose an effective tolerance. In \cite{Bechet02} the authors start from an existing triangular mesh created with a CAD software and refine and smooth the mesh based on element quality and surface curvature. While all those methods allow their authors to get satisfactory meshes over curved surfaces according to their needs, they all make use of flat elements to mesh geometries and do not generate actual shells. 
 
 \subsection{A mechanically-driven method to mesh curved surfaces with shells}
 
 Indeed, one main difference between shell and plate elements is that the rest shape of the former can describe a curved surface. We propose to take this crucial feature into account to optimise the meshing process. While many flat triangles are often required to describe highly curved surfaces, fewer triangular shell elements are needed to describe the given geometry with the same precision since they can be naturally curved. In the following we assume that we have a high resolution triangular mesh obtained from a binary segmented image of the organ we want to simulate (via a Marching Cube algorithm for instance). Our goal is to create a mesh featuring the optimal number of shell elements while staying as close as possible to our targeted geometry. 
 
-Therefore we need to insure that the distance between the surface of our shell-based mesh and the targeted high resolution mesh will be minimal. To our knowledge the only tool available to measure error between two surfaces is the Hausdorff distance \cite{Klein96,Cignoni98}. As a reminder the Hausdorff distance between two meshes is the maximum between the two so-called one-sided Hausdorff distances:
-
+Therefore we need to insure that the distance between the surface of our shell-based mesh and the targeted high resolution mesh will be minimal. An efficient technique for measuring the error between two surfaces is the Hausdorff distance \cite{Klein96,Cignoni98}. As a reminder the Hausdorff distance between two meshes is the maximum between the two so-called one-sided Hausdorff distances:
 \begin{equation}
 d_{\mathrm{H}}(X,Y) = \max \left\{ \sup_{x \in X} \inf_{y \in Y} d(x,y), \sup_{y \in Y} \inf_{x \in X} d(x,y) \right\} \enspace .
 \end{equation}
-where $d()$ is the Euclidian distance between two points. Since the curved surface of each shell must be taken into account in the computation of the Hausdorff distance, a finer mesh is created by adding vertices on the surface of each element. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using (\ref{eq-deflection}). \CD{Lien avec la fonction d'interpolation a mettre plus en avant !}. We then use this new mesh that samples the actual surface described by the shells to compute the Hausdorff distance with the targeted high resolution mesh. The same process of subdivision allows us to render each shell as a curved triangle (Fig.~\ref{fig-shell} ). 
+where $d()$ is the Euclidian distance between two points. The same technique of subdivision used for rendering allows us to sample the actual surface described by the shells to compute the Hausdorff distance with the targeted high resolution mesh. 
 
-\begin{figure}
-\centering
-\includegraphics[height=4cm]{images/shell_curvature}
-\caption {The triangle formed by the three vertices of the shell has been recursively subdivided 3 times and the deflection of each new vertex was computed according to the same deflection function used in our shell finite element formulation. Sampling the actual surface of the shell allows rendering and more accurate Hausdorff distance computation. }
-\label{fig-shell}
-\end{figure}
-
-The first step in the process of generating a shell-based mesh is an aggressive decimation of the targeted high resolution mesh. We then apply a heuristi"c method derived from the work of Saupin et. al \cite{Saupin07} with tetrahedral meshes based on very simple geometrical rules. For each node of the coarse mesh, we find the three closest triangles on the high resolution mesh and we move the node to the barycenter of the three centres of mass of those triangles. This technique locally smooths the surface of the mesh while converging towards the desired high resolution mesh. At each iteration of this algorithm we measure the error with the target using the Hausdorff distance and the process is stopped when the required precision has been reached. A simple example is shown Fig. \ref{fig-cylinder} and \ref{fig-cylinderResults} to illustrate the method. 
+The first step in the process of generating a shell-based mesh is an aggressive simplification of the targeted high resolution mesh by using the quadric edge collapse decimation technique implemented in Meshlab \cite{Meshlab}. The algorithm tries as much as possible to preserve mesh boundaries and generate high quality triangular elements. We then apply a heuristic method derived from the work of Saupin et. al \cite{Saupin07} with tetrahedral meshes based on very simple geometrical rules. For each node of the coarse mesh, we find the three closest triangles on the high resolution mesh and we move the node to the barycenter of the three centres of mass of those triangles. This technique locally smooths the surface of the mesh while converging towards the desired high resolution mesh. At each iteration of this algorithm we measure the error with the target using the Hausdorff distance and the process is stopped when the required precision has been reached. A simple example is shown Fig. \ref{fig-cylinder} and \ref{fig-cylinderResults} to illustrate the method. 
 
 \begin{figure}
 \centering
@@ -150,11 +141,10 @@ The first step in the process of generating a shell-based mesh is an aggressive 
 \caption {Illustration of our method on a simple example. The target is the high resolution cylinder mesh (left) and the start point is a very coarse mesh approximating the shape of a cylinder (right).}
 \label{fig-cylinder}
 \end{figure}
-
 \begin{figure}
 \centering
 \includegraphics[height=4cm]{images/cylinderResults2}
-\caption {(Left) Hausdorff distance colour map of the coarse mesh rendered with shells. (Right) Hausdorff distance colour map after one iteration of our algorithm. We can notice that differences with the target mesh have been subtantially reduced.}
+\caption {(Left) One-sided Hausdorff distance colour map of the coarse mesh rendered with shells. (Right) One-sided Hausdorff distance colour map after only one iteration of our algorithm. We can notice that differences with the target mesh have been subtantially reduced.}
 \label{fig-cylinderResults}
 \end{figure}
 
@@ -165,13 +155,16 @@ The first step in the process of generating a shell-based mesh is an aggressive 
 
 
 \subsection{Deformations}
+
 \subsubsection{Computation times on 3 examples}
-\subsubsection{Coupling between tetrahedra and shells for more advanced modelling}
+
+\subsubsection{Coupling between tetrahedra and shells for advanced modelling}
+
 \begin{figure}
 \centering
 \includegraphics[height=4cm]{images/stent_begin.png}
 \includegraphics[height=4cm]{images/stent_end.png}
-\caption {Avant... Apres...}
+\caption {Before... After...}
 \label{fig-stent}
 \end{figure}
 
