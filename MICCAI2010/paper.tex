@@ -102,6 +102,7 @@ The stiffness matrix $\textbf{K}_e$ for an element is then classically obtained 
 where $\boldsymbol\chi$ is the material matrix. The stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element as in the membrane case. 
 
 \subsubsection{Mechanical interactions with the curved surface of shells}
+\label{sec:interactions}
 But the practical interest of modelling complex behaviours such as bending and twisting would remain fairly low for medical simulation if contacts were not handled properly. In our case the difficulty comes from different sources. First the collision detection must be carried out with the curved surface of shell elements as opposed to the classic detection on plane triangles. Then forces applied to a given triangle need to be distributed between linear forces and torques onto its three vertices.  As we will see, the same polynomial interpolation function \ref{eq-deflection} chosen to compute the bending energy in our FEM formulation is also used to capture the interactions between the curved surface and other objects. 
 
 In order to detect the collision with the bent surface, we have chosen the subdivision approach. Therefore a finer mesh is created by adding vertices on the surface of each element. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using (\ref{eq-deflection}) and the displacements and slopes at the three vertices of the triangular element. This process of subdivision allows us to render each shell as a curved triangle (Fig.~\ref{fig-shell} ) and detect any collision with the curved surface of the shell using any of the classic collision detection algorithms working on flat triangles.
@@ -160,11 +161,15 @@ The first step in the process of generating a shell-based mesh is an aggressive 
 
 \subsubsection{Coupling between tetrahedra and shells for advanced modelling}
 
+Structures in human body can be either solid (brain, liver, prostrate etc.) or hollow (blood vessels, colon, stomach etc.). However knowing how to model the two kind of structures is not sufficient to reach a high degree of accuracy in medical simulation. Indeed real life situations are more complex. As an example, the external surface of the liver is covered by a single layer of cells called Glisson's capsule. Its interaction with the liver plays an important role into the overall structure's mechanical behaviour. Therefore considering the interaction between solid and hollow objects is as crucial as modelling the two structures separately. 
+
+An example of medical procedure to illustrate this point even further is angioplasty. Angioplasty is the technique of mechanically widening a narrowed or obstructed blood vessel, typically as a result of atherosclerosis. An empty and collapsed balloon on a guide wire, known as a balloon catheter, is passed into the narrowed locations and then inflated to a fixed size using water pressures. The balloon crushes the fatty deposits, so opening up the blood vessel to improved flow. As a proof of concept we tried to simulate an angioplasty (Fig.~\ref{fig-stent}). The blood vessel is modelled using the shell FEM formulation described in this paper and the fatty deposits are simulated with a tetrahedral FEM method and are fixed to the interior wall of the blood vessel. When the balloon inflates it crushes the deposits and the deposits then apply a pressure onto the curved surfaces of shells modelling the interior wall. The forces are then distributed onto the mechanical nodes of the blood vessel mesh as detailled in section \ref{sec:interactions}, which widens the blood vessel as expected. 
+
 \begin{figure}
 \centering
 \includegraphics[height=4cm]{images/stent_begin.png}
 \includegraphics[height=4cm]{images/stent_end.png}
-\caption {Before... After...}
+\caption {Simulation of an angioplasty procedure. (Left) The collapsed balloon was inserted into the blood vessel simulated with our shell FEM formulation. The fatty deposits (in yellow) are modelled with a tetrahedral FEM. (Right) Upon inflation the balloon is crushing the fatty deposits, which is applying a pressure onto the interior wall and widening the blood vessel.}
 \label{fig-stent}
 \end{figure}
 
