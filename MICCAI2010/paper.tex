@@ -121,7 +121,7 @@ But the practical interest of modelling complex behaviours such as bending and t
 In order to detect the collision with the bent surface, we have chosen the subdivision approach. Therefore a finer mesh is created by adding vertices on the surface of each element. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using (\ref{eq-deflection}) and the displacements and slopes at the three vertices of the triangular element. This process of subdivision allows us to render each shell as a curved triangle (Fig.~\ref{fig-shell} ) and detect any collision with the curved surface of the shell using any of the classic collision detection algorithms working on flat triangles.
 \begin{figure}
 \centering
-\includegraphics[height=3cm]{images/shell_curvature}
+\includegraphics[height=4cm]{images/shell_curvature2.png}
 \caption {The triangle formed by the three vertices of the shell has been recursively subdivided 3 times and the deflection of each new vertex was computed according to the same deflection function used in our shell finite element formulation. Sampling the actual surface of the shell allows rendering and more accurate collision detection.}
 \label{fig-shell}
 \end{figure}
@@ -146,20 +146,17 @@ d_{\mathrm{H}}(X,Y) = \max \left\{ \sup_{x \in X} \inf_{y \in Y} d(x,y), \sup_{y
 \end{equation}
 where $d()$ is the Euclidian distance between two points. The same technique of subdivision used for rendering allows us to sample the actual surface described by the shells to compute the Hausdorff distance with the targeted high resolution mesh. 
 
-The first step in the process of generating a shell-based mesh is an aggressive simplification of the targeted high resolution mesh by using the quadric edge collapse decimation technique implemented in Meshlab \cite{Meshlab}. The algorithm tries as much as possible to preserve mesh boundaries and generate high quality triangular elements. We then apply a heuristic method derived from the work of Saupin et. al \cite{Saupin07} with tetrahedral meshes based on very simple geometrical rules. For each node of the coarse mesh, we find the three closest triangles on the high resolution mesh and we move the node to the barycenter of the three centres of mass of those triangles. This technique locally smooths the surface of the mesh while converging towards the desired high resolution mesh. At each iteration of this algorithm we measure the error with the target using the Hausdorff distance and the process is stopped when the required precision has been reached. A simple example is shown Fig. \ref{fig-cylinder} and \ref{fig-cylinderResults} to illustrate the method. 
+The first step in the process of generating a shell-based mesh is an aggressive simplification of the targeted high resolution mesh by using the quadric edge collapse decimation technique implemented in Meshlab \cite{Meshlab}. The algorithm tries as much as possible to preserve mesh boundaries and generate high quality triangular elements. We then apply a heuristic method derived from the work of Saupin et. al \cite{Saupin07} with tetrahedral meshes based on very simple geometrical rules. For each node of the coarse mesh, we find the three closest triangles on the high resolution mesh and we move the node to the barycenter of the three centres of mass of those triangles. This technique locally smooths the surface of the mesh while converging towards the desired high resolution mesh. At each iteration of this algorithm we measure the error with the target using the Hausdorff distance and the process is stopped when the required precision has been reached. A simple example is shown Fig. \ref{fig-cylinder} 
+%and \ref{fig-cylinderResults} 
+to illustrate the method. 
 
 \begin{figure}
 \centering
-\includegraphics[height=4cm]{images/cylinderHighWireframe}
-\includegraphics[height=4cm]{images/cylinderLow}
-\caption {Illustration of our method on a simple example. The target is the high resolution cylinder mesh (left) and the start point is a very coarse mesh approximating the shape of a cylinder (right).}
+\includegraphics[height=2.6cm]{images/cylinderHighWireframe}
+\includegraphics[height=2.6cm]{images/cylinderLow}
+\includegraphics[height=2.6cm]{images/resultsCylinder}
+\caption {\CD{Ca serait bien d'ajouter des (a) - (b) - (c) - (d) en dessous des figures}Illustration of our method on a simple example. The target is the high resolution cylinder mesh (left) and the start point is a very coarse mesh approximating the shape of a cylinder. (Left) One-sided Hausdorff distance colour map of the coarse mesh rendered with shells. (Right) One-sided Hausdorff distance colour map after only one iteration of our algorithm. We can notice that differences with the target mesh have been subtantially reduced.}
 \label{fig-cylinder}
-\end{figure}
-\begin{figure}
-\centering
-\includegraphics[height=4cm]{images/resultsCylinder}
-\caption {(Left) One-sided Hausdorff distance colour map of the coarse mesh rendered with shells. (Right) One-sided Hausdorff distance colour map after only one iteration of our algorithm. We can notice that differences with the target mesh have been subtantially reduced.}
-\label{fig-cylinderResults}
 \end{figure}
 
 \section{Results}
@@ -170,14 +167,14 @@ This approach has been applied to mesh more complex anatomical structures with c
 
 \begin{figure}
 \centering
-\includegraphics[height=4cm]{images/resultsLiver}
+\includegraphics[height=3cm]{images/resultsLiver}
 \caption {Left: the targeteted high resolution liver mesh (8,000 triangles). Right: the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh (1,200 shells)}. 
 \label{fig-liver}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[height=4cm]{images/resultsAnevrism}
+\includegraphics[height=3cm]{images/resultsAnevrism}
 \caption {Left: the targeteted high resolution anevrism mesh (28,368 triangles). Right: the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh (1,160 shells)}.
 \label{fig-anevrism}
 \end{figure}
