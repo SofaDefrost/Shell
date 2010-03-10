@@ -33,21 +33,29 @@
 \section{Introduction}
 
 Human body is composed of various deformable anatomical structures. Realistic modelling of organ deformations is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast update of the deformation model to obtain a real-time display of the computed deformations. To realise this kind of interactive systems, one faces the trade-off problem between accuracy of the model and the need of fast computations. 
-
 Another key challenge of real-time human soft-tissue modelling is the variousness of the mechanical behaviours. It seems unrealistic to target a unique model for all tissues even if there are obvious advantages to make maximum use of optimised generic models. Yet most of previous work focus on volume models that are able to capture the behavior of solid organs like liver \cite{} or brain tissues \cite{} \CD{TODO: biblio}. In contrast, this paper seeks to propose a solution for simulating, in real-time, deformation of thin anatomical structures, whose volume is negligible compared to their surface area. Examples of such anatomical structures include hollow structures, like the wall of blood vessels or the colon but also the envelope of solid organs, like the capsule of Glisson.
 
-In the following of this paper, we present a framework for realistic and real-time simulation of thin organs. Our method, presented in section~\ref{sec:model} is based on shell theory and computes the internal forces using Finite Element Modelling (FEM) on curved triangles. The design of the elements relies on a polynomial interpolation that is also used to capture the interactions with other models, including solid models. We also present an automatic process to obtain meshes from image based reconstruction in an attempt to optimise the computation using fewer elements (see section~\ref{sec:mesh}). The benefits of our approach (meshing of a curved surface, fast computation and possible interactions with solid models) are illustrated using various examples presented in section~\ref{sec:results}.
+Shell theory allows the modelling of  structure  deformations when the thickness is small compared to its other dimensions~\cite{Liu03}. The key idea is to model the physical shell as if it were a surface of zero thickness, but endowed with mechanical properties in the form of elastic resistance to stretching, twisting, bending and shearing forces.
+Rather than resorting to shell theory, previous work on medical simulation often relies on mass-spring models (see \ref{Hammer08} \CD{voir fichier bib isbms} for instance).
+%Rather than resorting to shell theory which involves the most complex formulations in continuum mechanics, previous works have often relied on discrete formulations. Early approaches only considered in-plane deformation, and often relied on mass-spring models. More recent works have considered adding bending through angular springs. For instance Wang et al.~\cite{Wang07} successfully used a network of linear and angular springs to describe bending and twisting of catheters and guidewires in an interventional radiology simulator. \CD{C'est pas des shells si?} 
+Yet, such models are limited in their ability to describe certain behaviour, as they do not rely on continuum mechanics: it is difficult to derive spring stiffness (in particular for angular springs) from elastic properties (Young's modulus and Poisson's ratio).
+The use of fast shell based model for computer graphics and interactive simulation was recently introduced with the work of Choi~\textit{et al.}~\cite{Choi}. The model relies on simplified energy functions and precomputed modal analysis. It allows for fast and visually realistic results.
+We propose to rely an a similar approach but with more accuracy in order to be applicable to medical simulation. Our model is not based on modal analysis but uses a corotational formulation and polynomial shape functions. In \cite{Comas2010ISBMS}, we present and apply this shell model for a flat deformable implant.
 
-\section{A physical model for thin structures}
+In this paper, we propose to apply this technique for modelling the deformations of some anatomical structures. Therefore, one of the main problem is to geometrically model the surface of the bodies using the shape functions of the shell model.
+This problem is quite similar to the reconstruction of the surface of organs with continuous surface patches that has been extensively studied \CD{L'ideal serait un survey en fait !!}~\cite{} .
+\CD{Je te laisse completer}
+
+
+Our contribution is to unify these two approaches (shell based modeling and geometric reconstruction using shape functions) in a framework  for realistic and real-time simulation of thin organ deformations. 
+In addition, we demonstrate the ability of the technique to simulate thin anatomical membrane which enfolds a solid organ without any requirement on mesh correspondence.
+Our method, presented in section~\ref{sec:model} is based on shell theory and computes the internal forces using Finite Element Modelling (FEM) on curved triangles. The design of the elements relies on a polynomial interpolation that is also used to capture the interactions with other models, including solid models. We also present an automatic process to obtain meshes from image based reconstruction in an attempt to optimise the computation using fewer elements (see section~\ref{sec:mesh}). The benefits of our approach (meshing of a curved surface, fast computation and possible interactions with solid models) are illustrated using various examples presented in section~\ref{sec:results}.
+
+\section{Co-rotational triangular shell model for thin structures}
 \label{sec:model}
-\subsection{Related work}  
+%\subsection{Related work}  
 
-Rather than resorting to shell theory which involves the most complex formulations in continuum mechanics, previous works have often relied on discrete formulations. Early approaches only considered in-plane deformation, and often relied on mass-spring models. More recent works have considered adding bending through angular springs. For instance Wang et al.~\cite{Wang07} successfully used a network of linear and angular springs to describe bending and twisting of catheters and guidewires in an interventional radiology simulator. \CD{C'est pas des shells si?} Yet, such models are limited in their ability to describe certain behaviour, as they do not rely on continuum mechanics. Another limitation of such models is the difficulty to derive spring stiffness (in particular for angular springs) from elastic properties (Young's modulus and Poisson's ratio). For these reasons, other approaches have been proposed. 
-
-Continuum mechanics provides many formulations able to accurately describe stresses occurring within thin objects. Most of them fall into one of the following two categories: plate theory or shell theory. Those theories have been a subject of interest in the mechanical community for decades. The difference between these two kinds of structures is very well explained by Liu et al.~\cite{Liu03} and can be summarized by the fact that plate bending elements can only carry transversal loads while shells can undergo more complex deformations. Considering the wide range of shapes and solicitations that can be applied to hollow organs, a thin plate model would not correctly capture their deformation and therefore a shell formulation was retained for this work.
-
-
-\subsection{Co-rotational triangular shell model}
+%\subsection{}
 
 A complete description and validation of our co-rotational triangular shell finite element model is available in one of our previous publication \cite{Comas2010ISBMS}. Therefore we will only remind briefly the key points. We improved and extended a plate model first introduced by Przemieniecki \cite{Przemieniecki68} to a co-rotational formulation. Co-rotational approaches offer a good trade-off between computational efficiency and accuracy by allowing small deformations but large displacements. Once combined with an in-plane membrane formulation we obtain an accurate, yet computationally efficient, shell finite element method featuring both membrane and bending energies. 
 
@@ -95,7 +103,7 @@ Symbolically this may be expressed as $\textbf{e} = \textbf{Dc}$ where $\textbf{
 \textbf{e} = \textbf{DC}^{-1}\textbf{u} = \textbf{bu}
 \end{equation} 
 where the strain-displacement matrix $\textbf{b} = \textbf{DC}^{-1}$. 
-The stiffness matrix $\textbf{K}_e$ for an element is then classically obtained from
+The stiffness matrix $\textbf{K}_e$ for an element is then obtained from:
 \begin{equation}
 \textbf{K}_e = \int_v \textbf{b}^{T} \boldsymbol\chi \textbf{b} dV
 \end{equation} 
