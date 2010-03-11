@@ -23,7 +23,7 @@
 
     <Node name="Shell">
         <EulerImplicitSolver />
-        <CGLinearSolver iterations="30" tolerance="1e-9" threshold="1e-9"/>
+        <CGLinearSolver iterations="100" tolerance="1e-9" threshold="1e-9"/>
         <TriangleSetTopologyContainer name="coarseTopo" filename="applications/plugins/shells/mesh/anevrism200.obj" />
         <MechanicalObject name="coarseMesh_MO" template="Rigid" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
 
@@ -38,9 +38,9 @@
 		
 		-->
 
-        <noFixedRotationConstraint FixedZRotation="true"/>
+       
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="5000000" poissonRatio="0.45" thickness="0.05" refineMesh="0"/>
-            
+   <!--         
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subCoarseTopo"/>
             <TriangleSubdivisionTopologicalMapping object1="coarseTopo" object2="subCoarseTopo" subdivisions="0"/>
@@ -52,6 +52,7 @@
             </Node>
 
         </Node>
+	-->	
         
     </Node>
 </Node>

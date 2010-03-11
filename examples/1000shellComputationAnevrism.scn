@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<Node name="root" dt="0.04" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 -10 0">
+<Node name="root" dt="0.03" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 -10 0">
 <!--    <CollisionPipeline verbose="0" />-->
 <!--    <BruteForceDetection name="N2" />-->
 <!--    <CollisionResponse response="default" />-->
@@ -23,7 +23,7 @@
 
     <Node name="Shell">
         <EulerImplicitSolver />
-        <CGLinearSolver iterations="30" tolerance="1e-9" threshold="1e-9"/>
+        <CGLinearSolver iterations="100" tolerance="1e-9" threshold="1e-9"/>
         <TriangleSetTopologyContainer name="coarseTopo" filename="applications/plugins/shells/mesh/anevrism1000.obj" />
         <MechanicalObject name="coarseMesh_MO" template="Rigid" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
 
@@ -39,7 +39,7 @@
 		-->
 
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="5000000" poissonRatio="0.45" thickness="0.05" refineMesh="0"/>
-           <!-- 
+           <!--
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subCoarseTopo"/>
             <TriangleSubdivisionTopologicalMapping object1="coarseTopo" object2="subCoarseTopo" subdivisions="0"/>
