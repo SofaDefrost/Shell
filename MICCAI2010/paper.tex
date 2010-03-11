@@ -41,9 +41,10 @@ Another key challenge of soft-tissue modelling is the variousness of the mechani
 
 Shell theory allows the modelling of structure deformations when the thickness is small compared to its other dimensions~\cite{Liu03}. The key idea is to model the physical shell as a surface but endowed with mechanical properties in the form of elastic resistance to stretching and bending forces. 
 Rather than resorting to shell theory, previous work on medical simulation often relies on linear or angular mass-spring models as in \cite{Nedel98,Hammer08}. Yet, such models are limited in their ability to describe certain behaviour, as they do not rely on continuum mechanics: it is difficult to derive spring stiffness (in particular for angular springs) from elastic properties (Young's modulus and Poisson's ratio).
-The use of fast shell based model for computer graphics and interactive simulation was recently introduced with the work of Choi et al.~\cite{Choi07}. The model relies on simplified energy functions and precomputed modal analysis. It allows for fast and visually realistic results. We propose to rely on a similar approach but with more accuracy in order to be applicable to medical simulation. Our model is not based on modal analysis but uses a co-rotational formulation and polynomial shape functions presented in~\cite{Comas2010ISBMS}. 
+The use of fast shell based model for computer graphics and interactive simulation was recently introduced with the work of Choi et al.~\cite{Choi07}. The model relies on simplified energy functions and precomputed modal analysis. It allows for fast and visually realistic results. We propose to rely on a similar approach but with more accuracy in order to be applicable to medical simulation. Our model is not based on modal analysis but uses a co-rotational formulation, triangular elements with 18 degrees of freedom, and polynomial shape functions presented in~\cite{Comas2010ISBMS}. 
 
-In this paper, we propose for the first time to apply this technique for modelling the deformations of some anatomical structures. The first step is to geometrically model the surface of the structures using curved triangular shell elements. 
+To model the deformation of complex anatomical structures using shell elements, the first step is to describe its surface with curved patches.
+%In this paper, we propose for the first time to apply this technique for modelling the deformations of some anatomical structures. The first step is to geometrically model the surface of the structures using curved triangular shell elements. 
 This process is quite similar to the reconstruction of the surface of objects in computer vision. Indeed calculating curvature maps of 3D surfaces represented as digitized data (point clouds or triangulated meshes) has been extensively studied. One of the most common approach is to use continuous surface patches~\cite{Kolb95,Douros02}. The surface is locally approximated by an analytic representation called surface patch, usually chosen to be an implicit surface.
 These works target non noise-sensitive approaches and coherent surface and curve extraction from 3D data~\cite{Tang99}.
 %In~\cite{Tang99} an elegant and non noise-sensitive approach that infers sign and direction of principal curvatures directly from the input is presented and the authors use this information for coherent surface and curve extraction from 3D data. 
@@ -52,13 +53,12 @@ we want to model the deformation of the structure.
 %In that regard the curvature of the surface has a physical meaning: it represents the rest shape of our anatomical structure, that is the configuration with zero energy. 
 %\CD{Non !!! Rien ne te dit que l'objet ne te dit que l'objet n'est pas déformé au moment où tu prend l'image !!!}
 In that regard the curvature of the surface has a physical meaning: it represents the neutral fiber surface of the shell modelling on which the plane stress hypothesis~\cite{Liu03} applies. 
-Therefore we propose to match the shape (polynomial) functions used in our shell FEM formulation to describe the surface of the shells with the surface of the anatomical structures that we wish to simulate.
 
-
-One originality of this work is that the polynomial shape functions, defined on  curved triangles, are used in three different ways to optimize the computation and reach real-time computations.
-The shell model, presented in section~\ref{sec:model}, uses them to computes the internal forces using a Finite Element Modelling (FEM).
-The interactions with other models, including deformable solid models, are captured and processed using the same polynomial interpolations.
-Moreover, in section~\ref{sec:mesh} we also present an automatic process to obtain meshes from image based reconstruction that relies on the exact same polynomial functions.
+In this paper, we propose to determine the shape (polynomial) functions used in our shell formulation to approximate the surface of anatomical structures with a surface composed of shell elements.
+These polynomial shape functions are used in three different ways in our computational model: (a) to approximate complex geometrical shapes, (b) to compute internal forces, (c) to compute contact forces  inside a curved triangle.
+Section~\ref{sec:model} presents the  Finite Element Modelling (FEM) of the shell elements
+and the process of contacts and interactions with other models.
+In section~\ref{sec:mesh} we present the automatic process to obtain meshes from image based reconstruction.
 % in an attempt to optimise the computation using fewer elements. 
 Finally the benefits of our approach (meshing of a curved surface, fast computation and possible interactions with solid models) are illustrated using various examples presented in section~\ref{sec:results}.
 
