@@ -23,8 +23,8 @@
 
     <Node name="Shell">
         <EulerImplicitSolver />
-		<SparseLDLSolver />
-        <!--<CGLinearSolver iterations="100" tolerance="1e-9" threshold="1e-9"/>-->
+		<!--<SparseLDLSolver />-->
+        <CGLinearSolver iterations="1000" tolerance="0.05" threshold="1e-20"/>
         <TriangleSetTopologyContainer name="coarseTopo" filename="applications/plugins/shells/mesh/anevrism600.obj" />
         <MechanicalObject name="coarseMesh_MO" template="Rigid" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
 
