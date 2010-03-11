@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<Node name="root" dt="0.04" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 -10 0">
+<!--    <CollisionPipeline verbose="0" />-->
+<!--    <BruteForceDetection name="N2" />-->
+<!--    <CollisionResponse response="default" />-->
+<!--    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />-->
+<!--    <CollisionGroup />-->
+
+    <Node name="CoarseMesh">
+        <MeshLoader name="coarseMesh" filename="applications/plugins/shells/mesh/anevrism1000.obj"/>
+        <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid" vertices="@coarseMesh.vertices" normals="@coarseMesh.normals" invertNormals="false"/>
+
+    </Node>
+
+	<!--
+    <Node name="TargetMesh">
+        <MeshLoader name="targetMesh" filename="applications/plugins/shells/mesh/anevrismHighRes.obj"/>
+        <TriangleSetTopologyContainer name="targetTopo"/>
+        <MechanicalObject name="targetMesh_MO" template="Vec3d"/>
+    </Node>
+	-->
+
+
+    <Node name="Shell">
+        <EulerImplicitSolver />
+        <CGLinearSolver iterations="30" tolerance="1e-9" threshold="1e-9"/>
+        <TriangleSetTopologyContainer name="coarseTopo" filename="applications/plugins/shells/mesh/anevrism1000.obj" />
+        <MechanicalObject name="coarseMesh_MO" template="Rigid" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
+
+        <UniformMass mass="0.3 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.03"  compute_mapping_inertia="0" />
+
+		<BoxConstraint box="-0.2 -1 -0.2 0.2 -0.8 0.2  0.4 0.3 -0.8 0.8 0.7 -0.7" />
+<!--
+
+        <FixedConstraint indices="63 396 62 389 392 64 387 395 45 152 43 204 61 281"/>
+        <FixedConstraint indices="54 275 96 394 93 295 16 347"/>
+        <FixedConstraint indices="85 234 78 208 79 325 19 332"/>
+		
+		-->
+
+        <noFixedRotationConstraint FixedZRotation="true"/>
+        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="5000000" poissonRatio="0.45" thickness="0.05" refineMesh="0"/>
+            
+        <Node name="SubTriangles">
+            <TriangleSetTopologyContainer  name="subCoarseTopo"/>
+            <TriangleSubdivisionTopologicalMapping object1="coarseTopo" object2="subCoarseTopo" subdivisions="0"/>
+            <MechanicalObject  name="subCoarse_MO" />
+			<BendingPlateMechanicalMapping printLog="1" object1="coarseMesh_MO" object2="subCoarse_MO" name="MappingShells" isMechanical="false"/>
+            <Node>
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping object1="subCoarse_MO" object2="Visual"/>
+            </Node>
+
+        </Node>
+        
+    </Node>
+</Node>

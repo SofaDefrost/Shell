@@ -1,0 +1,218 @@
+<?xml version="1.0" ?>
+<Node name="root" dt="0.02" showBehaviorModels="0" showCollisionModels="1" showMappings="0" showMechanicalMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="0" gravity="0 0 -10">
+    <MasterConstraintSolver />
+	<CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <EdgeSetController name="test" deplOutput="0.52" maxDepl="2.2" speed="0.0" step="0.05" listening="true" handleEventTriggersUpdate="true"/>
+	<NewProximityIntersection name="Proximity" alarmDistance="@test.deplOutput" contactDistance="0.0" useLineLine="0" />
+	
+	<CollisionResponse response="FrictionContact" />
+
+
+	
+	<Node name="Low_res_cylinder">
+        <include href="vesselScale.xml" filename="vesselScale.xml"  />
+        <Vertex2Frame name="LowResVertex2Frame" template="Rigid" vertices="@triMesh.position" invertNormals="false"/>
+    </Node>
+	
+
+	<Node name="vessel" >
+		<EulerImplicitSolver rayleighMass="0.005" rayleighStiffness="0.005"/>
+		<!--<CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+		<SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+		<include href="vesselScale.xml" filename="vesselScale.xml"  />
+		<MechanicalObject name="shells" scale="1" template="Rigid" rest_position="@../Low_res_cylinder/LowResVertex2Frame.frames" position="@../Low_res_cylinder/LowResVertex2Frame.frames" />
+		<UniformMass  totalMass="0.1"  showAxisSizeFactor="1"  />  <!--mass="0.00005 0.00001 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]"-->
+		<!--<noFixedRotationConstraint FixedZRotation="true"/>-->
+        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="80.0" poissonRatio="0.3" thickness="1"/>
+		
+		
+		
+		
+		<BoxConstraint box="-10.2 -5 -5 -9.8 5 5  9.8 -5 -5 10.2 5 5" />
+		<LinearSolverConstraintCorrection  printLog="0" />
+		
+		<!--
+		<Node name="ColisTri">
+			<MechanicalObject name="TriColis" />
+			<Triangle/>
+			<IdentityMapping />
+		</Node>	
+		-->
+		
+		<Node name="SubTriangles">
+            <TriangleSetTopologyContainer name="subTrianglesTopo"/>
+            <TriangleSubdivisionTopologicalMapping object1="triMesh" object2="subTrianglesTopo" subdivisions="1"/>
+            <MechanicalObject name="subPoints" />
+            <BendingPlateMechanicalMapping printLog="1" object1="shells" object2="subPoints" name="MappingShells" isMechanical="true"/>
+			
+			<VTKExporter filename="VTK/vessel" exportEveryNumberOfSteps="0" listening="true" edges="0" triangles="1" quads="0" tetras="0" />
+
+            <Node name="visual">
+                <OglModel name="VisualVesselSurf" color="1.0 0.0 0.0 1.0"/>
+                <IdentityMapping object1="subPoints" object2="VisualVesselSurf"/>
+            </Node>
+			
+        </Node>
+		
+		<!--
+		<Node name="constraint" >
+			<MechanicalObject name="const2" position="@../../cholesterol/constraint/const1.position" />
+			<BendingPlateMechanicalMapping printLog="1" object1="shells" object2="const2" name="MappingConstraint" isMechanical="true" noTargetTriangles="true"/>
+		</Node>
+		-->
+		
+		<Node name="constraint" >
+			<MechanicalObject name="const2"  />
+			<IdentityMapping/>
+		</Node>
+		
+		
+	</Node>
+	
+	<Node name="cholesterol" >
+		<EulerImplicitSolver />
+		<CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
+		<include href="stenosis2.xml" filename="stenosis2.xml"  />
+		<MechanicalObject name="tetras" debugViewIndices="false" debugViewIndicesScale="0.07" scale="1000"/>
+		<UniformMass totalMass="0.001"/>
+		<Object type="TetrahedronFEMForceField" name="FEM" youngModulus="60" poissonRatio="0.3" method="large" />
+		
+		<CylinderROI name="cylinder" directions="1 0 0"  positions="-1 0 0" rMax="3.1" rMin="2.9"/>
+		<!--<noObject type="FixedConstraint" name="FixedConstraint" indices="@cylinder.indices" />-->
+		<BoxConstraint box="-10.2 -5 -5 -9.8 5 5  9.8 -5 -5 10.2 5 5" />
+		
+		<PrecomputedConstraintCorrection rotations="1" recompute="0" debugViewFrameScale="0.1"/>
+		
+		<VTKExporter filename="VTK/cholesterol" exportEveryNumberOfSteps="0" listening="true" edges="0" triangles="1" quads="0" tetras="1" />
+		<Point />
+	
+		<!--
+		
+		<Node name="constraint" >
+			<MechanicalObject name="const1" />
+			<SubsetMapping object1="tetras" object2="const1" indices="@../cylinder.indices"/>
+		</Node>
+		-->
+		
+				
+		<Node name="constraint" >
+			<MechanicalObject name="const1" position="@../../vessel/constraint/const2.position" />
+			<BarycentricMapping object1="tetras" object2="const1"/>
+		</Node>
+		
+		<!--
+		
+		<Node name="Collision">
+			<include href="stenosisSurface.xml" filename="stenosisSurface.xml" />
+			<MechanicalObject name="triangles" scale="970"/>
+			<Point />
+			
+
+			<BarycentricMapping object1="tetras" object2="triangles"/>
+			<Node name="visual" activated="false">
+                <OglModel name="Visual" color="0 0 1 0.2"/>
+                <IdentityMapping object1="triangles" object2="Visual"/>
+            </Node>		
+			
+		</Node>
+		-->
+		
+		
+	</Node>
+	
+	
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="9" second_point="9" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="12" second_point="12" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="17" second_point="17" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="18" second_point="18" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="21" second_point="21" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="27" second_point="27" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="28" second_point="28" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="29" second_point="29" />
+
+	
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="30" second_point="30" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="31" second_point="31" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="32" second_point="32" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="33" second_point="33" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="34" second_point="34" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="35" second_point="35" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="36" second_point="36" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="37" second_point="37" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="38" second_point="38" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="39" second_point="39" />
+	
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="40" second_point="40" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="41" second_point="41" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="42" second_point="42" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="43" second_point="43" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="44" second_point="44" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="45" second_point="45" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="46" second_point="46" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="47" second_point="47" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="48" second_point="48" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="49" second_point="49" />
+	
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="50" second_point="50" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="51" second_point="51" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="52" second_point="52" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="53" second_point="53" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="54" second_point="54" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="55" second_point="55" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="56" second_point="56" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="57" second_point="57" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="58" second_point="58" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="59" second_point="59" />
+	
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="60" second_point="60" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="61" second_point="61" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="62" second_point="62" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="63" second_point="63" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="64" second_point="64" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="65" second_point="65" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="66" second_point="66" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="67" second_point="67" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="68" second_point="68" />
+	<Object type="BilateralInteractionConstraint" object1="cholesterol/constraint/const1" object2="vessel/constraint/const2" first_point="69" second_point="69" />
+	
+	
+	
+	
+	<Node name="balloon" >
+		<MechanicalObject name="balLine" template="Rigid" position="-8 0 0 0 0 0 1  8 0 0 0 0 0 1" />
+		<Mesh name="lines" lines="0 1" position="@balLine.position" />
+		
+		<EdgeSetController name="control" deplOutput="0.5" maxDepl="2.2" speed="0.0" step="0.05" listening="true" handleEventTriggersUpdate="true"/>
+		
+		<Node name="Collision">
+			<MechanicalObject name="SegCollis"  position="-5 0 0   5 0 0 " />
+			<Line proximity="@../control.deplOutput"/>		
+			<IdentityMapping/>
+		</Node>
+	
+		<Node name="VisuBalloon">
+			<Object type="MechanicalObject" name="Quads" />
+			<include href="Objects/QuadSetTopology.xml"/>
+			<Edge2QuadTopologicalMapping nbPointsOnEachCircle="40" radius="@../control.deplOutput" object1="lines" object2="Container"  flipNormals="true" printLog="1"/>
+			<TubularMapping nbPointsOnEachCircle="40" radius="@../control.deplOutput" object1="balLine" object2="Quads"  />
+			
+			<VTKExporter filename="VTK/balloon" exportEveryNumberOfSteps="0" listening="true" edges="0" triangles="0" quads="1" tetras="0" />
+			<Node name="VisuOgl">
+				<Object type="OglModel" name="Visual" color="0.7 0.7 0.7"  material="texture Ambient 1 0.2 0.2 0.2 0.0 Diffuse 1 1.0 1.0 1.0 1.0 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 20"/>
+				<Object type="IdentityMapping" object1="Quads" object2="Visual"/>
+			</Node>
+		</Node>
+	
+
+	</Node>	
+	
+	
+	
+	
+	
+	
+	
+	
+		
+</Node>
