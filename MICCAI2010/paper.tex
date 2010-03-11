@@ -138,7 +138,8 @@ Once a collision has been detected, it must be processed by distributing the lin
 
 The main difficulty is to convert the normal component of the force applied to the bent surface into a torque at each of the three nodes (Fig.~\ref{fig-shell} (c)). Our approach is the following: during force computation, we use the angle measured at each node to compute the local deflection of each subvertex within the triangle. Differentiating the formulation twice yields a relation between the torque applied at each node and the generated force in bending. We therefore need to invert the latter formulation to convert a bending force into torques at each vertex. We start by retrieving the normal component of the applied force vector $F_{\mathrm{z}}$. We project the application point of the force into the triangle's plane and compute its local coordinates $(x,y)$. We create the polynom $P = F_{\mathrm{z}}(1 \hspace{0.2cm} x \hspace{0.2cm} y \hspace{0.2cm} x^2 \hspace{0.2cm} xy \hspace{0.2cm} y^2 \hspace{0.2cm} x^3 \hspace{0.2cm} xy^2 \hspace{0.2cm} y^3)^T$. The moments at each vertex are then obtained with $\Omega = (\textbf{C}^{-1})^T P$.  Thus we are able to transmit any force coming from elaborate interactions with the curved surface of shells to the mechanical vertices used in our FEM formulation. 
 
-\section{A mechanically-driven method to mesh curved surfaces with shells}
+\section{Physics-based reconstruction using shell elements}
+%A mechanically-driven method to mesh curved surfaces with shells}
 \label{sec:mesh}
 %\paragraph{Related work}
 
@@ -153,69 +154,82 @@ d_{\mathrm{H}}(X,Y) = \max \left\{ \sup_{x \in X} \inf_{y \in Y} d(x,y), \sup_{y
 \end{equation}
 where $d()$ is the Euclidian distance between two points. The same technique of subdivision used for rendering allows us to sample the actual surface described by the shells to compute the Hausdorff distance with the targeted high resolution mesh. 
 
-The first step in the process of generating a shell-based mesh is an aggressive simplification of the targeted high resolution mesh by using the quadric edge collapse decimation technique implemented in Meshlab \cite{Meshlab}. The algorithm tries as much as possible to preserve mesh boundaries and generate high quality triangular elements. We then apply a heuristic method derived from the work of Saupin et. al \cite{Saupin07} with tetrahedral meshes based on very simple geometrical rules. For each node of the coarse mesh, we find the three closest triangles on the high resolution mesh and we move the node to the barycenter of the three centres of mass of those triangles. This technique locally smooths the surface of the mesh while converging towards the desired high resolution mesh. At each iteration of this algorithm we measure the error between the curved surface of shells and the target using the Hausdorff distance and the process is stopped when the required precision has been reached. A simple example is shown Fig.~\ref{fig-cylinder} to illustrate the method. 
+The first step in the process of generating a shell-based mesh is a important decimation of the high resolution mesh, using quadric edge collapse technique implemented in  Meshlab \cite{Meshlab}.
+%aggressive simplification of the targeted high resolution mesh by using the quadric edge collapse decimation technique implemented in Meshlab \cite{Meshlab}. 
+The algorithm tries as much as possible to preserve mesh boundaries and generate high quality triangular elements. We then apply a heuristic method derived from the work of Saupin et. al \cite{Saupin07} with tetrahedral meshes based on very simple geometrical rules. For each node of the coarse mesh, we find the three closest triangles on the high resolution mesh and we move the node to the barycenter of the three centres of mass of those triangles. This technique locally smoothes the surface of the mesh while converging towards the desired high resolution mesh. At each iteration of this algorithm we measure the error between the curved surface of shells and the target using the Hausdorff distance and the process is stopped when the required precision has been reached. A simple example is shown Fig.~\ref{fig-cylinder} to illustrate the method. 
 %We can notice that differences with the target mesh have been subtantially reduced.
 % Christian: je ne comprend pas cette phrase.. du coup, je l'enlève !
-
-\begin{figure}
+%
+\begin{figure}[htb]
 \centering
 \includegraphics[height=2.5cm]{images/exampleCylinder}
 \caption {Illustration of our method on a simple example. The target is a high resolution cylinder mesh of 16,384 triangles (a) and we start from a very coarse mesh (12 triangles) approximating the shape of a cylinder, rendered with flat triangles here (b). In (c) the same coarse mesh is rendered with shells and a one-sided Hausdorff distance colour map is applied to show the initial error with the high resolution mesh. (d) One-sided Hausdorff distance colour map after only one iteration of our algorithm (48 shells).}
 \label{fig-cylinder}
 \end{figure}
+%
 
+\vspace{-0.7cm}
 \section{Results}
+\vspace{-0.2cm}
 \label{sec:results}
 \paragraph{Meshing of anatomical structures}
-
-This approach has been applied to mesh more complex anatomical structures with curved shell elements. In each case the error is expressed as a percentage of the diagonal of the object's bounding box. 
-
-\begin{figure}
+This approach has been applied to approximate more complex anatomical geometries with curved shell elements.
+In each case the error is expressed as a percentage of the diagonal of the object's bounding box. 
+\begin{figure}[h]
+\vspace{-0.8cm}
 \centering
 \includegraphics[height=3cm]{images/resultsLiver}
+\vspace{-0.2cm}
 \caption {Left: the targeteted high resolution Glisson's capsule mesh (8,000 triangles). Right: the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh (1,200 shells)}. 
 \label{fig-liver}
 \end{figure}
-
-\begin{figure}
+%
+\begin{figure}[h]
+\vspace{-1.5cm}
 \centering
 \includegraphics[height=3cm]{images/resultsAneurysm}
+\vspace{-0.2cm}
 \caption {(a) the targeteted high resolution aneurysm mesh (28,368 triangles). (b): the one-sided Hausdorff distance error map on a mesh of 1,160 shells generated with our method \CD{Montre plutot celui qui part de 200 et fait environ 800 triangles a la fin !!!}}.
 \label{fig-aneurysm}
+\vspace{-1.4cm}
 \end{figure}
-
-
+%
+%
 \paragraph{Computation times}
-
 We perform several tests on the aneurysm model at different resolution. 
 The shells are resisting to a uniform pressure load and are solved using an Conjugate Gradient (CG) iterative solver.
 The computation times are reported in the Fig.\ref{fig-computation}. 
 Implicit integration allows for large time steps (40ms) and the computation is real-time for 800 shell elements and a reasonable error criterion ($5\%$).
-When the computation time must be bounded (critical real-time applications), one can fix the number of CG iterations to, for instance, $100$ and remain real-time for 1000 shell elements. However, in that case, the accuracy of the results are not checked.
-
+When the computation time must be bounded (critical real-time applications), one can fix the number of CG iterations to, for instance, $100$ and remain real-time for 1000 shell elements. However, in that case, the accuracy of the results is not checked.
+%
 \begin{figure}
+\vspace{-0.5cm}
 \centering
 \includegraphics[height=3cm]{images/computation_time.png}
+\vspace{-0.5cm}
 \caption {Computation time on meshes of the Aneurysm model with 200, 400, 600, 800 and 1000 elements.}.
+\vspace{-1.5cm}
 \label{fig-computation}
 \end{figure}
-
+%
+%
 \paragraph{Coupling between tetrahedra and shells for advanced modelling}
-
+%
 Structures in human body can be either solid (brain, liver, prostrate etc.) or hollow (blood vessels, colon, stomach etc.). However knowing how to model the two kind of structures is not sufficient to reach a high degree of accuracy in medical simulation. Indeed real life situations are more complex. As an example, the external surface of the liver is covered by a single layer of cells called Glisson's capsule. Its interaction with the liver plays an important role into the overall structure's mechanical behaviour. Therefore considering the interaction between solid and hollow objects is as crucial as modelling the two structures separately. 
 
 An example of medical procedure to illustrate this point even further is angioplasty. Angioplasty is the technique of mechanically widening a narrowed or obstructed blood vessel, typically as a result of atherosclerosis. An empty and collapsed balloon on a guide wire, known as a balloon catheter, is passed into the narrowed locations and then inflated to a fixed size using water pressures. The balloon crushes the fatty deposits, so opening up the blood vessel to improved flow. As a proof of concept we tried to simulate an angioplasty (Fig.~\ref{fig-stent}). The blood vessel is modelled using the shell FEM formulation described in this paper and the fatty deposits are simulated with a tetrahedral FEM method and are fixed to the interior wall of the blood vessel. When the balloon inflates it crushes the deposits and the deposits then apply a pressure onto the curved surfaces of shells modelling the interior wall. The forces are then distributed onto the mechanical nodes of the blood vessel mesh as detailled in section \ref{sec:interactions}, which widens the blood vessel as expected. 
-
+%
 \begin{figure}
 \centering
 \includegraphics[height=3.8cm]{images/stenose_final.png}
-\caption {Simulation of an angioplasty procedure. (a) The collapsed balloon was inserted into the blood vessel simulated with our shell FEM formulation. The fatty deposits (in yellow) are modelled with a tetrahedral FEM. (b) Upon inflation the balloon is crushing the fatty deposits, which is applying a pressure onto the interior wall and widening the blood vessel.}
+\caption {Simulation of an angioplasty procedure. (a, c): A collapsed stent is inserted into the blood vessel simulated with our shell FEM formulation. The fatty deposits (in yellow) are modelled with tetrahedral FEM.  (b, d): The stent is crushing the fatty deposits which create a pressure onto the interior wall and widen the blood vessel.}
 \label{fig-stent}
 \end{figure}
-
-
+%
 \section{Conclusion}
-We proposed a complete framework for real-time modelling of thin anatomical structures. The novelty of our method relies on the combination of a shell finite element formulation and a geometric surface reconstruction both based on the same polynomial interpolation function used to describe the surface of shells. We also showed how contacts and interactions with the curved surfaces of shells could be handled using the same function. The efficiency of the whole approach was demonstrated through shell reconstruction and real-time modelling of a blood vessel showing signs of an aneurysm. Finally these results are very encouraging towards fine modelling of more complex situations like interactions existing between the liver and the Glisson's capsule or the simulation of an angioplasty procedure. 
+In this paper, we propose a framework for real-time modelling of thin anatomical structures. The novelty of our method relies on the combination of a shell finite element formulation and a geometric surface reconstruction both based on the same polynomial interpolation function used to describe the surface of shells. We also show how contacts and interactions with the curved surfaces of shells can be handled using the same function. The efficiency of the proposed method is illustrated through shell-based reconstruction and real-time simulation of the deformations of various anatomical structures. We also present preliminary results on an application of our work through the simulation of an angioplasty procedure. 
+%
+
 
 %\section*{Acknowledgments}
 
