@@ -24,7 +24,7 @@
 \begin{document}
 
 
-\title{Shell Model for Reconstruction and Simulation of Thin Anatomical Structures}
+\title{Shell Model for Reconstruction and Real-Time Simulation of Thin Anatomical Structures}
 %\author{Olivier Comas, St\'ephane Cotin and Christian Duriez}
 %\institute{INRIA, Alcove team, Lille, France}
 
@@ -39,13 +39,13 @@ This paper presents a new modelling technique for the deformation of thin anatom
 Human body is composed of various deformable anatomical structures. Realistic modelling of organ deformations is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast update of the deformation model to obtain a real-time display of the computed deformations. To realise this kind of interactive systems, one faces the trade-off problem between accuracy of the model and the need of fast computations. 
 Another key challenge of soft-tissue modelling is the variousness of the mechanical behaviours. It seems unrealistic to target a unique model for all tissues even if there are obvious advantages to make maximum use of optimised generic models. Yet most of previous work focus on volumetric models that are able to capture the behaviour of solid organs like liver \cite{} or brain tissues \cite{} \CD{TODO: biblio}. In contrast, this paper seeks to propose a solution for simulating, close to real-time, deformation of thin anatomical structures whose volume is negligible compared to their surface area. Examples of such anatomical structures include hollow structures, like the wall of blood vessels or the colon but also the envelope of solid organs, like the capsule of Glisson.
 
-Shell theory allows the modelling of structure deformations when the thickness is small compared to its other dimensions~\cite{Liu03}. The key idea is to model the physical shell as if it were a surface of zero thickness, but endowed with mechanical properties in the form of elastic resistance to stretching and bending forces. \OC{Pas de shearing il me semble. Et il y a bien une thickness dans la formulation, ta phrase laisse sous-entendre qu'on la prend pas en compte.}
+Shell theory allows the modelling of structure deformations when the thickness is small compared to its other dimensions~\cite{Liu03}. The key idea is to model the physical shell as if it were a surface of zero thickness, but endowed with mechanical properties in the form of elastic resistance to stretching and bending forces. \OC{TODO: reformuler cette phrase pour enlever zero thickness}
 Rather than resorting to shell theory, previous work on medical simulation often relies on linear or angular mass-spring models as in \cite{Nedel98,Hammer08}. Yet, such models are limited in their ability to describe certain behaviour, as they do not rely on continuum mechanics: it is difficult to derive spring stiffness (in particular for angular springs) from elastic properties (Young's modulus and Poisson's ratio).
-The use of fast shell based model for computer graphics and interactive simulation was recently introduced with the work of Choi et al.~\cite{Choi07}. The model relies on simplified energy functions and precomputed modal analysis. It allows fast and visually realistic results. We propose to rely an a similar approach but with more accuracy in order to be applicable to medical simulation. Our model is not based on modal analysis but uses a co-rotational formulation and polynomial shape functions. In~\cite{Comas2010ISBMS}, we present and apply this shell model to a flat deformable implant. \OC{ptet un peu trop specifique pour preserver l'anonymat non ?}
+The use of fast shell based model for computer graphics and interactive simulation was recently introduced with the work of Choi et al.~\cite{Choi07}. The model relies on simplified energy functions and precomputed modal analysis. It allows fast and visually realistic results. We propose to rely an a similar approach but with more accuracy in order to be applicable to medical simulation. Our model is not based on modal analysis but uses a co-rotational formulation and polynomial shape functions presented in~\cite{Comas2010ISBMS}.
 
 In this paper, we propose to apply this technique for modelling the deformations of some anatomical structures. To be able to do this, one of the main problem is to geometrically model the surface of the structures using curved triangular shell elements. This problem is quite similar to the reconstruction of the surface of objects in computer vision. Indeed calculating curvature maps of 3D surfaces represented as digitised data (point clouds or triangulated meshes) has been extensively studied in this field. One of the most common approach is to use continuous surface patches~\cite{Kolb95,Douros02}. The surface is locally approximated by an analytic representation called surface patch, usually chosen to be an implicit surface. In~\cite{Tang99} an elegant and non noise-sensitive approach that infers sign and direction of principal curvatures directly from the input is presented and the authors use this information for coherent surface and curve extraction from 3D data. However, our situation is substantially different as extracting the surface is not our ultimate goal. We want to model the deformation of the structure and in that regard the curvature of the surface has a physical meaning: it represents the rest shape of our anatomical structure, that is the configuration with zero energy. Therefore we need to match the shape (polynomial) functions used in our shell FEM formulation to describe the surface of the shells with the surface of the anatomical structures that we wish to simulate.
 
-Our contribution is to unify these two approaches (shell based modelling and geometric surface reconstruction) separately used in mechanical engineering and computer vision in a framework for realistic simulation of thin organ deformations. In addition, we demonstrate the ability of the technique to simulate thin anatomical membrane which enfolds a solid organ without any requirement on mesh correspondence. \OC{j'enleverais bien cette derniere phrase moi, on en fait pas la demonstration au final, on evoque juste que ca serait possible} Our method, presented in section~\ref{sec:model}, is based on shell theory and computes the internal forces using Finite Element Modelling (FEM) on curved triangles. The design of the elements relies on a polynomial interpolation function that is also used to capture and process the interactions with other models, including solid models. In section~\ref{sec:mesh} we also present an automatic process to obtain meshes from image based reconstruction that relies on the exact same polynomial function.
+Our contribution is to unify these two approaches (shell based modelling and geometric surface reconstruction) separately used in mechanical engineering and computer vision in a framework for realistic simulation of thin organ deformations. Our method, presented in section~\ref{sec:model}, is based on shell theory and computes the internal forces using Finite Element Modelling (FEM) on curved triangles. The design of the elements relies on a polynomial interpolation function that is also used to capture and process the interactions with other models, including solid models. In section~\ref{sec:mesh} we also present an automatic process to obtain meshes from image based reconstruction that relies on the exact same polynomial function.
 % in an attempt to optimise the computation using fewer elements. 
 Finally the benefits of our approach (meshing of a curved surface, fast computation and possible interactions with solid models) are illustrated using various examples presented in section~\ref{sec:results}.
 
@@ -152,21 +152,20 @@ This approach has been applied to mesh more complex anatomical structures with c
 \begin{figure}
 \centering
 \includegraphics[height=3cm]{images/resultsLiver}
-\caption {Left: the targeteted high resolution liver mesh (8,000 triangles). Right: the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh (1,200 shells)}. 
+\caption {Left: the targeteted high resolution Glisson's capsule mesh (8,000 triangles). Right: the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh (1,200 shells)}. 
 \label{fig-liver}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[height=3cm]{images/resultsAnevrism}
-\caption {Left: the targeteted high resolution anevrism mesh (28,368 triangles). Right: the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh (1,160 shells)}.
-\label{fig-anevrism}
+\includegraphics[height=3cm]{images/resultsAneurysm}
+\caption {(a) the targeteted high resolution aneurysm mesh (28,368 triangles). (b): the one-sided Hausdorff distance error map on a mesh of 1,160 shells generated with our method}.
+\label{fig-aneurysm}
 \end{figure}
 
 
 \subsection{Computation times}
 
-Anevrism: 7.5 FPS with a timestep of 0.02s so we would need to be about 7 times faster to be real-time (easily doable on GPU)
 
 \subsection{Coupling between tetrahedra and shells for advanced modelling}
 
@@ -183,7 +182,9 @@ An example of medical procedure to illustrate this point even further is angiopl
 
 
 \section{Conclusion}
-\section*{Acknowledgments}
+We proposed a complete framework for real-time modelling of thin anatomical structures. The novelty of our method relies on the combination of a shell finite element formulation and a geometric surface reconstruction both based on the same polynomial interpolation function used to describe the surface of shells. We also showed how contacts and interactions with the curved surfaces of shells could be handled using the same function. The efficiency of the whole approach was demonstrated through shell reconstruction and real-time modelling of a blood vessel showing signs of an aneurysm. Finally these results are very encouraging towards fine modelling of more complex situations like interactions existing between the liver and the Glisson's capsule or the simulation of an angioplasty procedure. 
+
+%\section*{Acknowledgments}
 
 \bibliographystyle{splncs}
 \bibliography{bibliography}
