@@ -12,13 +12,13 @@
 
     </Node>
 
-	<!--
+	
     <Node name="TargetMesh">
         <MeshLoader name="targetMesh" filename="applications/plugins/shells/mesh/anevrismHighRes.obj"/>
         <TriangleSetTopologyContainer name="targetTopo"/>
         <MechanicalObject name="targetMesh_MO" template="Vec3d"/>
     </Node>
-	-->
+
 
 
     <Node name="Shell">
