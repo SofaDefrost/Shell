@@ -64,7 +64,7 @@ public:
 
 
 template<class DataTypes>
-class TriangularBendingFEMForceField : public core::componentmodel::behavior::ForceField<DataTypes>, public virtual core::objectmodel::BaseObject
+class TriangularBendingFEMForceField : public core::componentmodel::behavior::ForceField<DataTypes>
 {
 public:
         SOFA_CLASS(SOFA_TEMPLATE(TriangularBendingFEMForceField,DataTypes), SOFA_TEMPLATE(core::componentmodel::behavior::ForceField,DataTypes));
@@ -162,8 +162,9 @@ public:
 	virtual void reinit();
 	virtual void addForce (VecDeriv& f, const VecCoord& x, const VecDeriv& v);
 	virtual void addDForce (VecDeriv& df, const VecDeriv& dx);
-        virtual void addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset);
-	virtual double getPotentialEnergy(const VecCoord& x);
+    virtual void addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset);
+
+	virtual double getPotentialEnergy(const VecCoord& x) const;
 	virtual void handleTopologyChange();
 
         sofa::core::componentmodel::topology::BaseMeshTopology* getTopology() {return _topology;}

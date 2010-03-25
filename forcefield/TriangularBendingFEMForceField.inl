@@ -170,7 +170,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 {
     this->Inherited::init();
 
-    _topology = getContext()->getMeshTopology();
+    _topology = this->getContext()->getMeshTopology();
 
     if (_topology->getNbTriangles()==0)
     {
@@ -216,7 +216,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 //    trianglesTarget = targetTriangles.getValue();
 
     _topologyHigh = NULL;
-    getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
+    this->getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
     if (_topologyHigh != NULL)
     {
         trianglesTarget = _topologyHigh->getTriangles();
@@ -858,7 +858,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-    double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/)
+    double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
 {
     serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
     return 0;
