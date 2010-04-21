@@ -6,15 +6,14 @@
     <CollisionGroup />
 
     <Node name="CoarseMesh">
-        <MeshLoader name="coarseMesh" filename="applications/plugins/shells/mesh/anevrismLowRes300WithHoles_iteration1.obj"/>
-<!--        <TriangleSetTopologyContainer name="coarseTopo"/>-->
-        <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid" vertices="@coarseMesh.vertices" normals="@coarseMesh.normals" invertNormals="false"/>
-
+        <MeshObjLoader name="coarseMeshLoader" filename="../mesh/anevrismLowRes200WithHoles.obj"/>
+        <TriangleSetTopologyContainer name="coarseTopo" src="@coarseMeshLoader"/>
+        <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid" vertices="@coarseMeshLoader.position" normals="@coarseMeshLoader.normals" invertNormals="false"/>
     </Node>
 
     <Node name="TargetMesh">
-        <MeshLoader name="targetMesh" filename="applications/plugins/shells/mesh/anevrismHighRes.obj"/>
-        <TriangleSetTopologyContainer name="targetTopo"/>
+        <MeshObjLoader name="targetMesh" filename="../mesh/anevrismHighRes.obj"/>
+        <TriangleSetTopologyContainer name="targetTopo" src="@targetMesh" />
         <MechanicalObject name="targetMesh_MO" template="Vec3d"/>
         <OglModel name="Visual" color="green"/>
     </Node>
@@ -23,25 +22,22 @@
     <Node name="Shell">
         <EulerImplicitSolver />
         <CGLinearSolver iterations="50" tolerance="1e-15" threshold="1e-15"/>
-        <TriangleSetTopologyContainer name="coarseTopo" filename="applications/plugins/shells/mesh/anevrismLowRes300WithHoles_iteration1.obj" />
+        <MeshObjLoader name="coarseTopoLoader"  filename="../mesh/anevrismLowRes200WithHoles.obj"  /> 
+        <TriangleSetTopologyContainer name="coarseTopo" src="@coarseTopoLoader" />
         <MechanicalObject name="coarseMesh_MO" template="Rigid" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
 
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.00001" totalmass="1" />
 
-<!--        <FixedConstraint indices="49 573 138 585 142 591 23 576 44 239 130 306 80 410 144 593"/>-->
-<!--        <FixedConstraint indices="21 383 17 389 141 592 40 590"/>-->
-<!--        <FixedConstraint indices="11 6 568 227 11 589 308"/>-->
-
         <FixedRotationConstraint FixedZRotation="true"/>
-        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1" refineMesh="0" targetVertices="@/TargetMesh/targetTopo.position" targetTriangles="@/TargetMesh/targetTopo.triangles"/>
+        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1" refineMesh="0" targetVertices="@../TargetMesh/targetTopo.position" targetTriangles="@../TargetMesh/targetTopo.triangles"/>
             
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subCoarseTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="coarseTopo" object2="subCoarseTopo" subdivisions="0"/>
+            <TriangleSubdivisionTopologicalMapping object1="coarseTopo" object2="subCoarseTopo" subdivisions="2"/>
             <MechanicalObject  name="subCoarse_MO" />
-            <BendingPlateMechanicalMapping measureError="0" targetVertices="@/TargetMesh/targetTopo.position" targetTriangles="@/TargetMesh/targetTopo.triangles"/>
+            <BendingPlateMechanicalMapping measureError="0"/>
             <Triangle contactStiffness="0.001"/>
         </Node>
-        
     </Node>
+
 </Node>
