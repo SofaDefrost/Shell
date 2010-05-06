@@ -25,8 +25,8 @@
 #ifndef SOFA_COMPONENT_MAPPING_BENDINGPLATEMAPPING_INL
 #define SOFA_COMPONENT_MAPPING_BENDINGPLATEMAPPING_INL
 
-#include <sofa/core/componentmodel/behavior/MechanicalMapping.h>
-#include <sofa/core/componentmodel/behavior/MechanicalState.h>
+#include <sofa/core/behavior/MechanicalMapping.h>
+#include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/helper/vector.h>
 #include <sofa/helper/gl/GLSLShader.h>
 //#include <sofa/core/VisualModel.h>
@@ -52,7 +52,7 @@ using namespace sofa::defaulttype;
 using namespace sofa::component::forcefield;
 using namespace sofa::component::topology;
 using namespace sofa::helper::system::thread;
-using namespace core::componentmodel::topology;
+using namespace core::topology;
 
 template <class BasicMapping>
 class BendingPlateMechanicalMapping : public BasicMapping, public virtual core::objectmodel::BaseObject

@@ -24,7 +24,7 @@
 ******************************************************************************/
 #define SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_CPP
 #include "TriangularBendingFEMForceField.inl"
-#include <sofa/core/componentmodel/behavior/ForceField.inl>
+#include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/component/container/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
@@ -52,7 +52,6 @@ int TriangularBendingFEMForceFieldClass = core::RegisterObject("Triangular finit
 .add< TriangularBendingFEMForceField<Rigid3dTypes> >()
 #endif
 #ifndef SOFA_DOUBLE
-        // WARNING: THE TEMPLATE BELOW HAS BEEN CHANGED ONLY BECAUSE MACROS SOFA_FLOAT AND SOFA_DOUBLE DO NOT WORK
 //.add< TriangularBendingFEMForceField<Rigid3fTypes> >()
 #endif
 ;
@@ -61,7 +60,6 @@ int TriangularBendingFEMForceFieldClass = core::RegisterObject("Triangular finit
 template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<Rigid3dTypes>;
 #endif
 #ifndef SOFA_DOUBLE
-    // WARNING: THE TEMPLATE BELOW HAS BEEN CHANGED ONLY BECAUSE MACROS SOFA_FLOAT AND SOFA_DOUBLE DO NOT WORK
 //template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<Rigid3fTypes>;
 #endif
 

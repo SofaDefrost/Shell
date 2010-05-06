@@ -29,8 +29,8 @@
 #pragma once
 #endif
 
-#include <sofa/core/componentmodel/behavior/ForceField.h>
-#include <sofa/core/componentmodel/topology/BaseMeshTopology.h>
+#include <sofa/core/behavior/ForceField.h>
+#include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Mat.h>
 #include <sofa/component/topology/TriangleData.h>
@@ -53,7 +53,7 @@ namespace forcefield
 using namespace sofa::defaulttype;
 using sofa::helper::vector;
 using namespace sofa::component::topology;
-using namespace sofa::core::componentmodel::behavior;
+using namespace sofa::core::behavior;
 
 /// This class can be overridden if needed for additionnal storage within template specializations.
 template<class DataTypes>
@@ -64,12 +64,12 @@ public:
 
 
 template<class DataTypes>
-class TriangularBendingFEMForceField : public core::componentmodel::behavior::ForceField<DataTypes>
+class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTypes>, public virtual core::objectmodel::BaseObject
 {
 public:
-        SOFA_CLASS(SOFA_TEMPLATE(TriangularBendingFEMForceField,DataTypes), SOFA_TEMPLATE(core::componentmodel::behavior::ForceField,DataTypes));
+        SOFA_CLASS(SOFA_TEMPLATE(TriangularBendingFEMForceField,DataTypes), SOFA_TEMPLATE(core::behavior::ForceField,DataTypes));
 
-        typedef core::componentmodel::behavior::ForceField<DataTypes> Inherited;
+        typedef core::behavior::ForceField<DataTypes> Inherited;
 	typedef typename DataTypes::VecCoord VecCoord;
 	typedef typename DataTypes::VecDeriv VecDeriv;
 	typedef typename DataTypes::VecReal VecReal;
@@ -79,9 +79,11 @@ public:
 	typedef typename Coord::value_type   Real    ;
 	typedef Vec<3,Real> Vec3;
 
-	typedef sofa::core::componentmodel::topology::BaseMeshTopology::index_type Index;
-	typedef sofa::core::componentmodel::topology::BaseMeshTopology::Triangle Triangle;
-	typedef sofa::core::componentmodel::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
+        typedef Vec3Types::VecCoord VecCoordHigh;
+
+	typedef sofa::core::topology::BaseMeshTopology::index_type Index;
+	typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
+	typedef sofa::core::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
 
 protected:
 
@@ -95,11 +97,10 @@ protected:
         typedef Mat<9, 9, Real> StiffnessMatrixBending;
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
 
-	sofa::core::componentmodel::topology::BaseMeshTopology* _topology;
-
-        sofa::core::componentmodel::topology::BaseMeshTopology* _topologyHigh;
-        helper::vector<Vec3> verticesTarget;
-        SeqTriangles trianglesTarget;
+	sofa::core::topology::BaseMeshTopology* _topology;
+        sofa::core::topology::BaseMeshTopology* _topologyHigh;
+//        VecCoordHigh verticesTarget;
+//        SeqTriangles trianglesTarget;
 
 //        TriangularBendingFEMForceFieldInternalData<DataTypes> data;
 //        friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
@@ -162,12 +163,11 @@ public:
 	virtual void reinit();
 	virtual void addForce (VecDeriv& f, const VecCoord& x, const VecDeriv& v);
 	virtual void addDForce (VecDeriv& df, const VecDeriv& dx);
-    virtual void addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset);
+        virtual void addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset);
+        virtual double getPotentialEnergy(const VecCoord& x) const;
+//	virtual void handleTopologyChange();
 
-	virtual double getPotentialEnergy(const VecCoord& x) const;
-	virtual void handleTopologyChange();
-
-        sofa::core::componentmodel::topology::BaseMeshTopology* getTopology() {return _topology;}
+        sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
         TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}
 
 	Data<Real> f_poisson;
@@ -177,8 +177,8 @@ public:
         Data <Real> f_membraneRatio;
         Data <Real> f_bendingRatio;
         Data<bool> refineMesh;
-//        Data<VecCoord> targetVertices;
-//        Data<SeqTriangles> targetTriangles;
+        Data<VecCoordHigh> targetVertices;
+        Data<SeqTriangles> targetTriangles;
 
         unsigned int indexTop;
 

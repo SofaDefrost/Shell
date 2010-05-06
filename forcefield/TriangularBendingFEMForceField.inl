@@ -26,7 +26,7 @@
 #define SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 
 #include "TriangularBendingFEMForceField.h"
-#include <sofa/core/componentmodel/behavior/ForceField.inl>
+#include <sofa/core/behavior/ForceField.inl>
 #include <sofa/helper/gl/template.h>
 #include <sofa/component/topology/TriangleData.inl>
 #include <sofa/component/topology/EdgeData.inl>
@@ -56,7 +56,7 @@ namespace sofa
 		{
 			using namespace sofa::defaulttype;
 			using namespace	sofa::component::topology;
-			using namespace core::componentmodel::topology;
+			using namespace core::topology;
 
 
 
@@ -138,21 +138,21 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , f_membraneRatio(initData(&f_membraneRatio,(Real)1.0,"membraneRatio","In plane forces ratio"))
 , f_bendingRatio(initData(&f_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
 , refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
-//, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
-//, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
+, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
+, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
 {
 }
 
 // --------------------------------------------------------------------------------------
 // ---
 // --------------------------------------------------------------------------------------
-template <class DataTypes> void TriangularBendingFEMForceField<DataTypes>::handleTopologyChange()
-{
-    std::list<const TopologyChange *>::const_iterator itBegin=_topology->firstChange();
-    std::list<const TopologyChange *>::const_iterator itEnd=_topology->lastChange();
-
-    triangleInfo.handleTopologyEvents(itBegin,itEnd);
-}
+//template <class DataTypes> void TriangularBendingFEMForceField<DataTypes>::handleTopologyChange()
+//{
+//    std::list<const TopologyChange *>::const_iterator itBegin=_topology->firstChange();
+//    std::list<const TopologyChange *>::const_iterator itEnd=_topology->lastChange();
+//
+//    triangleInfo.handleTopologyEvents(itBegin,itEnd);
+//}
 
 // --------------------------------------------------------------------------------------
 // ---
@@ -170,7 +170,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 {
     this->Inherited::init();
 
-    _topology = this->getContext()->getMeshTopology();
+    _topology = getContext()->getMeshTopology();
 
     if (_topology->getNbTriangles()==0)
     {
@@ -190,7 +190,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
     
 //    generateCylinder();
 
-    const VecCoord& x = *this->mstate->getX();
+//    const VecCoord& x = *this->mstate->getX();
 //    for (unsigned int i = 0; i<x.size(); i++)
 //    {
 //        Vec3 pos = x[i].getCenter();
@@ -204,33 +204,36 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 //            std::cout << "indice central point bottom = " << i << std::endl;
 //    }
 
-    std::cout << "TriangularBendingFEMForceField retrieves coarse topology" << std::endl;
-    std::cout << "number of vertices = " << x.size() << std::endl;
-    std::cout << "number of triangles = " << _topology->getTriangles().size() << std::endl;
+//    std::cout << "TriangularBendingFEMForceField retrieves coarse topology" << std::endl;
+//    std::cout << "number of vertices = " << x.size() << std::endl;
+//    std::cout << "number of triangles = " << _topology->getTriangles().size() << std::endl;
 
     std::cout << "TriangularBendingFEMForceField retrieves target topology" << std::endl;
+
+    std::cout << "number of vertices = " << targetVertices.getValue().size() << std::endl;
+    std::cout << "number of triangles = " << targetTriangles.getValue().size() << std::endl;
 
     // Retrieves vertices of high resolution mesh
 //    verticesTarget = targetVertices.getValue();
 //    // Retrieves triangles of high resolution mesh
 //    trianglesTarget = targetTriangles.getValue();
 
-    _topologyHigh = NULL;
-    this->getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
-    if (_topologyHigh != NULL)
-    {
-        trianglesTarget = _topologyHigh->getTriangles();
-
-        MechanicalState<Vec3Types>* mStateHigh = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyHigh->getContext()->getMechanicalState());
-        verticesTarget = *mStateHigh->getX();
-
-        std::cout << "number of vertices = " << verticesTarget.size() << std::endl;
-        std::cout << "number of triangles = " << trianglesTarget.size() << std::endl;
-    }
-    else
-    {
-        std::cout << "WARNING(TriangularBendingFEMForceField): no target high resolution mesh found" << std::endl;
-    }
+//    _topologyHigh = NULL;
+//    getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
+//    if (_topologyHigh != NULL)
+//    {
+//        trianglesTarget = _topologyHigh->getTriangles();
+//
+//        MechanicalState<Vec3Types>* mStateHigh = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyHigh->getContext()->getMechanicalState());
+//        verticesTarget = *mStateHigh->getX();
+//
+//        std::cout << "number of vertices = " << verticesTarget.size() << std::endl;
+//        std::cout << "number of triangles = " << trianglesTarget.size() << std::endl;
+//    }
+//    else
+//    {
+//        std::cout << "WARNING(TriangularBendingFEMForceField): no target high resolution mesh found" << std::endl;
+//    }
 
 
     if (refineMesh.getValue())
@@ -372,7 +375,7 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
 //    const SeqTriangles trianglesHigh = targetTriangles.getValue();
 //    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << trianglesHigh.size() << " triangles" << std::endl;
 
-    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << trianglesTarget.size() << " triangles" << std::endl;
+    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << targetTriangles.getValue().size() << " triangles" << std::endl;
     
     // Level of subdivision
     unsigned int levelSubdivision = 1;
@@ -509,12 +512,12 @@ template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints)
 {
     // Retrieves vertices of high resolution mesh
-//    const VecCoord& x = targetVertices.getValue();
-//    // Retrieves triangles of high resolution mesh
-//    const SeqTriangles triangles = targetTriangles.getValue();
+    const VecCoordHigh& x = targetVertices.getValue();
+    // Retrieves triangles of high resolution mesh
+    const SeqTriangles triangles = targetTriangles.getValue();
 
-    const helper::vector<Vec3> x = verticesTarget;
-    const SeqTriangles triangles = trianglesTarget;
+//    const helper::vector<Vec3> x = verticesTarget;
+//    const SeqTriangles triangles = trianglesTarget;
 
     multimap<Real, Vec3> closestTrianglesData;
 
@@ -857,12 +860,12 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 // --------------------------------------------------------------------------------------
 // ---
 // --------------------------------------------------------------------------------------
-template <class DataTypes>
-    double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
-{
-    serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
-    return 0;
-}
+//template <class DataTypes>
+//    double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/)
+//{
+//    serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
+//    return 0;
+//}
 
 // --------------------------------------------------------------------------------------
 // Computes the quaternion that embodies the rotation from triangle to world
@@ -1362,6 +1365,13 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, co
     triangleInfo.endEdit();
 }
 
+
+template <class DataTypes>
+    double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
+{
+    serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
+    return 0;
+}
 
 // --------------------------------------------------------------------------------------
 // ---	Compute force F = Jt * material * J * u
