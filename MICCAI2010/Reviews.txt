@@ -1,0 +1,132 @@
+MICCAI 2010
+
+Reviews of submission #1213: "Shell Model for Reconstruction and
+Real-Time Simulation of Thin Anatomical Structures"
+
+------------------------ Submission 1213, Review 1 ------------------------
+
+Reviewer:           external
+
+Overall Recommendation
+
+   Good - Accept 
+
+The review
+
+   **Relevance
+
+   The topic of the paper is highly relevant to several areas of medical
+   image computing, and will be of interest to MICCAI attendees.
+
+   **Originality & soundness
+
+   An efficient shell finite element formulation incorporating cubic shape
+   functions is described. The use of the elements for reconstructing
+   anatomical models is described, also. By virtue of their high order shape
+   functions they are able to reproduce high curvature geometry accurately
+   with very few elements. Such tools could find applications in many areas
+   of surgical simulation and medical image computing.
+
+   As discussed by the authors, shell formulations are useful for modelling
+   thin structures, e.g. membranes, of which there are many biological
+   examples. Whereas solid element formulations (tetrahedra, hexahedra, etc)
+   are commonly used in surgical simulation, efficient shell models have
+   been conspicuously absent. As such, this work represents an important
+   contribution.
+
+   One query regarding the coupling to tetrahedra (or, presumably, any other
+   solid elements): essentially, a contact condition is employed, but I was
+   wondering if it is feasible/difficult to impose a more direct coupling -
+   perhaps having the shells and tets sharing nodes? I think this would be
+   more appropriate than a contact-based coupling in many cases, such as,
+   for example, modelling skin attached to underlying tissue. Perhaps some
+   comments on this could be added?
+
+   **Clarity of presentation
+
+   The presentation is clear, concise and logical. Explanations are easy to
+   follow.
+
+   Some minor misspellings:
+   - pg 5, para 2, line 1: insure -> ensure
+   - pg 7, second line before sect 5: detailled -> detailed
+
+   Also, I think reference 8 is incorrectly listed.
+
+------------------------ Submission 1213, Review 2 ------------------------
+
+Reviewer:           external
+
+Overall Recommendation
+
+   Good - Accept 
+
+The review
+
+   General:
+   The paper describes an approach for reconstruction and real-time
+   simulation of anatomical structures by employing a thin shell model. The
+   basis is a co-rotational triangular shell model which has been proposed
+   earlier in a publication of the same authors. Further, collision handling
+   and reconstruction are described.
+   The paper is written fine, the material is presented in a clear way
+   (especially considering the strict page limitations). The only drawback
+   of the submission is that the contribution over the previous work [7] is
+   left unclear. Still, the reviewer suggests to accept the paper for
+   publication at MICCAI.
+
+   The reviewer has the following comments:
+   - Related work: "The use of fast shell-based modelling [...] was recently
+   introduced in computer graphics with the work of Choi et al [...]". This
+   sounds a bit naive, as thin shell modeling has been intensively
+   researched in computer graphics for years. Thus either more references
+   should be given, or the phrase should be mitigated.
+   - The contribution and main differences over the own work of the authors
+   [7] should be detailed out.
+   - The following reference is missing: Comas et al., "A shell model for
+   Real-Time Simulation of Intra-ocular Implant Deployment", Biomedical
+   Simulation, 2010. The work must be cited and the differences between that
+   work and the submission must be detailed.
+
+   - Collision handling: The contact handling of thin shells is particularly
+   challenging since a concept such as 'penetration depth' does not exist
+   for non-volumetric objects. Thus, many authors have resorted to
+   continuous collision handling techniques. This is particularly important
+   if large time-steps (such as the proposed 40ms) are employed. The authors
+   should mention this issue. In addition, the reviewer would like to see
+   timings of the collision detection, which is supposed to be very
+   time-consuming. 
+
+   Typos:
+   - "target non noise-sensitive" -> "target non-noise-sensitive" (consider
+   re-formulating the phrase)
+   - "a important decimation" -> "an important decimation"
+
+------------------------ Submission 1213, Review 3 ------------------------
+
+Reviewer:           external
+
+Overall Recommendation
+
+   Short of acceptable - Probably reject 
+
+The review
+
+   I fail to capture the main message that the authors want to send. Is this
+   some variant of a shell deformation model for thin structures or surface
+   reconstruction by fitting sort of parametric patches? Unfortunately, the
+   authors hide most of the methodology behind the anonymity: "A complete
+   description and validation of our co-rotational triangular shell finite
+   element model is available in one of our previous publication". The paper
+   should be restructured such that the complete method is accessible
+   without violating the anonymity requirement. Coupling between shell and
+   volume models on the example of Glisson's capsule is a very interesting
+   problem, but unfortunately, it is again unclear what is tackled here
+   exactly, mechanics (FEM?) or geometry (Hausdorff?). Unfortunately again,
+   the conclusions remain unclear: "We propose a framework for real-time
+   modelling of thin anatomical structures." What modelling, physical
+   behavior or geometric representation? It is possible that the authors
+   might have something interesting to report on, I just can not find it
+   clearly presented in the paper.
+
+
