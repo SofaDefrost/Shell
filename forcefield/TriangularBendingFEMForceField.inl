@@ -56,7 +56,7 @@ namespace sofa
 		{
 			using namespace sofa::defaulttype;
 			using namespace	sofa::component::topology;
-			using namespace core::topology;
+			using namespace core::componentmodel::topology;
 
 
 
@@ -146,13 +146,13 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 // --------------------------------------------------------------------------------------
 // ---
 // --------------------------------------------------------------------------------------
-//template <class DataTypes> void TriangularBendingFEMForceField<DataTypes>::handleTopologyChange()
-//{
+template <class DataTypes> void TriangularBendingFEMForceField<DataTypes>::handleTopologyChange()
+{
 //    std::list<const TopologyChange *>::const_iterator itBegin=_topology->firstChange();
 //    std::list<const TopologyChange *>::const_iterator itEnd=_topology->lastChange();
 //
 //    triangleInfo.handleTopologyEvents(itBegin,itEnd);
-//}
+}
 
 // --------------------------------------------------------------------------------------
 // ---
@@ -170,7 +170,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 {
     this->Inherited::init();
 
-    _topology = getContext()->getMeshTopology();
+    _topology = this->getContext()->getMeshTopology();
 
     if (_topology->getNbTriangles()==0)
     {
@@ -208,15 +208,16 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 //    std::cout << "number of vertices = " << x.size() << std::endl;
 //    std::cout << "number of triangles = " << _topology->getTriangles().size() << std::endl;
 
-    std::cout << "TriangularBendingFEMForceField retrieves target topology" << std::endl;
+//    std::cout << "TriangularBendingFEMForceField retrieves target topology" << std::endl;
 
-    std::cout << "number of vertices = " << targetVertices.getValue().size() << std::endl;
-    std::cout << "number of triangles = " << targetTriangles.getValue().size() << std::endl;
+//    std::cout << "number of vertices = " << targetVertices.getValue().size() << std::endl;
+//    std::cout << "number of triangles = " << targetTriangles.getValue().size() << std::endl;
 
     // Retrieves vertices of high resolution mesh
-//    verticesTarget = targetVertices.getValue();
-//    // Retrieves triangles of high resolution mesh
-//    trianglesTarget = targetTriangles.getValue();
+    verticesTarget = targetVertices.getValue();
+    // Retrieves triangles of high resolution mesh
+    trianglesTarget = targetTriangles.getValue();
+
 
 //    _topologyHigh = NULL;
 //    getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
@@ -235,12 +236,17 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 //        std::cout << "WARNING(TriangularBendingFEMForceField): no target high resolution mesh found" << std::endl;
 //    }
 
+//    _topologyHigh = NULL;
+//    this->getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
+//    if (_topologyHigh != NULL)
+//    {
+//        trianglesTarget = _topologyHigh->getTriangles()
+//    }
 
     if (refineMesh.getValue())
     {
         refineCoarseMeshToTarget();
     }
-
 }
 
 
@@ -480,7 +486,7 @@ void TriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(sofa::help
 {
     bool alreadyHere = false;
 
-    for (unsigned v=0; v<subVertices.size(); v++)
+    for (unsigned int v=0; v<subVertices.size(); v++)
     {
         if ( (subVertices[v]-vertex).norm() < 0.0000001)
         {
@@ -860,12 +866,13 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 // --------------------------------------------------------------------------------------
 // ---
 // --------------------------------------------------------------------------------------
-//template <class DataTypes>
-//    double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/)
-//{
-//    serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
-//    return 0;
-//}
+template <class DataTypes>
+    double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
+{
+    serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
+    return 0;
+}
+
 
 // --------------------------------------------------------------------------------------
 // Computes the quaternion that embodies the rotation from triangle to world
@@ -1208,6 +1215,17 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrixB
     // Inverse of C
     Mat<9, 9, Real> invC;
     invC.invert(C);
+//    for (int i=0; i<9;i++)
+//    {
+//        for (int j=0; j<9;j++)
+//        {
+//            std::cout << C[i][j] << "  " ;
+//        }
+//        std::cout << std::endl;
+//    }
+//    std::cout << std::endl;
+////    std::cout << "C = " << C << std::endl;
+////    std::cout << "inversion of C" << std::endl;
     tinfo->invC = invC;
 
     // Calculation of the 3 Gauss points taken in the centre of each edge
@@ -1298,19 +1316,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(const i
 
 	TriangleInformation *tinfo = &triangleInf[i];
 
-//	tinfo->materialMatrix[0][0] = 1;
-//	tinfo->materialMatrix[0][1] = f_poisson.getValue();
-//	tinfo->materialMatrix[0][2] = 0;
-//	tinfo->materialMatrix[1][0] = f_poisson.getValue();
-//	tinfo->materialMatrix[1][1] = 1;
-//	tinfo->materialMatrix[1][2] = 0;
-//	tinfo->materialMatrix[2][0] = 0;
-//	tinfo->materialMatrix[2][1] = 0;
-//	tinfo->materialMatrix[2][2] = 0.5f * (1 - f_poisson.getValue());
-//
-//	tinfo->materialMatrix *= (f_young.getValue() / (12 *  (1 - f_poisson.getValue() * f_poisson.getValue())));
-
-        tinfo->materialMatrix[0][0] = 1;
+	tinfo->materialMatrix[0][0] = 1;
 	tinfo->materialMatrix[0][1] = f_poisson.getValue();
 	tinfo->materialMatrix[0][2] = 0;
 	tinfo->materialMatrix[1][0] = f_poisson.getValue();
@@ -1318,12 +1324,24 @@ void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(const i
 	tinfo->materialMatrix[1][2] = 0;
 	tinfo->materialMatrix[2][0] = 0;
 	tinfo->materialMatrix[2][1] = 0;
-	tinfo->materialMatrix[2][2] = 0.5 * (1 - f_poisson.getValue());
+	tinfo->materialMatrix[2][2] = 0.5f * (1 - f_poisson.getValue());
 
-	tinfo->materialMatrix *= ( f_young.getValue() / (1 - f_poisson.getValue() * f_poisson.getValue()) );
+	tinfo->materialMatrix *= (f_young.getValue() / (12 *  (1 - f_poisson.getValue() * f_poisson.getValue())));
 
-        Real t = f_thickness.getValue();
-        tinfo->materialMatrix *= t ;
+//        tinfo->materialMatrix[0][0] = 1;
+//	tinfo->materialMatrix[0][1] = f_poisson.getValue();
+//	tinfo->materialMatrix[0][2] = 0;
+//	tinfo->materialMatrix[1][0] = f_poisson.getValue();
+//	tinfo->materialMatrix[1][1] = 1;
+//	tinfo->materialMatrix[1][2] = 0;
+//	tinfo->materialMatrix[2][0] = 0;
+//	tinfo->materialMatrix[2][1] = 0;
+//	tinfo->materialMatrix[2][2] = 0.5 * (1 - f_poisson.getValue());
+//
+//	tinfo->materialMatrix *= ( f_young.getValue() / (1 - f_poisson.getValue() * f_poisson.getValue()) );
+//
+//        Real t = f_thickness.getValue();
+//        tinfo->materialMatrix *= t ;
 
 	triangleInfo.endEdit();
 }
@@ -1346,7 +1364,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, co
     // Compute stiffness matrix K = J*material*Jt
     StiffnessMatrix K;
     computeStiffnessMatrix(K, J, tinfo->materialMatrix);
-    K *= triangleInf[elementIndex].area;
+//    K *= triangleInf[elementIndex].area;
     tinfo->stiffnessMatrix = K;
 
     // Compute forces
@@ -1365,13 +1383,6 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, co
     triangleInfo.endEdit();
 }
 
-
-template <class DataTypes>
-    double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
-{
-    serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
-    return 0;
-}
 
 // --------------------------------------------------------------------------------------
 // ---	Compute force F = Jt * material * J * u
@@ -1449,6 +1460,10 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, con
 
         Vec3 fc1 = tinfo->Qframe.inverseRotate(Vec3(0.0, 0.0, F_bending[6]));
         Vec3 fc2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[7], F_bending[8], 0.0));
+
+//        fa1 = fa2 = Vec3(0,0,0);
+//        fb1 = fb2 = Vec3(0,0,0);
+//        fc1 = fc2 = Vec3(0,0,0);
 
         f[a] += Deriv(-fa1, -fa2);
     	f[b] += Deriv(-fb1, -fb2);

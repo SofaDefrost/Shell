@@ -249,17 +249,22 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
 //    // Retrieves triangles of high resolution mesh
 //    const SeqTriangles trianglesTarget = targetTriangles.getValue();
 
+//    std::cout << "vertices = " << verticesTarget.size() << std::endl;
+//    std::cout << "triangles = " << trianglesTarget.size() << std::endl;
+
     _topologyHigh = NULL;
     getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
     if (_topologyHigh != NULL)
     {
-        trianglesTarget = _topologyHigh->getTriangles();
+        std::cout << "WARNING: HIGH RES MESH TOPOLOGY IS HARD CODED" << std::endl;
 
-        MechanicalState<Vec3Types>* mStateHigh = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyHigh->getContext()->getMechanicalState());
-        verticesTarget = *mStateHigh->getX();
-
-        std::cout << "high res vertices = " << verticesTarget.size() << std::endl;
-        std::cout << "high res triangles = " << trianglesTarget.size() << std::endl;
+//        trianglesTarget = _topologyHigh->getTriangles();
+//
+//        MechanicalState<OutDataTypes>* mStateHigh = dynamic_cast<MechanicalState<OutDataTypes>*> (_topologyHigh->getContext()->getMechanicalState());
+//        verticesTarget = *mStateHigh->getX();
+//
+//        std::cout << "high res vertices = " << verticesTarget.size() << std::endl;
+//        std::cout << "high res triangles = " << trianglesTarget.size() << std::endl;
     }
     else
     {
@@ -286,7 +291,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
         OutVecCoord &outVertices = *this->toModel->getX();
         for (unsigned int i=0; i<outVertices.size(); i++)
         {
-            coloursPerVertex.push_back(Vec3(0.1, 0.1, 0.9));
+//            coloursPerVertex.push_back(Vec3(0.1, 0.1, 0.9));
+            coloursPerVertex.push_back(Vec3(0.56, 0.14, 0.6));    // purple
         }
     }
 
@@ -408,11 +414,11 @@ template <class BaseMapping>
 typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError)
 {
     // Mesh 1
-    MechanicalState<Vec3Types>* mState1 = dynamic_cast<MechanicalState<Vec3Types>*> (topo1->getContext()->getMechanicalState());
+    MechanicalState<OutDataTypes>* mState1 = dynamic_cast<MechanicalState<OutDataTypes>*> (topo1->getContext()->getMechanicalState());
     const OutVecCoord &vertices1 = *mState1->getX();
 
     // Mesh 2
-    MechanicalState<Vec3Types>* mState2 = dynamic_cast<MechanicalState<Vec3Types>*> (topo2->getContext()->getMechanicalState());
+    MechanicalState<OutDataTypes>* mState2 = dynamic_cast<MechanicalState<OutDataTypes>*> (topo2->getContext()->getMechanicalState());
     const OutVecCoord &vertices2 = *mState2->getX();
     const SeqEdges edges2 = topo2->getEdges();
     const SeqTriangles triangles2 = topo2->getTriangles();
@@ -444,7 +450,6 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Dist
         {
             HausdorffDistance = minimumDistance;
         }
-
     }
 
     return HausdorffDistance;
@@ -811,6 +816,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv&
             v_u[7] = va_c_local[0];   v_u[8] = va_c_local[1];
 
             tinfo->coefficients = tinfo->invC * v_u;
+
+//            std::cout << "triangle " << t << ":   " << tinfo->coefficients << std::endl;
         }
 
 
@@ -1006,7 +1013,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::draw()
         }
         Real correctedError;
 //        maximum = 0.84;
-        int count = 0;
+//        int count = 0;
         for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
         {
 //            if (vectorErrorCoarse[i]>5.5)

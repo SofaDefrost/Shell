@@ -64,7 +64,7 @@ public:
 
 
 template<class DataTypes>
-class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTypes>, public virtual core::objectmodel::BaseObject
+class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTypes>
 {
 public:
         SOFA_CLASS(SOFA_TEMPLATE(TriangularBendingFEMForceField,DataTypes), SOFA_TEMPLATE(core::behavior::ForceField,DataTypes));
@@ -98,9 +98,9 @@ protected:
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
 
 	sofa::core::topology::BaseMeshTopology* _topology;
-        sofa::core::topology::BaseMeshTopology* _topologyHigh;
-//        VecCoordHigh verticesTarget;
-//        SeqTriangles trianglesTarget;
+//        sofa::core::topology::BaseMeshTopology* _topologyHigh;
+        VecCoordHigh verticesTarget;
+        SeqTriangles trianglesTarget;
 
 //        TriangularBendingFEMForceFieldInternalData<DataTypes> data;
 //        friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
@@ -164,8 +164,8 @@ public:
 	virtual void addForce (VecDeriv& f, const VecCoord& x, const VecDeriv& v);
 	virtual void addDForce (VecDeriv& df, const VecDeriv& dx);
         virtual void addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset);
-        virtual double getPotentialEnergy(const VecCoord& x) const;
-//	virtual void handleTopologyChange();
+	virtual double getPotentialEnergy(const VecCoord& x) const;
+	virtual void handleTopologyChange();
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
         TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}

@@ -40,22 +40,22 @@
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.000001" totalmass="1" />
 <!--        <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />-->
 <!--        <AttachConstraint name="Constraint" object2="tri" object1="pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />-->
-        <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="true" />
+<!--        <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="true" />-->
         <FixedConstraint indices="0-1" drawSize="0"/>
-        <ConstantForceField points="2" forces="0 0 0 -3 0 0"/>
+        <ConstantForceField points="2" forces="0 0 3 0 0 0"/>
         <FixedRotationConstraint FixedZRotation="true"/>
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1"/>
             
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subTrianglesTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="4"/>
+            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="2"/>
             <MechanicalObject  name="subPoints" />
-            <BendingPlateMechanicalMapping/>
+<!--            <BendingPlateMechanicalMapping/>-->
             <Triangle contactStiffness="0.001"/>
-<!--            <Node>-->
-<!--                <OglModel name="Visual" color="red"/>-->
-<!--                <IdentityMapping object1="subPoints" object2="Visual"/>-->
-<!--            </Node>-->
+            <Node>
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping object1="subPoints" object2="Visual"/>
+            </Node>
         </Node>
         
     </Node>

@@ -106,8 +106,11 @@ protected:
 
         helper::gl::GLSLShader shader;
 
+        BaseMeshTopology* inputTopo;
+	BaseMeshTopology* outputTopo;
+        
         Data<bool> measureError;
-//        Data<InVecCoord> targetVertices;
+//        Data<OutVecCoord> targetVertices;
 //        Data<SeqTriangles> targetTriangles;
 
         BaseMeshTopology* _topologyHigh;
@@ -118,9 +121,6 @@ protected:
         helper::vector<Vec3> coloursPerVertex;
         helper::vector<Real> vectorErrorCoarse;
         helper::vector<Real> vectorErrorTarget;
-
-	BaseMeshTopology* inputTopo;
-	BaseMeshTopology* outputTopo;
 
         // Pointer on the forcefield associated with the in topology
         TriangularBendingFEMForceField<InDataTypes>* triangularBendingForcefield;
