@@ -23,7 +23,8 @@
 \title{Shell Model for Reconstruction and Real-Time Simulation of Thin Anatomical Structures}
 \author{Olivier Comas\inst{1,2}, Christian Duriez\inst{1} and St\'ephane Cotin\inst{1}}
 \institute{INRIA, Shaman team, Lille, France
-\and The Australian e-Health Research Centre, CSIRO, Brisbane, Australia}
+%\and Preventative Health National Research Flagship, CSIRO ICT, The Australian e-Health Research Centre, Brisbane, Australia}
+\and Preventative Health Flagship, CSIRO ICT, AEHRC, Brisbane, Australia}
 
 \maketitle
 
@@ -37,7 +38,7 @@ The human body is composed of various deformable anatomical structures.
 %Realistic modelling of organ deformations is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast update of the deformation model to obtain a real-time display of the computed deformations. 
 %Another 
 A key challenge of soft-tissue modelling is the variousness of the mechanical behaviours. It seems unrealistic to use a unique model for all tissues.
-Yet most of previous works focus on volumetric models that are able to capture the behaviour of solid organs like the liver or the brain (see for instance \cite{Miller07,Delingette08}). In contrast, this paper seeks to propose a solution for simulating, in real-time, the deformation of thin anatomical structures whose volume is negligible compared to their surface area. Examples include hollow structures, such as the wall of blood vessels, or membranes, such as the Glisson's capsule surrounding the liver. 
+Yet most of previous works focus on volumetric models that are able to capture the behaviour of solid organs like the liver or the brain (see for instance \cite{Miller07,Delingette08}). In contrast, this paper seeks to propose a solution for simulating, in real-time, the deformation of thin anatomical structures whose volume is negligible compared to their surface area. Examples include hollow structures, such as the wall of blood vessels, or membranes, such as the Glisson's capsule surrounding the liver. It is also of particular interest to us for modelling the colon in our colonoscopy simulator \cite{deVisser10}.
 %of such anatomical structures 
 
 Shell theory allows the modelling of structure deformations when the thickness is small compared to its other dimensions~\cite{Liu03}. The key idea is to model the physical shell as a surface but endowed with mechanical properties in the form of elastic resistance to stretching and bending forces. Rather than resorting to shell theory, previous works in medical simulation often rely on linear or angular mass-spring models as in \cite{Nedel98,Hammer08}. Yet, such models are limited in their ability to describe certain behaviour, as they do not rely on continuum mechanics: it is difficult to derive spring stiffness (in particular for angular springs) from elastic properties (Young's modulus and Poisson's ratio).
@@ -46,7 +47,9 @@ The work of Choi et al.~\cite{Choi07} in computer graphics refers to a fast shel
 To model the deformation of complex anatomical structures using shell elements, the first step is to describe its surface with curved patches. This process is quite similar to the reconstruction of the surface of objects in computer vision. Indeed calculating curvature maps of 3D surfaces represented as digitised data (point clouds or triangulated meshes) has been extensively studied. One of the most common approach is to use continuous surface patches~\cite{Kolb95}. The surface is locally approximated by an analytic representation called surface patch, usually chosen to be an implicit surface. These works target approaches that are not noise-sensitive and coherent surface and curve extraction from 3D data~\cite{Tang99}. 
 % removed citation Douros02 which was with Kolb95.
 %In~\cite{Tang99} an elegant and non noise-sensitive approach that infers sign and direction of principal curvatures directly from the input is presented and the authors use this information for coherent surface and curve extraction from 3D data. 
-However, our situation is substantially different as we want to model the deformation of the structure. In that regard the curvature of the surface has a physical meaning: it represents the mid-surface of the shell on which the plane stress hypothesis~\cite{Liu03} applies. We propose to approximate the surface of anatomical structures with shell elements whose each surface is described by the shape function used in our shell formulation.
+However, our situation is substantially different as we want to model the deformation of the structure. In that regard the curvature of the surface has a physical meaning: it represents the mid-surface of the shell. 
+% on which the plane stress hypothesis~\cite{Liu03} applies. 
+We propose to approximate the surface of anatomical structures with shell elements whose each surface is described by the shape function used in our shell formulation.
 
 These polynomial shape functions are used in three different ways in our computational model: (a) to approximate complex geometrical shapes, (b) to compute internal forces, (c) to compute contact forces onto a curved triangle. Section~\ref{sec:model} presents our Finite Element Modelling (FEM) for shell elements and how we process contacts and interactions with other models. In section~\ref{sec:mesh} we introduce an automatic process to obtain meshes from image based reconstruction. Finally the benefits of our approach (meshing of a curved surface, fast computation and possible interactions with solid models) are illustrated using various examples showed in section~\ref{sec:results}. Implementations were carried out within the open source framework SOFA \cite{SOFA}.
 
@@ -174,7 +177,7 @@ When the computation time must be bounded (critical real-time applications), one
 \subsubsection{Coupling between tetrahedra and shells for advanced modelling.}
 %
 %Structures in human body can be either solid (brain, liver, prostate etc.) or hollow (blood vessels, colon, stomach etc.). 
-Structures in human body can be either solid or hollow. However knowing how to model the two kind of structures is not sufficient to reach a high degree of accuracy, real life situations are more complex. As an example, the external surface of the liver is covered by a layer of cells called Glisson's capsule. Its interaction with the liver plays an important role into the overall structure's mechanical behaviour. Therefore considering the interaction between solid and hollow objects is as crucial as modelling the two structures separately. 
+Structures in human body can be either solid (brain, liver, prostate etc.) or hollow (colon, blood vessels, stomach etc.). However knowing how to model the two kind of structures is not sufficient to reach a high degree of accuracy, real life situations are more complex. As an example, the external surface of the liver is covered by a layer of cells called Glisson's capsule. Its interaction with the liver plays an important role into the overall structure's mechanical behaviour. Therefore considering the interaction between solid and hollow objects is as crucial as modelling the two structures separately. 
 
 An example of medical procedure to illustrate this point even further is angioplasty. Angioplasty is the technique of mechanically widening a narrowed or obstructed blood vessel, typically as a result of atherosclerosis. An empty and collapsed balloon on a guide wire is passed into the narrowed locations and then inflated to a fixed size. The balloon crushes the fatty deposits, so opening up the blood vessel to improved flow. As a proof of concept we tried to simulate an angioplasty (Fig.~\ref{fig-stent}). The blood vessel is modelled using the shell FEM formulation described in this paper and the fatty deposits are simulated with a tetrahedral FEM method and are fixed to the interior wall of the blood vessel. When the balloon inflates it crushes the deposits and they then apply a pressure onto the curved surfaces of shells modelling the interior wall. The forces are then distributed onto the mechanical nodes of the blood vessel mesh as detailed in section~\ref{sec:interactions}, which widens the blood vessel as expected. 
 
@@ -189,8 +192,8 @@ An example of medical procedure to illustrate this point even further is angiopl
 \section{Conclusion}
 We propose a framework for real-time modelling of thin anatomical structures. The novelty of our method relies on the combination of a shell finite element formulation and a geometric surface reconstruction both based on the same polynomial interpolation function used to describe the surface of shells. We also show how contacts and interactions with the curved surfaces of shells can be handled using the same function. The efficiency of the method is illustrated through shell-based reconstruction and real-time simulation of the deformations of various anatomical structures. We also present preliminary results on the simulation of an angioplasty procedure. 
 
-\section*{Acknowledgments}
-We would like to thank INRIA and the SOFA project, as well as CSIRO Preventative Health National Research Flagship, ICTC, The Australian e-Health Research Centre for their fundings.
+%\section*{Acknowledgments}
+%We would like to thank INRIA and the SOFA project, as well as CSIRO Preventative Health National Research Flagship, ICTC, The Australian e-Health Research Centre for their fundings.
 
 \bibliographystyle{splncs}
 \bibliography{bibliography}

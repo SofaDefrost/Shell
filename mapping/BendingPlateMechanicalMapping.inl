@@ -48,8 +48,7 @@ BendingPlateMechanicalMapping<BaseMapping>::BendingPlateMechanicalMapping(In* fr
 , inputTopo(NULL)
 , outputTopo(NULL)
 , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
-//, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
-//, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
+, nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
 {
 }
 
@@ -61,6 +60,8 @@ BendingPlateMechanicalMapping<BaseMapping>::~BendingPlateMechanicalMapping()
 template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::init()
 {
+//    std::cout << "BendingPlateMechanicalMapping::init()" << std::endl;
+
     // Retrieves topology
     inputTopo = this->fromModel->getContext()->getMeshTopology();
     outputTopo = this->toModel->getContext()->getMeshTopology();
@@ -213,7 +214,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
 
 
                 default :
-                    serr << "BendingPlateMechanicalMapping init(): No closest primitive has been found" << sendl;
+                    serr << "BendingPlateMechanicalMapping init(): No closest primitive has been found for vertex " << i << sendl;
                     return;
             }
         }
@@ -230,52 +231,36 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     triangularBendingForcefield = NULL;
     this->getContext()->get(triangularBendingForcefield);
     if (!triangularBendingForcefield)
+    {
+        serr << "WARNING(BendingPlateMechanicalMapping): triangularBendingForcefield was not found" << sendl;
         return;
+    }
 
-    // Retrieves topological mapping to retrieve list of edges (for rendering of wireframe)
+    // Retrieves topological mapping to retrieve list of edges (to render in wireframe mode)
     triangleSubdivisionTopologicalMapping = NULL;
+//    this->getContext()->get(triangleSubdivisionTopologicalMapping, nameHighTopology.getValue(), sofa::core::objectmodel::BaseContext::SearchRoot);
     this->getContext()->get(triangleSubdivisionTopologicalMapping);
     if (!triangleSubdivisionTopologicalMapping)
+    {
+        serr << "WARNING(BendingPlateMechanicalMapping): triangleSubdivisionTopologicalMapping was not found" << sendl;
         return;
+    }
 
     // Call of apply() and applyJ()
     this->Inherit::init();
 
-
-    std::cout << "BendingPlateMechanicalMapping:: retrieves target topology" << std::endl;
-
-    // Retrieves vertices of high resolution mesh
-//    const OutVecCoord& verticesTarget = targetVertices.getValue();
-//    // Retrieves triangles of high resolution mesh
-//    const SeqTriangles trianglesTarget = targetTriangles.getValue();
-
-//    std::cout << "vertices = " << verticesTarget.size() << std::endl;
-//    std::cout << "triangles = " << trianglesTarget.size() << std::endl;
-
-    _topologyHigh = NULL;
-    getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
-    if (_topologyHigh != NULL)
+    // Set each colour of each vertex to default
+    OutVecCoord &outVertices = *this->toModel->getX();
+    for (unsigned int i=0; i<outVertices.size(); i++)
     {
-        std::cout << "WARNING: HIGH RES MESH TOPOLOGY IS HARD CODED" << std::endl;
-
-//        trianglesTarget = _topologyHigh->getTriangles();
-//
-//        MechanicalState<OutDataTypes>* mStateHigh = dynamic_cast<MechanicalState<OutDataTypes>*> (_topologyHigh->getContext()->getMechanicalState());
-//        verticesTarget = *mStateHigh->getX();
-//
-//        std::cout << "high res vertices = " << verticesTarget.size() << std::endl;
-//        std::cout << "high res triangles = " << trianglesTarget.size() << std::endl;
-    }
-    else
-    {
-        std::cout << "WARNING(BendingPlateMechanicalMapping): no target high resolution mesh found" << std::endl;
+//        std::cout << "Checking outVertex " << i << ": " << outVertices[i] << std::endl;
+        coloursPerVertex.push_back(Vec3(0.56, 0.14, 0.6));    // purple
     }
 
-
-    // Retrieves high resolution mesh topology and measures the error
+    // If we want to measure the error between the two meshes using Hausdorff distance
     if (measureError.getValue())
     {
-        // List of colours for colour map
+        // List of colours to create a colour map
         Vec3 colour;
         Real incr = (float)2/3/240; // (2/3) is chosen stop the gradient to blue
         for (int i=0; i<240; i++)
@@ -284,16 +269,40 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
             colourMapping.push_back(colour);
         }
 
-        MeasureError();
-    }
-    else
-    {
-        OutVecCoord &outVertices = *this->toModel->getX();
-        for (unsigned int i=0; i<outVertices.size(); i++)
+        // Retrieves high resolution mesh topology
+        topologyTarget = NULL;
+        getContext()->get(topologyTarget, nameTargetTopology.getValue(), sofa::core::objectmodel::BaseContext::SearchRoot);
+        if (measureError.getValue() && topologyTarget == NULL)
         {
-//            coloursPerVertex.push_back(Vec3(0.1, 0.1, 0.9));
-            coloursPerVertex.push_back(Vec3(0.56, 0.14, 0.6));    // purple
+            std::cout << "WARNING(BendingPlateMechanicalMapping): target mesh " << nameTargetTopology.getValue() << " was not found" << std::endl;
+            return;
         }
+
+        // Computes two-sided Hausdorff distance
+        MeasureError();
+
+        // Overwrites colour for each vertex based on the error and colour map
+        Real maximum = 0;
+        if (measureError.getValue())
+        {
+            // Normalises the error
+            for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+            {
+                if (fabs(vectorErrorCoarse[i])>maximum)
+                {
+                    maximum = fabs(vectorErrorCoarse[i]);
+                }
+            }
+            Real correctedError;
+            for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+            {
+                correctedError = fabs(vectorErrorCoarse[i])*5;
+                if (correctedError > maximum)
+                    correctedError = maximum;
+                coloursPerVertex[i] = colourMapping[ (int)((correctedError/maximum)*239) ];
+            }
+        }
+
     }
 
     // Initialises shader
@@ -384,7 +393,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::MeasureError()
 {
     Real distance1;
     std::cout << "Computing Hausdorff distance high res->coarse" << std::endl;
-    distance1 = DistanceHausdorff(_topologyHigh, outputTopo, vectorErrorTarget);
+    distance1 = DistanceHausdorff(topologyTarget, outputTopo, vectorErrorTarget);
     std::cout << "Hausdorff distance between high res mesh and coarse mesh = " << distance1 << std::endl;
 
     Real average = 0;
@@ -398,7 +407,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::MeasureError()
 
     Real distance2;
     std::cout << "Computing Hausdorff distance coarse->high res" << std::endl;
-    distance2 = DistanceHausdorff(outputTopo, _topologyHigh, vectorErrorCoarse);
+    distance2 = DistanceHausdorff(outputTopo, topologyTarget, vectorErrorCoarse);
     std::cout << "Hausdorff distance between coarse mesh and high res mesh = " << distance2 << std::endl;
 
     average = 0;
@@ -725,22 +734,11 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
 
                 // Adds deflection
                 z = tinfo->coefficients[0] + tinfo->coefficients[1]*vertexLocal[0] + tinfo->coefficients[2]*vertexLocal[1] + tinfo->coefficients[3]*vertexLocal[0]*vertexLocal[0] + tinfo->coefficients[4]*vertexLocal[0]*vertexLocal[1] + tinfo->coefficients[5]*vertexLocal[1]*vertexLocal[1] + tinfo->coefficients[6]*vertexLocal[0]*vertexLocal[0]*vertexLocal[0] + tinfo->coefficients[7]*vertexLocal[0]*vertexLocal[1]*vertexLocal[1] + tinfo->coefficients[8]*vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
-//                std::cout << "z = " << z << std::endl;
-
-//                Mat<3, 3, Real > R;
-//                tinfo->Qframe.toMatrix(R);
-//                std::cout << "R = " << R << std::endl;
 
                 w += tinfo->Qframe.inverseRotate(Vec3(0, 0, z));
             }
 
             out[i] += w/listBaseTriangles[i].size();
-
-//            // Position in Qframe
-//            out0 = tinfo->Qframe.rotate(out[i]);
-//            // Computed deflection w in Qframe
-//            out0[2] += w/listBaseTriangles[i].size();
-//            out[i] = tinfo->Qframe.inverseRotate(out0);
         }
 
         triangularBendingForcefield->getTriangleInfo().endEdit();
@@ -999,37 +997,6 @@ template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::draw()
 {
     OutVecCoord &outVertices = *this->toModel->getX();
-
-    Real maximum = 0;
-    if (measureError.getValue())
-    {
-        // Normalises the error
-        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
-        {
-            if (fabs(vectorErrorCoarse[i])>maximum)
-            {
-                maximum = fabs(vectorErrorCoarse[i]);
-            }
-        }
-        Real correctedError;
-//        maximum = 0.84;
-//        int count = 0;
-        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
-        {
-//            if (vectorErrorCoarse[i]>5.5)
-//            {
-//                count++;
-//                std::cout << "error of vertex " << i << " = " << vectorErrorCoarse[i] << std::endl;
-//            }
-
-            correctedError = fabs(vectorErrorCoarse[i])*5;
-            if (correctedError > maximum)
-                correctedError = maximum;
-            coloursPerVertex.push_back( colourMapping[ (int)((correctedError/maximum)*239) ] );
-        }
-
-//        std::cout << count << " vertices are above 5.5 out of " << vectorErrorCoarse.size() << std::endl;
-    }
 
     shader.TurnOn();
 

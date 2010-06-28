@@ -1,4 +1,4 @@
-<Node name="root" dt="0.01" gravity="0 0 0" showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0">
+<Node name="root" dt="0.01" gravity="0 0 0" showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0">
         <MasterContactSolver/>
         <LCPConstraintSolver tolerance="1e-6" initial_guess="false" build_lcp="true" printLog="false" mu="0.1"/>
         <CollisionPipeline verbose="0" />
@@ -11,16 +11,16 @@
 
 
         <!-- Motion control of the implant -->
-        <Node name="ImplantMotion">
-            <MechanicalObject name="ArticulatedObject" template="Vec1d"/>
-            <Node name="6D_DOFs1">
-                <MechanicalObject name="6D_Dof" template="Rigid"/>
-                <UniformMass mass="0.00128 0.000001 [0.0000001 0 0 0 0.0000001 0 0 0 0.0000001]" showAxisSizeFactor="5"/>
-                <ArticulatedSystemMapping object1="ArticulatedObject" object2="6D_Dof"/>
-            </Node>
-            <ArticulatedHierarchyContainer filename="applications/plugins/shells/examples/ISBMS/data/ImplantMotion.bvh"/>
-            <ArticulatedHierarchyBVHController />
-        </Node>
+<!--        <Node name="ImplantMotion">-->
+<!--            <MechanicalObject name="ArticulatedObject" template="Vec1d"/>-->
+<!--            <Node name="6D_DOFs1">-->
+<!--                <MechanicalObject name="6D_Dof" template="Rigid"/>-->
+<!--                <UniformMass mass="0.00128 0.000001 [0.0000001 0 0 0 0.0000001 0 0 0 0.0000001]" showAxisSizeFactor="5"/>-->
+<!--                <ArticulatedSystemMapping object1="ArticulatedObject" object2="6D_Dof"/>-->
+<!--            </Node>-->
+<!--            <ArticulatedHierarchyContainer filename="applications/plugins/shells/examples/ISBMS/data/ImplantMotion.bvh"/>-->
+<!--            <ArticulatedHierarchyBVHController />-->
+<!--        </Node>-->
 
 
         <Node name="Rest_position">
@@ -43,7 +43,7 @@
 
         <!-- After 5s of simulation, stiffness and angularStiffness= must be set down to 3e5 and 3e4 respectively, for the implant to be able to relax towards the capsule's centre    -->
         <RestShapeSpringsForceField points="468" stiffness="3e9" angularStiffness="1e8" external_rest_shape="../ImplantMotion/6D_DOFs1/6D_Dof" external_points="1"/>
-
+<!--        <FixedConstraint indices="468"/>-->
 
 
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.15"/>
@@ -67,17 +67,26 @@
             </Node>
         </Node>
 
-          <!--        <Node name="SubTriangles">-->
-          <!--            <TriangleSetTopologyContainer  name="subTriangles"/>-->
-          <!--            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="1"/>-->
-          <!--            <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003"/>-->
-          <!--            <BendingPlateMechanicalMapping/>-->
-          <!--            <Triangle />-->
-          <!--            <Node>-->
-          <!--                <OglModel name="Visual" color="red"/>-->
-          <!--                <IdentityMapping object1="subPoints" object2="Visual"/>-->
-          <!--            </Node>-->
-          <!--        </Node>-->
+<!--                  <Node name="SubTriangles">-->
+<!--                      <TriangleSetTopologyContainer  name="subTriangles"/>-->
+<!--                      <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="0"/>-->
+<!--                      <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003" printLog="true"/>-->
+<!--                      <BendingPlateMechanicalMapping/>-->
+<!--<!--                      <Triangle />-->-->
+<!--<!--                      <Node>-->-->
+<!--<!--                          <OglModel name="Visual" color="red"/>-->-->
+<!--<!--                          <IdentityMapping object1="subPoints" object2="Visual"/>-->-->
+<!--<!--                      </Node>-->-->
+<!--                  </Node>-->
+
+<!--            <Node name="SubTriangles">-->
+<!--                <MechanicalObject name="basePointsVec3" template="Vec3d"/>-->
+<!--                <IdentityMapping/>-->
+<!--                <Node>-->
+<!--                    <OglModel name="Visual" color="red"/>-->
+<!--                    <IdentityMapping object1="basePointsVec3" object2="Visual"/>-->
+<!--                </Node>-->
+<!--            </Node>-->
 
         </Node>
 

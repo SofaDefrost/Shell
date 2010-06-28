@@ -1,5 +1,7 @@
 <Node name="root" dt="0.01" showVisualModels="1" showBehaviorModels="0" showCollisionModels="1" showMappings="0" showForceFields="1" showWireFrame="0">
 
+<!--    <TriangleSetTopologyContainer name="testTopo" />-->
+
     <Node name="TargetMesh">
         <MeshObjLoader name="targetTopoLoader" filename="../mesh/aneurysmHighRes.obj" />
         <TriangleSetTopologyContainer name="targetTopo" src="@targetTopoLoader" />
@@ -27,9 +29,9 @@
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subCoarseTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="coarseTopo" object2="subCoarseTopo" subdivisions="2"/>
+            <TriangleSubdivisionTopologicalMapping name="mapping" object1="coarseTopo" object2="subCoarseTopo" subdivisions="2"/>
             <MechanicalObject  name="subCoarse_MO" />
-            <BendingPlateMechanicalMapping measureError="1"/>
+            <BendingPlateMechanicalMapping measureError="1" targetTopology="targetTopo"/>
         </Node>
     </Node>
 

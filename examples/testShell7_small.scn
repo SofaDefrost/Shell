@@ -27,9 +27,9 @@
 
     <Node name="7smallTriangles">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="0.5"/>
-<!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
 <!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
         <TriangleSetTopologyContainer name="baseTriangles" filename="../mesh/7small_triangles.obj"/>
         <MechanicalObject name="tri" template="Rigid" debugViewIndices="false" debugViewIndicesScale="0.0007"/>
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.0002" totalmass="0.0001" />

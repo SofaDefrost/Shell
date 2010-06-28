@@ -31,6 +31,8 @@
 #include <sofa/helper/gl/GLSLShader.h>
 //#include <sofa/core/VisualModel.h>
 
+#include <sofa/component/topology/TriangleSetTopologyContainer.h>
+
 #include "../forcefield/TriangularBendingFEMForceField.h"
 #include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
 
@@ -110,10 +112,9 @@ protected:
 	BaseMeshTopology* outputTopo;
         
         Data<bool> measureError;
-//        Data<OutVecCoord> targetVertices;
-//        Data<SeqTriangles> targetTriangles;
+        Data<std::string> nameTargetTopology;
 
-        BaseMeshTopology* _topologyHigh;
+        TriangleSetTopologyContainer* topologyTarget;
         OutVecCoord verticesTarget;
         SeqTriangles trianglesTarget;
         

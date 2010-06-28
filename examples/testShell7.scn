@@ -27,9 +27,9 @@
 
     <Node name="4trianglesAgain">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
-<!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
 <!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
         <TriangleSetTopologyContainer name="baseTriangles" filename="../mesh/7triangles.obj"/>
         <MechanicalObject name="tri" template="Rigid" debugViewIndices="false" debugViewIndicesScale="0.0007"/>
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.2" totalmass="0.1" />
@@ -54,7 +54,7 @@
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subTriangles"/>
-            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="2"/>
+            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="1"/>
             <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003"/>
 <!--            <ConstantForceField points="5 9" forces="0 0 3"/>-->
             <BendingPlateMechanicalMapping/>
