@@ -253,7 +253,6 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     OutVecCoord &outVertices = *this->toModel->getX();
     for (unsigned int i=0; i<outVertices.size(); i++)
     {
-//        std::cout << "Checking outVertex " << i << ": " << outVertices[i] << std::endl;
         coloursPerVertex.push_back(Vec3(0.56, 0.14, 0.6));    // purple
     }
 

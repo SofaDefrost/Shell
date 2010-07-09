@@ -1,0 +1,172 @@
+\usepackage{amsmath,amssymb}             % AMS Math
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[left=3.8cm,right=3.3cm,top=2.8cm,bottom=2.8cm,includefoot,includehead,headheight=13.6pt]{geometry}
+\renewcommand{\baselinestretch}{1.05}
+
+
+% Glossary / list of abbreviations
+\usepackage[intoc]{nomencl}
+\renewcommand{\nomname}{List of Abbreviations}
+\makenomenclature
+% Help
+% Issue the \nomenclature command for each symbol you want to have included in the nomenclature list. The best place for this command is immediately after you introduce the symbol for the first  time. Put \printnomenclature at the place you want to have your nomenclature list. Option "refpage" to add page numbers.
+% Example: PhD\nomenclature{PhD}{Doctor of Philosophy} 
+
+
+
+% Natbib adds different possibilities for citations. \cite{ref} => Name et al. (xxxx) ; \citepref} => (Name et al., xxxx) ; \citep[prefix][suffix]{ref} => (prefix Name et al., xxxx, suffix) ; 
+\usepackage{natbib}										
+
+% Creates a label in front of each item of the bibliography based on Author-year.
+\makeatletter
+\def\@lbibitem[#1]#2{%
+\if\relax\@extra@b@citeb\relax\else
+\@ifundefined{br@#2\@extra@b@citeb}{}{%
+\@namedef{br@#2}{\@nameuse{br@#2\@extra@b@citeb}}}\fi
+\@ifundefined{b@#2\@extra@b@citeb}{\def\NAT@num{}}{\NAT@parse{#2}}%
+\item[\hfil\hyper@natanchorstart{#2\@extra@b@citeb}{[{\citealp{#2}}]}%
+\hyper@natanchorend]%
+\NAT@ifcmd#1(@)(@)\@nil{#2}}
+\makeatother
+
+% ------------------------------------------------------------------------------------------------------------------
+%   Pdf configuration
+% ------------------------------------------------------------------------------------------------------------------
+\usepackage{ifpdf}
+
+\ifpdf
+  \usepackage[pdftex]{graphicx}
+  \DeclareGraphicsExtensions{.jpg,.pdf,.png}
+  \usepackage[a4paper]{hyperref}
+\else
+  \usepackage{graphicx}
+  \DeclareGraphicsExtensions{.ps,.eps}
+  \usepackage[a4paper,dvipdfm]{hyperref}
+\fi
+
+\graphicspath{{.}{images/}}
+
+% Links in pdf
+\usepackage{color}
+\definecolor{linkcol}{rgb}{0,0,0}		%  {0,0,0.4}
+\definecolor{citecol}{rgb}{0,0,0} 	%  {0.5,0,0}
+
+% Change this to change the informations included in the pdf file (see hyperref documentation for information on those parameters)
+\hypersetup
+{
+pdftitle="Real-time soft tissue modelling on GPU for medical simulation", % Sets the document information Title field
+pdfauthor="Olivier COMAS", % Sets the document information Author field
+pdfpagelayout=SinglePage, % Sets layout of PDF pages ('SinglePage' displays a single page)
+pdffitwindow=true, % Resize document window to fit document size
+colorlinks=true, % Colors the text of links and anchors
+linkcolor=linkcol, % Color for normal internal links
+citecolor=citecol, % Color for bibliographical citations in text
+urlcolor=linkcol % Color for linked URLs
+}
+
+% To get the link in the table of figures point to the top of the image (instead of the caption by default)
+\usepackage[all]{hypcap}
+
+% The tocbibind package enables the titles of the Table of Contents, the List of Figures, the List of Tables, the Bibliography and the Index all to be correctly added to the Table of Contents.
+\usepackage[notlot,notlof]{tocbibind}
+
+% Implements a new bookmark (outline) organisation for package hyperref. Only one LaTeX pass is sufficient (instead of 2 by hyperref)
+%\usepackage{bookmark}
+
+% ------------------------------------------------------------------------------------------------------------------
+%   Definitions
+% ------------------------------------------------------------------------------------------------------------------
+\setcounter{secnumdepth}{3}				% Change the depth to which section numbering occurs
+\setcounter{tocdepth}{2} 					% Specifies what depth to take the Table of Contents to
+
+% Some useful commands and shortcut for maths:  partial derivative and stuff
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+
+\usepackage{rotating}                    				% Sideways of figures & tables
+%\usepackage{bibunits}
+%\usepackage[sectionbib]{chapterbib}          	% Cross-reference package (Natural BiB)
+%\usepackage{natbib}                  					% Put References at the end of each chapter. Do not put 'sectionbib' option here. Sectionbib option in 'natbib' will do.
+                                         
+%\usepackage{multirow}		% Multirows in tables
+%\usepackage{slashbox}		% Diagonal separation in corner cells of tables
+
+% For algorithmics
+%\usepackage{algorithm}
+%\usepackage[noend]{algorithmic}
+
+ % Short text in italic put between two lines for a short abstract before each chapter
+\newenvironment{shortAbstract}
+{\vspace{\stretch{1}} \noindent\rule[2pt]{\textwidth}{0.5pt} \it}									% Before environment
+{\newline \noindent\rule[2pt]{\textwidth}{0.5pt} \vspace{\stretch{3}} \newpage}		% After environment
+
+
+% Centered page environment used for abstracts at the end of the manuscript
+\newenvironment{vcenterpage}
+{\newpage\vspace*{\fill}\thispagestyle{empty}\renewcommand{\headrulewidth}{0pt}}
+{\vspace*{\fill}}
+
+
+
+% ------------------------------------------------------------------------------------------------------------------
+%   Headers configuration
+% ------------------------------------------------------------------------------------------------------------------
+\usepackage{fancyhdr}				% Fancy Header Style Options
+\pagestyle{fancy}                       % Sets fancy header and footer
+
+\fancyhead{}														 % Clear all head fields
+\fancyhead[RE]{\nouppercase{\leftmark}} 		     % Chapter at the right on even pages
+\fancyhead[LE]{\thepage}									 % Page number at the left on even pages
+\fancyhead[LO]{\nouppercase{\rightmark}}    	 % Section at the left on odd pages
+\fancyhead[RO]{\thepage}									 % Page number at the right on odd pages
+\fancyfoot{}														 % Clear all footer fields
+
+\let\headruleORIG\headrule
+\renewcommand{\headrule}{\color{black} \headruleORIG}
+\renewcommand{\headrulewidth}{1.0pt}
+\usepackage{colortbl}
+\arrayrulecolor{black}
+
+% Redefine style "plain" used by chapter pages
+\fancypagestyle{plain}
+{
+  \fancyhead{}
+  \fancyfoot{}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+
+% ------------------------------------------------------------------------------------------------------------------
+%   Clear Header Style on the Last Empty Odd pages
+% ------------------------------------------------------------------------------------------------------------------
+\makeatletter
+
+\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else%
+  \hbox{}%
+  \thispagestyle{empty}%              % Empty header styles
+  \newpage%
+  \if@twocolumn\hbox{}\newpage\fi\fi\fi}
+
+\makeatother
+
+
+
+% ------------------------------------------------------------------------------------------------------------------
+%   Fancy chapter titles
+% ------------------------------------------------------------------------------------------------------------------
+%\usepackage[Lenny]{fncychap}			% Lenny, Bjornstrup
+% WARNING: screwed the table of contents up (problem with \appendix)
+% Using \chapter*{Appendix Example}\label{chap:appendix1} \phantomsection \addcontentsline{toc}{chapter}{Appendix Example} instead of chapter{Appendix Example} fixes the problem as well
+
+
+% ------------------------------------------------------------------------------------------------------------------
+%   Prints your review date and 'Draft Version' (From Josullvn, CS, CMU)
+% ------------------------------------------------------------------------------------------------------------------
+\newcommand{\reviewtimetoday}[2]{\special{!userdict begin
+    /bop-hook{gsave 20 710 translate 45 rotate 0.8 setgray
+      /Times-Roman findfont 12 scalefont setfont 0 0   moveto (#1) show
+      0 -12 moveto (#2) show grestore}def end}}
+% You can turn on or off this option.
+\reviewtimetoday{\today}{Draft Version}
+
+

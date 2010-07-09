@@ -1,0 +1,37 @@
+\documentclass[a4paper,11pt,twoside,openright]{ThesisStyle}
+
+\include{formatAndDefs}
+
+\begin{document}
+
+\include{TitlePage}
+
+% First pages (numbered with roman)
+\frontmatter
+\setcounter{page}{1}
+
+\input{Acknowledgements}			% Acknowledgements
+\input{Abstract}								% English short abstract
+\include{Resume}							% Substantial french abstract
+
+\tableofcontents							% Table of contents
+%\listoffigures									% List of figures
+%\listoftables									% List of tables
+
+% All chapters
+\mainmatter
+\include{Chapter1}
+\include{Chapter2}
+
+% Appendix
+\appendix
+\include{Appendix1}
+
+% References
+\bibliographystyle{ThesisBiblioStyle}
+\bibliography{Thesis}
+
+% List of abbreviations
+%\printnomenclature
+
+\end{document}

@@ -6,7 +6,7 @@
         <MeshObjLoader name="targetTopoLoader" filename="../mesh/aneurysmHighRes.obj" />
         <TriangleSetTopologyContainer name="targetTopo" src="@targetTopoLoader" />
         <MechanicalObject name="targetMesh_MO" template="Vec3d"/>
-<!--        <OglModel name="Visual" color="red"/>-->
+        <OglModel name="Visual" color="green"/>
     </Node>
 
 
