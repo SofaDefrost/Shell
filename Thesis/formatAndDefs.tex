@@ -5,6 +5,31 @@
 \renewcommand{\baselinestretch}{1.05}
 
 
+
+% ------------------------------------------------------------------------------------------------------------------
+%   Draft stuff during redaction
+% ------------------------------------------------------------------------------------------------------------------
+\usepackage{draftcopy}
+
+
+\usepackage{color}
+\newcommand{\draft}[1]{\color{red}{(#1)}}
+
+
+\newcommand{\reviewtimetoday}[2]{\special{!userdict begin
+    /bop-hook{gsave 20 710 translate 45 rotate 0.8 setgray
+      /Times-Roman findfont 12 scalefont setfont 0 0   moveto (#1) show
+      0 -12 moveto (#2) show grestore}def end}}
+% You can turn on or off this option.
+\reviewtimetoday{\today}{Draft Version}
+
+
+
+
+% ------------------------------------------------------------------------------------------------------------------
+%   Nomenclature and bibliography settings
+% ------------------------------------------------------------------------------------------------------------------
+
 % Glossary / list of abbreviations
 \usepackage[intoc]{nomencl}
 \renewcommand{\nomname}{List of Abbreviations}
@@ -12,7 +37,6 @@
 % Help
 % Issue the \nomenclature command for each symbol you want to have included in the nomenclature list. The best place for this command is immediately after you introduce the symbol for the first  time. Put \printnomenclature at the place you want to have your nomenclature list. Option "refpage" to add page numbers.
 % Example: PhD\nomenclature{PhD}{Doctor of Philosophy} 
-
 
 
 % Natbib adds different possibilities for citations. \cite{ref} => Name et al. (xxxx) ; \citepref} => (Name et al., xxxx) ; \citep[prefix][suffix]{ref} => (prefix Name et al., xxxx, suffix) ; 
@@ -48,9 +72,10 @@
 \graphicspath{{.}{images/}}
 
 % Links in pdf
-\usepackage{color}
+%\usepackage{color}
 \definecolor{linkcol}{rgb}{0,0,0}		%  {0,0,0.4}
 \definecolor{citecol}{rgb}{0,0,0} 	%  {0.5,0,0}
+
 
 % Change this to change the informations included in the pdf file (see hyperref documentation for information on those parameters)
 \hypersetup
@@ -157,16 +182,3 @@ urlcolor=linkcol % Color for linked URLs
 %\usepackage[Lenny]{fncychap}			% Lenny, Bjornstrup
 % WARNING: screwed the table of contents up (problem with \appendix)
 % Using \chapter*{Appendix Example}\label{chap:appendix1} \phantomsection \addcontentsline{toc}{chapter}{Appendix Example} instead of chapter{Appendix Example} fixes the problem as well
-
-
-% ------------------------------------------------------------------------------------------------------------------
-%   Prints your review date and 'Draft Version' (From Josullvn, CS, CMU)
-% ------------------------------------------------------------------------------------------------------------------
-\newcommand{\reviewtimetoday}[2]{\special{!userdict begin
-    /bop-hook{gsave 20 710 translate 45 rotate 0.8 setgray
-      /Times-Roman findfont 12 scalefont setfont 0 0   moveto (#1) show
-      0 -12 moveto (#2) show grestore}def end}}
-% You can turn on or off this option.
-\reviewtimetoday{\today}{Draft Version}
-
-
