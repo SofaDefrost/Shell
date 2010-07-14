@@ -7,26 +7,6 @@
 
 
 % ------------------------------------------------------------------------------------------------------------------
-%   Draft stuff during redaction
-% ------------------------------------------------------------------------------------------------------------------
-\usepackage{draftcopy}
-
-
-\usepackage{color}
-\newcommand{\draft}[1]{\color{red}{(#1)}}
-
-
-\newcommand{\reviewtimetoday}[2]{\special{!userdict begin
-    /bop-hook{gsave 20 710 translate 45 rotate 0.8 setgray
-      /Times-Roman findfont 12 scalefont setfont 0 0   moveto (#1) show
-      0 -12 moveto (#2) show grestore}def end}}
-% You can turn on or off this option.
-\reviewtimetoday{\today}{Draft Version}
-
-
-
-
-% ------------------------------------------------------------------------------------------------------------------
 %   Nomenclature and bibliography settings
 % ------------------------------------------------------------------------------------------------------------------
 
@@ -72,7 +52,7 @@
 \graphicspath{{.}{images/}}
 
 % Links in pdf
-%\usepackage{color}
+\usepackage{color}
 \definecolor{linkcol}{rgb}{0,0,0}		%  {0,0,0.4}
 \definecolor{citecol}{rgb}{0,0,0} 	%  {0.5,0,0}
 
@@ -182,3 +162,38 @@ urlcolor=linkcol % Color for linked URLs
 %\usepackage[Lenny]{fncychap}			% Lenny, Bjornstrup
 % WARNING: screwed the table of contents up (problem with \appendix)
 % Using \chapter*{Appendix Example}\label{chap:appendix1} \phantomsection \addcontentsline{toc}{chapter}{Appendix Example} instead of chapter{Appendix Example} fixes the problem as well
+
+
+
+
+% ------------------------------------------------------------------------------------------------------------------
+%   Draft stuff during redaction
+% ------------------------------------------------------------------------------------------------------------------
+
+% For comments and TODO (merely writes in colour)
+\newcommand{\OC}[1]{\color{blue}{\textnormal{(#1)}}}
+\newcommand{\TODO}[1]{\color{red}{TODO: #1}}
+
+% To display current time (\currenttime) and change format of date
+\usepackage[dayofweek]{datetime}
+\settimeformat{xxivtime}					% twenty-four hour time like 16:51
+
+% Defines a new date format as Tue 13th of July 2010
+\newdateformat{mydateformat}{\shortdayofweekname{\THEDAY}{\THEMONTH}{\THEYEAR} \ordinaldate{\THEDAY}~of \monthname[\THEMONTH] \THEYEAR}
+\mydateformat
+
+% Watermarks the document
+\usepackage{type1cm,eso-pic}
+\makeatletter
+\AddToShipoutPicture{%
+\setlength{\@tempdimb}{.5\paperwidth}%
+\setlength{\@tempdimc}{.5\paperheight}%
+\setlength{\unitlength}{1pt}%
+\put(\strip@pt\@tempdimb,\strip@pt\@tempdimc){%
+\makebox(0,0){\rotatebox{45}{\textcolor[gray]{0.9}%
+{\fontsize{3cm}{3cm}\selectfont{Draft Version}}}}%
+\makebox(-500,-0){\rotatebox{90}{\textcolor[gray]{0.9}%
+{\fontsize{0.7cm}{0.7cm}\selectfont{Olivier Comas - \today ~at \currenttime}}}}
+}%
+}
+\makeatother
