@@ -1,0 +1,67 @@
+\part{Introduction}
+
+	\chapter{Medical simulation}
+		\section{General context and goal: medical training, patient-specific planning and per-operative guidance}
+		\section{Challenges (trade-off between accuracy and real-time)}
+
+	\chapter{One key point in medical simulation: soft-tissue modelling}
+		\section{Necessary background in continuum mechanics}
+			\subsection{Deformation tensor and strain tensor}
+			\subsection{Stress and constitutive laws}
+		\section{Tissue characterisation}
+			\subsection{Material models for organs (non-linear, visco-elastic and anisotropic)}
+			\subsection{Measure/estimation of model parameters}
+
+	\chapter{Main principles of Finite Element Method (or how to solve equations of continuum mechanics from previous section)}
+		\section{Discretisation}
+		\section{Derivation of element equations}
+		\section{Assembly of element equations}
+		\section{Solution of global problem}
+
+
+
+\part{Solid organs modelling}
+
+	\chapter{State of art: FEM}
+
+	\chapter{Linear not accurate => Non-linear FEM => Introduction of TLED}
+		\section{Differences with classic FEM and reasons of its efficiency}
+		\section{Visco-elasticity and anisotropy added \OC{MICCAI 2008; MedIA 2009}}
+
+	\chapter{GPU implementation of TLED}
+		\section{What is GPGPU}
+		\section{Re-formulation of the algorithm for its Cg implementation}
+		\section{CUDA implementation/optimisations \OC{ISBMS 2008a}}
+
+	\chapter{Implementation in SOFA}
+		\section{Presentation of SOFA project and architecture}
+		\section{Implementation in SOFA and TLED released in open-source}
+
+
+
+\part{Hollow organs modelling}
+
+	\chapter{State of art: hollow structures}
+		\section{Non-physic approaches (computer graphics stuff)}
+		\section{Physically accurate approches (plates/shells)}
+
+	\chapter{Colonoscopy simulator project}
+		\section{Project introduction}
+		\section{Mass-spring model for colon implemented on GPU \OC{ISBMS 2008b}}
+
+	\chapter{More accurate: a co-rotational triangular shell model \OC{ISBMS 2010}}
+		\section{Model description}
+		\section{Validation}
+		\section{Application to implant deployment simulation in cataract surgery}
+	
+	\chapter{'Shell meshing' technique \OC{MICCAI 2010}}
+		\section{State of art: reconstruction/simplification}
+		\section{Our method}
+		
+	\chapter{Applications to medical simulation}
+		\section{Nice medical stuff to show}
+		\section{Interaction solid/hollow organs}
+	
+	
+	
+\part{Conclusion}
