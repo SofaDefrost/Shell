@@ -1,28 +1,43 @@
-\chapter{Soft-tissue modelling}
+\chapter{Background in continuum mechanics for soft-tissue modelling}
 \label{chap:softtissue}
 \begin{shortAbstract}
-As seen in the previous chapter, realistic modelling of organs' deformation is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast updates of the deformation model to obtain a real-time display of the computed deformations. If for medical training devices the haptic feedback from touching organs merely needs to feel real, the accuracy of the information provided to the clinician in the cases of planning or per-operative guidance is crucial. Therefore a substantial comprehension of the mechanics involved and a knowledge of physical properties of anatomical structures are both mandatory in our quest to realistically model organs' deformation. This chapter will first introduce a few necessary basic concepts of continuum mechanics. It will then present the different theoretical models able to describe organs' mechanical behaviours. 
+As seen in the previous chapter, realistic modelling of organs' deformation is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast updates of the deformation model to obtain a real-time display of the computed deformations. If for medical training devices the haptic feedback from touching organs merely needs to feel real, the accuracy of the information provided to the clinician in the cases of planning or per-operative guidance is crucial. Therefore a substantial comprehension of the mechanics involved and a knowledge of physical properties of anatomical structures are both mandatory in our quest to realistically model organs' deformation. This chapter will introduce a few necessary concepts of continuum mechanics. It will then present the different theoretical models able to describe organs' mechanical behaviours. 
 \end{shortAbstract}
 
 
 
-\section{Necessary background in continuum mechanics}
+\section{Introduction}
+In our everyday life, matter appears smooth and continuous: from the wood used to build your desk to the water you drink. But this is just illusion. The concept that matter is composed of discrete units has been around for millennia. In fact we know with certainty that our world is composed of microscopic atoms and molecules separated by empty space since the beginning of the twentieth century~\citep{Lautrup05}. However, certain physical phenomena can be predicted with theories that pay no attention to the molecular structure of materials. Consider for instance the deformation of the horizontal board of a bookshelf under the weight of the books. The bending of the shelf can be modelled without considering its molecular composition. The branch of physics in which materials are treated as continuous is known as continuum mechanics. Continuum mechanics studies the response of materials to different loading conditions. In this theory, matter is assumed to exist as a continuum, meaning that the matter in the body is continuously distributed and fills the entire region of space it occupies~\citep{Lai96}. Whether the approximation of continuum mechanics is justified in a given situation is a matter of experimental test. 
 
-\subsection{What is continuum mechanics}
-In our everyday life matter appears smooth and continuous: from the wood used to build your desk to the water you drink. But this is just illusion. The concept that matter is composed of discrete units has been around for millennia. In fact we know with certainty that our world is composed of microscopic atoms and molecules separated by empty space since the beginning of the twentieth century~\cite{Lautrup05}. However, certain physical phenomena can be predicted with theories that pay no attention to the molecular structure of materials. Consider for instance the deformation of the horizontal board of a bookshelf under the weight of the books. The bending of the shelf can be modelled without considering its molecular composition. The branch of physics in which materials are treated as continuous is known as continuum mechanics. In this theory matter is assumed to exist as a continuum, meaning that the matter in the body is continuously distributed and fills the entire region of space it occupies~\cite{Lai96}. Whether the approximation of continuum mechanics is justified in a given situation is a matter of experimental test. 
+Modelling anatomical structures requires an understanding of the deformation and stresses caused by the different sollicitations that occur during medical procedures. A sufficient knowledge of continuum mechanics is therefore essential to follow the rest of this manuscript. Continuum mechanics can be divided into two main parts: general principles common to all media (analysis of deformation, strain and stress concepts) and constitutive equations defining idealised materials. This chapter will not only deal with those two aspects but will also introduce experiments carried out on organs in order to assess the physical parameters used in the theoretical models. This chapter will follow the notation used by~\cite{Reddy07} and the interested reader may refer to this book for more details.  
 
-Continuum mechanics studies the response of materials to different loading conditions and can be divided into two main parts: general principles common to all media and constitutive equations defining idealised materials. 
 
-\subsection{General principles}
-\subsubsection{Deformation tensor and strain tensor}
-\subsubsection{Stress}
-
-\subsection{Idealised materials}
-So far we have described the state of stress and strain and these concepts are valid for every continuum. However these equations are not sufficient to describe the response of a specific material due to a given loading.
-\subsubsection{Constitutive laws}
-
+\section{Description of motion}
+	\subsection{Lagrangian description}
+	\subsection{Eulerian description}
+	\subsection{Displacement field}
+	
+\section{Analysis of deformation}
+	\subsection{Deformation gradient tensor}
+	\subsection{Change of volume}
 		
-		
+\section{Strain measures}
+	\subsection{Cauchy-Green deformation tensors}
+	\subsection{Green strain tensor}
+	\subsection{Cauchy and Euler tensor}
+	\subsection{Infinitesimal strain tensor}
+	
+\section{Stress}
+	\subsection{Cauchy stress}
+	\subsection{First Piola-Kirchhoff stress tensor}
+	\subsection{Second Piola-Kirchhoff stress tensor}
+	
+\section{Constitutive equations}
+	\subsection{Elastic solids}	
+	\subsection{Generalised Hooke's law}
+	\subsection{Orthotropic materials}
+	\subsection{Isotropic materials}
+			
 \section{Tissue characterisation}
 	\subsection{Material models for organs (non-linear, visco-elastic and anisotropic)}
-	\subsection{Measure/estimation of model parameters?}
+	\subsection{Measure/estimation of model parameters}
