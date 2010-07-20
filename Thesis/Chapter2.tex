@@ -1,26 +1,62 @@
 \chapter{Background in continuum mechanics for soft-tissue modelling}
 \label{chap:softtissue}
 \begin{shortAbstract}
-As seen in the previous chapter, realistic modelling of organs' deformation is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast updates of the deformation model to obtain a real-time display of the computed deformations. If for medical training devices the haptic feedback from touching organs merely needs to feel real, the accuracy of the information provided to the clinician in the cases of planning or per-operative guidance is crucial. Therefore a substantial comprehension of the mechanics involved and a knowledge of physical properties of anatomical structures are both mandatory in our quest to realistically model organs' deformation. This chapter will introduce a few necessary concepts of continuum mechanics. It will then present the different theoretical models able to describe organs' mechanical behaviours. 
+As seen in the previous chapter, realistic modelling of organs' deformation is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast updates of the deformation model to obtain a real-time display of the computed deformations. If for medical training devices the haptic feedback from touching organs merely needs to feel real, the accuracy of the information provided to the clinician in the cases of planning or per-operative guidance is crucial. Therefore a substantial comprehension of the mechanics involved and a knowledge of physical properties of anatomical structures are both mandatory in our quest to realistically model the deformation of organs. This chapter will start by introducing the main concepts of continuum mechanics that are fundamental to study the mechanical response of organs. It will then present mathematical models able to describe the different mechanical aspects of materials and briefly expose their experimental validation.
 \end{shortAbstract}
 
 
 
 \section{Introduction}
-In our everyday life, matter appears smooth and continuous: from the wood used to build your desk to the water you drink. But this is just illusion. The concept that matter is composed of discrete units has been around for millennia. In fact we know with certainty that our world is composed of microscopic atoms and molecules separated by empty space since the beginning of the twentieth century~\citep{Lautrup05}. However, certain physical phenomena can be predicted with theories that pay no attention to the molecular structure of materials. Consider for instance the deformation of the horizontal board of a bookshelf under the weight of the books. The bending of the shelf can be modelled without considering its molecular composition. The branch of physics in which materials are treated as continuous is known as continuum mechanics. Continuum mechanics studies the response of materials to different loading conditions. In this theory, matter is assumed to exist as a continuum, meaning that the matter in the body is continuously distributed and fills the entire region of space it occupies~\citep{Lai96}. Whether the approximation of continuum mechanics is justified in a given situation is a matter of experimental test. 
+In our everyday life, matter appears smooth and continuous: from the wood used to build your desk to the water you drink. But this is just illusion. The concept that matter is composed of discrete units has been around for millennia. In fact we know with certainty that our world is composed of microscopic atoms and molecules separated by empty space since the beginning of the twentieth century \citep{Lautrup05}. However, certain physical phenomena can be predicted with theories that pay no attention to the molecular structure of materials. Consider for instance the deformation of the horizontal board of a bookshelf under the weight of the books. The bending of the shelf can be modelled without considering its molecular composition. The branch of physics in which materials are treated as continuous is known as \emph{continuum mechanics}. Continuum mechanics studies the response of materials to different loading conditions. In this theory, matter is assumed to exist as a continuum, meaning that the matter in the body is continuously distributed and fills the entire region of space it occupies \citep{Lai96}. This assumption is generally valid if the length scales of interest are large compared with the length scales of discrete molecular structure, but whether the approximation of continuum mechanics is actually justified in a given situation is merely a matter of experimental test. 
 
-Modelling anatomical structures requires an understanding of the deformation and stresses caused by the different sollicitations that occur during medical procedures. A sufficient knowledge of continuum mechanics is therefore essential to follow the rest of this manuscript. Continuum mechanics can be divided into two main parts: general principles common to all media (analysis of deformation, strain and stress concepts) and constitutive equations defining idealised materials. This chapter will not only deal with those two aspects but will also introduce experiments carried out on organs in order to assess the physical parameters used in the theoretical models. This chapter will follow the notation used by~\cite{Reddy07} and the interested reader may refer to this book for more details.  
+Modelling anatomical structures requires an understanding of the deformation and stresses caused by the different sollicitations that occur during medical procedures. A sufficient knowledge of continuum mechanics is therefore essential to follow the rest of this manuscript. Continuum mechanics can be divided into two main parts: general principles common to all media (analysis of deformation, strain and stress concepts) and constitutive equations defining idealised materials. This chapter will not only deal with those two aspects but will also introduce experiments carried out on organs in order to assess the physical parameters used in the mathematical models. This chapter will follow the notation used by \cite{Reddy07} and the interested reader may refer to this book for more details.  
 
 
 \section{Description of motion}
+Let us consider a body $\boldsymbol \beta$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\boldsymbol \beta$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. Deformation implies the change in shape and/or size of the body from an initial configuration noted $\kappa_{0}$ to a new configuration $\kappa$ called the \emph{current} or \emph{deformed configuration}. 
+
+Let us now consider a given particule of the body that we call $X$. What we will call particule in the following is in fact an infinitesimal volume of material. We denote the position it occupies in the initial configuration $\textbf{X}$ and note $\textbf{x}$ its position in the deformed configuration, both expressed in the chosen frame of reference. The mapping $\chi : \boldsymbol \beta_{\kappa_{0}} \rightarrow \boldsymbol \beta_{\kappa}$ is called the \emph{deforming mapping} of the body $\boldsymbol \beta$ from $\kappa_{0}$ to $\kappa$. When analysing the deformation of a continuous body, it is necessary to describe the evolution of configurations through time. Its mathematical description follows one of the two approaches: the material description or the spatial description. The material description is known as \emph{Lagrangian description} whereas the spatial description is also called \emph{Eulerian description}. These two approaches are detailled next. 
+
 	\subsection{Lagrangian description}
+In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. Thus, the current coordinates ($\textbf{x} \in \kappa$) are expressed in terms of the reference coordinates ($\textbf{X} \in \kappa_{0}$): 
+\begin{equation}
+\textbf{x} = \chi(\textbf{X}, t), \quad \chi(\textbf{X}, 0) = \textbf{X},
+\end{equation}
+and the variation of a typical variable $\phi$ over the body is described with respect to the coordinates $\textbf{X}$ and time $t$:
+\begin{equation}
+\phi = \phi(\textbf{X}, t) \enspace .
+\end{equation}
+For a fixed value of $\textbf{X} \in \kappa_{0}$, $\phi(\textbf{X},t)$ gives the value of $\phi$ at time $t$ associated with the fixed particule $X$ whose position in the reference configuration is $\textbf{X}$. We note that a change in time $t$ implies that the same particule $X$ has a different value $\phi$. Thus, the Lagrangian description focuses its attention on the particules of the continuous body and it is usually used in solid mechanics.
+	
 	\subsection{Eulerian description}
+Rather than following the particules, the Eulerian description observes the changes at fixed locations. 	In the Eulerian description, the motion is this time referred to the current configuration $\kappa$ and $\phi$ is described with respect to the current position ($\textbf{x} \in \kappa$):
+\begin{equation}
+\phi = \phi(\textbf{x}, t), \quad \textbf{X} = \textbf{X}(\textbf{x}, t) \enspace .
+\end{equation}
+For a fixed value of $\textbf{x} \in \kappa$, $\phi(\textbf{x},t)$ gives the value of $\phi$ associated with different material particules at different times, because different particules occupy the position $\textbf{x} \in \kappa$ at different times. A change in time $t$ implies that a different value $\phi$ is observed at the same spatial location $\textbf{x} \in \kappa$, now probably occupied by a different particule. Hence, the Eulerian description is focused on a spatial position. 	This approach is convenient for the study of fluid flow where the kinematic property of greatest interest is the rate at which change is taking place rather than the shape of the body of fluid at a reference time \citep{Spencer80}. Because we are only interested in the study of solid bodies, the Lagrangian description will be used in the rest of the text. 
+	
 	\subsection{Displacement field}
+The deplacement of a particule $X$ is called \emph{displacement vector} and its expression in the Lagrangian description is the following:
+\begin{equation}
+\textbf{u}(\textbf{X}, t) = \textbf{x}(\textbf{X}, t) - \textbf{X} \enspace .
+\end{equation}
+A \emph{displacement field} is a vector field of all displacement vectors for all particles in the body, which relates the deformed configuration $\kappa$ with the undeformed configuration $\kappa_{0}$. Indeed if the displacement field is known, we can construct the current configuration $\kappa$ from the undeformed configuration $\kappa_{0}$: $\chi(\textbf{X}, t) = \textbf{X} + \textbf{u}(\textbf{X})$. 	
 	
 \section{Analysis of deformation}
+
 	\subsection{Deformation gradient tensor}
+The displacement field tells us how a point displaces from the reference to the deformed configuration. However, we would also like to know how a piece of material is stretched and rotated as the body moves from the reference to the deformed configuration. Since the length of a material line $d\textbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\textbf{X}$ deforms into $d\textbf{x}$. The question then becomes how to relate $d\textbf{x}$ in the deformed configuration into $d\textbf{X}$ of the reference configuration. The \emph{deformation gradient} gives this relationship and is defined as:
+\begin{equation}
+d\textbf{x} = \textbf{F}  d\textbf{X}
+\end{equation}
+
+
 	\subsection{Change of volume}
+
+
 		
+	\newpage
+			
 \section{Strain measures}
 	\subsection{Cauchy-Green deformation tensors}
 	\subsection{Green strain tensor}
