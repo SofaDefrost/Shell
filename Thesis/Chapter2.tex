@@ -9,60 +9,195 @@ As seen in the previous chapter, realistic modelling of organs' deformation is a
 \section{Introduction}
 In our everyday life, matter appears smooth and continuous: from the wood used to build your desk to the water you drink. But this is just illusion. The concept that matter is composed of discrete units has been around for millennia. In fact we know with certainty that our world is composed of microscopic atoms and molecules separated by empty space since the beginning of the twentieth century \citep{Lautrup05}. However, certain physical phenomena can be predicted with theories that pay no attention to the molecular structure of materials. Consider for instance the deformation of the horizontal board of a bookshelf under the weight of the books. The bending of the shelf can be modelled without considering its molecular composition. The branch of physics in which materials are treated as continuous is known as \emph{continuum mechanics}. Continuum mechanics studies the response of materials to different loading conditions. In this theory, matter is assumed to exist as a continuum, meaning that the matter in the body is continuously distributed and fills the entire region of space it occupies \citep{Lai96}. This assumption is generally valid if the length scales of interest are large compared with the length scales of discrete molecular structure, but whether the approximation of continuum mechanics is actually justified in a given situation is merely a matter of experimental test. 
 
-Modelling anatomical structures requires an understanding of the deformation and stresses caused by the different sollicitations that occur during medical procedures. A sufficient knowledge of continuum mechanics is therefore essential to follow the rest of this manuscript. Continuum mechanics can be divided into two main parts: general principles common to all media (analysis of deformation, strain and stress concepts) and constitutive equations defining idealised materials. This chapter will not only deal with those two aspects but will also introduce experiments carried out on organs in order to assess the physical parameters used in the mathematical models. This chapter will follow the notation used by \cite{Reddy07} and the interested reader may refer to this book for more details.  
+Modelling anatomical structures requires an understanding of the deformation and stresses caused by the different sollicitations that occur during medical procedures. A sufficient knowledge of continuum mechanics is therefore essential to follow the rest of this manuscript. Continuum mechanics can be divided into two main parts: general principles common to all media (analysis of deformation, strain and stress concepts) and constitutive equations defining idealised materials. This chapter will not only deal with those two aspects but will also introduce experiments carried out on organs in order to assess the physical parameters used in the mathematical models. This chapter will follow the notation used by \cite{Bonnet97} and \cite{Reddy07}. The interested reader may refer to these books for more details.  
 
 
 \section{Description of motion}
-Let us consider a body $\boldsymbol \beta$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\boldsymbol \beta$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. Deformation implies the change in shape and/or size of the body from an initial configuration noted $\kappa_{0}$ to a new configuration $\kappa$ called the \emph{current} or \emph{deformed configuration}. 
+Let us consider a body $\boldsymbol \beta$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\boldsymbol \beta$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. Deformation implies the change in shape and\slash or size of the body from an initial configuration noted $\kappa_{0}$ to a new configuration $\kappa$ called the \emph{current} or \emph{deformed configuration}. 
 
-Let us now consider a given particule of the body that we call $X$. What we will call particule in the following is in fact an infinitesimal volume of material. We denote the position it occupies in the initial configuration $\textbf{X}$ and note $\textbf{x}$ its position in the deformed configuration, both expressed in the chosen frame of reference. The mapping $\chi : \boldsymbol \beta_{\kappa_{0}} \rightarrow \boldsymbol \beta_{\kappa}$ is called the \emph{deforming mapping} of the body $\boldsymbol \beta$ from $\kappa_{0}$ to $\kappa$. When analysing the deformation of a continuous body, it is necessary to describe the evolution of configurations through time. Its mathematical description follows one of the two approaches: the material description or the spatial description. The material description is known as \emph{Lagrangian description} whereas the spatial description is also called \emph{Eulerian description}. These two approaches are detailled next. 
+Let us now consider a given particule of the body that we call $X$. What we will call particule in the following is in fact an infinitesimal volume of material. We denote the position it occupies in the initial configuration $\mathbf{X}$ and note $\mathbf{x}$ its position in the deformed configuration, both expressed in the chosen frame of reference. The mapping $\chi$ defined as the following:
+\begin{equation}
+\label{chap2:mapping}
+\chi : \boldsymbol \beta_{\kappa_{0}} \rightarrow \boldsymbol \beta_{\kappa}
+\end{equation} 
+is called the \emph{deforming mapping} of the body $\boldsymbol \beta$ from $\kappa_{0}$ to $\kappa$. When analysing the deformation of a continuous body, it is necessary to describe the evolution of configurations through time. Its mathematical description follows one of the two approaches: the material description or the spatial description. The material description is known as \emph{Lagrangian description} whereas the spatial description is also called \emph{Eulerian description}. These two approaches are detailled next. 
 
 	\subsection{Lagrangian description}
-In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. Thus, the current coordinates ($\textbf{x} \in \kappa$) are expressed in terms of the reference coordinates ($\textbf{X} \in \kappa_{0}$): 
+In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. Thus, the current coordinates ($\mathbf{x} \in \kappa$) are expressed in terms of the reference coordinates ($\mathbf{X} \in \kappa_{0}$): 
 \begin{equation}
 \textbf{x} = \chi(\textbf{X}, t), \quad \chi(\textbf{X}, 0) = \textbf{X},
 \end{equation}
-and the variation of a typical variable $\phi$ over the body is described with respect to the coordinates $\textbf{X}$ and time $t$:
+and the variation of a typical variable $\phi$ over the body is described with respect to the coordinates $\mathbf{X}$ and time $t$:
 \begin{equation}
-\phi = \phi(\textbf{X}, t) \enspace .
+\phi = \phi(\textbf{X}, t).
 \end{equation}
-For a fixed value of $\textbf{X} \in \kappa_{0}$, $\phi(\textbf{X},t)$ gives the value of $\phi$ at time $t$ associated with the fixed particule $X$ whose position in the reference configuration is $\textbf{X}$. We note that a change in time $t$ implies that the same particule $X$ has a different value $\phi$. Thus, the Lagrangian description focuses its attention on the particules of the continuous body and it is usually used in solid mechanics.
+For a fixed value of $\mathbf{X} \in \kappa_{0}$, $\phi(\mathbf{X},t)$ gives the value of $\phi$ at time $t$ associated with the fixed particule $X$ whose position in the reference configuration is $\mathbf{X}$. We note that a change in time $t$ implies that the same particule $X$ has a different value $\phi$. Thus, the Lagrangian description focuses its attention on the particules of the continuous body and it is usually used in solid mechanics.
 	
 	\subsection{Eulerian description}
-Rather than following the particules, the Eulerian description observes the changes at fixed locations. 	In the Eulerian description, the motion is this time referred to the current configuration $\kappa$ and $\phi$ is described with respect to the current position ($\textbf{x} \in \kappa$):
+Rather than following the particules, the Eulerian description observes the changes at fixed locations. 	In the Eulerian description, the motion is this time referred to the current configuration $\kappa$ and $\phi$ is described with respect to the current position ($\mathbf{x} \in \kappa$):
 \begin{equation}
-\phi = \phi(\textbf{x}, t), \quad \textbf{X} = \textbf{X}(\textbf{x}, t) \enspace .
+\phi = \phi(\textbf{x}, t), \quad \textbf{X} = \textbf{X}(\textbf{x}, t).
 \end{equation}
-For a fixed value of $\textbf{x} \in \kappa$, $\phi(\textbf{x},t)$ gives the value of $\phi$ associated with different material particules at different times, because different particules occupy the position $\textbf{x} \in \kappa$ at different times. A change in time $t$ implies that a different value $\phi$ is observed at the same spatial location $\textbf{x} \in \kappa$, now probably occupied by a different particule. Hence, the Eulerian description is focused on a spatial position. 	This approach is convenient for the study of fluid flow where the kinematic property of greatest interest is the rate at which change is taking place rather than the shape of the body of fluid at a reference time \citep{Spencer80}. Because we are only interested in the study of solid bodies, the Lagrangian description will be used in the rest of the text. 
+For a fixed value of $\mathbf{x} \in \kappa$, $\phi(\mathbf{x},t)$ gives the value of $\phi$ associated with different material particules at different times, because different particules occupy the position $\textbf{x} \in \kappa$ at different times. A change in time $t$ implies that a different value $\phi$ is observed at the same spatial location $\mathbf{x} \in \kappa$, now probably occupied by a different particule. Hence, the Eulerian description is focused on a spatial position. 	This approach is convenient for the study of fluid flow where the kinematic property of greatest interest is the rate at which change is taking place rather than the shape of the body of fluid at a reference time \citep{Spencer80}. Because we are only interested in the study of solid bodies, the Lagrangian description will be used in the rest of the text. 
 	
 	\subsection{Displacement field}
 The deplacement of a particule $X$ is called \emph{displacement vector} and its expression in the Lagrangian description is the following:
 \begin{equation}
-\textbf{u}(\textbf{X}, t) = \textbf{x}(\textbf{X}, t) - \textbf{X} \enspace .
+\textbf{u}(\textbf{X}, t) = \textbf{x}(\textbf{X}, t) - \textbf{X}.
 \end{equation}
-A \emph{displacement field} is a vector field of all displacement vectors for all particles in the body, which relates the deformed configuration $\kappa$ with the undeformed configuration $\kappa_{0}$. Indeed if the displacement field is known, we can construct the current configuration $\kappa$ from the undeformed configuration $\kappa_{0}$: $\chi(\textbf{X}, t) = \textbf{X} + \textbf{u}(\textbf{X})$. 	
+A \emph{displacement field} is a vector field of all displacement vectors for all particles in the body, which relates the deformed configuration $\kappa$ with the undeformed configuration $\kappa_{0}$. Indeed if the displacement field is known, we can construct the current configuration $\kappa$ from the undeformed configuration $\kappa_{0}$: $\chi(\mathbf{X}, t) = \mathbf{X} + \mathbf{u}(\mathbf{X})$. 	
 	
 \section{Analysis of deformation}
 
 	\subsection{Deformation gradient tensor}
-The displacement field tells us how a point displaces from the reference to the deformed configuration. However, we would also like to know how a piece of material is stretched and rotated as the body moves from the reference to the deformed configuration. Since the length of a material line $d\textbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\textbf{X}$ deforms into $d\textbf{x}$. The question then becomes how to relate $d\textbf{x}$ in the deformed configuration into $d\textbf{X}$ of the reference configuration. The \emph{deformation gradient} gives this relationship and is defined as:
+The displacement field tells us how a point displaces from the reference to the deformed configuration. However, we would also like to know how a piece of material is stretched and rotated as the body moves from the reference to the deformed configuration. Since the length of a material line $d\mathbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\mathbf{X}$ deforms into $d\mathbf{x}$. The question then becomes how to relate $d\mathbf{x}$ in the deformed configuration with $d\mathbf{X}$ of the reference configuration. 
+
+Consider two particules $P_{1}$ and $P_{2}$ in a continuous body separated by an infinitesimal distance $d\mathbf{X}$:
 \begin{equation}
-d\textbf{x} = \textbf{F}  d\textbf{X}
+\label{chap2:dX}
+d\mathbf{X} = \mathbf{X}_{P_{2}} - \mathbf{X}_{P_{1}}.
+\end{equation}
+After deformation the two particules have deformed to their current positions given by the mapping $\chi$~\eqref{chap2:mapping} as:
+\begin{equation}
+\mathbf{x}_{P_1} = \chi(\mathbf{X}_{P_{1}}, t) \quad \mbox{and} \quad \mathbf{x}_{P_2} = \chi(\mathbf{X}_{P_{2}}, t).
+\end{equation}
+Using \eqref{chap2:dX} the distance $d\textbf{x}$ between $P_{1}$ and $P_{2}$ can then be expressed as:
+\begin{equation}
+d\mathbf{x} = \mathbf{x}_{P_{2}} - \mathbf{x}_{P_{1}} = \chi(\mathbf{X}_{P_{1}} + d\mathbf{X}, t) - \chi(\mathbf{X}_{P_{1}}, t).
+\end{equation}
+The \emph{deformation gradient} $\textbf{F}$ can be defined as:
+\begin{equation}
+\mathbf{F} = \pd{\chi}{\mathbf{X}}
+\end{equation}
+and the vector $d\textbf{x}$ can then be obtained in terms of $d\mathbf{X}$ as:
+\begin{equation}
+d\textbf{x} = \textbf{F} \, d\textbf{X}.
+\end{equation}
+Note that $\textbf{F}$ transforms vectors from the reference configuration into vectors in the current configuration and is therefore a second-order tensor.
+
+Knowing that $\chi(\mathbf{X}, t)$ is of course $\mathbf{x}$, the deformation gradient may also be written as:
+\begin{equation}
+\label{chap2:gradient}
+\mathbf{F} = \pd{\mathbf{x}}{\mathbf{X}} = \nabla_{0} \mathbf{x} = \nabla_{0} \mathbf{u} + \mathbf{I},
+\end{equation}
+where $\nabla_{0}$ is the gradient operator with respect to $\mathbf{X}$ and $\mathbf{u}$ the displacement vector. In indicial notation in a Cartesian coordinate system, \eqref{chap2:gradient} can be explicited as:
+\begin{equation}
+[F] = 
+	\begin{bmatrix}
+		\pd{\mathbf{x}_{1}}{\mathbf{X}_{1}} & \pd{\mathbf{x}_{1}}{\mathbf{X}_{2}} & \pd{\mathbf{x}_{1}}{\mathbf{X}_{3}} \\\\
+		\pd{\mathbf{x}_{2}}{\mathbf{X}_{1}} & \pd{\mathbf{x}_{2}}{\mathbf{X}_{2}} & \pd{\mathbf{x}_{2}}{\mathbf{X}_{3}} \\\\
+		\pd{\mathbf{x}_{3}}{\mathbf{X}_{1}} & \pd{\mathbf{x}_{3}}{\mathbf{X}_{2}} & \pd{\mathbf{x}_{3}}{\mathbf{X}_{3}}
+	\end{bmatrix}
+	.
 \end{equation}
 
 
 	\subsection{Change of volume}
+At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. We can define volume elements in the reference and deformed configurations. Consider three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ forming a parallelepiped in the reference configuration. The three vectors after deformation $d\mathbf{x}^{(1)}$, $d\mathbf{x}^{(2)}$ and $d\mathbf{x}^{(3)}$ can be obtained with:
+\begin{equation}
+\label{chap2:dxdX}
+d\mathbf{x}^{(i)} = \mathbf{F} \, d\mathbf{X}^{(i)}, \quad i = 1, 2, 3.
+\end{equation}
+The volume of the parallelepiped that we will note $dV$  can be calculated using the triple product between the three vectors:
+\begin{align}
+dV &= d\mathbf{X}^{(1)} \cdot d\mathbf{X}^{(2)} \times d\mathbf{X}^{(3)} = (\mathbf{\hat{N}}_{1} \cdot \mathbf{\hat{N}}_{2} \times \mathbf{\hat{N}}_{3}) \, dX^{(1)} dX^{(2)} dX^{(3)} \notag \\
+&= dX^{(1)} dX^{(2)} dX^{(3)}, \label{chap2:dV}
+\end{align}
+where $\mathbf{\hat{N}}_{i}$ denote the unit vector along $d\mathbf{X}^{i}$. The corresponding volume in the deformed configuration is given by:
+\begin{align}
+dv &= d\mathbf{x}^{(1)} \cdot d\mathbf{x}^{(2)} \times d\mathbf{x}^{(3)} \notag \\
+&=  (\mathbf{F} \cdot \mathbf{\hat{N}}_{1}) \cdot (\mathbf{F} \cdot \mathbf{\hat{N}}_{2}) \times (\mathbf{F} \cdot \mathbf{\hat{N}}_{3}) \,  dX^{(1)} dX^{(2)} dX^{(3)} \quad \text{by \eqref{chap2:dxdX}} \notag \\
+&= \det \mathbf{F} \, dX^{(1)} dX^{(2)} dX^{(3)}. \label{chap2:dv}
+\end{align}
+The determinant of $\mathbf{F}$ is called the \emph{Jacobian} and it is denoted by $J = \det \mathbf{F}$. And we have:
+\begin{equation}
+dv = J dV.
+\end{equation}
+Thus, J has the physical meaning of being the local ratio of current to reference volume of a material volume element.
 
-
-		
-	\newpage
 			
 \section{Strain measures}
+The length of a material curve from the reference configuration can change when displaced to a curve in the deformed configuration. If all the curves do not change length, it is said that a rigid body displacement occurred. The concept of strain is used to evaluate how much a given displacement differs locally from a rigid body displacement. Therefore, although we know how to transform vectors from the reference configuration into vectors in the current configuration using the deformation gradient, it is more useful to find a measure of the change in length of $d\mathbf{X}$. Many measures of strains can be defined and the most common ones are now introduced. 
+
 	\subsection{Cauchy-Green deformation tensors}
-	\subsection{Green strain tensor}
-	\subsection{Cauchy and Euler tensor}
-	\subsection{Infinitesimal strain tensor}
+Consider two particules $P_{1}$ and $P_{2}$ in the neighbourhood of each other, separated by $d\mathbf{X}$ in the reference configuration. In the deformed configuration $P_{1}$ and $P_{2}$ occupy the positions $\tilde{P}_{1}$ and $\tilde{P}_{2}$ and they are separated by $d\mathbf{x}$. We are interested in the change of distance between the two points $P_{1}$ and $P_{2}$ as the body deforms. 
+
+The squared distances between $P_{1}$ and $P_{2}$ and $\tilde{P}_{1}$ and $\tilde{P}_{2}$ are respectively given by:
+\begin{align}
+(dS)^2 &= d\mathbf{X} \cdot d\mathbf{X} \label{chap2:dS} \\
+(ds)^2 &= d\mathbf{x} \cdot d\mathbf{x} = (\mathbf{F} \, d\mathbf{X}) \cdot (\mathbf{F} \, d\mathbf{X}) \notag \\
+&= (\mathbf{F} \, d\mathbf{X})^T (\mathbf{F} \, d\mathbf{X}) = (d\mathbf{X}^T \, \mathbf{F}^T) (\mathbf{F} \, d\mathbf{X}) = d\mathbf{X}^T (\mathbf{F}^T \mathbf{F} \, d\mathbf{X}) \notag \\
+&= d\mathbf{X} \cdot (\mathbf{F}^T \mathbf{F} \, d\mathbf{X}).
+\end{align}
+using the property that the dot product between two vectors $a$ and $b$ can also be expressed as the simple product between the transpose of $a$ and $b$ ($a \cdot b = a^T b$). We define the \emph{right Cauchy-Green deformation tensor} $\mathbf{C}$ as:
+\begin{equation}
+\mathbf{C} = \mathbf{F}^T \mathbf{F}.
+\end{equation}
+Thus, the change of distance between the two points $P_{1}$ and $P_{2}$ after deformation of the continuous body may be written as:
+\begin{equation}
+\label{chap2:ds}
+(ds)^2 = d\mathbf{X} \cdot (\mathbf{C} \, d\mathbf{X}).
+\end{equation}
+By definition, $\mathbf{C}$ is a symmetric second-order tensor. The transpose of $\mathbf{C}$ is denoted $\mathbf{B}$ and is called the \emph{left Cauchy-Green deformation tensor}:
+\begin{equation}
+\mathbf{B} = \mathbf{F} \mathbf{F}^T.
+\end{equation}
+
 	
+	\subsection{Green strain tensor}
+Using \eqref{chap2:dS} and \eqref{chap2:ds}, the change in the squared lengths due to the body deformation between the reference and the current configuration can be expressed as:
+\begin{align}
+(ds)^2 - (dS)^2 &= d\mathbf{X} \cdot (\mathbf{C} \, d\mathbf{X}) - d\mathbf{X} \cdot d\mathbf{X} \notag \\
+&= d\mathbf{X} \cdot  (\mathbf{C} - \mathbf{I}) \, d\mathbf{X}.
+\end{align}
+Let us define the \emph{Green-St. Venant strain tensor} $\mathbf{E}$ as:
+\begin{equation}
+\mathbf{E} = \frac{1}{2}	 (\mathbf{C} - \mathbf{I})
+\end{equation}
+so we can write:
+\begin{equation}
+(ds)^2 - (dS)^2 = 2 \, d\mathbf{X} \cdot \mathbf{E} \, d\mathbf{X}.
+\end{equation}
+By definition, the Green strain tensor is a symmetric second-order tensor. Also, the change in squared lengths is zero if and only if $\mathbf{E} = \mathbf{0}$. Using \eqref{chap2:gradient}, the Green strain tensor may be developped as the following:
+\begin{align}
+\mathbf{E} &= \frac{1}{2} (\mathbf{F}^T \mathbf{F} - \mathbf{I}) \notag \\
+&= \frac{1}{2} \left[ (\nabla_{0} \mathbf{u} + \mathbf{I})^T (\nabla_{0} \mathbf{u} + \mathbf{I}) - \mathbf{I} \right] \notag \\
+&= \frac{1}{2} \left[ (\nabla_{0} \mathbf{u})^T  + \nabla_{0} \mathbf{u}+ (\nabla_{0} \mathbf{u})^T(\nabla_{0} \mathbf{u}) \right] \label{chap2:GreenTensor}
+\end{align}
+
+The Green strain tensor can be expressed in terms of its components in any coordinate system. In particular, in the cartesian coordinate system $(X_1, X_2, X_3)$ the components $E_{ij}$ of $\mathbf{E}$ are the following:
+\begin{equation}
+E_{i,j} = \frac{1}{2} \left( \pd{u_i}{Xj} + \pd{u_j}{Xi} + \pd{u_k}{Xi} \pd{u_k}{Xj} \right), \quad i = 1, 2, 3.
+\end{equation}
+The components $E_{11}$, $E_{22}$ and $E_{33}$ are called \emph{normal strains} and it can be shown that they are in fact the ratio of the change in length to the original length along each of the three unit vectors. The components $E_{12}$, $E_{23}$ and $E_{13}$ are called \emph{shear strains} and they can be interpreted as a measure of the change in angle between line elements that were perpendicular to each other in the undeformed configuration. 
+
+	\subsection{Cauchy and Euler tensor}
+The change in the squared lengths during the body deformation can also be expressed relative to the current length. The length $dS$ can be written in terms of $d\mathbf{x}$ as:
+\begin{equation}
+(dS)^2 = d\mathbf{X} \cdot d\mathbf{X} = d\mathbf{x} \cdot (\mathbf{F}^{-T} \mathbf{F}^{-1}) d\mathbf{x} = d\mathbf{x} \cdot \mathbf{\tilde{B}} d\mathbf{x}
+\end{equation}
+where $\mathbf{\tilde{B}} = \mathbf{F}^{-T} \mathbf{F}^{-1}$ is called the \emph{Cauchy strain tensor}. $\mathbf{\tilde{B}}$ is in fact the inverse of the left Cauchy-Green tensor $\mathbf{B}$ introduced previously. 
+
+In a similar way we defined the Green strain tensor, we can write the change in the squared lengths but relative to the current length:
+\begin{equation}
+(ds)^2 - (dS)^2 = 2 \, d\mathbf{x} \cdot \mathbf{e} \, d\mathbf{x}.
+\end{equation}
+where $\mathbf{e}$ is called \emph{Almansi-Hamel strain tensor} or simply \emph{Euler strain tensor}. 
+	
+	\subsection{\TODO{Principal strains?}}
+		
+	\subsection{Infinitesimal strain tensor}
+In some cases, it is possible to simplify the expression of the Green strain tensor defined in \eqref{chap2:GreenTensor}. Indeed, when the displacement gradients are small (that is, $|\nabla \mathbf{u}| \ll 1$) we can neglect the nonlinear terms in the definition. In the case of infinitesimal strains, the Green-Lagrange strain tensor and the Eulerian strain tensor are approximately the same and can be approximated by the infinitesimal strain tensor denoted $\boldsymbol \epsilon$ and is given by:
+\begin{equation}
+\boldsymbol \epsilon = \frac{1}{2} \left[ \nabla \mathbf{u} + (\nabla \mathbf{u})^T \right]
+\end{equation}
+Its Cartesian components $\epsilon_{ij}$ are the following:
+\begin{equation}
+\epsilon_{ij} = \frac{1}{2} (\pd{u_i}{X_j} + \pd{u_j}{X_i}).
+\end{equation}
+
+The strain quantities defined in the previous sections are nonlinear expressions in terms of the mapping $\chi$ and will lead to nonlinear governing equations. In solid mechanics, whenever the hypothesis is acceptable, it is common practice to assume that the displacements are small and the infinitesimal strain tensor is used as a measure of the deformation. 
+
 \section{Stress}
 	\subsection{Cauchy stress}
 	\subsection{First Piola-Kirchhoff stress tensor}
