@@ -71,6 +71,7 @@ The \emph{deformation gradient} $\textbf{F}$ can be defined as:
 \end{equation}
 and the vector $d\textbf{x}$ can then be obtained in terms of $d\mathbf{X}$ as:
 \begin{equation}
+\label{chap2:dxdX}
 d\textbf{x} = \textbf{F} \, d\textbf{X}.
 \end{equation}
 Note that $\textbf{F}$ transforms vectors from the reference configuration into vectors in the current configuration and is therefore a second-order tensor.
@@ -114,6 +115,9 @@ The determinant of $\mathbf{F}$ is called the \emph{Jacobian} and it is denoted 
 dv = J dV.
 \end{equation}
 Thus, J has the physical meaning of being the local ratio of current to reference volume of a material volume element.
+
+
+	\subsection{\TODO{Change of surface?}}
 
 			
 \section{Strain measures}
@@ -186,24 +190,123 @@ where $\mathbf{e}$ is called \emph{Almansi-Hamel strain tensor} or simply \emph{
 	
 	\subsection{\TODO{Principal strains?}}
 		
-	\subsection{Infinitesimal strain tensor}
+	\subsection{Infinitesimal strain tensor} \label{chap2:infinitesimalStrainTensor}
 In some cases, it is possible to simplify the expression of the Green strain tensor defined in \eqref{chap2:GreenTensor}. Indeed, when the displacement gradients are small (that is, $|\nabla \mathbf{u}| \ll 1$) we can neglect the nonlinear terms in the definition. In the case of infinitesimal strains, the Green-Lagrange strain tensor and the Eulerian strain tensor are approximately the same and can be approximated by the infinitesimal strain tensor denoted $\boldsymbol \epsilon$ and is given by:
 \begin{equation}
-\boldsymbol \epsilon = \frac{1}{2} \left[ \nabla \mathbf{u} + (\nabla \mathbf{u})^T \right]
+\boldsymbol \epsilon = \frac{1}{2} \left[ \nabla \mathbf{u} + (\nabla \mathbf{u})^T \right].
 \end{equation}
 Its Cartesian components $\epsilon_{ij}$ are the following:
 \begin{equation}
 \epsilon_{ij} = \frac{1}{2} (\pd{u_i}{X_j} + \pd{u_j}{X_i}).
 \end{equation}
 
-The strain quantities defined in the previous sections are nonlinear expressions in terms of the mapping $\chi$ and will lead to nonlinear governing equations. In solid mechanics, whenever the hypothesis is acceptable, it is common practice to assume that the displacements are small and the infinitesimal strain tensor is used as a measure of the deformation. 
+The strain quantities defined in the previous sections are nonlinear expressions in terms of the mapping $\chi$ and will lead to nonlinear governing equations. In solid mechanics, whenever the hypothesis is acceptable, it is common practice to assume that the displacements are small and the infinitesimal strain tensor is then used as a measure of the deformation. 
 
 \section{Stress}
-	\subsection{Cauchy stress}
-	\subsection{First Piola-Kirchhoff stress tensor}
-	\subsection{Second Piola-Kirchhoff stress tensor}
+Stress is a measure of the intensity of the internal forces acting between particles of a deformable body across imaginary internal surfaces. These internal forces are produced between the particles in the body as a reaction to external forces applied on the body. The $SI$ unit for stress is pascal (symbol $Pa$), which is equivalent to one newton (force) per square meter (unit area). As with strain, different measures of stress can be defined. For instance, stress can be measured per unit of deformed area (section \ref{chap2:CauchyStress}) or undeformed area (sections \ref{chap2:PiolaStress1} and \ref{chap2:PiolaStress2}). In general, the stress is not uniformly distributed over the cross section of a material body, and consequently the stress at a point on a given area is different from the average stress over this entire area. Therefore, it is necessary to define the stress not over a given area but at a specific point in the body. Stress at a point in a three-dimensional continuum can be measured in terms of nine quantities, three per plane, on three mutually perpendicular planes at the point. These nine quantities may be viewed as the components of a second-order tensor that we call \emph{stress tensor}. 
+
+	\subsection{Cauchy stress}\label{chap2:CauchyStress}
+The Euler-Cauchy's stress principle states that on any surface (real or imaginary) that divides the body, the action of one part of the body on the other is equivalent to the system of distributed forces and couples on the surface dividing the body. With that consideration in mind, let us consider a plane $S$ that passes through an arbitrary internal point $P$ which has a unit normal vector $\mathbf{n}$. This plane separates the body into two regions and we are interested in the forces applied by one region onto the other. First we will introduce the true stress, defined as the stress in the deformed configuration $\chi$ measured per unit area of the deformed configuration. The force $\Delta\mathbf{f}(\mathbf{n})$ acting on a small element of area $\Delta a$ in a continuous medium depends not only on the size of the area but also depends on the orientation of this area $\mathbf{n}$. The \emph{Cauchy stress vector} at $P$ on $S$ can be defined as:
+\begin{equation}
+\mathbf{t}(\mathbf{n}) = \lim_{\Delta a \to 0} \frac{\Delta \mathbf{f}(\mathbf{n})}{\Delta a}.
+\end{equation}
+This equation means that the stress vector depends on its location in the body and the orientation of the plane on which it is acting. In general, the stress vector is not perpendicular to that plane and it can be separated into two components: one component normal to the plane called \emph{normal stress} and one component tangent to the plane named \emph{shear stress}. Since $\mathbf{t}$ depends on $\mathbf{n}$ but is not in the direction of $\mathbf{n}$, it may be interesting to look into the relationship between $\mathbf{t}$ and $\mathbf{n}$. 
+
+To establish this relationship, let us consider an infinitesimal tetrahedron in a Cartesian coordinate system. \TODO{Add figure of a tetrahedron with all notations}. We note $-\mathbf{t}_1$, $-\mathbf{t}_2$, $-\mathbf{t}_3$ and $\mathbf{t}$ the stress vectors in the outwards directions on the faces of the tetrahedron whose areas are respectively $\Delta a_1$, $\Delta a_2$, $\Delta a_3$ and $\Delta a$. For the mass $m$ inside the tetrahedron, we have by Newton's second law:
+\begin{equation}
+\label{chap2:Newton}
+\sum \mathbf{F} = \mathbf{t} \Delta a - \mathbf{t}_1 \Delta a_1 - \mathbf{t}_2 \Delta a_2 - \mathbf{t}_3 \Delta a_3 + \Delta v \mathbf{f} = m \mathbf{a},
+\end{equation}
+where $\mathbf{f}$ is the force per unit volume acting on the body, $\Delta v$ the volume of the tetrahedron and $\mathbf{a}$ the acceleration.
+The areas $\Delta a_1$, $\Delta a_2$ and $\Delta a_3$ being the projections of $\Delta a$, they are related to $\Delta a$ in the Cartesian coordinate system $(\mathbf{e}_1, \mathbf{e}_2, \mathbf{e}_3)$ by:
+\begin{equation}
+\label{chap2:DeltaAi}
+\Delta a_i = (\mathbf{n} \cdot \mathbf{e}_i) \Delta a, \quad i=1, 2, 3.
+\end{equation}
+Dividing \eqref{chap2:Newton} by $\Delta a$, using \eqref{chap2:DeltaAi} and noting that $\Delta v \slash \Delta a \rightarrow 0$ when the tetrahedron shrinks to a point yields:
+\begin{align}
+\mathbf{t} &= (\mathbf{n} \cdot \mathbf{e}_1) \mathbf{t}_1 + (\mathbf{n} \cdot \mathbf{e}_2) \mathbf{t}_2 + (\mathbf{n} \cdot \mathbf{e}_3) \mathbf{t}_3 \notag \\
+&= \mathbf{n} \cdot (\mathbf{e}_1 \mathbf{t}_1 + \mathbf{e}_2 \mathbf{t}_2 + \mathbf{e}_3 \mathbf{t}_3)
+\end{align}
+
+We define the \emph{Cauchy stress tensor} $\sigma = \mathbf{e}_1 \mathbf{t}_1 + \mathbf{e}_2 \mathbf{t}_2 + \mathbf{e}_3 \mathbf{t}_3$ and we have:
+\begin{equation}
+\label{chap2:CauchyFormula}
+\mathbf{t}(\mathbf{n}) = \mathbf{n} \cdot \sigma
+\end{equation}
+The stress vector $\mathbf{t}$ represents the vectorial stress on a plane whose normal is $\mathbf{n}$. As we demonstrated, the stress tensor is a property of the medium that is independent of $\mathbf{n}$. It represents the current force per unit of deformed area: $d\mathbf{f} = \mathbf{t} da = \sigma \cdot d\mathbf{a}$. 
+
+The matrix form of \eqref{chap2:CauchyFormula} in a Cartesian coordinate system is given by:
+\begin{equation}
+	\begin{bmatrix}
+		t_1 \\
+		t_2 \\
+		t_3
+	\end{bmatrix}
+= 
+	\begin{bmatrix}
+		\sigma_{11} && \sigma_{21} && \sigma_{31} \\
+		\sigma_{12} && \sigma_{22} && \sigma_{32} \\
+		\sigma_{13} && \sigma_{23} && \sigma_{33} \\
+	\end{bmatrix}
+	\begin{bmatrix}
+		n_1 \\
+		n_2 \\
+		n_3
+	\end{bmatrix}
+	.
+\end{equation}
+
+The Cauchy stress tensor is used for stress analysis of material bodies experiencing small deformations. This stress is basically defined as force/(unit deformed area). The strain measure that is appropriate to use with the Cauchy stress tensor is the infinitesimal strain tensor (see section~\ref{chap2:infinitesimalStrainTensor}).  The problem with using the Cauchy stress tensor for analysing materials undergoing large deformation is that we generally do not know the area in the deformed configuration. Therefore, we need to develop alternative stress tensors that we can use in the reference configuration. We will introduce two new stress measures: the first Piola-Kirchhoff stress tensor and the second Piola-Kirchhoff stress tensor.
+
+	\subsection{First Piola-Kirchhoff stress tensor}\label{chap2:PiolaStress1}
+We know that the Cauchy stress tensor represents the current force per unit of deformed area: $d\mathbf{f} = \mathbf{t}(\mathbf{n}) da = \sigma \cdot d\mathbf{a}$. We define a stress vector $\mathbf{T}$ over the area element $dA$ with normal $\mathbf{N}$ in the underformed configuration such that it results in the same total force
+\begin{equation}
+\label{chap2:df}
+d\mathbf{f} = \mathbf{t}(\mathbf{n}) da = \mathbf{T}(\mathbf{N}) dA.
+\end{equation} 
+The two stress vectors have the obviously the same direction but different magnitudes since they are not applied to the same area.
+
+In a similar way we defined the Cauchy stress $\sigma$ with $\mathbf{t}(\mathbf{n}) = \sigma \cdot \mathbf{n}$, we introduce a stress tensor $\mathbf{P}$ called the \emph{first Piola-Kirchhoff stress tensor} such that $\mathbf{T}(\mathbf{n}) = \mathbf{P} \cdot \mathbf{N}$. The first Piola-Kirchhoff stress tensor gives the current force per unit undeformed area.
+
+The relation between the first Piola-Kirchhoff stress tensor and the Cauchy stress tensor can be obtained as follows. From \eqref{chap2:df} we have:
+\begin{equation}
+\mathbf{T} = \frac{da}{dA} \mathbf{t}
+\end{equation}
+Let us assume the \emph{Nanson's relation} \TODO{demonstration in section \emph{Change of surface}?} expressed as:
+\begin{equation}
+da \mathbf{n} = J \, dA \, \mathbf{F}^{-T} \, \mathbf{N},
+\end{equation}
+where $da$ is an area of the deformed configuration, $dA$ an area from the reference configuration, $\mathbf{F}$ the deformation gradient and $J = \det \mathbf{F}$ the Jacobian of the transformation.
+Using $d\mathbf{f} = \mathbf{t} da$ and Nanson's relation we have:
+\begin{equation}
+\mathbf{T} =  J \, \mathbf{t} \, \mathbf{F}^{-T}
+\end{equation}
+Finally we can express the first Piola-Kirchhoff stress tensor $\mathbf{P}$ as
+\begin{equation}
+\mathbf{P} = J \, \sigma \, \mathbf{F}^{-T}.
+\end{equation}
+	
+	
+	\subsection{Second Piola-Kirchhoff stress tensor}\label{chap2:PiolaStress2}
+The \emph{second Piola-Kirchhoff stress tensor} $\mathbf{S}$ is introduced as the stress tensor associated with the force $d\mathbf{F}$ in the undeformed area $d\mathbf{A}$ that corresponds to the force $d\mathbf{f}$ in the deformed area $d\mathbf{a}$:
+\begin{equation}
+d\mathbf{F} = \mathbf{S} \, d\mathbf{A}
+\end{equation}
+Thus, the second Piola-Kirchhoff stress tensor gives the transformed current force per unit undeformed area. Similar to the relationship \eqref{chap2:dxdX} between $d\mathbf{x}$ and $d\mathbf{X}$, the force $d\mathbf{f}$ is related to the force $d\mathbf{F}$ by:
+\begin{align}
+d\mathbf{F} &= \mathbf{F}^{-1} \, d\mathbf{f} \notag \\
+&= \mathbf{F}^{-1} \, (\mathbf{P} \, d\mathbf{A}) \notag \\
+&= \mathbf{S} \, d\mathbf{A}
+\end{align}
+Therefore, the second Piola-Kirchhoff stress tensor is related to the first Piola-Kirchhoff stress tensor as follows:
+\begin{equation}
+\mathbf{S} = \mathbf{F}^{-1} \mathbf{P} = J \, \mathbf{F}^{-1} \, \sigma \, \mathbf{F}^{-T}
+\end{equation}
 	
 \section{Constitutive equations}
+%After the introduction of strain tensors, we are now in possesion of different measures to assess the state of deformation in a continuous solid. 
+
 	\subsection{Elastic solids}	
 	\subsection{Generalised Hooke's law}
 	\subsection{Orthotropic materials}
