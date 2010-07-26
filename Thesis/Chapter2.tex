@@ -93,8 +93,11 @@ where $\nabla_{0}$ is the gradient operator with respect to $\mathbf{X}$ and $\m
 \end{equation}
 
 
+	\subsection{\TODO{Isochoric component of the deformation gradient?}}
+
+
 	\subsection{Change of volume}
-At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. We can define volume elements in the reference and deformed configurations. Consider three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ forming a parallelepiped in the reference configuration. The three vectors after deformation $d\mathbf{x}^{(1)}$, $d\mathbf{x}^{(2)}$ and $d\mathbf{x}^{(3)}$ can be obtained with:
+At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. We can define volume elements in the reference and deformed configurations. Consider three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ forming a parallelepiped in the reference configuration \TODO{Add figure with all notations}. The three vectors after deformation $d\mathbf{x}^{(1)}$, $d\mathbf{x}^{(2)}$ and $d\mathbf{x}^{(3)}$ can be obtained with:
 \begin{equation}
 \label{chap2:dxdX}
 d\mathbf{x}^{(i)} = \mathbf{F} \, d\mathbf{X}^{(i)}, \quad i = 1, 2, 3.
@@ -112,13 +115,29 @@ dv &= d\mathbf{x}^{(1)} \cdot d\mathbf{x}^{(2)} \times d\mathbf{x}^{(3)} \notag 
 \end{align}
 The determinant of $\mathbf{F}$ is called the \emph{Jacobian} and it is denoted by $J = \det \mathbf{F}$. And we have:
 \begin{equation}
+\label{chap2:dvdV}
 dv = J dV.
 \end{equation}
 Thus, J has the physical meaning of being the local ratio of current to reference volume of a material volume element.
 
 
-	\subsection{\TODO{Change of surface?}}
-
+	\subsection{Change of surface}
+For similar reasons, let us find the relation between an element of area in the reference configuration $d\mathbf{A}$ which becomes $d\mathbf{a}$ in the deformed configuration. Considering an arbitrary material line $d\mathbf{L}$ in the reference configuration and noting $d\mathbf{l}$ the same line after deformation \TODO{Add figure with all notations}, the corresponding reference and current volumes are given respectively by:
+\begin{align}
+d\mathbf{V} &= d\mathbf{L} \cdot d\mathbf{A} \\
+d\mathbf{v} &= d\mathbf{l} \cdot d\mathbf{a}
+\end{align}
+Using \eqref{chap2:dvdV} which relates the reference and deformed volumes and recalling that $d\mathbf{l} = \mathbf{F} \, d\mathbf{L}$, we have:
+\begin{equation}
+J \, d\mathbf{L} \cdot d\mathbf{A} = (\mathbf{F} \, d\mathbf{L}) \cdot d\mathbf{a}.
+\end{equation}
+The fact that this expression is valid for any vector $d\mathbf{L}$ and using the property $\mathbf{a} \cdot \mathbf{b} = \mathbf{a} ^{T} \mathbf{b}$ yields:
+\begin{equation}
+\label{chap2:dadA}
+d\mathbf{a} = J \, \mathbf{F}^{-T} \, d\mathbf{A}.
+\end{equation}
+			
+			
 			
 \section{Strain measures}
 The length of a material curve from the reference configuration can change when displaced to a curve in the deformed configuration. If all the curves do not change length, it is said that a rigid body displacement occurred. The concept of strain is used to evaluate how much a given displacement differs locally from a rigid body displacement. Therefore, although we know how to transform vectors from the reference configuration into vectors in the current configuration using the deformation gradient, it is more useful to find a measure of the change in length of $d\mathbf{X}$. Many measures of strains can be defined and the most common ones are now introduced. 
@@ -191,13 +210,13 @@ where $\mathbf{e}$ is called \emph{Almansi-Hamel strain tensor} or simply \emph{
 	\subsection{\TODO{Principal strains?}}
 		
 	\subsection{Infinitesimal strain tensor} \label{chap2:infinitesimalStrainTensor}
-In some cases, it is possible to simplify the expression of the Green strain tensor defined in \eqref{chap2:GreenTensor}. Indeed, when the displacement gradients are small (that is, $|\nabla \mathbf{u}| \ll 1$) we can neglect the nonlinear terms in the definition. In the case of infinitesimal strains, the Green-Lagrange strain tensor and the Eulerian strain tensor are approximately the same and can be approximated by the infinitesimal strain tensor denoted $\boldsymbol \epsilon$ and is given by:
+In some cases, it is possible to simplify the expression of the Green strain tensor defined in \eqref{chap2:GreenTensor}. Indeed, when the displacement gradients are small (that is, $|\nabla \mathbf{u}| \ll 1$) we can neglect the nonlinear terms in the definition. In the case of infinitesimal strains, the Green-Lagrange strain tensor and the Eulerian strain tensor are approximately the same and can be approximated by the infinitesimal strain tensor denoted $\boldsymbol \varepsilon$ and is given by:
 \begin{equation}
-\boldsymbol \epsilon = \frac{1}{2} \left[ \nabla \mathbf{u} + (\nabla \mathbf{u})^T \right].
+\boldsymbol \varepsilon = \frac{1}{2} \left[ \nabla \mathbf{u} + (\nabla \mathbf{u})^T \right].
 \end{equation}
-Its Cartesian components $\epsilon_{ij}$ are the following:
+Its Cartesian components $\varepsilon_{ij}$ are the following:
 \begin{equation}
-\epsilon_{ij} = \frac{1}{2} (\pd{u_i}{X_j} + \pd{u_j}{X_i}).
+\varepsilon_{ij} = \frac{1}{2} (\pd{u_i}{X_j} + \pd{u_j}{X_i}).
 \end{equation}
 
 The strain quantities defined in the previous sections are nonlinear expressions in terms of the mapping $\chi$ and will lead to nonlinear governing equations. In solid mechanics, whenever the hypothesis is acceptable, it is common practice to assume that the displacements are small and the infinitesimal strain tensor is then used as a measure of the deformation. 
@@ -245,9 +264,9 @@ The matrix form of \eqref{chap2:CauchyFormula} in a Cartesian coordinate system 
 	\end{bmatrix}
 = 
 	\begin{bmatrix}
-		\sigma_{11} && \sigma_{21} && \sigma_{31} \\
-		\sigma_{12} && \sigma_{22} && \sigma_{32} \\
-		\sigma_{13} && \sigma_{23} && \sigma_{33} \\
+		\sigma_{11} & \sigma_{21} & \sigma_{31} \\
+		\sigma_{12} & \sigma_{22} & \sigma_{32} \\
+		\sigma_{13} & \sigma_{23} & \sigma_{33} \\
 	\end{bmatrix}
 	\begin{bmatrix}
 		n_1 \\
@@ -273,12 +292,7 @@ The relation between the first Piola-Kirchhoff stress tensor and the Cauchy stre
 \begin{equation}
 \mathbf{T} = \frac{da}{dA} \mathbf{t}
 \end{equation}
-Let us assume the \emph{Nanson's relation} \TODO{demonstration in section \emph{Change of surface}?} expressed as:
-\begin{equation}
-da \mathbf{n} = J \, dA \, \mathbf{F}^{-T} \, \mathbf{N},
-\end{equation}
-where $da$ is an area of the deformed configuration, $dA$ an area from the reference configuration, $\mathbf{F}$ the deformation gradient and $J = \det \mathbf{F}$ the Jacobian of the transformation.
-Using $d\mathbf{f} = \mathbf{t} da$ and Nanson's relation we have:
+Using $d\mathbf{f} = \mathbf{t} da$ and the relation \eqref{chap2:dadA} between $d\mathbf{A}$ and $d\mathbf{a}$, we have:
 \begin{equation}
 \mathbf{T} =  J \, \mathbf{t} \, \mathbf{F}^{-T}
 \end{equation}
@@ -305,13 +319,162 @@ Therefore, the second Piola-Kirchhoff stress tensor is related to the first Piol
 \end{equation}
 	
 \section{Constitutive equations}
-%After the introduction of strain tensors, we are now in possesion of different measures to assess the state of deformation in a continuous solid. 
+So far, all the relations that we have established are valid for every continuum. Indeed, no mention was made of any material in the derivations. Therefore these relations are not sufficient to describe the response of a material to a given loading. We know that the stresses result from the deformation of the material and it is now necessary to express them in terms of some measure of this deformation such as, for instance, the strain. These relationships, known as \emph{constitutive equations}, obviously depend on the type of material under consideration and may be dependent on time or not. Constitutive equations are not derived from any physical principles, although they are subject to obeying certain rules and the entropy inequality. In essence, constitutive equations are mathematical models of the behaviour of materials that are validated against experimental results. 
 
-	\subsection{Elastic solids}	
-	\subsection{Generalised Hooke's law}
+The relationship between stress and strain depends on the nature, or constitution of the particular material that we are studying. Of course, any material mechanics, and especially tissue mechanics, can be quite complex, and many assumptions must be made when deriving a constitutive equation. It is basically impossible to derive a particular constitutive equation that would accurately model all aspects of tissue behaviour under any type of loading. This is because tissues may behave very differently under small loads as compared to large loads. For instance, we may expect damage under large loads. Also, under different loading rates different tissues may behave differently. Therefore, whenever we develop a constitutive equation to model a tissue, we need to balance the need to accurately model tissue behaviour under the range of loadings with the need to have a constitutive equation that is simple enough to:
+\begin{enumerate}
+\item be computed in a numerical model 
+\item experimentally measure all the material constants used in the constitutive equation
+\end{enumerate}
+This section will now introduce the most common constitutive models relevant to soft-tissue modelling. 
+    
+    
+	\subsection{Elasticity}	
+If under applied loads a material stores but does not dissipate energy, and it returns to its orginal shape when the loads are removed, we call that material elastic. The work done by the stress is generally dependent on the deformation path. However, for elastic materials the stress does not depend on the path of deformation and therefore the state of stress in the deformed configuration is determined only by the state of deformation. It means that the stress does not depend on the time taken to achieve the deformation or the rate at which the state of deformation is reached. 
+
+One special case of elastic materials are \emph{hyperelastic} materials. A material is said to be hyperelastic if there exists a \emph{strain energy density} function $U_0(\varepsilon)$ such that
+\begin{equation}
+\label{chap2:energy}
+\boldsymbol \sigma = \pd{U_0}{\varepsilon}.
+\end{equation}
+In order to develop a mathematical model of an hyperelastic material, $U_0$ is expanded in Taylor's series about $\varepsilon = 0$:
+\begin{equation}
+U_0 = C_0 + C_{ij}\varepsilon_{ij} + \frac{1}{2!}\hat{C}_{ijkl}\varepsilon{ij}\varepsilon_{kl} + \frac{1}{3!}\hat{C}_{ijklmn}\varepsilon_{ij}\varepsilon_{kl}\varepsilon_{mn} + \ldots , 
+\end{equation}
+where $C_0$, $C_{ij}$ and $\hat{C}$ are material stiffnesses. The form of $U_0$ may varied for different materials. A material is said to be \emph{linear} if the relationship between strain and stress is also linear. Based on this definition, $U_0$ is a cubic or higher-order function of the strains for nonlinear materials whereas $U_0$ is a quadratic function of strain for linear materials. We will start by discussing linear materials for the case of infinitesimal deformations (sections \ref{chap2:Hooke} to \ref{chap2:isotropic}). Consequently, we will not make any distinction between the various measures of stress and strain and use $\boldsymbol \sigma$ and $\boldsymbol \varepsilon$ for stress and strain tensors respectively. 
+	
+	\subsection{Linear materials: generalised Hooke's law} \label{chap2:Hooke}
+The linear constitutive model for infinitesimal deformations is called the generalised Hooke's law. To derive the relation between stress and strain for a linear material, we assume the quadratic form of $U_0$:
+\begin{equation}
+U_0 = C_0 + C_{ij}\varepsilon_{ij} + \frac{1}{2!}\hat{C}_{ijkl}\varepsilon{ij}\varepsilon_{kl}
+\end{equation}
+From there and using \eqref{chap2:energy} it can be shown that there exists some coefficients $C_{ijkl}$ such as:
+\begin{equation}
+\sigma_{ij} = C_{ijkl} \varepsilon_{kl}
+\end{equation}
+The $C_{ijkl}$ are the coefficients of the fourth-order tensor $\mathbf{C}$ that relates the second-order tensors of strain and stress. The $81$ scalar components of this fourth-order tensor ($=3^4$) can be reduced to $21$ independent coefficients using existing symmetries. Recalling that both strain and stress tensors are symmetric yields:
+\begin{equation}
+	\begin{bmatrix}
+		\sigma_{11} \\
+		\sigma_{22} \\
+		\sigma_{33} \\
+		\sigma_{23} \\
+		\sigma_{13} \\
+		\sigma_{12}
+	\end{bmatrix}
+= 
+	\begin{bmatrix}
+		C_{1111} & C_{1122} & C_{1133} & C_{1123} & C_{1113} & C_{1112} \\
+		C_{1122} & C_{2222} & C_{2233} & C_{2223} & C_{2213} & C_{2212} \\
+		C_{1133} & C_{2233} & C_{3333} & C_{3323} & C_{3313} & C_{3312} \\
+		C_{1123} & C_{2223} & C_{3323} & C_{2323} & C_{2313} & C_{2312} \\
+		C_{1113} & C_{2213} & C_{3313} & C_{2313} & C_{1313} & C_{1312} \\
+		C_{1112} & C_{2212} & C_{3312} & C_{2312} & C_{1312} & C_{1212}
+	\end{bmatrix}
+	\begin{bmatrix}
+		\varepsilon_{11} \\
+		\varepsilon_{22} \\
+		\varepsilon_{33} \\
+		\varepsilon_{23} \\
+		\varepsilon_{13} \\
+		\varepsilon_{12}
+	\end{bmatrix}
+	.
+\end{equation}
+
 	\subsection{Orthotropic materials}
-	\subsection{Isotropic materials}
+Further reduction in the number of independent stiffness parameters can be achieved using the so-called material symmetry. This symmetry is due to the internal structure of the material, that is the arrangement of molecules (crystallographic form). We note that the symmetry under discussion is a directional property and not a positional property. Thus, a material may have certain elastic symmetry at every point of a material body and the properties may vary from point to point. Positional dependence of material properties is what we called the inhomogeneity of the material. 
+
+\emph{Orthotropic} materials are characterised by three mutually orthogonal planes of material symmetry, that is, three mutually orthogonal preferred directions. In this case, the number of coefficients is reduced to 9 and the stress-strain relation for an orthotropic material is the following:
+\begin{equation}
+\label{chap2:orthotropic}
+	\begin{bmatrix}
+		\sigma_{11} \\
+		\sigma_{22} \\
+		\sigma_{33} \\
+		\sigma_{23} \\
+		\sigma_{13} \\
+		\sigma_{12}
+	\end{bmatrix}
+= 
+	\begin{bmatrix}
+		C_{1111} & C_{1122} & C_{1133} &       0       &       0       &       0 \\
+		C_{1122} & C_{2222} & C_{2233} &       0       &       0       &       0 \\
+		C_{1133} & C_{2233} & C_{3333} &       0       &       0       &       0 \\
+		      0       &        0     &        0       & C_{2323} &       0       &       0 \\
+		      0       &        0     &        0       &       0       & C_{1313} &       0 \\
+		      0       &        0     &        0       &       0       &       0       & C_{1212}
+	\end{bmatrix}
+	\begin{bmatrix}
+		\varepsilon_{11} \\
+		\varepsilon_{22} \\
+		\varepsilon_{33} \\
+		\varepsilon_{23} \\
+		\varepsilon_{13} \\
+		\varepsilon_{12}
+	\end{bmatrix}
+	.
+\end{equation}
+
+Most often, the material properties are determined in a laboratory in terms of the engineering constants such as Young?s modulus, shear modulus, and so on. These constants are measured using simple tests like uniaxial tension test or pure shear test (see section \ref{chap2:estimationParameters}). Because of their direct and obvious physical meaning, engineering constants are used in place of the more abstract stiffness coefficients $C_{ijkl}$. Therefore, we will now reformulate \eqref{chap2:orthotropic} with respect to those engineering constants. Nothing $E_i$ the Young's modulus in the direction $x_i$ and $G_{ij}$ the shear moduli in the $x_i-x_j$ plane, it can be shown that:
+	
+%Since we consider infinitesimal deformations and we also linearised the constitutive material law between stress and strain, the principle of superpositions applies. It means that the sum of the displacements (and hence strains) produced by two sets of loads is equal to the displacements (and strains) produced by the sum of the two sets of loads. For example, the extensional strain $\varepsilon_{11}^{(1)}$ in the  coordinate direction $x_1$ due to the stress $\sigma_{11}$ in the same direction is $\sigma_{11}/E_1$, where $E_1$ denotes Young?s modulus of the material in the $x_1$ direction. The extensional strain $\varepsilon_{11}^{(2)}$ due to the stress $\sigma_{22}$ applied in the direction $x_2$ (as a result of the Poisson's effect) is $-\nu_{21} (\sigma_{22}/E_2)$, where $\nu_{21}$ is the Poisson's ratio:
+%\begin{equation}
+%\nu_{21} = - \frac{\varepsilon_{11}}{\varepsilon_{22}}
+%\end{equation} 
+%and  $E_2$ denotes Young?s modulus of the material in the $x_2$ direction. Similarly, $\sigma_{33}$ produces a strain $\varepsilon_{11}^{(3)}$ valued at $-\nu_{31} (\sigma_{33}/E_3)$. The total strain $\varepsilon_{11}$ due to the simulatneous application of all three normal stress components is:
+%\begin{equation}
+%\varepsilon_{11} = \varepsilon_{11}^{(1)} + \varepsilon_{11}^{(2)} + \varepsilon_{11}^{(3)} = \frac{\sigma_{11}}{E_1} - \nu_{21} \, \frac{\sigma_{22}}{E_2}  - \nu_{31} \, \frac{\sigma_{33}}{E_3}.
+%\end{equation}
+
+\begin{equation}
+\label{chap2:orthotropic}
+	\begin{bmatrix}
+		\varepsilon_{11} \\
+		\varepsilon_{22} \\
+		\varepsilon_{33} \\
+		\varepsilon_{23} \\
+		\varepsilon_{13} \\
+		\varepsilon_{12}
+	\end{bmatrix}
+= 
+	\begin{bmatrix}
+		\frac{1}{E_1} & -\frac{\nu_{21}}{E_2} & -\frac{\nu_{31}}{E_3} &       0       &       0       &       0 \\
+		-\frac{\nu_{12}}{E_1} & \frac{1}{E_2} & -\frac{\nu_{32}}{E_3} &       0       &       0       &       0 \\
+		-\frac{\nu_{13}}{E_1} & -\frac{\nu_{23}}{E_2} & \frac{1}{E_3} &       0       &       0       &       0 \\
+		      0       &        0     &        0       & \frac{1}{G_{23}} &       0       &       0 \\
+		      0       &        0     &        0       &       0       & \frac{1}{G_{13}}&       0 \\
+		      0       &        0     &        0       &       0       &       0       & \frac{1}{G_{12}}
+	\end{bmatrix}
+	\begin{bmatrix}
+		\sigma_{11} \\
+		\sigma_{22} \\
+		\sigma_{33} \\
+		\sigma_{23} \\
+		\sigma_{13} \\
+		\sigma_{12}
+	\end{bmatrix}
+	.
+\end{equation}
+
+	\subsection{Isotropic materials} \label{chap2:isotropic}
+A material is said \emph{isotropic} if its properties are independent of the directions. Therefore, we have the following relations:
+\begin{equation}
+E_1 = E_2 = E_3 = E, \quad G_{12} = G_{13} = G_{23} = G, \quad \nu_{12} = \nu_{23} = \nu_{13} = \nu.
+\end{equation}
+The stress-strain relations may be written:
+\begin{equation}
+\sigma_{ij} = \frac{E}{1+\nu} \varepsilon_{ij} + \frac{\nu E}{(1+\nu)(1-2\nu)} \varepsilon_{kk}\delta_{ij}.
+\end{equation}	
+where the summation of repeated indices is implied (Einstein's notation). The inverse relations are:
+\begin{equation}
+\varepsilon_{ij} = \frac{1+\nu}{E} \sigma_{ij} - \frac{\nu}{E} \sigma_{kk} \delta_{ij},
+\end{equation}
+recalling that $G = E/[2(1+\nu)]$.
+	
+	\subsection{Non-linear materials}
+	
 			
 \section{Tissue characterisation}
 	\subsection{Material models for organs (non-linear, visco-elastic and anisotropic)}
-	\subsection{Measure/estimation of model parameters}
+	\subsection{Measure/estimation of model parameters} \label{chap2:estimationParameters}
