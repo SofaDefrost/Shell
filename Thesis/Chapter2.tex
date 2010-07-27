@@ -93,9 +93,6 @@ where $\nabla_{0}$ is the gradient operator with respect to $\mathbf{X}$ and $\m
 \end{equation}
 
 
-	\subsection{\TODO{Isochoric component of the deformation gradient?}}
-
-
 	\subsection{Change of volume}
 At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. We can define volume elements in the reference and deformed configurations. Consider three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ forming a parallelepiped in the reference configuration \TODO{Add figure with all notations}. The three vectors after deformation $d\mathbf{x}^{(1)}$, $d\mathbf{x}^{(2)}$ and $d\mathbf{x}^{(3)}$ can be obtained with:
 \begin{equation}
@@ -137,6 +134,25 @@ The fact that this expression is valid for any vector $d\mathbf{L}$ and using th
 d\mathbf{a} = J \, \mathbf{F}^{-T} \, d\mathbf{A}.
 \end{equation}
 			
+			
+	\subsection{Volumetric and isochoric components}
+We recall that the Jacobian $J$ has the physical meaning of being the local ratio of current to reference volume of a material volume element. Therefore, if $J = 1$ the volume does not change locally during the deformation and the latter is qualified as \emph{isochoric} at this given particule $P$. If $J = 1$ everywhere in the body, the deformation of the body is isochoric. 
+
+When dealing with incompressible and nearly incompressible materials it is necessary to separate the volumetric from the isochoric components of the deformation. Such a separation must ensure that the isochoric component $\mathbf{\hat{F}}$ does not imply any change in volume. This condition can be achieved by choosing $\mathbf{\hat{F}}$ as:
+\begin{equation}
+\mathbf{\hat{F}} = J^{-1/3} \mathbf{F}.
+\end{equation}
+Indeed,
+\begin{align}
+\det \mathbf{\hat{F}} &= \det (J^{-1/3} \mathbf{F}) \notag \\
+&= (J^{-1/3})^3 \det \mathbf{F} \notag \\
+&= J^{-1} J \notag \\
+&= 1
+\end{align}
+The deformation gradient $\mathbf{F}$ can now be expressed in terms of the volumetric and isochoric component $J$ and $\mathbf{\hat{F}}$ as:
+\begin{equation}
+\mathbf{F} = J^{1/3} \mathbf{\hat{F}}
+\end{equation}
 			
 			
 \section{Strain measures}
@@ -206,11 +222,30 @@ In a similar way we defined the Green strain tensor, we can write the change in 
 (ds)^2 - (dS)^2 = 2 \, d\mathbf{x} \cdot \mathbf{e} \, d\mathbf{x}.
 \end{equation}
 where $\mathbf{e}$ is called \emph{Almansi-Hamel strain tensor} or simply \emph{Euler strain tensor}. 
+
 	
-	\subsection{\TODO{Principal strains?}}
+	\subsection{Principal strains and invariants}	\label{chap2:strainInvariants}
+The components $\varepsilon_{ij}$ of the strain tensor depend on of the coordinate system at the point under consideration. However, the strain tensor itself is a physical quantity and as such, it is independent of the coordinate system chosen to represent it. Certain operations on strain tensors give the same result independently of the coordinate system chosen to represent the components of strain. As an example, a vector is a simple tensor of rank one. In three dimensions, it has three components. The value of these components will depend on the coordinate system chosen to represent the vector, but the length of the vector is a physical quantity (a scalar) and is independent of the coordinate system chosen to represent the vector. Similarly, every second rank tensor (such as the strain tensors) has three independent invariant quantities associated with it. One set of such \emph{invariants} are the principal strains of the strain tensor, which are just the eigenvalues of the strain tensor. Because they are independent of any coordinate system, they are very convenient to define strain energy density functions (see section \ref{chap2:non-linear}). The most commonly used invariants are:
+\begin{align}
+I &= tr(\varepsilon) \notag \\
+II &= \frac{1}{2} \left\lbrace tr(\varepsilon^{2}) - \left[tr(\varepsilon)^{2} \right] \right\rbrace \\
+III &= det(\varepsilon). \notag
+\end{align}
+
+It can be shown that in the coordinate system $(\mathbf{p}_1, \mathbf{p}_2, \mathbf{p}_3)$ formed by the three eigenvectors, the expression of the strain tensor is:
+\begin{equation}
+\boldsymbol \varepsilon =
+	\begin{bmatrix}
+	\varepsilon_1 &          0           &           0           \\
+	         0           & \varepsilon_2 &           0           \\
+	         0           &           0           & \varepsilon_3
+	\end{bmatrix}	
+\end{equation}
+Since there are no shear strain components in this particular coordinate system, the principal strains represent the maximum and minimum stretches of an elemental volume. Because of the obvious simplicity of the strain tensor's expression, this coordinate system is often used in mechanics to derive and solve equations.
+
 		
 	\subsection{Infinitesimal strain tensor} \label{chap2:infinitesimalStrainTensor}
-In some cases, it is possible to simplify the expression of the Green strain tensor defined in \eqref{chap2:GreenTensor}. Indeed, when the displacement gradients are small (that is, $|\nabla \mathbf{u}| \ll 1$) we can neglect the nonlinear terms in the definition. In the case of infinitesimal strains, the Green-Lagrange strain tensor and the Eulerian strain tensor are approximately the same and can be approximated by the infinitesimal strain tensor denoted $\boldsymbol \varepsilon$ and is given by:
+In some cases, it is possible to simplify the expression of the Green strain tensor defined in \eqref{chap2:GreenTensor}. Indeed, when the displacement gradients are small (that is, $|\nabla \mathbf{u}| \ll 1$) we can neglect the non-linear terms in the definition. In the case of infinitesimal strains, the Green-Lagrange strain tensor and the Eulerian strain tensor are approximately the same and can be approximated by the infinitesimal strain tensor denoted $\boldsymbol \varepsilon$ and is given by:
 \begin{equation}
 \boldsymbol \varepsilon = \frac{1}{2} \left[ \nabla \mathbf{u} + (\nabla \mathbf{u})^T \right].
 \end{equation}
@@ -219,7 +254,7 @@ Its Cartesian components $\varepsilon_{ij}$ are the following:
 \varepsilon_{ij} = \frac{1}{2} (\pd{u_i}{X_j} + \pd{u_j}{X_i}).
 \end{equation}
 
-The strain quantities defined in the previous sections are nonlinear expressions in terms of the mapping $\chi$ and will lead to nonlinear governing equations. In solid mechanics, whenever the hypothesis is acceptable, it is common practice to assume that the displacements are small and the infinitesimal strain tensor is then used as a measure of the deformation. 
+The strain quantities defined in the previous sections are non-linear expressions in terms of the mapping $\chi$ and will lead to non-linear governing equations. In solid mechanics, whenever the hypothesis is acceptable, it is common practice to assume that the displacements are small and the infinitesimal strain tensor is then used as a measure of the deformation. 
 
 \section{Stress}
 Stress is a measure of the intensity of the internal forces acting between particles of a deformable body across imaginary internal surfaces. These internal forces are produced between the particles in the body as a reaction to external forces applied on the body. The $SI$ unit for stress is pascal (symbol $Pa$), which is equivalent to one newton (force) per square meter (unit area). As with strain, different measures of stress can be defined. For instance, stress can be measured per unit of deformed area (section \ref{chap2:CauchyStress}) or undeformed area (sections \ref{chap2:PiolaStress1} and \ref{chap2:PiolaStress2}). In general, the stress is not uniformly distributed over the cross section of a material body, and consequently the stress at a point on a given area is different from the average stress over this entire area. Therefore, it is necessary to define the stress not over a given area but at a specific point in the body. Stress at a point in a three-dimensional continuum can be measured in terms of nine quantities, three per plane, on three mutually perpendicular planes at the point. These nine quantities may be viewed as the components of a second-order tensor that we call \emph{stress tensor}. 
@@ -318,6 +353,20 @@ Therefore, the second Piola-Kirchhoff stress tensor is related to the first Piol
 \mathbf{S} = \mathbf{F}^{-1} \mathbf{P} = J \, \mathbf{F}^{-1} \, \sigma \, \mathbf{F}^{-T}
 \end{equation}
 	
+	
+		\subsection{Principal stresses and invariants}
+In the same way that we defined principal strains in section \ref{chap2:strainInvariants} and like any second-rank tensor, the stress tensor has three invariants and we can find a coordinate system $(\mathbf{n}_1, \mathbf{n}_2, \mathbf{n}_3)$ in which the expression of the stress tensor is:
+\begin{equation}
+\boldsymbol \sigma =
+	\begin{bmatrix}
+	\sigma_1 &         0      &        0       \\
+	        0      & \sigma_2 &        0       \\
+	        0      &          0     & \sigma_3
+	\end{bmatrix}	
+\end{equation}
+This result means that at every point in a stressed body there are at least three planes called \emph{principal planes}, with normal vectors $\mathbf{n}_1$, $\mathbf{n}_2$ and $\mathbf{n}_3$ called \emph{principal directions} (in fact, the eigenvectors), where the corresponding stress vector is perpendicular to the plane and where there are no normal shear stresses. The three stresses normal $\sigma_1$, $\sigma_2$ and $\sigma_3$ to these principal planes are called \emph{principal stresses}.
+
+
 \section{Constitutive equations}
 So far, all the relations that we have established are valid for every continuum. Indeed, no mention was made of any material in the derivations. Therefore these relations are not sufficient to describe the response of a material to a given loading. We know that the stresses result from the deformation of the material and it is now necessary to express them in terms of some measure of this deformation such as, for instance, the strain. These relationships, known as \emph{constitutive equations}, obviously depend on the type of material under consideration and may be dependent on time or not. Constitutive equations are not derived from any physical principles, although they are subject to obeying certain rules and the entropy inequality. In essence, constitutive equations are mathematical models of the behaviour of materials that are validated against experimental results. 
 
@@ -337,11 +386,16 @@ One special case of elastic materials are \emph{hyperelastic} materials. A mater
 \label{chap2:energy}
 \boldsymbol \sigma = \pd{U_0}{\varepsilon}.
 \end{equation}
-In order to develop a mathematical model of an hyperelastic material, $U_0$ is expanded in Taylor's series about $\varepsilon = 0$:
+However, for \emph{imcompressible} materials the stress tensor is not completely determined by the deformation. The hydrostatic pressure\footnote{pressure exerted by a fluid at equilibrium due to the force of gravity} affects the stress and the above equation is then written as:
+\begin{equation}
+\label{chap2:energy2}
+\boldsymbol \sigma = -p \mathbf{I} + \pd{U_0}{\varepsilon},
+\end{equation}
+where $p$ is the hydrostatic pressure. In order to develop a mathematical model of an hyperelastic material, $U_0$ is expanded in Taylor's series about $\varepsilon = 0$:
 \begin{equation}
 U_0 = C_0 + C_{ij}\varepsilon_{ij} + \frac{1}{2!}\hat{C}_{ijkl}\varepsilon{ij}\varepsilon_{kl} + \frac{1}{3!}\hat{C}_{ijklmn}\varepsilon_{ij}\varepsilon_{kl}\varepsilon_{mn} + \ldots , 
 \end{equation}
-where $C_0$, $C_{ij}$ and $\hat{C}$ are material stiffnesses. The form of $U_0$ may varied for different materials. A material is said to be \emph{linear} if the relationship between strain and stress is also linear. Based on this definition, $U_0$ is a cubic or higher-order function of the strains for nonlinear materials whereas $U_0$ is a quadratic function of strain for linear materials. We will start by discussing linear materials for the case of infinitesimal deformations (sections \ref{chap2:Hooke} to \ref{chap2:isotropic}). Consequently, we will not make any distinction between the various measures of stress and strain and use $\boldsymbol \sigma$ and $\boldsymbol \varepsilon$ for stress and strain tensors respectively. 
+where $C_0$, $C_{ij}$ and $\hat{C}$ are material stiffnesses. The form of $U_0$ may varied for different materials. A material is said to be \emph{linear} if the relationship between strain and stress is also linear. Based on this definition, $U_0$ is a cubic or higher-order function of the strains for non-linear materials whereas $U_0$ is a quadratic function of strain for linear materials. We will start by discussing linear materials for the case of infinitesimal deformations (sections \ref{chap2:Hooke} to \ref{chap2:isotropic}). Consequently, we will not make any distinction between the various measures of stress and strain and use $\boldsymbol \sigma$ and $\boldsymbol \varepsilon$ for stress and strain tensors respectively. 
 	
 	\subsection{Linear materials: generalised Hooke's law} \label{chap2:Hooke}
 The linear constitutive model for infinitesimal deformations is called the generalised Hooke's law. To derive the relation between stress and strain for a linear material, we assume the quadratic form of $U_0$:
@@ -382,7 +436,7 @@ The $C_{ijkl}$ are the coefficients of the fourth-order tensor $\mathbf{C}$ that
 	.
 \end{equation}
 
-	\subsection{Orthotropic materials}
+	\subsection{Orthotropic materials} \label{chap2:orthotropic}
 Further reduction in the number of independent stiffness parameters can be achieved using the so-called material symmetry. This symmetry is due to the internal structure of the material, that is the arrangement of molecules (crystallographic form). We note that the symmetry under discussion is a directional property and not a positional property. Thus, a material may have certain elastic symmetry at every point of a material body and the properties may vary from point to point. Positional dependence of material properties is what we called the inhomogeneity of the material. 
 
 \emph{Orthotropic} materials are characterised by three mutually orthogonal planes of material symmetry, that is, three mutually orthogonal preferred directions. In this case, the number of coefficients is reduced to 9 and the stress-strain relation for an orthotropic material is the following:
@@ -416,7 +470,7 @@ Further reduction in the number of independent stiffness parameters can be achie
 	.
 \end{equation}
 
-Most often, the material properties are determined in a laboratory in terms of the engineering constants such as Young?s modulus, shear modulus, and so on. These constants are measured using simple tests like uniaxial tension test or pure shear test (see section \ref{chap2:estimationParameters}). Because of their direct and obvious physical meaning, engineering constants are used in place of the more abstract stiffness coefficients $C_{ijkl}$. Therefore, we will now reformulate \eqref{chap2:orthotropic} with respect to those engineering constants. Nothing $E_i$ the Young's modulus in the direction $x_i$ and $G_{ij}$ the shear moduli in the $x_i-x_j$ plane, it can be shown that:
+Most often, the material properties are determined in a laboratory in terms of the engineering constants such as Young's modulus, shear modulus, and so on. These constants are measured using simple tests like uniaxial tension test or pure shear test. Because of their direct and obvious physical meaning, engineering constants are used in place of the more abstract stiffness coefficients $C_{ijkl}$. Therefore, we will now reformulate \eqref{chap2:orthotropic} with respect to those engineering constants. Nothing $E_i$ the Young's modulus in the direction $x_i$ and $G_{ij}$ the shear moduli in the $x_i-x_j$ plane, it can be shown that:
 	
 %Since we consider infinitesimal deformations and we also linearised the constitutive material law between stress and strain, the principle of superpositions applies. It means that the sum of the displacements (and hence strains) produced by two sets of loads is equal to the displacements (and strains) produced by the sum of the two sets of loads. For example, the extensional strain $\varepsilon_{11}^{(1)}$ in the  coordinate direction $x_1$ due to the stress $\sigma_{11}$ in the same direction is $\sigma_{11}/E_1$, where $E_1$ denotes Young?s modulus of the material in the $x_1$ direction. The extensional strain $\varepsilon_{11}^{(2)}$ due to the stress $\sigma_{22}$ applied in the direction $x_2$ (as a result of the Poisson's effect) is $-\nu_{21} (\sigma_{22}/E_2)$, where $\nu_{21}$ is the Poisson's ratio:
 %\begin{equation}
@@ -472,9 +526,55 @@ where the summation of repeated indices is implied (Einstein's notation). The in
 \end{equation}
 recalling that $G = E/[2(1+\nu)]$.
 	
-	\subsection{Non-linear materials}
-	
+	\subsection{Non-linear materials} \label{chap2:non-linear}
+For most materials, the linear relation between stress and strain is only valid for small deformation. Beyond a certain threshold, Hooke's law is no longer valid. Note that it does mean that the material is not elastic, it may well recover all its deformation after removal of the loads. However, materials often exibit an elastic threshold in the non-linear range after which permanent deformation occurs. This range of deformation is qualified of \emph{plastic}. 
+
+The strain energy density function takes different forms for different materials. It is often expressed as a linar combination of unknown coefficients (determined experimentally) and principal invariants of Green strain tensor $\mathbf{E}$, left Cauchy-Green strain tensor $\mathbf{B}$ and deformation gradient tensor $\mathbf{F}$ (see section \ref{chap2:strainInvariants} for more information on invariants). The constitutive equations of  two well-known non-linear elastic materials (Mooney-Rivlin and neo-Hookean) will now be introduced.
+
+	\subsubsection*{Mooney-Rivlin}
+The Mooney-Rivlin model was proposed by Melvin Mooney and Ronald Rivlin in two independent papers in 1952. For an incompressible Mooney-Rivlin material, the strain energy density function $U_0$ is taken as a linear function of the principal invariants of the left Cauchy-Green strain tensor $\mathbf{B}$ and is written as:
+\begin{equation}
+U_0 = C_1 (I_B-3) + C_2(II_B-3),
+\end{equation}
+where $C_1$ and $C_2$ are two constants and $I_B$ and $II_B$ are the two principal invariants of $\mathbf{B}$. For those materials, it can be shown that the stress tensor has the form
+\begin{equation}
+\sigma = -p \mathbf{I} + \alpha \mathbf{B} + \beta \mathbf{B}^{-1},
+\end{equation}
+where $\alpha$ and $\beta$ are given by
+\begin{equation}
+\alpha = 2 \rho \pd{U_0}{I_B} = 2 \rho C_1, \quad \beta = -2\rho \pd{U_0}{II_B} = -2\rho C_2 \quad \mbox{with } \rho \, \mbox{the material density.}
+\end{equation}
+The Mooney-Rivlin incompressible model is often used to represent the behaviour of rubber-like materials.
+
+	\subsubsection*{Neo-Hookean}			
+The neo-Hookean model was proposed by Ronald Rivlin in 1948. It can be derived from the Mooney-Rivlin model in the special case where $C_2 = 0$ in the strain energy density function. Therefore, we have:
+\begin{equation}
+U_0 = C_1 (I_B-3)
+\end{equation}
+and the constitutive equation for the stress may be written as:
+\begin{equation}
+\sigma = -p \mathbf{I} + 2 \rho C_1 \mathbf{B}
+\end{equation}
+The neo-Hookean model provides a reasonable approximation of rubber-like material for moderate strains. It is typically accurate for strains less than $20\, \%$ \citep{Gent01}.
+			
+			
+	\subsection{Viscoelastic materials}
+Viscoelasticity is the property of materials that exhibit both viscous and elastic characteristics when undergoing deformation. Viscous materials, like honey, resist shear flow and strain linearly with time when a stress is applied. Elastic materials strain instantaneously when stretched and just as quickly return to their original state once the stress is removed. Viscoelastic materials have elements of both of these properties and, as such, exhibit time dependent strain. Depending on the change of strain rate versus stress inside a material the viscosity can be categorised as having a linear or non-linear response. When a material exhibits a linear response it is categorized as a Newtonian material. In this case the stress is linearly proportional to the strain rate. If the material exhibits a non-linear response to the strain rate, it is categorised as a Non-Newtonian material. 
+
+Viscoelastic materials present a few characteristics: 
+\begin{enumerate}
+\item if the stress is held constant, the strain increases with time (creep)
+\item if the strain is held constant, the stress decreases with time (relaxation)
+\item the effective stiffness depends on the rate of application of the load
+\item if cyclic loading is applied, hysteresis occurs, leading to a dissipation of mechanical energy
+\end{enumerate}
+
+\TODO{Add details on constitutive equations? Level of details to be determined later (depending on TLED needs)}
+
 			
 \section{Tissue characterisation}
-	\subsection{Material models for organs (non-linear, visco-elastic and anisotropic)}
-	\subsection{Measure/estimation of model parameters} \label{chap2:estimationParameters}
+One of the main obstacles in developing realistic organ models is the lack of data on the material properties of live organ tissues. Measuring and characterising in vivo organ properties is a highly challenging task, but is a requirement for realistic organ modelling. Indeed, as we have seen in sections \ref{chap2:orthotropic} and \ref{chap2:non-linear}, constitutive equations require the experimental determination of material constants. Organ models with incorrect material properties will affect training in surgical simulator systems \citep{Sedef06}.
+
+The constitutive equations are used to define idealised materials, which represent different aspects of the mechanical behaviour of natural materials. However, no real material is known to behave exactly as one of these mathematical models. In particular, few biological tissues obey Hooke's law. If because of their high stiffness (and therefore small deformations) cortical bones are accurately described by a linear model, Hooke's law becomes insufficient to describe the mechanical behaviour of the liver with precision for instance. In fact, in vivo experiments conducted by \cite{Melvin73} suggest that mechanical behaviour of liver is non-linear and viscoelastic. The brain also appears to be non-linear and viscoelastic \citep{Miller97}. The liver has the additional property of anisotropy, more precisely, it is transversely isotropic according to \cite{Chui07}. 
+
+\TODO{Transition with next chapter (complexity of models => FEM to solve them)}
