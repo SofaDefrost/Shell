@@ -1,7 +1,7 @@
 \chapter{Background in continuum mechanics for soft-tissue modelling}
 \label{chap:softtissue}
 \begin{shortAbstract}
-As seen in the previous chapter, realistic modelling of organ deformation is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedure and per-operative guidance based on simulation. In all these cases the clinician needs fast updates of the deformation model to obtain a real-time display of the computed deformations. If for medical training devices the haptic feedback from touching organs merely needs to feel real, the accuracy of the information provided to the clinician in the cases of planning or per-operative guidance is crucial. Therefore, a substantial comprehension of the mechanics involved and a knowledge of the physical properties of anatomical structures are both mandatory in our quest to realistically model the deformation of organs. This chapter will start by introducing the main concepts of continuum mechanics that are fundamental to study the mechanical response of organs. It will then present mathematical models able to describe the different mechanical aspects of materials and briefly discuss the mechanical characterisation of tissues.
+As seen in the previous chapter, realistic modelling of organ deformation is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedures and per-operative guidance based on simulation. In all these cases the clinician needs fast updates of the deformation model to obtain a real-time display of the computed deformations. If for medical training devices the haptic feedback from touching organs merely needs to feel real, the accuracy of the information provided to the clinician in the cases of planning or per-operative guidance is crucial. Therefore, a substantial comprehension of the mechanics involved and a knowledge of the physical properties of anatomical structures are both mandatory in our quest to realistically model the deformation of organs. This chapter will start by introducing the main concepts of continuum mechanics that are fundamental to study the mechanical response of organs. It will then present mathematical models able to describe the different mechanical aspects of materials and briefly discuss the mechanical characterisation of tissues.
 \end{shortAbstract}
 
 
@@ -9,19 +9,19 @@ As seen in the previous chapter, realistic modelling of organ deformation is a c
 \section{Introduction}
 In our everyday life, matter appears smooth and continuous: from the wood used to build your desk to the water you drink. But this is just illusion. The concept that matter is composed of discrete units has been around for millennia. In fact, we know with certainty that our world is composed of microscopic atoms and molecules separated by empty space since the beginning of the twentieth century \citep{Lautrup05}. However, certain physical phenomena can be predicted with theories that pay no attention to the molecular structure of materials. Consider for instance the deformation of the horizontal board of a bookshelf under the weight of books. The bending of the shelf can be modelled without considering its molecular composition. The branch of physics in which materials are treated as continuous is known as \emph{continuum mechanics}. Continuum mechanics studies the response of materials to different loading conditions. In this theory, matter is assumed to exist as a continuum, meaning that the matter in the body is continuously distributed and fills the entire region of space it occupies \citep{Lai96}. This assumption is generally valid if the length scales of interest are large compared with the length scales of discrete molecular structure, but whether the approximation of continuum mechanics is actually justified in a given situation is merely a matter of experimental test. 
 
-Modelling anatomical structures requires an understanding of the deformation and stresses caused by the different sollicitations that occur during medical procedures. A sufficient knowledge of continuum mechanics is therefore essential to follow the rest of this manuscript. Continuum mechanics can be divided into two main parts: general principles common to all media (analysis of deformation, strain and stress concepts) and constitutive equations defining idealised materials. This chapter will not only deal with those two aspects but will also discuss the different aspects of the mechanical behaviour that we find in anatomical structures. Note that this chapter will mostly follow the notation used by \cite{Bonnet97} and \cite{Reddy07}. The interested reader may refer to these books for more details.  
+Modelling anatomical structures requires an understanding of the deformation and stresses caused by the different interactions that occur during medical procedures. A sufficient knowledge of continuum mechanics is therefore essential to follow the rest of this manuscript. Continuum mechanics can be divided into two main parts: general principles common to all media (analysis of deformation, strain and stress concepts) and constitutive equations defining idealised materials. This chapter will not only deal with those two aspects but will also discuss the different aspects of the mechanical behaviour that we find in anatomical structures. Note that this chapter will mostly follow the notation used by \cite{Bonnet97} and \cite{Reddy07}. The interested reader may refer to these books for more details.  
 %This chapter will not only deal with those two aspects but will also introduce experiments carried out on organs in order to assess the physical parameters used in the mathematical models. 
 
 
 \section{Description of motion}
 Let us consider a body $\textbf{\textit{B}}$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\textbf{\textit{B}}$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. Deformation implies the change in shape and\slash or size of the body from an initial configuration noted $\kappa_{0}$ to a new configuration $\kappa$ called the \emph{current} or \emph{deformed configuration}. 
 
-Let us now consider a given particule of the body that we call $X$. What we will call particule in the following is in fact an infinitesimal volume of material. We denote the position it occupies in the initial configuration $\mathbf{X}$ and note $\mathbf{x}$ its position in the deformed configuration, both expressed in the chosen frame of reference. The mapping $\chi$ defined as the following:
+Let us now consider a given particle of the body that we call $X$. What we will call particle in the following is in fact an infinitesimal volume of material. We denote the position it occupies in the initial configuration $\mathbf{X}$ and note its position in the deformed configuration $\mathbf{x}$, both expressed in the chosen frame of reference. The mapping $\chi$ defined as the following:
 \begin{equation}
 \label{chap2:mapping}
 \chi : \textbf{\textit{B}}_{\kappa_{0}} \rightarrow \textbf{\textit{B}}_{\kappa}
 \end{equation} 
-is called the \emph{deforming mapping} of the body $\textbf{\textit{B}}$ from $\kappa_{0}$ to $\kappa$. When analysing the deformation of a continuous body, it is necessary to describe the evolution of configurations through time. Its mathematical description follows one of the two approaches: the material description or the spatial description. The material description is known as \emph{Lagrangian description} whereas the spatial description is also called \emph{Eulerian description}. These two approaches are detailled next. 
+is called the \emph{deforming mapping} of the body $\textbf{\textit{B}}$ from $\kappa_{0}$ to $\kappa$. When analysing the deformation of a continuous body, it is necessary to describe the evolution of configurations through time. Its mathematical description follows one of the two approaches: the material description or the spatial description. The material description is known as \emph{Lagrangian description} whereas the spatial description is called \emph{Eulerian description}. These two approaches are detailed next. 
 
 	\subsection{Lagrangian description}
 In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. Thus, the current coordinates ($\mathbf{x} \in \kappa$) are expressed in terms of the reference coordinates ($\mathbf{X} \in \kappa_{0}$): 
@@ -32,17 +32,17 @@ and the variation of a typical variable $\phi$ over the body is described with r
 \begin{equation}
 \phi = \phi(\textbf{X}, t).
 \end{equation}
-For a fixed value of $\mathbf{X} \in \kappa_{0}$, $\phi(\mathbf{X},t)$ gives the value of $\phi$ at time $t$ associated with the fixed particule $X$ whose position in the reference configuration is $\mathbf{X}$. We note that a change in time $t$ implies that the same particule $X$ has a different value $\phi$. Thus, the Lagrangian description focuses its attention on the particules of the continuous body and it is usually used in solid mechanics.
+For a fixed value of $\mathbf{X} \in \kappa_{0}$, $\phi(\mathbf{X},t)$ gives the value of $\phi$ at time $t$ associated with the fixed particle $X$ whose position in the reference configuration is $\mathbf{X}$. We note that a change in time $t$ implies that the same particle $X$ has a different value $\phi$. Thus, the Lagrangian description focuses its attention on the particles of the continuous body and it is usually used in solid mechanics.
 	
 	\subsection{Eulerian description}
-Rather than following the particules, the Eulerian description observes the changes at fixed locations. 	In the Eulerian description, the motion is this time referred to the current configuration $\kappa$ and $\phi$ is described with respect to the current position ($\mathbf{x} \in \kappa$):
+Rather than following the particles, the Eulerian description observes the changes at fixed locations. 	In the Eulerian description, the motion is this time referred to the current configuration $\kappa$ and $\phi$ is described with respect to the current position ($\mathbf{x} \in \kappa$):
 \begin{equation}
 \phi = \phi(\textbf{x}, t), \quad \textbf{X} = \textbf{X}(\textbf{x}, t).
 \end{equation}
-For a fixed value of $\mathbf{x} \in \kappa$, $\phi(\mathbf{x},t)$ gives the value of $\phi$ associated with the particule occupying the position $\textbf{x} \in \kappa$, which may very well be a different particule for each new time $ t $. Because a change in time $t$ implies that a different value $\phi$ is observed at the same spatial location $\mathbf{x} \in \kappa$, now probably occupied by a different particule, the Eulerian description is focused on a spatial position. This approach is convenient for the study of fluid flow where the kinematic property of greatest interest is the rate at which change is taking place rather than the shape of the body of fluid at a reference time \citep{Spencer80}. Because we are only interested in the study of solid bodies, the Lagrangian description will be used in the rest of the text. 
+For a fixed value of $\mathbf{x} \in \kappa$, $\phi(\mathbf{x},t)$ gives the value of $\phi$ associated with the particle occupying the position $\textbf{x} \in \kappa$, which may very well be a different particle for each new time $ t $. Because a change in time $t$ implies that a different value $\phi$ is observed at the same spatial location $\mathbf{x} \in \kappa$, now probably occupied by a different particle, the Eulerian description is focused on a spatial position. This approach is convenient for the study of fluid flow where the kinematic property of greatest interest is the rate at which change is taking place rather than the shape of the body of fluid at a reference time \citep{Spencer80}. Because we are only interested in the study of solid bodies, the Lagrangian description will be used in the rest of the text. 
 	
 	\subsection{Displacement field}
-The displacement $ \mathbf{u} $ of a particule $X$ is called \emph{displacement vector} and its expression in the Lagrangian description is given by the following:
+The displacement $ \mathbf{u} $ of a particle $X$ is called \emph{displacement vector} and its expression in the Lagrangian description is given by the following:
 \begin{equation}
 \mathbf{u}(\textbf{X}, t) = \mathbf{x}(\mathbf{X}, t) - \mathbf{X}.
 \end{equation}
@@ -53,12 +53,12 @@ A \emph{displacement field} is a vector field of all displacement vectors for al
 	\subsection{Deformation gradient tensor}
 The displacement field tells us how a point displaces from the reference to the deformed configuration. However, we would also like to know how a piece of material is stretched and rotated as the body moves from the reference to the deformed configuration. Since the length of a material line $d\mathbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\mathbf{X}$ deforms into $d\mathbf{x}$. The question then becomes how to relate $d\mathbf{x}$ in the deformed configuration with $d\mathbf{X}$ of the reference configuration. 
 
-Consider two particules $P_{1}$ and $P_{2}$ in a continuous body separated by an infinitesimal distance $d\mathbf{X}$:
+Consider two particles $P_{1}$ and $P_{2}$ in a continuous body separated by an infinitesimal distance $d\mathbf{X}$:
 \begin{equation}
 \label{chap2:dX}
 d\mathbf{X} = \mathbf{X}_{P_{2}} - \mathbf{X}_{P_{1}}.
 \end{equation}
-After deformation, the two particules have deformed to their current positions given by the mapping $\chi$~\eqref{chap2:mapping} as:
+After deformation, the two particles have deformed to their current positions given by the mapping $\chi$~\eqref{chap2:mapping} as:
 \begin{equation}
 \mathbf{x}_{P_1} = \chi(\mathbf{X}_{P_{1}}, t) \quad \mbox{and} \quad \mathbf{x}_{P_2} = \chi(\mathbf{X}_{P_{2}}, t).
 \end{equation}
@@ -123,7 +123,7 @@ Thus, J has the physical meaning of being the local ratio of current to referenc
 For similar reasons, let us find the relation between an element of area in the reference configuration $d\mathbf{A}$ which becomes $d\mathbf{a}$ in the deformed configuration. Considering an arbitrary material line $d\mathbf{L}$ in the reference configuration and noting $d\mathbf{l}$ the same line after deformation \TODO{Add figure with all notations}, the corresponding reference and current volumes are given respectively by:
 \begin{align}
 d\mathbf{V} &= d\mathbf{L} \cdot d\mathbf{A} \\
-d\mathbf{v} &= d\mathbf{l} \cdot d\mathbf{a}
+\mbox{and } \quad d\mathbf{v} &= d\mathbf{l} \cdot d\mathbf{a}.
 \end{align}
 Using \eqref{chap2:dvdV} which relates the reference and deformed volumes and recalling that $d\mathbf{l} = \mathbf{F} \, d\mathbf{L}$, we have:
 \begin{equation}
@@ -137,7 +137,7 @@ d\mathbf{a} = J \, \mathbf{F}^{-T} \, d\mathbf{A}.
 			
 			
 	\subsection{Volumetric and isochoric components}
-We recall that the Jacobian $J$ has the physical meaning of being the local ratio of current to reference volume of a material volume element. Therefore, if $J = 1$ the volume does not change locally during the deformation and the latter is qualified as \emph{isochoric} at this given particule $P$. If $J = 1$ everywhere in the body, the deformation of the body is isochoric. 
+We recall that the Jacobian $J$ has the physical meaning of being the local ratio of current to reference volume of a material volume element. Therefore, if $J = 1$ the volume does not change locally during the deformation and the latter is qualified as \emph{isochoric} at this given particle $P$. If $J = 1$ everywhere in the body, the deformation of the body is isochoric. 
 
 When dealing with incompressible and nearly incompressible materials it is necessary to separate the volumetric from the isochoric components of the deformation. Such a separation must ensure that the isochoric component $\mathbf{\hat{F}}$ does not imply any change in volume. This condition can be achieved by choosing $\mathbf{\hat{F}}$ as:
 \begin{equation}
@@ -148,11 +148,11 @@ Indeed,
 \det \mathbf{\hat{F}} &= \det (J^{-1/3} \mathbf{F}) \notag \\
 &= (J^{-1/3})^3 \det \mathbf{F} \notag \\
 &= J^{-1} J \notag \\
-&= 1
+&= 1.
 \end{align}
 The deformation gradient $\mathbf{F}$ can now be expressed in terms of the volumetric and isochoric component $J$ and $\mathbf{\hat{F}}$ as:
 \begin{equation}
-\mathbf{F} = J^{1/3} \mathbf{\hat{F}}
+\mathbf{F} = J^{1/3} \mathbf{\hat{F}}.
 \end{equation}
 			
 			
@@ -160,7 +160,7 @@ The deformation gradient $\mathbf{F}$ can now be expressed in terms of the volum
 The length of a material curve from the reference configuration can change when displaced to a curve in the deformed configuration. If all the curves do not change length, it is said that a rigid body displacement occurred. The concept of strain is used to evaluate how much a given displacement differs locally from a rigid body displacement. Therefore, although we know how to transform vectors from the reference configuration into vectors in the current configuration using the deformation gradient, it is more useful to find a measure of the change in length of $d\mathbf{X}$. Many measures of strains can be defined and the most common ones will now be introduced. 
 
 	\subsection{Cauchy-Green deformation tensors}
-Let us consider two particules $P_{1}$ and $P_{2}$ in the neighbourhood of each other, separated by $d\mathbf{X}$ in the reference configuration. In the deformed configuration $P_{1}$ and $P_{2}$ occupy the positions $\tilde{P}_{1}$ and $\tilde{P}_{2}$ and they are separated by $d\mathbf{x}$. We are interested in the change of distance between the two points $P_{1}$ and $P_{2}$ as the body deforms. 
+Let us consider two particles $P_{1}$ and $P_{2}$ in the neighbourhood of each other, separated by $d\mathbf{X}$ in the reference configuration. In the deformed configuration $P_{1}$ and $P_{2}$ occupy the positions $\tilde{P}_{1}$ and $\tilde{P}_{2}$ and they are separated by $d\mathbf{x}$. We are interested in the change of distance between the two points $P_{1}$ and $P_{2}$ as the body deforms. 
 
 The squared distances between $P_{1}$ and $P_{2}$ and $\tilde{P}_{1}$ and $\tilde{P}_{2}$ are respectively given by:
 \begin{align}
@@ -198,14 +198,14 @@ so we can write:
 \begin{equation}
 (ds)^2 - (dS)^2 = 2 \, d\mathbf{X} \cdot \mathbf{E} \, d\mathbf{X}.
 \end{equation}
-By definition, the Green strain tensor is a symmetric second-order tensor. Also, the change in squared lengths is zero if and only if $\mathbf{E} = \mathbf{0}$. Using \eqref{chap2:gradient}, the Green strain tensor may be developped as the following:
+By definition, the Green strain tensor is a symmetric second-order tensor. Also, the change in squared lengths is zero if and only if $\mathbf{E} = \mathbf{0}$. Using \eqref{chap2:gradient}, the Green strain tensor may be expanded as the following:
 \begin{align}
 \mathbf{E} &= \frac{1}{2} (\mathbf{F}^T \mathbf{F} - \mathbf{I}) \notag \\
 &= \frac{1}{2} \left[ (\nabla_{0} \mathbf{u} + \mathbf{I})^T (\nabla_{0} \mathbf{u} + \mathbf{I}) - \mathbf{I} \right] \notag \\
-&= \frac{1}{2} \left[ (\nabla_{0} \mathbf{u})^T  + \nabla_{0} \mathbf{u}+ (\nabla_{0} \mathbf{u})^T(\nabla_{0} \mathbf{u}) \right] \label{chap2:GreenTensor}
+&= \frac{1}{2} \left[ (\nabla_{0} \mathbf{u})^T  + \nabla_{0} \mathbf{u}+ (\nabla_{0} \mathbf{u})^T(\nabla_{0} \mathbf{u}) \right]. \label{chap2:GreenTensor}
 \end{align}
 
-The Green strain tensor can be expressed in terms of its components in any coordinate system. In particular, in the cartesian coordinate system $(X_1, X_2, X_3)$ the components $E_{ij}$ of $\mathbf{E}$ are the following:
+The Green strain tensor can be expressed in terms of its components in any coordinate system. In particular, in the Cartesian coordinate system $(X_1, X_2, X_3)$ the components $E_{ij}$ of $\mathbf{E}$ are the following:
 \begin{equation}
 E_{i,j} = \frac{1}{2} \left( \pd{u_i}{Xj} + \pd{u_j}{Xi} + \pd{u_k}{Xi} \pd{u_k}{Xj} \right), \quad i = 1, 2, 3.
 \end{equation}
@@ -241,6 +241,7 @@ It can be shown that in the coordinate system $(\mathbf{p}_1, \mathbf{p}_2, \mat
 	         0           & \varepsilon_2 &           0           \\
 	         0           &           0           & \varepsilon_3
 	\end{bmatrix}	
+	.
 \end{equation}
 Since there are no shear strain components in this particular coordinate system, the principal strains represent the maximum and minimum stretches of an elemental volume. Because of the obvious simplicity of the strain tensor's expression, this coordinate system is often used in mechanics to derive and solve equations.
 
@@ -258,7 +259,7 @@ Its Cartesian components $\varepsilon_{ij}$ are the following:
 The strain quantities defined in the previous sections are non-linear expressions in terms of the mapping $\chi$ and will lead to non-linear governing equations. In solid mechanics, whenever the hypothesis is acceptable, it is common practice to assume that the displacements are small and the infinitesimal strain tensor is then used as a measure of the deformation. 
 
 \section{Stress}
-Stress is a measure of the intensity of the internal forces acting between particles of a deformable body across imaginary internal surfaces. These internal forces are produced between the particles in the body as a reaction to external forces applied on the body. The $SI$ unit for stress is pascal (symbol $Pa$), which is equivalent to one newton (force) per square meter (unit area). As with strain, different measures of stress can be defined. For instance, stress can be measured per unit of deformed area (section \ref{chap2:CauchyStress}) or undeformed area (sections \ref{chap2:PiolaStress1} and \ref{chap2:PiolaStress2}). In general, the stress is not uniformly distributed over the cross section of a material body, and consequently the stress at a point on a given area is different from the average stress over this entire area. Therefore, it is necessary to define the stress not over a given area but at a specific point in the body. Stress at a point in a three-dimensional continuum can be measured in terms of nine quantities, three per plane, on three mutually perpendicular planes at the point. These nine quantities may be viewed as the components of a second-order tensor that we call \emph{stress tensor}. 
+Stress is a measure of the intensity of the internal forces acting between particles of a deformable body across imaginary internal surfaces. These internal forces are produced between the particles in the body as a reaction to external forces applied on the body. The $SI$ unit for stress is pascal (symbol $Pa$), which is equivalent to one newton (force) per square metre (unit area). As with strain, different measures of stress can be defined. For instance, stress can be measured per unit of deformed area (section \ref{chap2:CauchyStress}) or undeformed area (sections \ref{chap2:PiolaStress1} and \ref{chap2:PiolaStress2}). In general, the stress is not uniformly distributed over the cross section of a material body, and consequently the stress at a point on a given area is different from the average stress over this entire area. Therefore, it is necessary to define the stress not over a given area but at a specific point in the body. Stress at a point in a three-dimensional continuum can be measured in terms of nine quantities, three per plane, on three mutually perpendicular planes at the point. These nine quantities may be viewed as the components of a second-order tensor that we call \emph{stress tensor}. 
 
 	\subsection{Cauchy stress}\label{chap2:CauchyStress}
 The Euler-Cauchy's stress principle states that on any surface (real or imaginary) that divides the body, the action of one part of the body on the other is equivalent to the system of distributed forces and couples on the surface dividing the body. With that consideration in mind, let us consider a plane $S$ that passes through an arbitrary internal point $P$ which has a unit normal vector $\mathbf{n}$. This plane separates the body into two regions and we are interested in the forces applied by one region onto the other. First we will introduce the true stress, defined as the stress in the deformed configuration $\chi$ measured per unit area of the deformed configuration. The force $\Delta\mathbf{f}(\mathbf{n})$ acting on a small element of area $\Delta a$ in a continuous medium depends not only on the size of the area but also depends on the orientation of this area $\mathbf{n}$. The \emph{Cauchy stress vector} at $P$ on $S$ can be defined as:
@@ -281,13 +282,13 @@ The areas $\Delta a_1$, $\Delta a_2$ and $\Delta a_3$ being the projections of $
 Dividing \eqref{chap2:Newton} by $\Delta a$, using \eqref{chap2:DeltaAi} and noting that $\Delta v \slash \Delta a \rightarrow 0$ when the tetrahedron shrinks to a point yields:
 \begin{align}
 \mathbf{t} &= (\mathbf{n} \cdot \mathbf{e}_1) \mathbf{t}_1 + (\mathbf{n} \cdot \mathbf{e}_2) \mathbf{t}_2 + (\mathbf{n} \cdot \mathbf{e}_3) \mathbf{t}_3 \notag \\
-&= \mathbf{n} \cdot (\mathbf{e}_1 \mathbf{t}_1 + \mathbf{e}_2 \mathbf{t}_2 + \mathbf{e}_3 \mathbf{t}_3)
+&= \mathbf{n} \cdot (\mathbf{e}_1 \mathbf{t}_1 + \mathbf{e}_2 \mathbf{t}_2 + \mathbf{e}_3 \mathbf{t}_3).
 \end{align}
 
 We define the \emph{Cauchy stress tensor} $\sigma = \mathbf{e}_1 \mathbf{t}_1 + \mathbf{e}_2 \mathbf{t}_2 + \mathbf{e}_3 \mathbf{t}_3$ and we have:
 \begin{equation}
 \label{chap2:CauchyFormula}
-\mathbf{t}(\mathbf{n}) = \mathbf{n} \cdot \sigma
+\mathbf{t}(\mathbf{n}) = \mathbf{n} \cdot \sigma .
 \end{equation}
 The stress vector $\mathbf{t}$ represents the vectorial stress on a plane whose normal is $\mathbf{n}$. As we demonstrated, the stress tensor is a property of the medium that is independent of $\mathbf{n}$. It represents the current force per unit of deformed area: $d\mathbf{f} = \mathbf{t} da = \sigma \cdot d\mathbf{a}$. 
 
@@ -326,11 +327,11 @@ In a similar way we defined the Cauchy stress $\sigma$ with $\mathbf{t}(\mathbf{
 
 The relation between the first Piola-Kirchhoff stress tensor and the Cauchy stress tensor can be obtained as follows. From \eqref{chap2:df} we have:
 \begin{equation}
-\mathbf{T} = \frac{da}{dA} \mathbf{t}
+\mathbf{T} = \frac{da}{dA} \mathbf{t}.
 \end{equation}
 Using $d\mathbf{f} = \mathbf{t} da$ and the relation \eqref{chap2:dadA} between $d\mathbf{A}$ and $d\mathbf{a}$, we have:
 \begin{equation}
-\mathbf{T} =  J \, \mathbf{t} \, \mathbf{F}^{-T}
+\mathbf{T} =  J \, \mathbf{t} \, \mathbf{F}^{-T}.
 \end{equation}
 Finally we can express the first Piola-Kirchhoff stress tensor $\mathbf{P}$ as
 \begin{equation}
@@ -341,17 +342,17 @@ Finally we can express the first Piola-Kirchhoff stress tensor $\mathbf{P}$ as
 	\subsection{Second Piola-Kirchhoff stress tensor}\label{chap2:PiolaStress2}
 The \emph{second Piola-Kirchhoff stress tensor} $\mathbf{S}$ is introduced as the stress tensor associated with the force $d\mathbf{F}$ in the undeformed area $d\mathbf{A}$ that corresponds to the force $d\mathbf{f}$ in the deformed area $d\mathbf{a}$:
 \begin{equation}
-d\mathbf{F} = \mathbf{S} \, d\mathbf{A}
+d\mathbf{F} = \mathbf{S} \, d\mathbf{A}.
 \end{equation}
 Thus, the second Piola-Kirchhoff stress tensor gives the transformed current force per unit undeformed area. Similar to the relationship \eqref{chap2:dxdX} between $d\mathbf{x}$ and $d\mathbf{X}$, the force $d\mathbf{f}$ is related to the force $d\mathbf{F}$ by:
 \begin{align}
 d\mathbf{F} &= \mathbf{F}^{-1} \, d\mathbf{f} \notag \\
 &= \mathbf{F}^{-1} \, (\mathbf{P} \, d\mathbf{A}) \notag \\
-&= \mathbf{S} \, d\mathbf{A}
+&= \mathbf{S} \, d\mathbf{A}.
 \end{align}
 Therefore, the second Piola-Kirchhoff stress tensor is related to the first Piola-Kirchhoff stress tensor as follows:
 \begin{equation}
-\mathbf{S} = \mathbf{F}^{-1} \mathbf{P} = J \, \mathbf{F}^{-1} \, \sigma \, \mathbf{F}^{-T}
+\mathbf{S} = \mathbf{F}^{-1} \mathbf{P} = J \, \mathbf{F}^{-1} \, \sigma \, \mathbf{F}^{-T}.
 \end{equation}
 	
 	
@@ -364,6 +365,7 @@ In the same way that we defined principal strains in section \ref{chap2:strainIn
 	        0      & \sigma_2 &        0       \\
 	        0      &          0     & \sigma_3
 	\end{bmatrix}	
+	.
 \end{equation}
 This result means that at every point in a stressed body there are at least three planes called \emph{principal planes}, with normal vectors $\mathbf{n}_1$, $\mathbf{n}_2$ and $\mathbf{n}_3$ called \emph{principal directions} (in fact, the eigenvectors), where the corresponding stress vector is perpendicular to the plane and where there are no normal shear stresses. The three stresses normal $\sigma_1$, $\sigma_2$ and $\sigma_3$ to these principal planes are called \emph{principal stresses}.
 
@@ -401,11 +403,11 @@ where $C_0$, $C_{ij}$ and $\hat{C}$ are material stiffnesses. The form of $U_0$ 
 	\subsection{Linear materials: generalised Hooke's law} \label{chap2:Hooke}
 The linear constitutive model for infinitesimal deformations is called the generalised Hooke's law. To derive the relation between stress and strain for a linear material, we assume the quadratic form of $U_0$:
 \begin{equation}
-U_0 = C_0 + C_{ij}\varepsilon_{ij} + \frac{1}{2!}\hat{C}_{ijkl}\varepsilon{ij}\varepsilon_{kl}
+U_0 = C_0 + C_{ij}\varepsilon_{ij} + \frac{1}{2!}\hat{C}_{ijkl}\varepsilon{ij}\varepsilon_{kl}.
 \end{equation}
 From there and using \eqref{chap2:energy} it can be shown that there exists some coefficients $C_{ijkl}$ such as:
 \begin{equation}
-\sigma_{ij} = C_{ijkl} \varepsilon_{kl}
+\sigma_{ij} = C_{ijkl} \varepsilon_{kl}.
 \end{equation}
 The $C_{ijkl}$ are the coefficients of the fourth-order tensor $\mathbf{C}$ that relates the second-order tensors of strain and stress. The $81$ scalar components of this fourth-order tensor ($=3^4$) can be reduced to $21$ independent coefficients using existing symmetries. Recalling that both strain and stress tensors are symmetric yields:
 \begin{equation}
@@ -543,18 +545,18 @@ where $C_1$ and $C_2$ are two constants and $I_B$ and $II_B$ are the two princip
 \end{equation}
 where $\rho$ is the material density and $\alpha$ and $\beta$ are given by
 \begin{equation}
-\alpha = 2 \rho \pd{U_0}{I_B} = 2 \rho C_1, \quad \beta = -2\rho \pd{U_0}{II_B} = -2\rho C_2
+\alpha = 2 \rho \pd{U_0}{I_B} = 2 \rho C_1, \quad \beta = -2\rho \pd{U_0}{II_B} = -2\rho C_2.
 \end{equation}
 The Mooney-Rivlin incompressible model is often used to represent the behaviour of rubber-like materials.
 
 	\subsubsection*{Neo-Hookean}			
 The neo-Hookean model was proposed by Ronald Rivlin in 1948. It can be derived from the Mooney-Rivlin model in the special case where $C_2 = 0$ in the strain energy density function. Therefore, we have:
 \begin{equation}
-U_0 = C_1 (I_B-3)
+U_0 = C_1 (I_B-3).
 \end{equation}
 and the constitutive equation for the stress may be written as:
 \begin{equation}
-\sigma = -p \mathbf{I} + 2 \rho C_1 \mathbf{B}
+\sigma = -p \mathbf{I} + 2 \rho C_1 \mathbf{B}.
 \end{equation}
 The neo-Hookean model provides a reasonable approximation of rubber-like material for moderate strains. It is typically accurate for strains less than $20\, \%$ \citep{Gent01}.
 			
