@@ -1,56 +1,60 @@
 \part{Introduction}
 
 	\chapter{Medical simulation}
-		\section{General context and goal: medical training, patient-specific planning and per-operative guidance}
-		\section{Challenges (trade-off between accuracy and real-time)}
-
-%	\chapter{One key point in medical simulation: soft-tissue modelling}
-%		\section{Necessary background in continuum mechanics}
-%			\subsection{Deformation tensor and strain tensor}
-%			\subsection{Stress and constitutive laws}
-%		\section{Tissue characterisation}
-%			\subsection{Material models for organs (non-linear, visco-elastic and anisotropic)}
-%			\subsection{Measure/estimation of model parameters?}
+		\section{General context}
+			\subsection{Simulators for everything: we started by simulating what is simple}
+			\subsection{As complexity increases, applications to medical training, patient-specific planning and per-operative guidance}
+		\section{Challenges}					
+			\subsection{Photorealistic rendering}
+			\subsection{Accurate haptic feedback}
+			\subsection{Physically realist organ modelling in real-time}
+			 
 	\input{chapter2}
 
-	\chapter{Main principles of Finite Element Method (or how to solve equations of continuum mechanics from previous section)}
-		\section{Discretisation}
-		\section{Derivation of element equations}
-		\section{Assembly of element equations}
-		\section{Solution of global problem}
+	\input{chapter3}
 
 
 
 \part{Solid organs modelling}
 
 	\chapter{State of art: FEM}
-
-	\chapter{Linear not accurate => Non-linear FEM => Introduction of TLED}
-		\section{Differences with classic FEM and reasons of its efficiency}
+		\section{Expose the problem: how to model solid organs?}
+		\section{Techniques using geometrical kind of approaches}
+			\subsection{Shape matching}
+		\section{Techniques relying on physics}
+			\subsection{Mass-spring}
+		\section{Techniques based on continuum mechanics}	
+			\subsection{FEM with mesh (highlight evolution: linear, topological changes, co-rotational, non-linear, GPU)}
+			\subsection{Meshless (supposedly good for handling topological changes but other issues}
+		
+	\chapter{Introduction of TLED}
+		\section{Description of the algorithm (neo-Hookean, explicit integration, independent elements, parallelisable on GPU)}
 		\section{Visco-elasticity and anisotropy added \OC{MICCAI 2008; MedIA 2009}}
 
 	\chapter{GPU implementation of TLED}
 		\section{What is GPGPU}
 		\section{Re-formulation of the algorithm for its Cg implementation}
 		\section{CUDA implementation/optimisations \OC{ISBMS 2008a}}
-
-	\chapter{Implementation in SOFA}
-		\section{Presentation of SOFA project and architecture}
-		\section{Implementation in SOFA and TLED released in open-source}
+		\section{Implementation into SOFA}
+			\subsection{Presentation of SOFA project and architecture}
+			\subsection{TLED in SOFA and release in open-source}
 
 
 
 \part{Hollow organs modelling}
 
 	\chapter{State of art: hollow structures}
+		\section{Expose the problem: models presented for solid organs are insufficient. How to model hollow organs?}
+			\subsection{Colonoscopy simulator project: needs for colon}
+			\subsection{Cataract surgery, stenosis: other needs for implants/blood vessels}
 		\section{Non-physic approaches (computer graphics stuff)}
 		\section{Physically accurate approches (plates/shells)}
 
-	\chapter{Why a shell FEM? Colonoscopy simulator project}
-		\section{Project introduction}
-		\section{Mass-spring model for colon implemented on GPU \OC{ISBMS 2008b}}
+	\chapter{Mass-spring model for colon implemented on GPU \OC{ISBMS 2008b}}
+		\section{Colon is big, we need a fast model}
+		\section{Limitations (difficult to link it to actual physical properties)}
 
-	\chapter{More accurate: a co-rotational triangular shell model \OC{ISBMS 2010}}
+	\chapter{A co-rotational triangular shell model \OC{ISBMS 2010}}
 		\section{Model description}
 		\section{Validation}
 		\section{Application to implant deployment simulation in cataract surgery}
@@ -59,10 +63,7 @@
 		\section{State of art: reconstruction/simplification}
 		\section{Our method}
 		
-	\chapter{Applications to medical simulation}
-		\section{Nice medical stuff to show}
-		\section{Interaction solid/hollow organs}
-	
-	
 	
 \part{Conclusion}
+	\chapter{Summary}
+	\chapter{Discussion and perspectives (Interaction solid/hollow organs)}
