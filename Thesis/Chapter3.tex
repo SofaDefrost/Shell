@@ -8,37 +8,159 @@ Blabla
 \section{Introduction}
 
 	\subsection{A numerical method}
-One of the most important things engineers and scientists do is to model physical phenomena. Using assumptions concerning how the phenomena works and using the appropriate laws of physics governing the process, they can derive a mathematical model, often characterised by complex algebraic, differential or integral equations relating various quantities of interest. However, because of the complexities in the geometry and complex boundary conditions found in real life problems, we cannot analytically solve these equations. A few decades ago, the only possible approach was to drastically simplify them, which was not always sufficient to find an approximate solution. Nowadays, in practice, most of the problems are solved using numerical methods. Indeed, with suitable mathematical models and numerical methods, computers can help solving many practical problems of engineering. Numerical methods typically transform differential equations governing a continuum to a set of algebraic equations of a discrete model of the continuum that are to be solved using computers \citep{Reddy93}. The \emph{Finite Element Method} (FEM) is the most popular numerical procedure that is used to approximately solve differential equations, especially in continuum mechanics. 
+One of the most important things engineers and scientists do is to model physical phenomena. Using assumptions concerning how the phenomena works and using the appropriate laws of physics governing the process, they can derive a mathematical model, often characterised by complex differential or integral equations relating various quantities of interest. However, because of the complexities in the geometry and complex boundary conditions found in real life problems, we cannot analytically solve these equations. A few decades ago, the only possible approach was to drastically simplify them, which was not always sufficient to find an approximate solution. Nowadays, in practice, most of the problems are solved using numerical methods. Indeed, with suitable mathematical models and numerical methods, computers can help solving many practical problems of engineering. Numerical methods typically transform differential equations governing a continuum to a set of algebraic equations of a discrete model of the continuum that are to be solved using computers \citep{Reddy93}. The \emph{Finite Element Method} (FEM) is the most popular numerical procedure that is used to approximately solve differential equations, especially in continuum mechanics. 
 	
 	\subsection{The basic ideas of FEM}
 The finite element method begins by dividing the structure into small pieces, manageable regions, called \emph{elements}. The collection of all these elements makes up a \emph{mesh} which approximates the problem geometry. Why is this a good idea? If we can expect the solution for an engineering problem to be very complex, it is mostly due to the complex geometry, on which a global solution is difficult to figure out. If the problem domain can be divided (\emph{meshed}) into small elements, the solution within an element is easier to approximate \citep{MacDonald07}. Over each finite element, the unknown variables are approximated using known functions. These functions can be linear or higher-order polynomial expressions that depend on the geometrical locations (\emph{nodes}) used to define the finite element shape. The governing equations are integrated over each finite element using linear algebra techniques and the solution over the entire domain problem is obtained by summing (\emph{assembling}) the solution of each element. Thus, the finite element method transforms an infinite number of differential equations (one can be defined at any point of the continuum) into a finite number of algebraic equations (depending on the chosen number of elements). 
 
 This approach may be compared to trying to find the area under a curve. We know that we can find the exact solution for the area under the curve by integration. However, sometimes the function describing the curve is not known, or is difficult to integrate. One method to obtain an approximate solution is to break up the area into a series of rectangles and add the areas of all rectangles \TODO{Add figure with curve and rectangles}. It is worth nothing that the solution accuracy can be increased by reducing the width of the rectangles to better follow the curve. 
 
-\bigskip
+\medskip
 
-It is crucial to keep in mind that approximations occur at different stages during finite element analysis. The division of the whole domain into finite elements may not be exact \TODO{add figure from a domain divided into elements}, introducing error in the domain being modelled. The second stage is when element equations are derived. As mentionned earlier, the unknowns of the problem are approximated using the idea that any continuous function can be representated by a linear combination of known functions and undetermined coefficients. Algebraic relations between the undetermined coefficients are then obtained by satisfying the governing equations over each element. There are a few types of approach for establishing these equations but, without going into details, the mathematical foundation of all these approaches is the \emph{weighted residual method} (see Appendix~\ref{appendix2}), which leads to integrals during the process. Therefore, the second stage creates two sources of error: the representation of the solution by a linear combination of functions and the evaluation of the integrals. Finally, errors are introduced when solving the assembled system of algebraic equations. 
+It is crucial to keep in mind that approximations occur at different stages during finite element analysis. The division of the whole domain into finite elements may not be exact \TODO{add figure from a domain divided into elements}, introducing error in the domain being modelled. The second stage is when element equations are derived. As mentionned earlier, the unknowns of the problem are approximated using the idea that any continuous function can be representated by a linear combination of known functions and undetermined coefficients. Algebraic relations between the undetermined coefficients are then obtained by satisfying the governing equations over each element. There are a few types of approach for establishing these equations but, without going into details, the mathematical foundations of all these approaches are energy principles or the \emph{weighted residual methods} (see Appendix~\ref{appendix2}), which both lead to integrals during the process. Therefore, the second stage creates two sources of error: the representation of the solution by a linear combination of functions and the evaluation of the integrals. Finally, errors are introduced when solving the assembled system of algebraic equations. 
 
 
 \section{Discretisation}
 
 	\subsection{Meshing process}
-The first step in the finite element method is to create a mesh of the domain to study. Mesh generation is a very important task and can be very time consuming. The domain has to be meshed properly into elements of specific shapes. All the elements together form the entire domain of the problem without any gap or overlapping. For example, triangles or quadrilaterals can be used in two dimensions, and tetrahedra and hexahedra in three dimensions. Information, such as \emph{element connectivity}, must be created during the meshing process for later use in the formulation of the FEM equations. The number of elements into which the domain is divided in a problem depends mainly on the geometry of the domain and on the desired accuracy of the solution. Usually, the number of elements increases with the complexity of the geometry. For instance, if one part of the domain is thiner \TODO{add figure to illustrate this point}, the size of the elements must be reduced in order to tile this particular part, which increases the total number of elements, and hence  the number of algebraic equations to solve. However, adding elements is sometimes desirable. Indeed, increasing the number of elements tends to get an approximate solution closer to the exact analytical solution (as reducing the width of the rectangles allows for a better approximation of the area under the curve). A trade-off between accuracy and computational time must be found. This is why the meshing process on the problem domain must be carried out carefully. One needs to create a mesh which gives an accurate enough solution for the desired application while restraining the computational time according to the problem time constraints. As an example, finding the maximum load that can sustain a bridge in structural mechanics demands a high degree of accuracy, no matter how much time it is needed to compute the solution. Conversely, organ deformation in medical training simulators must be computed at an interactive rate so that no apparent delay can be observed between the manipulation of a given organ and its deformation. It does not mean that precision is not required, simply that the time constraints will necessarily limit the accuracy of the solution. 
+The first step in the finite element method is to create a mesh of the domain to study. Mesh generation is a very important task and can be very time consuming. The domain has to be meshed properly into elements of specific shapes. All the elements together form the entire domain of the problem without any gap or overlapping. For example, triangles or quadrilaterals can be used in two dimensions, and tetrahedra and hexahedra in three dimensions. Information, such as \emph{element connectivity}, must be created during the meshing process for later use in the formulation of the FEM equations. The number of elements into which the domain is divided in a problem depends mainly on the geometry of the domain and on the desired accuracy of the solution. Usually, the number of elements increases with the complexity of the geometry. For instance, if one part of the domain is thiner \TODO{add figure to illustrate this point}, the size of the elements must be reduced in order to tile this particular part, which increases the total number of elements, and hence  the number of algebraic equations to solve. However, adding elements is sometimes desirable. Indeed, increasing the number of elements tends to get an approximate solution closer to the exact analytical solution (as reducing the width of the rectangles allows for a better approximation of the area under the curve). Elements are classically added in the particular regions of interest for a given problem and where substantial deformation may occur if this information is known a priori. A trade-off between accuracy and computational time must be found. This is why the meshing process on the problem domain must be carried out carefully. One needs to create a mesh which gives an accurate enough solution for the desired application while restraining the computational time according to the problem time constraints. As an example, finding the maximum load that can sustain a bridge in structural mechanics demands a high degree of accuracy, no matter how much time it is needed to compute the solution. Conversely, organ deformation in medical training simulators must be computed at an interactive rate so that no apparent delay can be observed between the manipulation of a given organ and its deformation. It does not mean that precision is not required, simply that the time constraints will necessarily limit the accuracy of the solution. 
 
 	
-	\subsection{Elements and shape functions}
-As we have seen, the finite element method is based on finding an approximate solution over each element rather than the whole domain. To connect the approximate solution from each element to form a continuous over the whole domain, we require the solution to be the same at points common to the elements. Therefore, the element nodes (vertices defining each element's shape) needs to play the role of interpolation points in constructing the approximation functions over an element. Depending on the degree of polynomial approximation used to represent the solution, additional nodes may be identified inside the element. It is worth noting that the type of interpolation directly affects the accuracy of the solution. 
+	\subsection{Solution interpolation}	\label{chap3:solutionInterpolation}
+As we have seen, the finite element method is based on finding an approximate solution over each simple element rather than the whole domain. Any continuous function $ f $ may be approximated by a linear combination of known functions $ \phi_i $ and undetermined coefficients $ c_i $:
+\begin{equation}
+f \approx \tilde{f} = \sum_{i=1}^n c_i \phi_i .
+\end{equation}
+Moreover, the approximation solution $ u^e $within the element $\Omega_e $ must fullfill certain conditions of continuity in order to be convergent to the actual solution $ u $ as the number of elements is increased. The finite element method approximates the solution by the following polynomial expression:
+\begin{equation}
+\label{chap3:polynom}
+u^e(x) = \sum_{i=1}^n u^e_i \psi^e_i(x) 
+\end{equation}
+where $ \Omega_e $ is a one-dimensional element\footnote{For the sake of simplicity, all derivations are carried out in 1D but remain valid for each component in higher dimensions.}, $ x $ a position within this element, $ u^e_i $ are the values of the solution $ u $ at the nodes and $ \psi^e_i(x) $ the approximation functions over the element. This particular form will be assumed for brevity but the interested reader may refer to \cite{Reddy93} for demonstration. Note that $ u^e_i  $ plays the role of the undetermined coefficients and $ \psi^e_i $ the role of approximation functions. Writing the approximation in terms of the nodal values of the solution is necessitated by the fact that we require the solution to be the same at points common to the elements in order to connect the approximate solution from each element and form a continuous solution over the whole domain. The approximation $ \psi^e_i $ can be linear or higher-order polynomial expressions and are called interpolation functions. 
+%They are also commonly named \emph{shape functions} because they define the `shape' that a variable can take within an element (linear, quadratic etc.). 
+Depending on the degree of polynomial approximation used to represent the solution, additional nodes may be identified inside the element. It is worth noting that the type of interpolation directly affects the accuracy of the solution. In other words, finding the solution to the problem consists of merely figuring out the values of the sought variable at every node of the mesh. Its value at any other point of the domain may then be deducted by interpolation within elements. 
 
+\medskip
+
+The next logical question is how to derive the interpolation functions $ \psi^e_i  $ for a given element. Their derivation depends only on the geometry of the element and the number and location of the nodes. The number of nodes must be equal to the number of terms in the polynomial expansion. Therefore each element contains a single interpolation function for each of its nodes. As stated by interpolation theory, each interpolation function is required to be equal to $1$ at its corresponding node, and $0$ at all other nodes:
+\begin{equation} 
+	\psi^e_i(x_j) = \delta_{ij} = 
+	\begin{cases} 
+		1 & \text{if } i = j \\ 
+		0 & \text{if } i \neq j
+	\end{cases}
+\end{equation}
+where $ x_j $ is the position of node $j$. From there, we can state that the interpolation function at node $ i $ may be written as:
+\begin{equation}
+\psi^e_i(x) = C_i \prod_{i \neq j}^{n-1} (x-x_j)
+\end{equation}
+where $ j $ are the indices of the other nodes and $ C_i $ is a constant to be determined such as:
+\begin{equation}
+\psi^e_i(x_i) = 1.
+\end{equation}
+This function is zero at all nodes except the $i^{th}$ node. It is worth noting that such a definition for the interpolation functions $ \psi^e_i $ used in \eqref{chap3:polynom} yields:
+\begin{equation}
+u^e(x_j) = \sum_{i=1}^n u^e_i \psi^e_i(x_j) = u^e_j
+\end{equation}
+as expected. 
+
+Since elements over the whole domain are generally not identical (different shapes), this process of determining all interpolation functions can become fastidious. We will now introduce a general method for defining interpolation functions which allows for arbitrary element shapes (subject to a given topology). To this end, we discuss the concept of element \emph{natural coordinates}.
+
+	\subsection{Natural coordinates}
+The natural coordinate system allows us to map every element into a typical and simpler element. As an example, an 8-node hexahedron element is shown in Fig. \TODO{add figure of hexahedron in global and natural coordinates} as it appears in the global $(x_1, x_2, x_3)$ and natural $(\xi_1,\xi_2,\xi_3)$ coordinate systems. While in its natural coordinate system the element is a regular aligned cube, in the global coordinate system the element may assume any admissible arbitrary form. Essentially, admissible means that the element must not be too distorted, and must certainly not fold back on itself. Another example is given Fig. \TODO{add figure of tetrahedron in global and natural coordinates} with a tetrahedral element. The components of each node has a simple expression in natural coordinates, usually $0, 1$ or $-1$ and the centre of the coordinate system is taken at one of the nodes or at the centre of the element. 
+
+The use of the natural coordinate system has several advantages \citep{Biswas76}. Not only the interpolation functions can be derivated only once per type of element in the mesh, but their expression is also much simpler, regardless of the actual element shape. Consequently, the element equations and the derived element matrices get to be simplified too. However, we now need to switch between the natural and global coordinate systems before solving the equations on the whole domain. Indeed, it is necessary to account for the diversity of element shapes within the mesh. Solving the element equations expressed into the natural coordinate system would not yield the expected result for the whole domain. 
+	
+	
+	\subsection{Geometry interpolation}
+Let us assume a relation between the global coordinate $ x $ and the natural coordinate $ \xi $ in the following form:
+\begin{equation}
+\label{chap3:f}
+x = f(\xi)
+\end{equation}
+where $ f $ is assumed to be a one-to-one correspondence (that is, a bijective function). This function may be seen as a transformation between the natural shape of the element and its arbitrary shape within the actual mesh, it describes a change in geometry. It is natural to think of approximating the geometry in a similar way that we approximated the solution in section \ref{chap3:solutionInterpolation}. Hence, the transformation defined by \eqref{chap3:f} may also be written as
+\begin{equation}
+x = \sum_{i=1}^m x_i^e \hat{\psi}_i^e(\xi)
+\end{equation}
+where $ x_i^e $ is the global coordinate of the $ i^{th} $ node of the element $ \Omega_e $ and $ \hat{\psi}_i^e(\xi) $ are the interpolation functions of degree $ m-1 $. Thus, we have a linear transformation when $ m = 2 $ and the relation betweeen $ x $ and $ \xi $ is quadratic when $ m=3 $. The interpolation functions $ \hat{\psi}_i^e(\xi) $ are called \emph{shape functions} because they are used to express the geometry or shape of the element. 
+% Assuming the numbering of nodes in the global system follows the one of the natural system, the shape functions act as a mapping between the two representations. 
+
+
+	\subsection{A particular case: isoparametric elements}
+% \noindent \textbf{Some remarks.}
+Most of the time, we choose to interpolate the solution and the element geometry with the same interpolation functions. In this case, the elements are said to be \emph{isoparametric}. Under this configuration, natural coordinates appear as parameters that define the shape functions. Note that the shape functions describe the geometry and the solution with the same degree of interpolation. Because isoparametric elements are very common in practice, the use of the phrase \emph{shape functions} is often extented to denote the interpolation functions employed to approximate the solution.
 	
 	
 \section{Derivation of element equations}	
-	\subsection{Numerical integration}
-	\subsection{Generation of element matrices}
 
-\section{Assembly of element equations}
+Let us sum up where we are into the finite element analysis process so far. The whole domain has been divided into sub-domains, smaller, that we call elements, for which the solution to be sought will be simpler to find. We know how to approximate the solution within each of these elements using a linear combination of shape functions. And we even have a method to simplify the expression of these shape functions using natural coordinates. 
 
-\section{Solution of global problem}
+	\subsection{Strong and weak forms}
+	
+The next step is therefore to derive the element equations themselves. Obviously these equations depend on the type of problem that we seek to solve. From now on, we will only consider the context of continuum mechanics since our overall goal is the modelling of organ deformation. However, a similar approach can be used in the other fields of physics. In continuum mechanics, applying Newton's second law yields a partial differential system of equations. Such equations are called \emph{strong forms}. The strong form, in contrast to a \emph{weak form}, requires strong continuity on the dependent field variables, such as displacements \citep{Liu03}. The functions defining these field variables have to be differentiable up to the order of the partial differential equations that exist in the strong from. Obtaining the exact solution for a strong form is usually very difficult for practical engineering problems. We know that the finite element method can be used to find an approximated solution but the method usually works well only with regular geometry and boundary conditions.
+
+A weak form is often created using energy principles or weighted residual methods. The weak form is often an integral form and requires a weaker continuity on the field variables. Due to the weaker requirement on the field variables, and the integral operation, a formulation based on a weak form usually produces a set of discretised system equations that give much more accurate results, especially for problems of complex geometry. Hence, the weak form is preferred by many for obtaining an approximate solution. Using the weak form usually leads to a set of well-behaved algebraic system equations, if the problem domain is discretised properly into elements.
+
+	\subsection{Time dependence}
+In all the equations of the finite element method that we derived so far, we have not taken time into account. For some problem, this is not an issue, the motion is sufficiently slow to assume that the dynamic effects (such as damping effect) are neglectable. However, this assumption is not always valid, particulary in our case where we want to model organ deformation. The deformation obviously depends on time. Finite element models of time-dependent problems can be developed in two alternatives ways \citep{Reddy93}:
+\begin{description}
+\item[(a)] coupled formulation in which the time $ t $ is treated as an additional coordinate along with the spatial coordinate $ x $
+\item[(b)] decoupled formulation where time and spatial variations are assumede to be separable.
+\end{description}
+Thus, the approximation of the solution $ u $ takes one of these two forms:
+\begin{align}
+u(x, t) \approx u^e(x, t) &= \sum_{i=1}^n \hat{u}^e_i \hat{\psi}^e_i(x, t)  \quad \text{(coupled formulation)} \label{chap3:approxTime1}\\
+u(x, t) \approx u^e(x, t) &= \sum_{i=1}^n u^e_i(t) \psi^e_i(x) \quad \text{(decoupled formulation)} \label{chap3:approxTime2}
+\end{align}
+where $ \hat{\psi}^e_i(x, t) $ are time-space interpolation functions, $ \hat{u}^e_i $ are the nodal values that are independent of $ x $ and $ t $, $ \psi^e_i(x) $ are the usual interpolation functions in spatial coordinate $ x $ only and the nodal values $ u^e_i(t) $ are functions of time $ t $ only. Space-time coupled finite element formulations are not common and they have not been adequately studied. Hence, we consider the decoupled formulation only. Of course, the assumption that the time and spatial variations are separable is not valid in general. However, with sufficiently small time steps, it is possible to obtain accurate solutions nevertheless. 
+
+	
+	\subsection{Dynamic system of equations}	
+The space-time decoupled finite element formulation of time-dependent problems involves two steps:
+\begin{description}
+\item[1. Spatial approximation.]
+The solution $ u $ is first approximated by expressions of the form \eqref{chap3:approxTime2} while keeping the time-dependent term during the finite element model derivation. This step leads to a set of ordinary differential equations in time.
+\item[2. Temporal approximation.]
+The system of ordinary differential equations is then approximated in time where different schemes may be used to assess the time derivatives. This step yields a set of algebraic equations for $ u^e_i $ at discrete time $ t_{k+1} = (k+1) \Delta t$ where $ \Delta t $ is the time increment and $ k > 0$ an integer. 
+\end{description}
+At the end of this two-step approximation, we have a continuous spatial solution at discrete intervals in time:
+\begin{equation}
+\label{chap3:approxTime}
+u(x, t_k) \approx u^e(x, t_k) = \sum_{i=1}^n u^e_i(t_k) \psi^e_i(x) \quad \text{with } k = 0, 1, \ldots
+\end{equation}
+	
+The construction of the weak form using either energy principles or weighted residual methods will not be detailled here. The reader may easily find it in dozens of textbooks. By substituting \eqref{chap3:approxTime} in the weak form, we obtain the finite element equations of equilibrium in matrix form:
+\begin{equation}
+\label{chap3:eqDynamic}
+\mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R},
+\end{equation}
+where $ \mathbf{M} $ is a constant mass matrix, $\mathbf{D}$ is a constant damping matrix, $ \mathbf{K}(\mathbf{U}) $ is the stiffness matrix, which is a function of global nodal displacements $\mathbf{U}$, and $\mathbf{R}$ are externally applied loads. 
+
+	\subsection{Static system of equations}	
+Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, let us consider the problem of finding the maximum load that a desk can sustain. It is fair to say that strain and stress within the structure does not fluctuate over time. Therefore, we can assume that the equations describing the structure do not depend on time: the problem is said to be \emph{static}. In this case, the static system of equations can be easily obtained by merely dropping out the dynamics terms in \eqref{chap3:eqDynamic}. Indeed, the static case may just be seen as a special case of the dynamic equations and the static equations are:
+\begin{equation}
+\label{chap3:eqStatic}
+\mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
+\end{equation}
+
+	\subsection{Determination of the matrices involved}
 		
 
+%	\subsection{Generation of element matrices}
+%The basic postulate is that a continuum must satisfy Newton's second law of motion. This law can be stated as: the time rate of change of momentum of a collection of particules equals the resultant force exerted on the collection:
+%\begin{equation}
+%\dfrac{d}{dt}(m \mathbf{v}) = \mathbf{F},
+%\end{equation}
+%where $ m $ is the total mass, $ \mathbf{v} $ the velocity and $ \mathbf{F} $ the resultant force on the collection of particules. 
+	
+	
+
+\section{Assembly of element equations}
+%Since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns. This process is described in the next section. 
 
 
+\section{Solution of global problem}
+	
+	\subsection{Static problems}
+	
+	\subsection{Dynamic problems}
