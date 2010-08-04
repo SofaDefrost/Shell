@@ -986,7 +986,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv&
 
 
 template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecConst& /*out*/, const typename Out::VecConst& /*in*/ )
+void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::MatrixDeriv& /*out*/, const typename Out::MatrixDeriv& /*in*/ )
 {
 
 }
