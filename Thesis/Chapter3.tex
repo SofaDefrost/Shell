@@ -15,7 +15,7 @@ The finite element method begins by dividing the structure into small pieces, ma
 
 This approach may be compared to trying to find the area under a curve. We know that we can find the exact solution for the area under the curve by integration. However, sometimes the function describing the curve is not known, or is difficult to integrate. One method to obtain an approximate solution is to break up the area into a series of rectangles and add the areas of all rectangles \TODO{Add figure with curve and rectangles}. It is worth nothing that the solution accuracy can be increased by reducing the width of the rectangles to better follow the curve. 
 
-\medskip
+\bigskip
 
 It is crucial to keep in mind that approximations occur at different stages during finite element analysis. The division of the whole domain into finite elements may not be exact \TODO{add figure from a domain divided into elements}, introducing error in the domain being modelled. The second stage is when element equations are derived. As mentionned earlier, the unknowns of the problem are approximated using the idea that any continuous function can be representated by a linear combination of known functions and undetermined coefficients. Algebraic relations between the undetermined coefficients are then obtained by satisfying the governing equations over each element. There are a few types of approach for establishing these equations but, without going into details, the mathematical foundations of all these approaches are energy principles or the \emph{weighted residual methods} (see Appendix~\ref{appendix2}), which both lead to integrals during the process. Therefore, the second stage creates two sources of error: the representation of the solution by a linear combination of functions and the evaluation of the integrals. Finally, errors are introduced when solving the assembled system of algebraic equations. 
 
@@ -40,7 +40,7 @@ where $ \Omega_e $ is a one-dimensional element\footnote{For the sake of simplic
 %They are also commonly named \emph{shape functions} because they define the `shape' that a variable can take within an element (linear, quadratic etc.). 
 Depending on the degree of polynomial approximation used to represent the solution, additional nodes may be identified inside the element. It is worth noting that the type of interpolation directly affects the accuracy of the solution. In other words, finding the solution to the problem consists of merely figuring out the values of the sought variable at every node of the mesh. Its value at any other point of the domain may then be deducted by interpolation within elements. 
 
-\medskip
+\bigskip
 
 The next logical question is how to derive the interpolation functions $ \psi^e_i  $ for a given element. Their derivation depends only on the geometry of the element and the number and location of the nodes. The number of nodes must be equal to the number of terms in the polynomial expansion. Therefore each element contains a single interpolation function for each of its nodes. As stated by interpolation theory, each interpolation function is required to be equal to $1$ at its corresponding node, and $0$ at all other nodes:
 \begin{equation} 
@@ -80,10 +80,36 @@ x = f(\xi)
 \end{equation}
 where $ f $ is assumed to be a one-to-one correspondence (that is, a bijective function). This function may be seen as a transformation between the natural shape of the element and its arbitrary shape within the actual mesh, it describes a change in geometry. It is natural to think of approximating the geometry in a similar way that we approximated the solution in section \ref{chap3:solutionInterpolation}. Hence, the transformation defined by \eqref{chap3:f} may also be written as
 \begin{equation}
+\label{chap3:shapeFunctions}
 x = \sum_{i=1}^m x_i^e \hat{\psi}_i^e(\xi)
 \end{equation}
-where $ x_i^e $ is the global coordinate of the $ i^{th} $ node of the element $ \Omega_e $ and $ \hat{\psi}_i^e(\xi) $ are the interpolation functions of degree $ m-1 $. Thus, we have a linear transformation when $ m = 2 $ and the relation betweeen $ x $ and $ \xi $ is quadratic when $ m=3 $. The interpolation functions $ \hat{\psi}_i^e(\xi) $ are called \emph{shape functions} because they are used to express the geometry or shape of the element. 
+where $ x_i^e $ is the global coordinate of the $ i^{th} $ node of the element $ \Omega_e $, $ m $ the number of nodes for the element and $ \hat{\psi}_i^e(\xi) $ are the interpolation functions of degree $ m-1 $. Thus, we have a linear transformation when $ m = 2 $ and the relation betweeen $ x $ and $ \xi $ is quadratic when $ m=3 $. The interpolation functions $ \hat{\psi}_i^e(\xi) $ are called \emph{shape functions} because they are used to express the geometry or shape of the element. 
 % Assuming the numbering of nodes in the global system follows the one of the natural system, the shape functions act as a mapping between the two representations. 
+
+\bigskip
+
+\noindent \textbf{Remark.}
+It is worth noting that \eqref{chap3:shapeFunctions} can be easily extented to three-dimensional problems. Let us consider a Cartesian coordinate system and we denote the position of node $ i $ $ \mathbf{x}_i = [x_{i1}, x_{i2}, x_{i3}]^T$. The position of a point $ \mathbf{x} = [x_{1}, x_{2}, x_{3}]^T$ within the element may then be interpolated by applying \eqref{chap3:shapeFunctions} to each component of the position:
+\begin{align}
+x_1 &= \sum_{i=1}^m x_{i1} \hat{\psi}_i^e(\xi) \notag \\
+x_2 &= \sum_{i=1}^m x_{i2} \hat{\psi}_i^e(\xi) \\
+x_3 &= \sum_{i=1}^m x_{i3} \hat{\psi}_i^e(\xi) \notag
+\end{align}
+If we construct the vector $ \hat{\mathbf{x}}^e $ of all nodal positions $ \mathbf{x}_i $ of the element, we can define a shape function matrix $ \mathbf{H} $ such as:
+\begin{equation}
+\label{chap3:H}
+\mathbf{x} = \mathbf{H} \hat{\mathbf{x}}^e
+\end{equation}
+where $ \mathbf{H} $ is a $ 3 \times m $ matrix built from submatrices $ \mathbf{H}_i $
+\begin{equation}
+\mathbf{H}_i = 
+	\begin{bmatrix}
+		\hat{\psi}_i^e & 0 & 0 \\
+		0 & \hat{\psi}_i^e & 0 \\
+		0 & 0 & \hat{\psi}_i^e
+	\end{bmatrix}
+\quad i = 1, 2, \ldots, m.
+\end{equation}
 
 
 	\subsection{A particular case: isoparametric elements}
@@ -109,7 +135,7 @@ In all the equations of the finite element method that we derived so far, we hav
 \end{description}
 Thus, the approximation of the solution $ u $ takes one of these two forms:
 \begin{align}
-u(x, t) \approx u^e(x, t) &= \sum_{i=1}^n \hat{u}^e_i \hat{\psi}^e_i(x, t)  \quad \text{(coupled formulation)} \label{chap3:approxTime1}\\
+u(x, t) \approx u^e(x, t) &= \sum_{i=1}^n \hat{u}^e_i \hat{\psi}^e_i(x, t)  \quad \text{ (coupled formulation)} \label{chap3:approxTime1}\\
 u(x, t) \approx u^e(x, t) &= \sum_{i=1}^n u^e_i(t) \psi^e_i(x) \quad \text{(decoupled formulation)} \label{chap3:approxTime2}
 \end{align}
 where $ \hat{\psi}^e_i(x, t) $ are time-space interpolation functions, $ \hat{u}^e_i $ are the nodal values that are independent of $ x $ and $ t $, $ \psi^e_i(x) $ are the usual interpolation functions in spatial coordinate $ x $ only and the nodal values $ u^e_i(t) $ are functions of time $ t $ only. Space-time coupled finite element formulations are not common and they have not been adequately studied. Hence, we consider the decoupled formulation only. Of course, the assumption that the time and spatial variations are separable is not valid in general. However, with sufficiently small time steps, it is possible to obtain accurate solutions nevertheless. 
@@ -143,20 +169,70 @@ Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, 
 \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
 \end{equation}
 
-	\subsection{Determination of the matrices involved}
+	\subsection{A few words on the matrices involved}
 		
+		\subsubsection{Mass matrix}
+The mass matrix $ \mathbf{M} $ for the whole domain may be computed by summing the mass contributions from every elements:
+\begin{equation}
+\mathbf{M} = \sum_e \mathbf{M}^e,
+\end{equation}
+where $ \mathbf{M}^e $ is the mass of element $ \Omega_e $ given by:
+\begin{equation}
+\mathbf{M}^e = \int_{V^e} \rho^e \mathbf{H}^T \mathbf{H} dV
+\end{equation}
+where $ \rho $ the mass density, $ V^e $ the volume of the element and $ \mathbf{H} $ is the shape function matrix defined by \eqref{chap3:H}. This integral may be evaluated using a procedure of numerical integration and generally results in a band mass matrix (non-zero entries are confined to a diagonal band, comprising the main diagonal and more diagonals on either side). This method for computing the mass matrix is called \emph{variational mass lumping}.
 
-%	\subsection{Generation of element matrices}
-%The basic postulate is that a continuum must satisfy Newton's second law of motion. This law can be stated as: the time rate of change of momentum of a collection of particules equals the resultant force exerted on the collection:
-%\begin{equation}
-%\dfrac{d}{dt}(m \mathbf{v}) = \mathbf{F},
-%\end{equation}
-%where $ m $ is the total mass, $ \mathbf{v} $ the velocity and $ \mathbf{F} $ the resultant force on the collection of particules. 
+However, it is very common in finite element analysis to use a diagonal mass matrix. The most common way of achieving this is to define the diagonal entries with the sum of the corresponding rows and then set all other values to 0. The physical interpretation of this is lumping all of the mass in the volume surrounding a node at the node itself. A diagonal mass matrix may offer significant computational and storage advantages. First, it is easily inverted, since the inverse of a diagonal matrix is also diagonal. And a diagonal mass matrix can also be stored simply as a vector. Therefore, such a matrix may be built by directly computing the mass of each element and assigning an equal proportion of this to each of the element's nodes. This method is named \emph{direct mass lumping}. The mass $ m^e $ of element $ \Omega_e $ is given by:
+\begin{equation}
+m^e = \rho^e \int_{V^e} dV,
+\end{equation}
+which is integrated over the element using a numerical method. Each diagonal component of the mass matrix then receives a contribution of $ m^e/m $. 
+		
+		\subsubsection{Damping matrix}
+In a similar way to the mass matrix, a damping matrix may be defined by summing the damping contributions from every elements:
+\begin{equation}
+\mathbf{D} = \sum_e \mathbf{D}^e,
+\end{equation}
+where $ \mathbf{D}^e $ is the damping of element $ \Omega_e $ given by:
+\begin{equation}
+\mathbf{D}^e = \int_{V^e} \kappa^e \mathbf{H}^T \mathbf{H} dV
+\end{equation}
+where $ \kappa^e $ is a damping parameter. In practice, the components of damping matrices are difficult to determine experimentally. Therefore, it is common to employ the \emph{Rayleigh damping}. The Rayleigh damping assumes that the damping may be written in the form of:
+\begin{equation}
+\mathbf{D}^e = \alpha \mathbf{M}^e + \beta \mathbf{K}^e,
+\end{equation}
+where $ \alpha $ and $ \beta $ are coefficients defining mass and stiffness proportional damping components. However, for systems with large degrees of freedom, it is difficult to guess meaningful values of $ \alpha $ and $ \beta $. \cite{Chowdhury03} have proposed a method to calculate these coefficients. In practice, further assumptions may only lead to include the mass proportional component ($ \beta = 0 $), which yields a diagonal damping matrix if a diagonal mass matrix is used. 
+
+		
+		\subsubsection{Stiffness matrix}
+The expression of the stiffness matrix depends on the chosen strain tensor as well as the appropriate constitutive model for the material. Its general form cannot be explicited. However, it can be demonstrated that $ \mathbf{K}^e $ may be written as
+\begin{equation}
+\mathbf{K}^e = \int_{V^e} \mathbf{B}^T \mathbf{M} \, \mathbf{B} \, dV,
+\end{equation}
+where $ \mathbf{M} $ is a material matrix, which only depends on the constitutive model chosen, and $ \mathbf{B} $ is the \emph{strain-displacement matrix} defined as the derivatives of the shape functions (see \cite{Liu03,Belytschko00} for details). 
 	
 	
 
 \section{Assembly of element equations}
-%Since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns. This process is described in the next section. 
+We have now derived the equations for each element. However, since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns. The assembly should be carried out as soon as the element matrices are computed, rather than waiting until the element coefficients of all elements are computed. This would require storage of the coefficients for each element. Instead, we can perform the assembly while we calculate the element matrices. 
+
+The assembly operation is actually quite simple. Let us consider an example with stiffness matrices for one-dimensional problem. We assume that we have three two-node elements. And we suppose the element connectivity information given by Table \ref{chap3:connectivity}, which provides the global node number for each local node number within an element. 
+\begin{table}
+	\begin{center}
+	\begin{tabular}{|c|c|c|}
+		\hline Elements & 1 & 2 \\ 
+		\hline 1 & 1 & 2 \\ 
+		\hline 2 & 2 & 3 \\ 
+		\hline 3 & 3 & 4 \\ 
+		\hline 
+		\end{tabular} \caption{Element connectivity information}
+		\label{chap3:connectivity}
+	\end{center}
+\end{table}
+
+% The element matrices are expressed with respect to local node numbers.
+\TODO{add figure with global stiffness matrix and a few arrows issued from the element stiffness matrices}
+
 
 
 \section{Solution of global problem}
