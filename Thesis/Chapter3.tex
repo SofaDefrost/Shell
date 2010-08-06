@@ -141,7 +141,7 @@ u(x, t) \approx u^e(x, t) &= \sum_{i=1}^n u^e_i(t) \psi^e_i(x) \quad \text{(deco
 where $ \hat{\psi}^e_i(x, t) $ are time-space interpolation functions, $ \hat{u}^e_i $ are the nodal values that are independent of $ x $ and $ t $, $ \psi^e_i(x) $ are the usual interpolation functions in spatial coordinate $ x $ only and the nodal values $ u^e_i(t) $ are functions of time $ t $ only. Space-time coupled finite element formulations are not common and they have not been adequately studied. Hence, we consider the decoupled formulation only. Of course, the assumption that the time and spatial variations are separable is not valid in general. However, with sufficiently small time steps, it is possible to obtain accurate solutions nevertheless. 
 
 	
-	\subsection{Dynamic system of equations}	
+	\subsection{Dynamic system of equations}	 \label{chap3:dynamic}
 The space-time decoupled finite element formulation of time-dependent problems involves two steps:
 \begin{description}
 \item[1. Spatial approximation.]
@@ -162,8 +162,8 @@ The construction of the weak form using either energy principles or weighted res
 \end{equation}
 where $ \mathbf{M} $ is a constant mass matrix, $\mathbf{D}$ is a constant damping matrix, $ \mathbf{K}(\mathbf{U}) $ is the stiffness matrix, which is a function of global nodal displacements $\mathbf{U}$, and $\mathbf{R}$ are externally applied loads. 
 
-	\subsection{Static system of equations}	
-Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, let us consider the problem of finding the maximum load that a desk can sustain. It is fair to say that strain and stress within the structure does not fluctuate over time. Therefore, we can assume that the equations describing the structure do not depend on time: the problem is said to be \emph{static}. In this case, the static system of equations can be easily obtained by merely dropping out the dynamics terms in \eqref{chap3:eqDynamic}. Indeed, the static case may just be seen as a special case of the dynamic equations and the static equations are:
+	\subsection{Static system of equations}	\label{chap3:static}
+Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, let us consider the problem of finding the maximum load that a desk can sustain. It is fair to say that strain and stress within the structure does not fluctuate over time: the system is in an equilibrium state. At all times, the sum of all forces applied on the system is equal to $ 0 $. Therefore, we can assume that the equations describing the structure do not depend on time: the problem is said to be \emph{static}. In this case, the static system of equations can be easily obtained by merely dropping out the dynamics terms in \eqref{chap3:eqDynamic}. Indeed, the static case may just be seen as a special case of the dynamic equations and the static equations are:
 \begin{equation}
 \label{chap3:eqStatic}
 \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
@@ -171,7 +171,7 @@ Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, 
 
 	\subsection{A few words on the matrices involved}
 		
-		\subsubsection{Mass matrix}
+		\subsubsection{Mass matrix} \label{chap3:massMatrix}
 The mass matrix $ \mathbf{M} $ for the whole domain may be computed by summing the mass contributions from every elements:
 \begin{equation}
 \mathbf{M} = \sum_e \mathbf{M}^e,
@@ -214,7 +214,7 @@ where $ \mathbf{M} $ is a material matrix, which only depends on the constitutiv
 	
 
 \section{Assembly of element equations}
-We have now derived the equations for each element. However, since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns. The assembly should be carried out as soon as the element matrices are computed, rather than waiting until the element coefficients of all elements are computed. This would require storage of the coefficients for each element. Instead, we can perform the assembly while we calculate the element matrices. 
+We have now derived the equations for each element. However, since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns. The assembly should be carried out as soon as the element matrices are computed, rather than waiting until the element coefficients of all elements are computed. This would require storage of the coefficients for each element. Instead, we can perform the assembly while we calculate the element matrices.  
 
 The assembly operation is actually quite simple. Let us consider an example with stiffness matrices for one-dimensional problem. We assume that we have three two-node elements. And we suppose the element connectivity information given by Table \ref{chap3:connectivity}, which provides the global node number for each local node number within an element. 
 \begin{table}
@@ -236,7 +236,62 @@ The assembly operation is actually quite simple. Let us consider an example with
 
 
 \section{Solution of global problem}
+
+\cite{Belytschko00}
+
+	\subsection{Explicit time integration}
+
+
+	\subsection{Static solutions and implicit time integration}
+
+
+
+%The complete and global system of equations has now been established. In this section, we will examine the techniques commonly used for solving these equations. Note that this is only the most classical approaches and the list is obviously not exhaustive. The choice of a resolution method depends on the problem (linear or non-linear) and the properties of the stiffness matrix. The system will first be solved in static before reviewing different methods of time integration to find the solutions in dynamic. 
+%
+%	\subsection{Static problems}
+%First, we recall the general system of equations in static introduced in section \ref{chap3:static}, which is also valid for the whole system: 
+%\begin{equation}
+%\mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
+%\end{equation}	
+%In this case, the displacement $ \mathbf{U} $ at each node may be found using an appropriate solver. If the problem is linear, the stiffness matrix does not depend on the displacement and the resolution is facilitated. The unknown displacements may be computed by
+%\begin{equation}
+%\mathbf{U} = \mathbf{K}^{-1} \, \mathbf{R}.
+%\end{equation}
+%Many techniques are available in the literature to invert a matrix and a few of them are introduced in section \ref{chap3:solvers}. 
+%	
+%	\subsection{Dynamic problems}
+%Let us recall the general system of equations in dynamic introduced in section \ref{chap3:dynamic}, which is also valid for the whole system: 
+%\begin{equation}
+%\label{chap3:dynamic2}
+%\mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
+%\end{equation}	
+%In the general case of a dynamic system of equations, the equations are not yet algebraic and still depends on derivatives of the unknown displacements with respect to time. Therefore, an additional step needs to be performed before using a solver by integrating the equations over time. The different methods of time integration are classified into two main schemes: \emph{explicit} or \emph{implicit} integration. If positions and velocities are extrapolated from their values obtained at the previous time step, then this approach is qualified of explicit. Conversely, if positions and velocities are considered as unknowns for the current time step, the scheme is called implicit. The choice of one scheme over the other impacts the stability and the computational time. 
+%
+%		\subsubsection*{Explicit time integration}
+%Explicit schemes make use	 of data from the previous time step to assess the ones from current time step. From \eqref{chap3:dynamic2} we have:
+%\begin{align}
+%\mathbf{M} \mathbf{\ddot U} &= \mathbf{R} - (\mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U}) \notag \\
+%\mathbf{M} \mathbf{\ddot U} &= \mathbf{F}_{\textbf{ext}} - \mathbf{F}_{\textbf{int}}(\mathbf{U}, \mathbf{\dot U})
+%\end{align}
+%where $ \mathbf{F}_{\textbf{int}} $ and $ \mathbf{F}_{\textbf{ext}} $ are the internal and external forces, respectively. We denote $ \mathbf{U}_i - \mathbf{U}_{i-1} = \Delta U = h \mathbf{\dot U}_{i-1} $ and $ \mathbf{\dot U}_i - \mathbf{\dot U}_{i-1} = \Delta \dot U = h \mathbf{\ddot U}_{i-1} $ and we may write:
+%\begin{equation}
+%	\begin{pmatrix}
+%		\Delta U \\
+%		\Delta \dot U
+%	\end{pmatrix}
+%	= 
+%	h 
+%	\begin{pmatrix}
+%		\mathbf{\dot U}_{i-1} \\
+%		\mathbf{M}^{-1} \, (\mathbf{F}_{\textbf{ext}} - \mathbf{F}_{\textbf{int}}(\mathbf{U}, \mathbf{\dot U}))
+%	\end{pmatrix}
+%\end{equation}
+%We note that this scheme does not require any resolution of system if the mass matrix was diagonalised by mass lumping as explained in section \ref{chap3:massMatrix}. It is therefore a particulary efficient algorithm. However, this kind of scheme is only conditionally stable and requires small time steps. Thus, the gain in computation must be balanced against the need to calculating more steps. This lack of stability increases with smaller elements and stiffer materials. 
+
+%		\subsubsection*{Implicit time integration}
+		
+		
+	\subsection{Solvers}	\label{chap3:solvers}
 	
-	\subsection{Static problems}
-	
-	\subsection{Dynamic problems}
+		\subsubsection*{Direct solvers}
+		\subsubsection*{Iterative solvers}
