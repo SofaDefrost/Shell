@@ -160,18 +160,18 @@ The construction of the weak form using either energy principles or weighted res
 \label{chap3:eqDynamic}
 \mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R},
 \end{equation}
-where $ \mathbf{M} $ is a constant mass matrix, $\mathbf{D}$ is a constant damping matrix, $ \mathbf{K}(\mathbf{U}) $ is the stiffness matrix, which is a function of global nodal displacements $\mathbf{U}$, and $\mathbf{R}$ are externally applied loads. 
+where $ \mathbf{M} $ is a constant mass matrix, $\mathbf{D}$ is a constant damping matrix, $ \mathbf{K}(\mathbf{U}) $ is the stiffness matrix, which is a function of global nodal displacements $\mathbf{U}$, and $\mathbf{R}$ are externally applied loads. This equation is applicable to individual elements as well as the entire element assemblage.
 
 	\subsection{Static system of equations}	\label{chap3:static}
-Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, let us consider the problem of finding the maximum load that a desk can sustain. It is fair to say that strain and stress within the structure does not fluctuate over time: the system is in an equilibrium state. At all times, the sum of all forces applied on the system is equal to $ 0 $. Therefore, we can assume that the equations describing the structure do not depend on time: the problem is said to be \emph{static}. In this case, the static system of equations can be easily obtained by merely dropping out the dynamics terms in \eqref{chap3:eqDynamic}. Indeed, the static case may just be seen as a special case of the dynamic equations and the static equations are:
+Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, let us consider the problem of finding the maximum load that a desk can sustain. It is fair to say that strain and stress within the structure does not fluctuate over time: the system is in an equilibrium state. At all times, the sum of all forces applied on the system is equal to $ 0 $. Therefore, we can assume that the equations describing the structure do not depend on time: the problem is said to be \emph{static}. Accelerations can be neglected. In this case, the static system of equations can be easily obtained by merely dropping out the dynamics terms in \eqref{chap3:eqDynamic}. Indeed, the static case may just be seen as a special case of the dynamic equations and the static equations are:
 \begin{equation}
 \label{chap3:eqStatic}
 \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
 \end{equation}
 
-	\subsection{A few words on the matrices involved}
+	\subsection{A few words on the matrices involved} \label{chap3:wordOnMatrices}
 		
-		\subsubsection{Mass matrix} \label{chap3:massMatrix}
+		\subsubsection*{Mass matrix}
 The mass matrix $ \mathbf{M} $ for the whole domain may be computed by summing the mass contributions from every elements:
 \begin{equation}
 \mathbf{M} = \sum_e \mathbf{M}^e,
@@ -188,7 +188,7 @@ m^e = \rho^e \int_{V^e} dV,
 \end{equation}
 which is integrated over the element using a numerical method. Each diagonal component of the mass matrix then receives a contribution of $ m^e/m $. 
 		
-		\subsubsection{Damping matrix}
+		\subsubsection*{Damping matrix}
 In a similar way to the mass matrix, a damping matrix may be defined by summing the damping contributions from every elements:
 \begin{equation}
 \mathbf{D} = \sum_e \mathbf{D}^e,
@@ -204,12 +204,12 @@ where $ \kappa^e $ is a damping parameter. In practice, the components of dampin
 where $ \alpha $ and $ \beta $ are coefficients defining mass and stiffness proportional damping components. However, for systems with large degrees of freedom, it is difficult to guess meaningful values of $ \alpha $ and $ \beta $. \cite{Chowdhury03} have proposed a method to calculate these coefficients. In practice, further assumptions may only lead to include the mass proportional component ($ \beta = 0 $), which yields a diagonal damping matrix if a diagonal mass matrix is used. 
 
 		
-		\subsubsection{Stiffness matrix}
+		\subsubsection*{Stiffness matrix}
 The expression of the stiffness matrix depends on the chosen strain tensor as well as the appropriate constitutive model for the material. Its general form cannot be explicited. However, it can be demonstrated that $ \mathbf{K}^e $ may be written as
 \begin{equation}
-\mathbf{K}^e = \int_{V^e} \mathbf{B}^T \mathbf{M} \, \mathbf{B} \, dV,
+\mathbf{K}^e = \int_{V^e} \mathbf{B}^T \mathbf{E} \, \mathbf{B} \, dV,
 \end{equation}
-where $ \mathbf{M} $ is a material matrix, which only depends on the constitutive model chosen, and $ \mathbf{B} $ is the \emph{strain-displacement matrix} defined as the derivatives of the shape functions (see \cite{Liu03,Belytschko00} for details). 
+where $ \mathbf{E} $ is a material matrix, which only depends on the constitutive model chosen, and $ \mathbf{B} $ is the \emph{strain-displacement matrix} defined as the derivatives of the shape functions (see \cite{Liu03,Belytschko00} for details). 
 	
 	
 
@@ -236,41 +236,151 @@ The assembly operation is actually quite simple. Let us consider an example with
 
 
 \section{Solution of global problem}
-
-\cite{Belytschko00}
+The complete and global system of equations has now been established. Let us recall the general system of equations in dynamic introduced in section \ref{chap3:dynamic}, which is also valid for the whole system: 
+\begin{equation}
+\label{chap3:dynamic2}
+\mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
+\end{equation}	
+In this section, we will examine the techniques commonly used for solving these equations. In the general case of a dynamic system of equations, the equations are not yet algebraic and still depends on derivatives of the unknown displacements with respect to time. Therefore, an additional step needs to be performed before using a solver by integrating the equations over time. As we will see shortly, the different methods of time integration are classified into two main schemes: \emph{explicit} or \emph{implicit} integration. We begin by introducing the simplest method, the Euler method to explain the concept of an explicit method. Then the central difference method will be detailled. We then describe a few implicit methods, allowing us to highlight the relative advantages of the two types of methods. Finally, the static case will be solved by emphasizing the similarities with implicit systems through the critical step of linearisation of the governing equations \citep{Belytschko00}.
 
 	\subsection{Explicit time integration}
 
+		\subsubsection*{The Euler method}	
+We want to approximate the solution of the following differential equation:
+\begin{equation}
+\label{chap3:eqToSolve}
+y^{'}(t) = f(t, y(t))
+\end{equation}
+Note that we restrict ourselves to first-order differential equations (meaning that only the first derivative of $y$ appears in the equation, and no higher derivatives). However, a higher-order equation can easily be converted to a system of first-order equations by introducing extra variables. For example, the second-order equation $y^{''} = -y$ can be rewritten as two first-order equations: $y^{'} = z$ and $z^{'} = -y$. By solving equations like \eqref{chap3:eqToSolve}, we will therefore be able to integrate the global system of equations over time. 
 
-	\subsection{Static solutions and implicit time integration}
+We start by replacing the derivative $y^{'} $ by the finite difference approximation:
+\begin{equation}
+\label{chap3:approxExplicit}
+y^{'}(t) \approx \dfrac{y(t+\Delta t) - y(t)}{\Delta t},
+\end{equation}
+which gives:
+\begin{equation}
+y(t+\Delta t) \approx y(t) + \Delta t y^{'}(t)
+\end{equation}
+And substituting the last relation in \eqref{chap3:eqToSolve} yields:
+\begin{equation}
+\label{chap3:updateExplicit}
+y(t+\Delta t) \approx y(t) + \Delta t f(t, y(t))
+\end{equation}
+This formula is usually applied in a recursive scheme. We choose a time step $ \Delta t $ and we construct the sequence of time $ t^n = n \Delta t$. Using \eqref{chap3:updateExplicit}, we can approximate the exact solution $ y(t^n) $ at each time step by $ y^n $:
+\begin{equation}
+y^{n+1} = y^n + \Delta t f(t^n, y^n).
+\end{equation}
+This method is called \emph{Euler method} and is said to be explicit because the new value $ y^{n+1} $ is defined in terms of variables from the previous time step ($ y^n $).
 
 
+		\subsubsection*{The central difference method}	
+The central difference method is one of the most popular explicit methods in computational mechanics. This method is based on central difference formulas for the velocity and acceleration. Let us the time $ t $ of the simulation be subdivided into time steps $ \Delta t $. Let us denote by $ \mathbf{U}^t $, $ \mathbf{\dot U}^t $ and $ \mathbf{\ddot U }^t $ the matrices of nodal displacements, velocities and accelerations, respectively, at time $ t $. The central difference method makes use of the following finite differences approximations for acceleration and velocity:
+\begin{align}
+\mathbf{\ddot U}^t &= \dfrac{1}{(\Delta t)^2} \left( \mathbf{U}^{t-\Delta t} - 2 \mathbf{U}^{t} +\mathbf{U}^{t+\Delta t} \right) \label{chap3:accelerationApprox}\\
+\mathbf{\dot U}^t &= \dfrac{1}{2 \Delta t} \left( \mathbf{U}^{t+\Delta t} - \mathbf{U}^{t-\Delta t} \right). \label{chap3:velocityApprox}
+\end{align}
+One of the key advantage of the method is that the stifness term in \eqref{chap3:dynamic2} may be computed from
+\begin{equation}
+\mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{F}(\mathbf{U}) = \sum_e \tilde{\mathbf{F}}^e,
+\end{equation}
+where $ \tilde{\mathbf{F}}^e $ are the global nodal force contributions due to stresses in element $ \Omega_e $. $ \tilde{\mathbf{F}} $ may be computed using strain-displacement equations, the constitutive equation and the element connectivity. Therefore, let us assume that all nodal forces $\mathbf{F}^t $  at time $ t $ are known. 
 
-%The complete and global system of equations has now been established. In this section, we will examine the techniques commonly used for solving these equations. Note that this is only the most classical approaches and the list is obviously not exhaustive. The choice of a resolution method depends on the problem (linear or non-linear) and the properties of the stiffness matrix. The system will first be solved in static before reviewing different methods of time integration to find the solutions in dynamic. 
-%
-%	\subsection{Static problems}
-%First, we recall the general system of equations in static introduced in section \ref{chap3:static}, which is also valid for the whole system: 
+By subtituting \eqref{chap3:accelerationApprox} and \eqref{chap3:velocityApprox} into \eqref{chap3:dynamic2} we obtain:
+\begin{equation}
+\left( \dfrac{\mathbf{M}}{(\Delta t)^2} + \dfrac{\mathbf{D}}{2 \Delta t} \right) \mathbf{U}^{t+\Delta t} = \mathbf{R}^t - \mathbf{F}^t + \dfrac{2 \mathbf{M}}{(\Delta t)^2} \mathbf{U}^t + \left( \dfrac{\mathbf{D}}{2 \Delta t} - \dfrac{\mathbf{M}}{(\Delta t)^2} \right) \mathbf{U}^{t-\Delta t}.
+\end{equation}
+Both the right-hand side of the equation and the factor in front $ \mathbf{U}^{t+\Delta t} $ may be evaluated, which gives the nodal displacements for the next time step. The entire update can be accomplished without solving any system of equations provided that the mass matrix $ \mathbf{M} $ and the damping matrix $ \mathbf{D} $ are diagonal. As we have seen in section \ref{chap3:wordOnMatrices}, these approximations are often used in practice. And this is the characteristic of an explicit method: the time integration of the general system of equations for finite element model does not require the solution of any equations. This is a key point because it gives explicit methods a tremendous computational advantage. However, explicit methods are only conditionally stable. If the time step exceeds a critical value, the solution may be erroneous. This critical time step depends on the mesh and the material properties. It will decrease with mesh refinement and increasing stiffness of the material. 
+
+
 %\begin{equation}
-%\mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
-%\end{equation}	
-%In this case, the displacement $ \mathbf{U} $ at each node may be found using an appropriate solver. If the problem is linear, the stiffness matrix does not depend on the displacement and the resolution is facilitated. The unknown displacements may be computed by
-%\begin{equation}
-%\mathbf{U} = \mathbf{K}^{-1} \, \mathbf{R}.
+%\label{chap3:diffV}
+%\mathbf{V} ^{n+\frac{1}{2}} = \dfrac{1}{\Delta t^{n+\frac{1}{2}}} \left(\mathbf{U} ^{n+1} - \mathbf{U} ^{n} \right).
 %\end{equation}
-%Many techniques are available in the literature to invert a matrix and a few of them are introduced in section \ref{chap3:solvers}. 
-%	
+%By rearranging \eqref{chap3:diffV}, we may obtain:
+%\begin{equation}
+%\mathbf{U} ^{n+1} = \mathbf{U} ^{n} + \Delta t^{n+\frac{1}{2}} \mathbf{V}^{n+\frac{1}{2}}
+%\end{equation}
+%The acceleration is given by:
+%\begin{align}
+%\label{chap3:diffA}
+%\mathbf{A} ^{n} &= \dfrac{1}{ \Delta t^{n}} \left(\mathbf{V}^{n+\frac{1}{2}} - \mathbf{V}^{n-\frac{1}{2}} \right), \\
+%\mathbf{V} ^{n+\frac{1}{2}} &= \mathbf{V}^{n-\frac{1}{2}} + \Delta t^{n} \mathbf{A}^{n}.
+%\end{align}
+%By substituting \eqref{chap3:diffV} and its counterpart for the previous time step into \eqref{chap3:diffA}, the acceleration can be expressed directly in terms of the displacements:
+%\begin{equation}
+%\mathbf{A}^n = \dfrac{ \Delta t^{n-\frac{1}{2}} \left( \mathbf{U}^{n+1} - \mathbf{U}^{n} \right) - \Delta t^{n+\frac{1}{2}} \left( \mathbf{U}^{n} - \mathbf{U}^{n-1} \right) }{ \Delta t^{n} \Delta t^{n-\frac{1}{2}} \Delta t^{n+\frac{1}{2}} }
+%\end{equation}
+%If the time steps are all equals, the latter expression can be reduced to:
+%\begin{equation}
+%\mathbf{A}^n = \dfrac{ \left( \mathbf{U}^{n+1} -2 \mathbf{U}^{n} + \mathbf{U}^{n-1} \right) }{ \left( \Delta t^n \right)^2 }.
+%\end{equation}
+%This is the well-known formula for the second derivative of a function. 
+
+%We now consider the time integration of the dynamic system of equations. Equations \eqref{chap3:dynamic2} may be written as:
+%\begin{equation}
+%\mathbf{M} \mathbf{A}^n = \mathbf{F}_{\text{ext}}(\mathbf{U}, t^n) - \mathbf{F}_{\text{int}}(\mathbf{U}, \mathbf{V}, t^n).
+%\end{equation}
+%where $ \mathbf{F}_{\text{int}} $ and $ \mathbf{F}_{\text{ext}} $ are the internal and external forces, respectively. The external loads are usually provided as functions of time and they may depends on nodal displacements (as when a pressure is applied). The internal forces depend on displacements and velocities through the stiffness and damping matrices. 
+
+	\subsection{Implicit time integration}
+	
+		\subsubsection*{The backward Euler method}
+The problem that we wish to solve is the same than the one we introduced with the Euler method, which we reproduce here for convenience:
+\begin{equation}
+y^{'}(t) = f(t, y(t))
+\end{equation}
+This time, instead of using \eqref{chap3:approxExplicit}, we approximate the derivative $ y^{'}(t) $ by:
+\begin{equation}
+y^{'}(t) \approx \dfrac{y(t) - y(t-\Delta t)}{\Delta t}.
+\end{equation}
+The update expression for $ y^n $ then becomes:
+\begin{equation}
+y^{n+1} = y^n + \Delta t f(t^{n+1}, y^{n+1}).
+\end{equation}
+The \emph{backward Euler method} is an implicit method, meaning that we have to solve an equation to find $ y^{n+1} $. Of course, it costs time to solve this equation and this cost must be taken into consideration when we select the time integration method to use. The advantage of implicit methods is that they are usually more stable for solving a stiff equation, meaning that larger steps can be used. 
+
+	\subsubsection*{The Runge-Kutta method}
+The accuracy of backward Euler method can be improved by making the solution depends on more values. The $ 4^{th} $ order Runge-Kutta method gives the following update equation:
+\begin{equation}
+y^{n+1} = y^{n} + \frac{1}{6} \Delta t \left( k_1 + 2 k_2 + 2 k_3 +k_4 \right),
+\end{equation}
+where :
+\begin{align}
+k_1 &= f(t^n, y^n) \notag \\
+k_2 &= f(t^n + \frac{1}{2} \Delta t, y^n + \frac{1}{2} \Delta t \, k_1) \notag \\
+k_3 &= f(t^n + \frac{1}{2} \Delta t, y^n + \frac{1}{2} \Delta t \, k_2) \notag \\
+k_4 &= f(t^n + \Delta t, y^n + \Delta t \, k_3) \notag
+\end{align}
+This method is a fourth-order method because the total accumulated error has order $ \Delta t^4 $. It may be seen as a generalisation of the backward Euler method \citep{Press92}. Again, we have to solve an equation to find $ y^{n+1} $. 
+
+	\subsection{Static solutions}
+First, we recall the general system of equations in static introduced in section \ref{chap3:static}, which is also valid for the whole system: 
+\begin{equation}
+\mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
+\end{equation}	
+The situation is similar to implicit time integration methods for dynamic systems by the fact that we also have to solve a set of algebraic equations to find the nodal displacements. In the general case, the equations are non-linear and therefore quite difficult to solve. A suitable solver for this kind of system is, for instance, the \emph{Newton-Raphson} method. In essence, this method consists of obtaining linear equations instead. This process is called \emph{linearisation}. One may refer to \citep{Belytschko00} for more details. 
+
+However, if the problem is linear, the stiffness matrix does not depend on the displacement and the resolution is facilitated. The unknown displacements may be computed by:
+\begin{equation}
+\mathbf{U} = \mathbf{K}^{-1} \, \mathbf{R}.
+\end{equation}
+Many techniques are available in the literature to solve this type of system, and a few of them are introduced in the next section. 
+
+
+
 %	\subsection{Dynamic problems}
 %Let us recall the general system of equations in dynamic introduced in section \ref{chap3:dynamic}, which is also valid for the whole system: 
 %\begin{equation}
 %\label{chap3:dynamic2}
-%\mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
+%\mathbf{M} \mathbf{\ddot U} + \mathbf{U} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
 %\end{equation}	
 %In the general case of a dynamic system of equations, the equations are not yet algebraic and still depends on derivatives of the unknown displacements with respect to time. Therefore, an additional step needs to be performed before using a solver by integrating the equations over time. The different methods of time integration are classified into two main schemes: \emph{explicit} or \emph{implicit} integration. If positions and velocities are extrapolated from their values obtained at the previous time step, then this approach is qualified of explicit. Conversely, if positions and velocities are considered as unknowns for the current time step, the scheme is called implicit. The choice of one scheme over the other impacts the stability and the computational time. 
 %
 %		\subsubsection*{Explicit time integration}
 %Explicit schemes make use	 of data from the previous time step to assess the ones from current time step. From \eqref{chap3:dynamic2} we have:
 %\begin{align}
-%\mathbf{M} \mathbf{\ddot U} &= \mathbf{R} - (\mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U}) \notag \\
+%\mathbf{M} \mathbf{\ddot U} &= \mathbf{R} - (\mathbf{U} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U}) \notag \\
 %\mathbf{M} \mathbf{\ddot U} &= \mathbf{F}_{\textbf{ext}} - \mathbf{F}_{\textbf{int}}(\mathbf{U}, \mathbf{\dot U})
 %\end{align}
 %where $ \mathbf{F}_{\textbf{int}} $ and $ \mathbf{F}_{\textbf{ext}} $ are the internal and external forces, respectively. We denote $ \mathbf{U}_i - \mathbf{U}_{i-1} = \Delta U = h \mathbf{\dot U}_{i-1} $ and $ \mathbf{\dot U}_i - \mathbf{\dot U}_{i-1} = \Delta \dot U = h \mathbf{\ddot U}_{i-1} $ and we may write:
@@ -288,10 +398,124 @@ The assembly operation is actually quite simple. Let us consider an example with
 %\end{equation}
 %We note that this scheme does not require any resolution of system if the mass matrix was diagonalised by mass lumping as explained in section \ref{chap3:massMatrix}. It is therefore a particulary efficient algorithm. However, this kind of scheme is only conditionally stable and requires small time steps. Thus, the gain in computation must be balanced against the need to calculating more steps. This lack of stability increases with smaller elements and stiffer materials. 
 
-%		\subsubsection*{Implicit time integration}
-		
 		
 	\subsection{Solvers}	\label{chap3:solvers}
+We will now examine the techniques commonly used for solving linear systems of algebraic equations. Note that this is only the most classical approaches and the list is obviously not exhaustive. Two categories of techniques are in opposition: \emph{direct} or \emph{iterative} solvers \citep{Press02}. In any case, we seek the solution for the unknown solution $ \mathbf{x}$ of the following system of linear equations:
+\begin{equation}
+\label{chap3:linearEquation}
+\mathbf{A} \mathbf{x} = \mathbf{b}.
+\end{equation}
+The system may already be linear by nature, or been linearised using techniques such as Newton-Raphson methods. At this point in the discussion, we are therefore only interested in solving a linear system of equations. If the matrix $ \mathbf{A} $ is squared, which is the case in finite element methods, the problem may be written as follows:
+\begin{equation}
+\mathbf{x} = \mathbf{A}^{-1} \, \mathbf{b}.
+\end{equation}
+
+However, only solvers relevant to the context of finite element methods will be discussed. Indeed the matrix $ \mathbf{A} $ takes a specific form in problems solved by finite element methods. The matrix $ \mathbf{A} $ is \emph{sparse}. A sparse matrix is merely a matrix populated mainly with zeros. An example is given by Fig.~\ref{chap3:fig-sparse} for a finite element problem in two dimensions.
+\begin{figure}
+\begin{center}
+\includegraphics[width=10cm]{chapter3/sparse_matrix.pdf}
+\end{center}
+\caption{Illustration of a sparse matrix for a two-dimensional finite element problem. Each non-zero elements of the matrix is represented in black. Image courtesy of Oleg Alexandrov.}
+\label{chap3:fig-sparse}
+\end{figure}
+Because of the peculiar structure of the matrix involved in finite element computations, methods have been specifically designed to take advantage of this structure. Indeed, it is wasteful to use general methods of linear algebra on such problems, because most of the arithmetic operations devoted to solving the set of equations or inverting the matrix involve zero operands. Furthermore, it is wasteful to reserve storage for zero elements. 
+
+%The choice of a resolution method depends on the problem (linear or non-linear) and the properties of the stiffness matrix.
 	
 		\subsubsection*{Direct solvers}
+As their name is suggesting, direct solvers make an attempt into finding a solution directly by inverting the matrix $ \mathbf{A} $. They execute in a predictable number of operations. We will now introduce a few direct methods in the context of finite element methods. 
+% Methods such as Gauss-Jordan elimination or LU decomposition will not be discussed in this section for instance for their lack of efficiency with sparse matrices.
+
+\paragraph*{LU decomposition.}
+The LU decomposition is a matrix decomposition which writes a matrix as the product of a lower triangular matrix and an upper triangular matrix. In other words, $ \mathbf{A} $ may be written as:
+\begin{equation}
+\label{chap3:LU}
+\mathbf{A} = \mathbf{L} \mathbf{U},
+\end{equation}
+where $ \mathbf{L} $ is lower triangular (has elements only on the diagonal and below) and $ \mathbf{U} $ is upper triangular (has elements only on the diagonal and above). As an example, for the case of a $ 4 \times 4 $ matrix $ \mathbf{A} $, we have:
+\begin{equation}
+	\begin{bmatrix}
+	a_{11} & a_{12} & a_{13} & a_{14} \\
+	a_{21} & a_{22} & a_{23} & a_{24} \\
+	a_{31} & a_{32} & a_{33} & a_{34} \\
+	a_{41} & a_{42} & a_{43} & a_{44}
+	\end{bmatrix}
+=
+	\begin{bmatrix}
+	\alpha_{11} & 0 & 0 & 0 \\
+	\alpha_{21} & \alpha_{22} & 0 & 0 \\
+	\alpha_{31} & \alpha_{32} & \alpha_{33} & 0 \\
+	\alpha_{41} & \alpha_{42} & \alpha_{43} & \alpha_{44}
+	\end{bmatrix}
+	\begin{bmatrix}
+	\beta_{11} & \beta_{12} & \beta_{13} & \beta_{14} \\
+	0 & \beta_{22} & \beta_{23} & \beta_{24} \\
+	0 & 0 & \beta_{33} & \beta_{34} \\
+	0 & 0 & 0 & \beta_{44}
+	\end{bmatrix}
+\end{equation}
+By subtituting \eqref{chap3:LU} into \eqref{chap3:linearEquation} we obtain:
+\begin{equation}
+\mathbf{A} \mathbf{x} = (\mathbf{L} \mathbf{U}) \mathbf{x} = \mathbf{L} (\mathbf{U} \mathbf{x}) = \mathbf{b}.
+\end{equation}
+Therefore, we can solve \eqref{chap3:linearEquation} by first solving the vector $ \mathbf{y} $ such that:
+\begin{equation}
+\label{chap3:eqLyb}
+\mathbf{L} \mathbf{y} = \mathbf{b}
+\end{equation}
+and then solving 
+\begin{equation}
+\label{chap3:eqUxy}
+\mathbf{U} \mathbf{x} = \mathbf{y}.
+\end{equation}
+The advantage of breaking up one linear set of equations into two successive ones is that the solution of a triangular set of equations is quite trivial. Indeed, \eqref{chap3:eqLyb} can be solved by:
+\begin{equation} 
+\left\lbrace
+	\begin{aligned}
+		y_1 &= \dfrac{b_1}{\alpha_{11}}  \\	
+		y_i &= \dfrac{1}{\alpha_{ii}} \left[ b_i - \sum_{j=1}^{i-1} \alpha_{ij} y_j \right] \quad i = 2, 3, \ldots, N.
+	\end{aligned} 
+\right.
+\end{equation}
+for a $ N \times N $ matrix $ \mathbf{A} $. We then solve \eqref{chap3:eqUxy} in a similar way:
+\begin{equation} 
+\left\lbrace
+	\begin{aligned}
+		x_N &= \dfrac{y_N}{\beta_{NN}} \\	
+		x_i &= \dfrac{1}{\beta_{ii}} \left[ y_i - \sum_{j=i+1}^{N} \beta_{ij} x_j \right] \quad i = N-1, N-2, \ldots, 1. 
+	\end{aligned} 
+\right.
+\end{equation}
+
+
 		\subsubsection*{Iterative solvers}
+An iterative method attempts to solve the system of equations by finding successive approximations to the solution starting from an initial guess. In the case of a system of linear equations, the two main classes of iterative methods are the stationary iterative methods, and the more general Krylov subspace methods. Stationary iterative methods solve a linear system with an operator approximating the original one and based on a measurement of the error in the result (called the residual), form an equation of correction for which this process is repeated. While these methods are simple to derive, convergence is only guaranteed for a limited class of matrices. Examples of stationary iterative methods are the Jacobi method and Gauss?Seidel method. Krylov subspace methods work by forming an orthogonal basis of the sequence of successive matrix powers times the initial residual (the Krylov sequence). The approximations to the solution are then formed by minimising the residual over the subspace formed. The typical method in this class is the conjugate gradient method (CG). 
+In practice, for large system of equations (as often encountered in finite element analysis), direct methods would take too much time and an iterative solvers is commonly used. 
+
+\paragraph*{The Gauss-Seidel method.}
+For this method, convergence is only guaranteed if the matrix is either diagonally dominant, or symmetric and positive-definite. In a similar way than the LU decomposition, we start by decomposing the matrix $ \mathbf{A} $ into a lower triangular component $ \mathbf{L}_ {*} $ and a strictly upper triangular component $ \mathbf{U} $:
+\begin{equation}
+\mathbf{A} = \mathbf{L}_{*} + \mathbf{U}.
+\end{equation}
+The system of linear equations \eqref{chap3:linearEquation} may be rewritten as:
+\begin{equation}
+\mathbf{L}_{*} \mathbf{x} = \mathbf{b} - \mathbf{U} \mathbf{x}
+\end{equation}
+The Gauss-Seidel method is an iterative technique that solves the left-hand side of the expression for $ \mathbf{x} $ using previous values for $ \mathbf{x} $ on the right-hand side. That is:
+\begin{equation}
+\mathbf{x}^{n+1} = \mathbf{L}_{*}^{-1} (\mathbf{b} - \mathbf{U} \mathbf{x}^n).
+\end{equation}
+Similarly to the LU decomposition method, we take advantage of the triangular form of $ \mathbf{L}_{*} $. The components of $ \mathbf{x}^{n+1} $ can be computed sequentially in the following manner:
+\begin{equation}
+x_i^{n+1} = \dfrac{1}{a_{ii}} \left[ b_i - \sum_{j>i} a_{ij} x_j^n -\sum_{j<i} a_{ij} x_j^{n+1} \right] \quad i = 1, 2, \ldots, N.
+\end{equation}
+The procedure is usually continued until the changes made by an interation are below a given threshold. 
+
+\paragraph*{The conjugate gradient method.}		
+The simplest class of conjugate gradient method is based on the idea of minimising the quadratic function:
+\begin{equation}
+f(\mathbf{x}) = \frac{1}{2} \mathbf{x}^T \, \mathbf{A} \, \mathbf{x} - b^T \, \mathbf{x} + c.
+\end{equation}
+Indeed, if the matrix $ \mathbf{A} $ is symmetric and positive-definite, $ f(\mathbf{x}) $ is minimised by the solution to $ \mathbf{A} \mathbf{x} = \mathbf{b} $\citep{Shewchuk94}. The minimisation is carried out by generating a succession of search directions $ \mathbf{p} _k $ and improved minimisers $ \mathbf{x} _k $. At each stage a quantity $ \alpha_k $ is found that minimises $f(\mathbf{x}_k  + \alpha_k \mathbf{p}_k)$, and $\mathbf{x}_{k+1}$ is set equal to the new point $\mathbf{x}_k + \alpha_k \mathbf{p}_k$. The $ \mathbf{p}_k $  and $ \mathbf{x}_k $  are built up in such a way that $ \mathbf{x}_{k+1} $  is also the minimizer of $ f $ over the whole vector space of directions already taken, that is the space formed by the basis of vector ${\mathbf{p}_1, \mathbf{p}_2, \ldots, \mathbf{p}_k }$. After $N$ iterations, you arrive at the minimiser over the entire vector space, that is, the solution to our linear system of equations. 
+
+Later, the \emph{biconjugate gradient method} was introduced as a generalisation of ordinary conjugate gradient to solve systems where the matrix $ \mathbf{A} $ was not necessarily symmetric and positive-definite (see \cite{Belytschko00} for details). 	
