@@ -1,7 +1,7 @@
 \chapter{Practical approach of the Finite Element Method}
 \label{chap3}
 \begin{shortAbstract}
-Blabla
+The previous chapter explained in details how physics of anatomical structures could be described by continuun mechanics. When an organ is submitted to a force, the first effect of this application is a change in the organ's shape. This deformation can be measured using different strain tensors. By modelling the mechanical aspects of the material with an appropriate constitutive law, we can then deduce the stress tensor (or internal forces) at each point within the organ. The next step is to apply Newton's second law (law of conservation of momentum), which yields a partial differential equation at every point of the volume. The Finite Element Method is a numerical procedure that allows to turn an infinite number of partial differential equations into a finite number of algebraic equations. The method follows different steps. We will first begin by describing the subdivision of the domain into smaller sub-domains into which local simpler equations are derived. We will then discuss how all the local equations are summed over the whole domain which eventually leads to the global solution. 
 \end{shortAbstract}
 
 
@@ -131,7 +131,7 @@ A weak form is often created using energy principles or weighted residual method
 In all the equations of the finite element method that we derived so far, we have not taken time into account. For some problem, this is not an issue, the motion is sufficiently slow to assume that the dynamic effects (such as damping effect) are neglectable. However, this assumption is not always valid, particulary in our case where we want to model organ deformation. The deformation obviously depends on time. Finite element models of time-dependent problems can be developed in two alternatives ways \citep{Reddy93}:
 \begin{description}
 \item[(a)] coupled formulation in which the time $ t $ is treated as an additional coordinate along with the spatial coordinate $ x $
-\item[(b)] decoupled formulation where time and spatial variations are assumede to be separable.
+\item[(b)] decoupled formulation where time and spatial variations are assumed to be separable.
 \end{description}
 Thus, the approximation of the solution $ u $ takes one of these two forms:
 \begin{align}
@@ -160,7 +160,7 @@ The construction of the weak form using either energy principles or weighted res
 \label{chap3:eqDynamic}
 \mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R},
 \end{equation}
-where $ \mathbf{M} $ is a constant mass matrix, $\mathbf{D}$ is a constant damping matrix, $ \mathbf{K}(\mathbf{U}) $ is the stiffness matrix, which is a function of global nodal displacements $\mathbf{U}$, and $\mathbf{R}$ are externally applied loads. This equation is applicable to individual elements as well as the entire element assemblage.
+where $ \mathbf{M} $ is a constant mass matrix, $\mathbf{D}$ is a constant damping matrix, $ \mathbf{K}(\mathbf{U}) $ is the stiffness matrix, which is a function of global nodal displacements $\mathbf{U}$, and $\mathbf{R}$ are externally applied loads. This equation is applicable to individual elements as well as the entire element assemblage (this is why the subscripts $ ^e $ were dropped).
 
 	\subsection{Static system of equations}	\label{chap3:static}
 Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, let us consider the problem of finding the maximum load that a desk can sustain. It is fair to say that strain and stress within the structure does not fluctuate over time: the system is in an equilibrium state. At all times, the sum of all forces applied on the system is equal to $ 0 $. Therefore, we can assume that the equations describing the structure do not depend on time: the problem is said to be \emph{static}. Accelerations can be neglected. In this case, the static system of equations can be easily obtained by merely dropping out the dynamics terms in \eqref{chap3:eqDynamic}. Indeed, the static case may just be seen as a special case of the dynamic equations and the static equations are:

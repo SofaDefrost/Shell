@@ -572,6 +572,8 @@ Viscoelastic materials present a few characteristics:
 \item if cyclic loading is applied, hysteresis occurs, leading to a dissipation of mechanical energy
 \end{enumerate}
 
+In other words, the resistance of a viscoelastic material to a given force depends on the velocity to which this force is applied. 
+
 \TODO{Add details on constitutive equations? Level of details to be determined later (depending on TLED needs)}
 
 			
@@ -580,7 +582,4 @@ One of the main obstacles in developing realistic organ models is the lack of da
 
 The constitutive equations are used to define idealised materials, which represent different aspects of the mechanical behaviour of natural materials. However, no real material is known to behave exactly as one of these mathematical models. In particular, few biological tissues obey Hooke's law. If because of their high stiffness (and therefore small deformations) cortical bones are accurately described by a linear model, Hooke's law becomes insufficient to describe the mechanical behaviour of the liver with precision for instance. In fact, in vivo experiments conducted by \cite{Melvin73} suggest that mechanical behaviour of liver is non-linear and viscoelastic. The brain also appears to be non-linear and viscoelastic \citep{Miller97}. The liver has the additional property of anisotropy, more precisely, it is transversely isotropic according to \cite{Chui07}. 
 
-
-\TODO{Transition with next chapter (complexity of models => FEM to solve them)}
-
-% FEM most used technique to solve equations of continuum mechanics
+These various mechanical aspects of materials make realistic modelling of anatomical structures fairly challenging. In medical simulation, where modelling must occur in real-time or close to real-time, very often simplifications have to be made. As we will see in chapter \ref{chap4} and \ref{chap7}, numerous models are available in the literature to describe physics of objects, from fairly simple and naive approaches to more complex and thorough representations. However, the most common technique to solve equations of continuum mechanics is the Finite Element Method. Moreover, since the two main contributions of this thesis deal with finite element methods formulations, the general principles of this method will be detailled in the next section. 
