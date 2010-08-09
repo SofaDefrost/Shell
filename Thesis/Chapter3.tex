@@ -1,4 +1,4 @@
-\chapter{Practical approach of the Finite Element Method}
+\chapter{A practical approach of the Finite Element Method}
 \label{chap3}
 \begin{shortAbstract}
 The previous chapter explained in details how physics of anatomical structures could be described by continuun mechanics. When an organ is submitted to a force, the first effect of this application is a change in the organ's shape. This deformation can be measured using different strain tensors. By modelling the mechanical aspects of the material with an appropriate constitutive law, we can then deduce the stress tensor (or internal forces) at each point within the organ. The next step is to apply Newton's second law (law of conservation of momentum), which yields a partial differential equation at every point of the volume. The Finite Element Method is a numerical procedure that allows to turn an infinite number of partial differential equations into a finite number of algebraic equations. The method follows different steps. We will first begin by describing the subdivision of the domain into smaller sub-domains into which local simpler equations are derived. We will then discuss how all the local equations are summed over the whole domain which eventually leads to the global solution. 
@@ -8,22 +8,44 @@ The previous chapter explained in details how physics of anatomical structures c
 \section{Introduction}
 
 	\subsection{A numerical method}
-One of the most important things engineers and scientists do is to model physical phenomena. Using assumptions concerning how the phenomena works and using the appropriate laws of physics governing the process, they can derive a mathematical model, often characterised by complex differential or integral equations relating various quantities of interest. However, because of the complexities in the geometry and complex boundary conditions found in real life problems, we cannot analytically solve these equations. A few decades ago, the only possible approach was to drastically simplify them, which was not always sufficient to find an approximate solution. Nowadays, in practice, most of the problems are solved using numerical methods. Indeed, with suitable mathematical models and numerical methods, computers can help solving many practical problems of engineering. Numerical methods typically transform differential equations governing a continuum to a set of algebraic equations of a discrete model of the continuum that are to be solved using computers \citep{Reddy93}. The \emph{Finite Element Method} (FEM) is the most popular numerical procedure that is used to approximately solve differential equations, especially in continuum mechanics. 
+One of the most important things engineers and scientists do is to model physical phenomena. Using assumptions concerning how the phenomena works and using the appropriate laws of physics governing the process, they can derive a mathematical model, often characterised by complex differential or integral equations relating various quantities of interest. However, because of the complexities in the geometry and complex boundary conditions found in real life problems, they cannot analytically solve these equations. A few decades ago, the only possible approach was to drastically simplify them, which was not always sufficient to find an approximate solution. Nowadays, in practice, most of the problems are solved using numerical methods. Indeed, with suitable mathematical models and numerical methods, computers can help solving many practical problems of engineering. Numerical methods typically transform differential equations governing a continuum to a set of algebraic equations of a discrete model of the continuum that are to be solved using computers \citep{Reddy93}. The \emph{Finite Element Method} (FEM) is the most popular numerical procedure that is used to approximately solve differential equations, especially in continuum mechanics. 
 	
 	\subsection{The basic ideas of FEM}
 The finite element method begins by dividing the structure into small pieces, manageable regions, called \emph{elements}. The collection of all these elements makes up a \emph{mesh} which approximates the problem geometry. Why is this a good idea? If we can expect the solution for an engineering problem to be very complex, it is mostly due to the complex geometry, on which a global solution is difficult to figure out. If the problem domain can be divided (\emph{meshed}) into small elements, the solution within an element is easier to approximate \citep{MacDonald07}. Over each finite element, the unknown variables are approximated using known functions. These functions can be linear or higher-order polynomial expressions that depend on the geometrical locations (\emph{nodes}) used to define the finite element shape. The governing equations are integrated over each finite element using linear algebra techniques and the solution over the entire domain problem is obtained by summing (\emph{assembling}) the solution of each element. Thus, the finite element method transforms an infinite number of differential equations (one can be defined at any point of the continuum) into a finite number of algebraic equations (depending on the chosen number of elements). 
 
-This approach may be compared to trying to find the area under a curve. We know that we can find the exact solution for the area under the curve by integration. However, sometimes the function describing the curve is not known, or is difficult to integrate. One method to obtain an approximate solution is to break up the area into a series of rectangles and add the areas of all rectangles \TODO{Add figure with curve and rectangles}. It is worth nothing that the solution accuracy can be increased by reducing the width of the rectangles to better follow the curve. 
+This approach may be compared to trying to find the area under a curve. We know that we can find the exact solution for the area under the curve by integration. However, sometimes the function describing the curve is not known, or is difficult to integrate. One method to obtain an approximate solution is to break up the area into a series of rectangles and add the areas of all rectangles (see Fig.~\ref{chap3:fig-areaUnderCurve}). It is worth nothing that the solution accuracy can be increased by reducing the width of the rectangles to better follow the curve. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=8cm]{chapter3/areaUnderCurve.pdf}
+\end{center}
+\caption[Approximation of the area under a curve]{Approximation of the area under a curve by adding the areas of all rectangles (left Rieman sum).}
+\label{chap3:fig-areaUnderCurve}
+\end{figure}
 
-\bigskip
-
-It is crucial to keep in mind that approximations occur at different stages during finite element analysis. The division of the whole domain into finite elements may not be exact \TODO{add figure from a domain divided into elements}, introducing error in the domain being modelled. The second stage is when element equations are derived. As mentionned earlier, the unknowns of the problem are approximated using the idea that any continuous function can be representated by a linear combination of known functions and undetermined coefficients. Algebraic relations between the undetermined coefficients are then obtained by satisfying the governing equations over each element. There are a few types of approach for establishing these equations but, without going into details, the mathematical foundations of all these approaches are energy principles or the \emph{weighted residual methods} (see Appendix~\ref{appendix2}), which both lead to integrals during the process. Therefore, the second stage creates two sources of error: the representation of the solution by a linear combination of functions and the evaluation of the integrals. Finally, errors are introduced when solving the assembled system of algebraic equations. 
-
+It is crucial to keep in mind that approximations occur at different stages during finite element analysis. The division of the whole domain into finite elements may not be exact (see Fig.~\ref{chap3:fig-errorWithSubdivision}), introducing error in the domain being modelled. The second stage is when element equations are derived. As mentionned earlier, the unknowns of the problem are approximated using the idea that any continuous function can be representated by a linear combination of known functions and undetermined coefficients. Algebraic relations between the undetermined coefficients are then obtained by satisfying the governing equations over each element. There are a few types of approach for establishing these equations but, without going into details, the mathematical foundations of all these approaches are energy principles or the \emph{weighted residual methods} (see Appendix~\ref{appendix2}), which both lead to integrals during the process. Therefore, the second stage creates two sources of error: the representation of the solution by a linear combination of functions and the evaluation of the integrals. Finally, errors are introduced when solving the assembled system of algebraic equations. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=8cm]{chapter3/errorWithSubdivision.pdf}
+\end{center}
+\caption[Error introduced by the division into elements]{The division of the domain into elements is not always perfect.}
+\label{chap3:fig-errorWithSubdivision}
+\end{figure}
 
 \section{Discretisation}
 
 	\subsection{Meshing process}
-The first step in the finite element method is to create a mesh of the domain to study. Mesh generation is a very important task and can be very time consuming. The domain has to be meshed properly into elements of specific shapes. All the elements together form the entire domain of the problem without any gap or overlapping. For example, triangles or quadrilaterals can be used in two dimensions, and tetrahedra and hexahedra in three dimensions. Information, such as \emph{element connectivity}, must be created during the meshing process for later use in the formulation of the FEM equations. The number of elements into which the domain is divided in a problem depends mainly on the geometry of the domain and on the desired accuracy of the solution. Usually, the number of elements increases with the complexity of the geometry. For instance, if one part of the domain is thiner \TODO{add figure to illustrate this point}, the size of the elements must be reduced in order to tile this particular part, which increases the total number of elements, and hence  the number of algebraic equations to solve. However, adding elements is sometimes desirable. Indeed, increasing the number of elements tends to get an approximate solution closer to the exact analytical solution (as reducing the width of the rectangles allows for a better approximation of the area under the curve). Elements are classically added in the particular regions of interest for a given problem and where substantial deformation may occur if this information is known a priori. A trade-off between accuracy and computational time must be found. This is why the meshing process on the problem domain must be carried out carefully. One needs to create a mesh which gives an accurate enough solution for the desired application while restraining the computational time according to the problem time constraints. As an example, finding the maximum load that can sustain a bridge in structural mechanics demands a high degree of accuracy, no matter how much time it is needed to compute the solution. Conversely, organ deformation in medical training simulators must be computed at an interactive rate so that no apparent delay can be observed between the manipulation of a given organ and its deformation. It does not mean that precision is not required, simply that the time constraints will necessarily limit the accuracy of the solution. 
+The first step in the finite element method is to create a mesh of the domain to study. Mesh generation is a very important task and can be very time consuming. The domain has to be meshed properly into elements of specific shapes. All the elements together form the entire domain of the problem without any gap or overlapping. For example, triangles or quadrilaterals can be used in two dimensions, and tetrahedra and hexahedra in three dimensions. Information, such as \emph{element connectivity}, must be created during the meshing process for later use in the formulation of the FEM equations. The number of elements into which the domain is divided in a problem depends mainly on the geometry of the domain and on the desired accuracy of the solution. Usually, the number of elements increases with the complexity of the geometry. For instance, if one part of the domain is thiner (see Fig.~\ref{chap3:fig-sizeOfElementMeshing}), the size of the elements must be reduced in order to tile this particular part, which increases the total number of elements, and hence  the number of algebraic equations to solve. However, adding elements is sometimes desirable. Indeed, increasing the number of elements tends to get an approximate solution closer to the exact analytical solution (as reducing the width of the rectangles allows for a better approximation of the area under the curve). Elements are classically added in the particular regions of interest for a given problem, if this information is known a priori. A trade-off between accuracy and computational time must be found. This is why the meshing process on the problem domain must be carried out carefully. One needs to create a mesh which gives an accurate enough solution for the desired application while restraining the computational time according to the time constraints of the problem. As an example, finding the maximum load that can sustain a bridge in structural mechanics demands a high degree of accuracy, no matter how much time it is needed to compute the solution. Conversely, organ deformation in medical training simulators must be computed at an interactive rate so that no apparent delay can be observed between the manipulation of a given organ and its deformation. It does not mean that precision is not required, simply that the time constraints will necessarily limit the accuracy of the solution. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13cm]{chapter3/sizeOfElementMeshing.pdf}
+\end{center}
+\caption[Finer mesh required for complex geometry]{By adding details on the tree's geometry (right), the surface delimited by the tree becomes more difficult to mesh and would require smaller elements to tile all additional small branches.}
+\label{chap3:fig-sizeOfElementMeshing}
+\end{figure}
+
 
 	
 	\subsection{Solution interpolation}	\label{chap3:solutionInterpolation}
@@ -67,7 +89,23 @@ as expected.
 Since elements over the whole domain are generally not identical (different shapes), this process of determining all interpolation functions can become fastidious. We will now introduce a general method for defining interpolation functions which allows for arbitrary element shapes (subject to a given topology). To this end, we discuss the concept of element \emph{natural coordinates}.
 
 	\subsection{Natural coordinates}
-The natural coordinate system allows us to map every element into a typical and simpler element. As an example, an 8-node hexahedron element is shown in Fig. \TODO{add figure of hexahedron in global and natural coordinates} as it appears in the global $(x_1, x_2, x_3)$ and natural $(\xi_1,\xi_2,\xi_3)$ coordinate systems. While in its natural coordinate system the element is a regular aligned cube, in the global coordinate system the element may assume any admissible arbitrary form. Essentially, admissible means that the element must not be too distorted, and must certainly not fold back on itself. Another example is given Fig. \TODO{add figure of tetrahedron in global and natural coordinates} with a tetrahedral element. The components of each node has a simple expression in natural coordinates, usually $0, 1$ or $-1$ and the centre of the coordinate system is taken at one of the nodes or at the centre of the element. 
+The natural coordinate system allows us to map every element into a typical and simpler element. As an example, an 8-node hexahedron element is shown in Fig.~\ref{chap3:fig-naturalCoordinatesHexa} as it appears in the global $(x_1, x_2, x_3)$ and natural $(\xi_1,\xi_2,\xi_3)$ coordinate systems. While in its natural coordinate system the element is a regular aligned cube, in the global coordinate system the element may assume any admissible arbitrary form. Essentially, admissible means that the element must not be too distorted, and must certainly not fold back on itself. Another example is given Fig.~\ref{chap3:fig-naturalCoordinatesTetra} with a tetrahedral element. The components of each node has a simple expression in natural coordinates, usually $0, 1$ or $-1$ and the centre of the coordinate system is taken at one of the nodes or at the centre of the element. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13cm]{chapter3/naturalCoordinatesHexa.pdf}
+\end{center}
+\caption[Natural coordinates of a hexaedron]{Hexahedral element as it appears in the global coordinate system (a) and its natural coordinate system (b).}
+\label{chap3:fig-naturalCoordinatesHexa}
+\end{figure}
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13cm]{chapter3/naturalCoordinatesTetra.pdf}
+\end{center}
+\caption[Natural coordinates of a tetrahedron]{Tetrahedral element as it appears in the global coordinate system (a) and its natural coordinate system (b).}
+\label{chap3:fig-naturalCoordinatesTetra}
+\end{figure}
 
 The use of the natural coordinate system has several advantages \citep{Biswas76}. Not only the interpolation functions can be derivated only once per type of element in the mesh, but their expression is also much simpler, regardless of the actual element shape. Consequently, the element equations and the derived element matrices get to be simplified too. However, we now need to switch between the natural and global coordinate systems before solving the equations on the whole domain. Indeed, it is necessary to account for the diversity of element shapes within the mesh. Solving the element equations expressed into the natural coordinate system would not yield the expected result for the whole domain. 
 	
@@ -125,7 +163,7 @@ Let us sum up where we are into the finite element analysis process so far. The 
 	
 The next step is therefore to derive the element equations themselves. Obviously these equations depend on the type of problem that we seek to solve. From now on, we will only consider the context of continuum mechanics since our overall goal is the modelling of organ deformation. However, a similar approach can be used in the other fields of physics. In continuum mechanics, applying Newton's second law yields a partial differential system of equations. Such equations are called \emph{strong forms}. The strong form, in contrast to a \emph{weak form}, requires strong continuity on the dependent field variables, such as displacements \citep{Liu03}. The functions defining these field variables have to be differentiable up to the order of the partial differential equations that exist in the strong from. Obtaining the exact solution for a strong form is usually very difficult for practical engineering problems. We know that the finite element method can be used to find an approximated solution but the method usually works well only with regular geometry and boundary conditions.
 
-A weak form is often created using energy principles or weighted residual methods. The weak form is often an integral form and requires a weaker continuity on the field variables. Due to the weaker requirement on the field variables, and the integral operation, a formulation based on a weak form usually produces a set of discretised system equations that give much more accurate results, especially for problems of complex geometry. Hence, the weak form is preferred by many for obtaining an approximate solution. Using the weak form usually leads to a set of well-behaved algebraic system equations, if the problem domain is discretised properly into elements.
+A weak form is often created using energy principles or weighted residual methods. The weak form is often an integral form and requires a weaker continuity on the field variables. Due to the weaker requirement on the field variables, and the integral operation, a formulation based on a weak form usually produces a set of discretised system equations that give much more accurate results, especially for problems of complex geometry. Hence, the weak form is usually preferred for obtaining an approximate solution. Using the weak form usually leads to a set of well-behaved algebraic system equations, if the problem domain is discretised properly into elements.
 
 	\subsection{Time dependence}
 In all the equations of the finite element method that we derived so far, we have not taken time into account. For some problem, this is not an issue, the motion is sufficiently slow to assume that the dynamic effects (such as damping effect) are neglectable. However, this assumption is not always valid, particulary in our case where we want to model organ deformation. The deformation obviously depends on time. Finite element models of time-dependent problems can be developed in two alternatives ways \citep{Reddy93}:
@@ -158,15 +196,16 @@ u(x, t_k) \approx u^e(x, t_k) = \sum_{i=1}^n u^e_i(t_k) \psi^e_i(x) \quad \text{
 The construction of the weak form using either energy principles or weighted residual methods will not be detailled here. The reader may easily find it in dozens of textbooks. By substituting \eqref{chap3:approxTime} in the weak form, we obtain the finite element equations of equilibrium in matrix form:
 \begin{equation}
 \label{chap3:eqDynamic}
-\mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R},
+\mathbf{M}^e \mathbf{\ddot U}^e + \mathbf{D}^e \mathbf{ \dot U}^e + \mathbf{K}^e(\mathbf{U}^e) \cdot \mathbf{U}^e = \mathbf{R}^e,
 \end{equation}
-where $ \mathbf{M} $ is a constant mass matrix, $\mathbf{D}$ is a constant damping matrix, $ \mathbf{K}(\mathbf{U}) $ is the stiffness matrix, which is a function of global nodal displacements $\mathbf{U}$, and $\mathbf{R}$ are externally applied loads. This equation is applicable to individual elements as well as the entire element assemblage (this is why the subscripts $ ^e $ were dropped).
+where $ \mathbf{M}^e $ is a constant mass matrix, $\mathbf{D}^e$ is a constant damping matrix, $ \mathbf{K}^e(\mathbf{U}^e) $ is the stiffness matrix, which is a function of nodal displacements $\mathbf{U}^e$, and $\mathbf{R}^e$ are externally applied loads. All matrices are expressed at the level of individual elements (which is the reason for the superscript $ ^e $).
+
 
 	\subsection{Static system of equations}	\label{chap3:static}
 Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, let us consider the problem of finding the maximum load that a desk can sustain. It is fair to say that strain and stress within the structure does not fluctuate over time: the system is in an equilibrium state. At all times, the sum of all forces applied on the system is equal to $ 0 $. Therefore, we can assume that the equations describing the structure do not depend on time: the problem is said to be \emph{static}. Accelerations can be neglected. In this case, the static system of equations can be easily obtained by merely dropping out the dynamics terms in \eqref{chap3:eqDynamic}. Indeed, the static case may just be seen as a special case of the dynamic equations and the static equations are:
 \begin{equation}
 \label{chap3:eqStatic}
-\mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
+\mathbf{K}^e (\mathbf{U}^e ) \cdot \mathbf{U}^e  = \mathbf{R}^e .
 \end{equation}
 
 	\subsection{A few words on the matrices involved} \label{chap3:wordOnMatrices}
@@ -214,7 +253,7 @@ where $ \mathbf{E} $ is a material matrix, which only depends on the constitutiv
 	
 
 \section{Assembly of element equations}
-We have now derived the equations for each element. However, since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns. The assembly should be carried out as soon as the element matrices are computed, rather than waiting until the element coefficients of all elements are computed. This would require storage of the coefficients for each element. Instead, we can perform the assembly while we calculate the element matrices.  
+We have now derived the equations for each element. However, since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns. The assembly of the global stiffness matrix should be carried out as soon as the element matrices are computed, rather than waiting until the element coefficients of all elements are computed. This would require storage of the coefficients for each element. Instead, we can perform the assembly while we calculate the element matrices.  
 
 The assembly operation is actually quite simple. Let us consider an example with stiffness matrices for one-dimensional problem. We assume that we have three two-node elements. And we suppose the element connectivity information given by Table \ref{chap3:connectivity}, which provides the global node number for each local node number within an element. 
 \begin{table}
@@ -229,19 +268,53 @@ The assembly operation is actually quite simple. Let us consider an example with
 		\label{chap3:connectivity}
 	\end{center}
 \end{table}
-
-% The element matrices are expressed with respect to local node numbers.
-\TODO{add figure with global stiffness matrix and a few arrows issued from the element stiffness matrices}
-
-
-
-\section{Solution of global problem}
-The complete and global system of equations has now been established. Let us recall the general system of equations in dynamic introduced in section \ref{chap3:dynamic}, which is also valid for the whole system: 
+We also assume the following stiffness matrices for the three elements:
+\begin{equation}
+\mathbf{K}^1 = 
+\color{blue}
+	\begin{bmatrix}
+	-1 & 2 \\
+	3 & 1
+	\end{bmatrix}
+\color{black}
+\text{, } \quad 
+\mathbf{K}^2 = 
+\color{green}
+	\begin{bmatrix}
+	5 & 2 \\
+	-2 & 1
+	\end{bmatrix}
+\color{black}
+\text{ and } \quad 
+\mathbf{K}^3 = 
+\color{red}
+	\begin{bmatrix}
+	3 & 1 \\
+	2 & -1
+	\end{bmatrix}
+\color{black}
+\end{equation}
+The assembled matrix is a square matrix of dimension number of nodes $\times$ number of degrees of freedom. In our case, the global matrix is therefore a $ 4 \times 4 $ and is assembled in the following manner:
+\begin{equation}
+\mathbf{K} = 
+	\begin{bmatrix}
+	\color{blue}{-1} & \color{blue}{2} & \color{black}{0} & 0 \\
+	\color{blue}{3} & \color{blue}{1}\color{black}{+}\color{green}{5} & \color{green}{2} & \color{black}{0} \\
+	0 & \color{green}{-2} & \color{green}{1} \color{black}{+} \color{red}{3} & \color{red}{1} \\
+	\color{black}{0} & 0 & \color{red}{2} & \color{red}{-1}
+	\end{bmatrix}
+\color{black}
+\end{equation}
+In other words, the global matrix is merely a rewritting for the whole domain of the element stiffness matrices, which are expressed with respect to local node numbers, in terms of global node numbers. In addition to constructing the global mass and damping matrices (as shown in section \ref{chap3:wordOnMatrices}), this process leads to the following global system of equations:
 \begin{equation}
 \label{chap3:dynamic2}
 \mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
 \end{equation}	
-In this section, we will examine the techniques commonly used for solving these equations. In the general case of a dynamic system of equations, the equations are not yet algebraic and still depends on derivatives of the unknown displacements with respect to time. Therefore, an additional step needs to be performed before using a solver by integrating the equations over time. As we will see shortly, the different methods of time integration are classified into two main schemes: \emph{explicit} or \emph{implicit} integration. We begin by introducing the simplest method, the Euler method to explain the concept of an explicit method. Then the central difference method will be detailled. We then describe a few implicit methods, allowing us to highlight the relative advantages of the two types of methods. Finally, the static case will be solved by emphasizing the similarities with implicit systems through the critical step of linearisation of the governing equations \citep{Belytschko00}.
+The same set of equations was established at the element level in section \ref{chap3:dynamic} but we may note that the same system is also valid for the whole domain. 
+
+
+\section{Solution of global problem}
+The complete and global system of equations has now been established. In this section, we will examine the techniques commonly used for solving these equations. In the general case of a dynamic system of equations, the equations are not yet algebraic and still depends on derivatives of the unknown displacements with respect to time. Therefore, an additional step needs to be performed before using a solver by integrating the equations over time. As we will see shortly, the different methods of time integration are classified into two main schemes: \emph{explicit} or \emph{implicit} integration. We begin by introducing the simplest method, the Euler method to explain the concept of an explicit method. Then the central difference method will be detailled. We then describe a few implicit methods, allowing us to highlight the relative advantages of the two types of methods. Finally, the static case will be solved by emphasizing the similarities with implicit systems through the critical step of linearisation of the governing equations \citep{Belytschko00}.
 
 	\subsection{Explicit time integration}
 
@@ -249,29 +322,29 @@ In this section, we will examine the techniques commonly used for solving these 
 We want to approximate the solution of the following differential equation:
 \begin{equation}
 \label{chap3:eqToSolve}
-y^{'}(t) = f(t, y(t))
+\mathbf{\dot U}^t = f(t, \mathbf{U}^t).
 \end{equation}
-Note that we restrict ourselves to first-order differential equations (meaning that only the first derivative of $y$ appears in the equation, and no higher derivatives). However, a higher-order equation can easily be converted to a system of first-order equations by introducing extra variables. For example, the second-order equation $y^{''} = -y$ can be rewritten as two first-order equations: $y^{'} = z$ and $z^{'} = -y$. By solving equations like \eqref{chap3:eqToSolve}, we will therefore be able to integrate the global system of equations over time. 
+Note that we restrict ourselves to first-order differential equations (meaning that only the first derivative of $\mathbf{U}^t$ appears in the equation, and no higher derivatives). However, a higher-order equation can easily be converted to a system of first-order equations by introducing extra variables. For example, the second-order equation $\mathbf{\ddot U}^t = -\mathbf{U}^t$ can be rewritten as two first-order equations: $\mathbf{\dot U}^t = \mathbf{V}^t$ and $\mathbf{\dot V}^t = -\mathbf{U}^t$. By solving equations like \eqref{chap3:eqToSolve}, we will therefore be able to integrate the global system of equations over time. 
 
-We start by replacing the derivative $y^{'} $ by the finite difference approximation:
+We start by replacing the derivative $\mathbf{\dot U}^t $ by the finite difference approximation:
 \begin{equation}
 \label{chap3:approxExplicit}
-y^{'}(t) \approx \dfrac{y(t+\Delta t) - y(t)}{\Delta t},
+\mathbf{\dot U}^t \approx \dfrac{\mathbf{U}^{t+\Delta t} - \mathbf{U}^t}{\Delta t},
 \end{equation}
 which gives:
 \begin{equation}
-y(t+\Delta t) \approx y(t) + \Delta t y^{'}(t)
+\mathbf{U}^{t+\Delta t} \approx \mathbf{U}^t + \Delta t \, \mathbf{\dot U}^t
 \end{equation}
 And substituting the last relation in \eqref{chap3:eqToSolve} yields:
 \begin{equation}
 \label{chap3:updateExplicit}
-y(t+\Delta t) \approx y(t) + \Delta t f(t, y(t))
+\mathbf{U}^{t+\Delta t} \approx \mathbf{U}^t + \Delta t \, f(t, \mathbf{U}^t)
 \end{equation}
-This formula is usually applied in a recursive scheme. We choose a time step $ \Delta t $ and we construct the sequence of time $ t^n = n \Delta t$. Using \eqref{chap3:updateExplicit}, we can approximate the exact solution $ y(t^n) $ at each time step by $ y^n $:
+This formula is usually applied in a recursive scheme. We choose a time step $ \Delta t $ and we construct the sequence of time $ t^n = n \Delta t$. Using \eqref{chap3:updateExplicit}, we can approximate the exact solution $ \mathbf{U}^{t^n} $ at each time step by $ \mathbf{U}^n $:
 \begin{equation}
-y^{n+1} = y^n + \Delta t f(t^n, y^n).
+\mathbf{U}^{n+1} = \mathbf{U}^n + \Delta t \, f(t^n, \mathbf{U}^n).
 \end{equation}
-This method is called \emph{Euler method} and is said to be explicit because the new value $ y^{n+1} $ is defined in terms of variables from the previous time step ($ y^n $).
+This method is called \emph{Euler method} and is said to be explicit because the new value $ \mathbf{U}^{n+1} $ is defined in terms of variables from the previous time step $ \mathbf{U}^n $.
 
 
 		\subsubsection*{The central difference method}	
@@ -328,31 +401,31 @@ Both the right-hand side of the equation and the factor in front $ \mathbf{U}^{t
 		\subsubsection*{The backward Euler method}
 The problem that we wish to solve is the same than the one we introduced with the Euler method, which we reproduce here for convenience:
 \begin{equation}
-y^{'}(t) = f(t, y(t))
+\mathbf{\dot U}^t = f(t, \mathbf{U}^t).
 \end{equation}
-This time, instead of using \eqref{chap3:approxExplicit}, we approximate the derivative $ y^{'}(t) $ by:
+This time, instead of using \eqref{chap3:approxExplicit}, we approximate the derivative $ \mathbf{\dot U}^t $ by:
 \begin{equation}
-y^{'}(t) \approx \dfrac{y(t) - y(t-\Delta t)}{\Delta t}.
+\mathbf{\dot U}^t \approx \dfrac{\mathbf{U}^t - \mathbf{U}^{t-\Delta t}}{\Delta t}.
 \end{equation}
 The update expression for $ y^n $ then becomes:
 \begin{equation}
-y^{n+1} = y^n + \Delta t f(t^{n+1}, y^{n+1}).
+\mathbf{U}^{n+1} = \mathbf{U}^n + \Delta t \, f(t^{n+1}, \mathbf{U}^{n+1}).
 \end{equation}
-The \emph{backward Euler method} is an implicit method, meaning that we have to solve an equation to find $ y^{n+1} $. Of course, it costs time to solve this equation and this cost must be taken into consideration when we select the time integration method to use. The advantage of implicit methods is that they are usually more stable for solving a stiff equation, meaning that larger steps can be used. 
+The \emph{backward Euler method} is an implicit method, meaning that we have to solve an equation to find $ \mathbf{U}^{n+1} $. Of course, it costs time to solve this equation and this cost must be taken into consideration when we select the time integration method to use. The advantage of implicit methods is that they are usually more stable for solving a stiff equation, meaning that larger steps can be used. 
 
 	\subsubsection*{The Runge-Kutta method}
 The accuracy of backward Euler method can be improved by making the solution depends on more values. The $ 4^{th} $ order Runge-Kutta method gives the following update equation:
 \begin{equation}
-y^{n+1} = y^{n} + \frac{1}{6} \Delta t \left( k_1 + 2 k_2 + 2 k_3 +k_4 \right),
+\mathbf{U}^{n+1} = \mathbf{U}^{n} + \frac{1}{6} \Delta t \left( k_1 + 2 k_2 + 2 k_3 +k_4 \right),
 \end{equation}
 where :
 \begin{align}
-k_1 &= f(t^n, y^n) \notag \\
-k_2 &= f(t^n + \frac{1}{2} \Delta t, y^n + \frac{1}{2} \Delta t \, k_1) \notag \\
-k_3 &= f(t^n + \frac{1}{2} \Delta t, y^n + \frac{1}{2} \Delta t \, k_2) \notag \\
-k_4 &= f(t^n + \Delta t, y^n + \Delta t \, k_3) \notag
+k_1 &= f(t^n, \mathbf{U}^n) \notag \\
+k_2 &= f(t^n + \frac{1}{2} \Delta t, \mathbf{U}^n + \frac{1}{2} \Delta t \, k_1) \notag \\
+k_3 &= f(t^n + \frac{1}{2} \Delta t, \mathbf{U}^n + \frac{1}{2} \Delta t \, k_2) \notag \\
+k_4 &= f(t^n + \Delta t, \mathbf{U}^n + \Delta t \, k_3) \notag
 \end{align}
-This method is a fourth-order method because the total accumulated error has order $ \Delta t^4 $. It may be seen as a generalisation of the backward Euler method \citep{Press92}. Again, we have to solve an equation to find $ y^{n+1} $. 
+This method is a fourth-order method because the total accumulated error has order $ \Delta t^4 $. It may be seen as a generalisation of the backward Euler method \citep{Press92}. Again, we have to solve an equation to find $ \mathbf{U}^{n+1} $. 
 
 	\subsection{Static solutions}
 First, we recall the general system of equations in static introduced in section \ref{chap3:static}, which is also valid for the whole system: 
@@ -413,9 +486,9 @@ The system may already be linear by nature, or been linearised using techniques 
 However, only solvers relevant to the context of finite element methods will be discussed. Indeed the matrix $ \mathbf{A} $ takes a specific form in problems solved by finite element methods. The matrix $ \mathbf{A} $ is \emph{sparse}. A sparse matrix is merely a matrix populated mainly with zeros. An example is given by Fig.~\ref{chap3:fig-sparse} for a finite element problem in two dimensions.
 \begin{figure}
 \begin{center}
-\includegraphics[width=10cm]{chapter3/sparse_matrix.pdf}
+\includegraphics[width=13cm]{chapter3/sparse_matrix.pdf}
 \end{center}
-\caption{Illustration of a sparse matrix for a two-dimensional finite element problem. Each non-zero elements of the matrix is represented in black. Image courtesy of Oleg Alexandrov.}
+\caption[Illustration of a sparse matrix for a 2D finite element problem]{Illustration of a sparse matrix for a two-dimensional finite element problem. Each non-zero elements of the matrix is represented in black. Image courtesy of Oleg Alexandrov.}
 \label{chap3:fig-sparse}
 \end{figure}
 Because of the peculiar structure of the matrix involved in finite element computations, methods have been specifically designed to take advantage of this structure. Indeed, it is wasteful to use general methods of linear algebra on such problems, because most of the arithmetic operations devoted to solving the set of equations or inverting the matrix involve zero operands. Furthermore, it is wasteful to reserve storage for zero elements. 

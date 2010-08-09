@@ -95,7 +95,18 @@ where $\nabla_{0}$ is the gradient operator with respect to $\mathbf{X}$ and $\m
 
 
 	\subsection{Change of volume}
-At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. We can define volume elements in the reference and deformed configurations. Consider three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ forming a parallelepiped in the reference configuration \TODO{Add figure with all notations}. The three vectors after deformation $d\mathbf{x}^{(1)}$, $d\mathbf{x}^{(2)}$ and $d\mathbf{x}^{(3)}$ can be obtained with:
+At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. We can define volume elements in the reference and deformed configurations. Consider three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ forming a parallelepiped in the reference configuration as can be seen on Fig.~\ref{chap2:fig-changeVolume}. 
+% 
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13cm]{chapter2/changeVolume.pdf}
+\end{center}
+\caption{Transformation of a volume element under a deformation mapping. \TODO{CHANGE TO A BETTER FIGURE.}}
+\label{chap2:fig-changeVolume}
+\end{figure}
+%
+
+The three vectors after deformation $d\mathbf{x}^{(1)}$, $d\mathbf{x}^{(2)}$ and $d\mathbf{x}^{(3)}$ can be obtained with:
 \begin{equation}
 \label{chap2:dxdX}
 d\mathbf{x}^{(i)} = \mathbf{F} \, d\mathbf{X}^{(i)}, \quad i = 1, 2, 3.
@@ -120,7 +131,7 @@ Thus, J has the physical meaning of being the local ratio of current to referenc
 
 
 	\subsection{Change of surface}
-For similar reasons, let us find the relation between an element of area in the reference configuration $d\mathbf{A}$ which becomes $d\mathbf{a}$ in the deformed configuration. Considering an arbitrary material line $d\mathbf{L}$ in the reference configuration and noting $d\mathbf{l}$ the same line after deformation \TODO{Add figure with all notations}, the corresponding reference and current volumes are given respectively by:
+For similar reasons, let us find the relation between an element of area in the reference configuration $d\mathbf{A}$ which becomes $d\mathbf{a}$ in the deformed configuration. Considering an arbitrary material line $d\mathbf{L}$ in the reference configuration and noting $d\mathbf{l}$ the same line after deformation (see Fig.~\ref{chap2:fig-changeSurface}, the corresponding reference and current volumes are given respectively by:
 \begin{align}
 d\mathbf{V} &= d\mathbf{L} \cdot d\mathbf{A} \\
 \mbox{and } \quad d\mathbf{v} &= d\mathbf{l} \cdot d\mathbf{a}.
@@ -134,7 +145,14 @@ The fact that this expression is valid for any vector $d\mathbf{L}$ and using th
 \label{chap2:dadA}
 d\mathbf{a} = J \, \mathbf{F}^{-T} \, d\mathbf{A}.
 \end{equation}
-			
+% 
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13cm]{chapter2/changeSurface.pdf}
+\end{center}
+\caption{Transformation of a surface element under a deformation mapping. \TODO{CHANGE TO A BETTER FIGURE.}}
+\label{chap2:fig-changeSurface}
+\end{figure}
 			
 	\subsection{Volumetric and isochoric components}
 We recall that the Jacobian $J$ has the physical meaning of being the local ratio of current to reference volume of a material volume element. Therefore, if $J = 1$ the volume does not change locally during the deformation and the latter is qualified as \emph{isochoric} at this given particle $P$. If $J = 1$ everywhere in the body, the deformation of the body is isochoric. 
@@ -268,7 +286,17 @@ The Euler-Cauchy's stress principle states that on any surface (real or imaginar
 \end{equation}
 This equation means that the stress vector depends on its location in the body and the orientation of the plane on which it is acting. In general, the stress vector is not perpendicular to that plane and it can be separated into two components: one component normal to the plane called \emph{normal stress} and one component tangent to the plane named \emph{shear stress}. Since $\mathbf{t}$ depends on $\mathbf{n}$ but is not in the direction of $\mathbf{n}$, it may be interesting to look into the relationship between $\mathbf{t}$ and $\mathbf{n}$. 
 
-To establish this relationship, let us consider an infinitesimal tetrahedron in a Cartesian coordinate system. \TODO{Add figure of a tetrahedron with all notations}. We note $-\mathbf{t}_1$, $-\mathbf{t}_2$, $-\mathbf{t}_3$ and $\mathbf{t}$ the stress vectors in the outwards directions on the faces of the tetrahedron whose areas are respectively $\Delta a_1$, $\Delta a_2$, $\Delta a_3$ and $\Delta a$. For the mass $m$ inside the tetrahedron, we have by Newton's second law:
+To establish this relationship, let us consider an infinitesimal tetrahedron in a Cartesian coordinate system as represented Fig.~\ref{chap2:fig-CauchyStress}. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13cm]{chapter2/CauchyStress.pdf}
+\end{center}
+\caption{Tetrahedral element in Cartesian coordinates. \TODO{CHANGE TO A BETTER FIGURE.}}
+\label{chap2:fig-CauchyStress}
+\end{figure}
+%
+We note $-\mathbf{t}_1$, $-\mathbf{t}_2$, $-\mathbf{t}_3$ and $\mathbf{t}$ the stress vectors in the outwards directions on the faces of the tetrahedron whose areas are respectively $\Delta a_1$, $\Delta a_2$, $\Delta a_3$ and $\Delta a$. For the mass $m$ inside the tetrahedron, we have by Newton's second law:
 \begin{equation}
 \label{chap2:Newton}
 \sum \mathbf{F} = \mathbf{t} \Delta a - \mathbf{t}_1 \Delta a_1 - \mathbf{t}_2 \Delta a_2 - \mathbf{t}_3 \Delta a_3 + \Delta v \mathbf{f} = m \mathbf{a},
