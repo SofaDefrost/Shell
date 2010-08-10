@@ -1,17 +1,57 @@
-\chapter{State of art: FEM}
+\chapter{Modelling the deformation of solid objects in real-time}
 \label{chap4}
 \begin{shortAbstract}
 A short abstract for the upcoming chapter
 \end{shortAbstract}
 
 
-\section{Expose the problem: how to model solid organs?}
+\section{Introduction: the problematic}
 
-\section{Techniques using geometrical kind of approaches}
+At the beginning of computer simulation, users were immersed into environments that were merely a decor. If it could virtually take the user somewhere else, a static scene quickly showed its limits. Indeed, in a real-life environment many objects are in motion, interacting with each others. Therefore, in order to increase the fidelity of simulations, elements of physics were progressively added. It could be as simple as adding motion to clouds in a flight simulator for instance. But by improving the dynamism of the scene, the simulation appears more natural to users. Over time, with the increase in computational power of computers, objects stopped being all rigid and simulators started taking laws of physics into account. In other words, they became deformable. If this took the realism a step further, demands in computational power were multiplied. Simulators eventually faced a challenge: they had to weight the desired degree of realism against the computational power at their disposal. 
+
+In the field of medical simulation, the correctness of deformation is often crucial. This is particulary true in the cases of per-operative guidance. As an example, removing a brain tumor relies heavily on knowing the spatial relation between the patient's brain and the images acquired prior to surgery. Unfortunately, drilling a hole into the patient's skull releases pressure and the brain deforms. This phenomenon is called brain shift. The overall deformation is quite complex and the displacements depend on local elasticity of the brain, the size and the location of the tumor. A large brain shift, if not corrected, will result in inaccuracies in the surgical procedure and has the potential to cause damage to normal tissue. A solution is to accurately model the mechanical response of the patient's brain to predict the actual deformation and hence keep the knowledge of the tumor's location. 
+
+Conversely, when medical simulation is applied to training, such a precision in terms of distance is not required. The physician would not even visually notice reasonable errors as soon as it looks realistic enough. However, in some medical procedures, the sense of touch and the forces that the physician can feel are a fey factor for the success of the operation. For instance, during a colonoscopy procedure, force feedback gives precious information about what type of loop is forming and the physician can then react accordingly to prevent the loop formation. Consequently, a good colonoscopy simulator is required to provide accurate force feedbacks. If the contact forces were not reproduced to the operator, he would never be able to learn how to detect loop forming. Obviously, the computation of a realistic force to be returned demands an appropriate mechanical modelling of all structures. 
+
+If the reasons differ, the need for modelling the mechanical response of organs with precision remains. However, strong time constraints often limit the complexity of the modelling and affects the overall accuracy. Because of this trade-off, various approaches were proposed over the years to fit into real-time constraints and may be grouped into three main categories: (1) geometrically based techniques, (2) approaches physically motivated usually relying on Newton's second law and (3) methods actually based on the equations of continuum mechanics. 
+
+
+
+\section{Techniques based on geometry}
+
 	\subsection{Shape matching}
-	\section{Techniques relying on physics}
+One field particulary interested in modelling deformable objects in a very efficient way is the game industry. Of course, for games we are more attracted by computational efficiency and extreme stability features than accuracy to physics laws. Most of the time, we can tolerate a degradation of realism as long as the result looks realistic. \cite{Muller05} developed a technique with this idea in mind called \emph{shape matching}. We start with a set of particules with masses $ m_i $ in an initial configuration where we denote by $ \mathbf{x}_i^0 $ the initial positions of the particules. No connectivity information is required. The particles are simulated as a simple particle system without particle-particle interactions, but including response to collisions with the environment and including external forces such as gravity. The positions in the deformed configuration are noted $ \mathbf{x}_i $. The method consists of finding a set of points $ \mathbf{g}_i $ which minimises the difference between the two sets $ \mathbf{x}_i^0 $ and $ \mathbf{x}_i $. The first step is to find the rotation matrix $ \mathbf{R} $ and the translation vectors $ \mathbf{t} $ and $ \mathbf{t}_0 $ such that
+\begin{equation}
+\sum_i m_i (\mathbf{R}(\mathbf{x}_i^0 - \mathbf{t}_0) + \mathbf{t} - \mathbf{x}_i)^2
+\end{equation}
+is minimal. The optimal translation vectors $ \mathbf{t} $ and $ \mathbf{t}_0 $ turn out to be the centre of mass of the initial shape and actual shape, that we will note $ \mathbf{x}_{c}^0 $ and $ \mathbf{x}_c $, respectively. The optimal rotation matrix is found by first finding the optimal linear transformation $ \mathbf{A} $. The optimal rotation is eventually obtained through the rotational part of $ \mathbf{A} $ after a polar decomposition. Finally, the goal positions $ \mathbf{g}_i $ can be computed as follows:
+\begin{equation}
+\mathbf{g}_i = \mathbf{R}(\mathbf{x}_i^0 - \mathbf{x}_{c}^0) + \mathbf{x}_{c}.
+\end{equation}
+Once the goal positions are known, they are used to integrate the positions of the particules:
+\begin{equation}  
+	\begin{cases} 
+		\mathbf{v}_i(t+h) = \mathbf{v}_i(t) + \alpha \dfrac{\mathbf{g}_i(t) - \mathbf{x}_i(t)}{h}  + h \dfrac{f_{\text{ext}}(t)}{m_i} \\\\
+		\mathbf{x}_i(t+h) = \mathbf{x}_i(t) + h \mathbf{v}_i(t+h)
+	\end{cases}
+\end{equation}
+where $ \alpha $ is a parameter between $ 0 $ and $ 1 $ which simulates stiffness. 
+
+	
+	
+	
+	
+	
+	
+\section{Techniques relying on physics}
+
 	\subsection{Mass-spring}
 		
 \section{Techniques based on continuum mechanics}	
+
 	\subsection{FEM with mesh (highlight evolution: linear, topological changes, co-rotational, non-linear, GPU)}
+	
 	\subsection{Meshless (supposedly good for handling topological changes but other issues}
+	
+	
+	

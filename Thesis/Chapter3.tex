@@ -253,7 +253,7 @@ where $ \mathbf{E} $ is a material matrix, which only depends on the constitutiv
 	
 
 \section{Assembly of element equations}
-We have now derived the equations for each element. However, since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns. The assembly of the global stiffness matrix should be carried out as soon as the element matrices are computed, rather than waiting until the element coefficients of all elements are computed. This would require storage of the coefficients for each element. Instead, we can perform the assembly while we calculate the element matrices.  
+We have now derived the equations for each element. However, since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. In other words, elements share vertices. The deformation of an element induces the deformation of its neighbours. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns, to model this interaction between elements. The assembly of the global stiffness matrix should be carried out as soon as the element matrices are computed, rather than waiting until the element coefficients of all elements are computed. This would require storage of the coefficients for each element. Instead, we can perform the assembly while we calculate the element matrices.  
 
 The assembly operation is actually quite simple. Let us consider an example with stiffness matrices for one-dimensional problem. We assume that we have three two-node elements. And we suppose the element connectivity information given by Table \ref{chap3:connectivity}, which provides the global node number for each local node number within an element. 
 \begin{table}
@@ -305,7 +305,7 @@ The assembled matrix is a square matrix of dimension number of nodes $\times$ nu
 	\end{bmatrix}
 \color{black}
 \end{equation}
-In other words, the global matrix is merely a rewritting for the whole domain of the element stiffness matrices, which are expressed with respect to local node numbers, in terms of global node numbers. In addition to constructing the global mass and damping matrices (as shown in section \ref{chap3:wordOnMatrices}), this process leads to the following global system of equations:
+In other words, the global matrix is merely a rewritting on the whole domain of the element stiffness matrices, which are expressed with respect to local node numbers, in terms of global node numbers. In addition to constructing the global mass and damping matrices (as shown in section \ref{chap3:wordOnMatrices}), this process leads to the following global system of equations:
 \begin{equation}
 \label{chap3:dynamic2}
 \mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
@@ -591,4 +591,4 @@ f(\mathbf{x}) = \frac{1}{2} \mathbf{x}^T \, \mathbf{A} \, \mathbf{x} - b^T \, \m
 \end{equation}
 Indeed, if the matrix $ \mathbf{A} $ is symmetric and positive-definite, $ f(\mathbf{x}) $ is minimised by the solution to $ \mathbf{A} \mathbf{x} = \mathbf{b} $\citep{Shewchuk94}. The minimisation is carried out by generating a succession of search directions $ \mathbf{p} _k $ and improved minimisers $ \mathbf{x} _k $. At each stage a quantity $ \alpha_k $ is found that minimises $f(\mathbf{x}_k  + \alpha_k \mathbf{p}_k)$, and $\mathbf{x}_{k+1}$ is set equal to the new point $\mathbf{x}_k + \alpha_k \mathbf{p}_k$. The $ \mathbf{p}_k $  and $ \mathbf{x}_k $  are built up in such a way that $ \mathbf{x}_{k+1} $  is also the minimizer of $ f $ over the whole vector space of directions already taken, that is the space formed by the basis of vector ${\mathbf{p}_1, \mathbf{p}_2, \ldots, \mathbf{p}_k }$. After $N$ iterations, you arrive at the minimiser over the entire vector space, that is, the solution to our linear system of equations. 
 
-Later, the \emph{biconjugate gradient method} was introduced as a generalisation of ordinary conjugate gradient to solve systems where the matrix $ \mathbf{A} $ was not necessarily symmetric and positive-definite (see \cite{Belytschko00} for details). 	
+Later, the \emph{biconjugate gradient method} was introduced as a generalisation of the ordinary conjugate gradient to solve systems where the matrix $ \mathbf{A} $ was not necessarily symmetric and positive-definite (see \cite{Belytschko00} for details). 	
