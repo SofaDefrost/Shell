@@ -93,8 +93,68 @@ One limitation of fast lattice shape matching is that small features of a geomet
 \label{chap4:fig-flowers}
 \end{figure}	
 
+Although realism is not a crucial feature for game-like environments, other models based on laws of physics were created for other applications.
+
 	
 \section{Techniques relying on physics}
+
+	\subsection{3D Chainmail algorithm}
+The \emph{3D Chainmail} was introduced by \cite{Gibson97} as a fast algorithm for deforming solid objects. Rather than carrying out complex computations on a low resolution geometry (as opposed to FEM techniques), the main idea is to take advantage of the original data resolution (of a CT scan for instance) but perform simple deformation calculation for each element. In this algorithm, each volume element is linked to its six nearest neighbours. If a link between two nodes is stretched to its limit, displacements are transferred to its neighbouring links. It works in a very similar way to a chain and is illustrated by Fig.~\ref{chap4:fig-chainmail}. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=12cm]{chapter4/chainmail.pdf}
+\end{center}
+\caption[Deformation of a 2D chain]{Deformation of a 2D chain mail when the link indicated by an arrow is moved.}
+\label{chap4:fig-chainmail}
+\end{figure}	
+%
+The chain mail algorithm is then followed by an elastic relaxation, which relaxes the shape of the deformed object approximated by the chain mail algorithm. This step consists of minimising an elastic energy measure within the object to insure that the calculated deformation is a minimum energy configuration. 
+
+This method was extented by \cite{Schill98} to integrate inhomogeneous and anisotropic behaviour. This extension of the chain mail algorithm allows the authors to simulate the vitrous humor in the eye during a vitrectomy procedure. However, the main drawback of this algorithm is that it does not model volume preservation, an important characteristic of many tissues in the human body. 
+
+
+	\subsection{Modal analysis}
+\emph{Modal analysis} was first introduced to the graphics community by \cite{Pentland89} as a fast method for approximating deformation. Modal analysis is the process of taking the non-linear description of a system, finding a good linear approximation, and then finding a coordinate system that diagonalises the linear approximation. This process transforms a complicated system of non-linear equations into a simple set of decoupled linear equations that may be individually solved analytically \citep{Hauser03}. Moreover, because each decoupled equation may be solved analytically, stability concerns due to the choice of a time integration procedure are eliminated. The linearised system of equations may be written as:
+\begin{equation}
+\label{chap4:linearisedEquation}
+\mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K} \mathbf{U} = \mathbf{R}.
+\end{equation}	
+where $ \mathbf{M} $ is the mass matrix, $\mathbf{D}$ is the damping matrix, $ \mathbf{K} $ is the stiffness matrix and $\mathbf{R}$ are externally applied loads. Modal decomposition refers to the process of diagonalising equation \eqref{chap4:linearisedEquation}. By using Rayleigh damping (see discussion on damping in section \ref{chap3:wordOnMatrices}), \eqref{chap4:linearisedEquation} may be rewritten as:
+\begin{equation}
+\label{chap4:eqRayleigh}
+\mathbf{K} (\mathbf{U} + \alpha_1  \mathbf{ \dot U}) + \mathbf{M} (\alpha_2 \mathbf{ \dot U} + \mathbf{\ddot U})  = \mathbf{R},
+\end{equation}	
+where $ \alpha_1 $ and $ \alpha_2 $ are the Rayleigh coefficients. We denote $ \mathbf{W} $ the solution to the generalised eigenproblem $ \mathbf{K} \mathbf{x} + \lambda \mathbf{M} \mathbf{x} = 0 $ and $\boldsymbol \Lambda$ the diagonal matrix of eigenvalues, then \eqref{chap4:eqRayleigh} may be expressed as:
+\begin{equation}
+\boldsymbol \Lambda (\mathbf{Z} + \alpha_1  \mathbf{ \dot Z}) + (\alpha_2 \mathbf{ \dot Z} + \mathbf{\ddot Z})  = \mathbf{G},
+\end{equation}
+where $ \mathbf{Z} = \mathbf{W}^{-1} \mathbf{U} $ is the vector of modal coordinates and $ \mathbf{G} = \mathbf{W}^T \mathbf{U} $ is the external force vector in the modal coordinate system. Each row of this equation now corresponds to a single scalar differential equation:
+\begin{equation}
+\ddot z_i + (\alpha_1 \lambda_i +\alpha_2) \dot z_i + \lambda_i z_i = g_i.
+\end{equation}
+The analytical solutions to each equations are well known and are the following:
+\begin{equation}
+z_i = c_1 e^{t \omega_i^+} + c_2 e^{t \omega_i^-}
+\end{equation}
+where $ c_1 $ and $ c_2 $ are complex constants and $ \omega_i $ is the complex frequency given by:
+\begin{equation}
+\omega_i^{\pm} = \dfrac{-(\alpha_1 \lambda_i + \alpha_2) \pm \sqrt{(\alpha_1 \lambda_i +\alpha_2)^2 - 4 \lambda_i}}{2}.
+\end{equation}
+The main advantage of modal analysis is the possibility to model only the necessary modes. Indeed if the eigenvalue $ \lambda_i $ associated with a particular mode is large, then the force required to cause a discernible displacement of that mode will also be large. Similarly, some displacements may be too small to be detected. Removing those modes from the computation will not change the appearance of the resulting simulation while substantially reducing the computational cost. 
+
+\cite{James02} went even further by using graphics hardware to reduce CPU costs to a minimum. In particular, they use modal analysis to model human skin and secondary tissues in a laparascopic surgical simulation to allow the CPU to focus on more complex tissue models and user contact interactions (see Fig.~\ref{chap4:fig-modalAnalysisLaparo}). The technique is fairly efficient as it allows precomputations of the vibration modes. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13cm]{chapter4/modalAnalysisLaparo.pdf}
+\end{center}
+\caption[Applications of modal analysis]{(Left) A jumping motion that leads to significant thigh and belly vibrations of human skin when rendered with modal analysis. (Right) The same hardware accelerated technique is applied to secondary tissues in a laparoscopic simulation to ease the CPU of computations. } 
+\label{chap4:fig-modalAnalysisLaparo}
+\end{figure}	
+
+Although modal analysis significantly accelerates the simulation, it generates noticeable artifacts when applied to large deformations due to the step of linearisation. It can produce unnatural results with deformations of large amplitude. \cite{Choi05} proposed to overcome this limitation by taking the rotational component of the deformation into account at each node. \cite{Barbic05} make use of modal analysis to build a deformation basis from modal derivatives. It allows them to simulate large deformations of solid objects with non-linear material. 
+
 
 	\subsection{Mass-spring model}
 A classic technique for modelling a deformable object is the mass-spring system. In this method, the geometry is described by a network of masses connected together by springs. The force $ F $ exerted onto each mass by the spring may be computed with:
@@ -129,18 +189,15 @@ Because they do not derive from the equations of continuum mechanics, mass-sprin
 A mass-spring model may also be enhanced to feature viscoelasticity. Indeed, \cite{Stiles72} proposed a viscoelastic mass-spring system to test hypotheses on the mechanical response of muscles. Much more recently, \cite{Tamura05} introduced a method to simulate viscoelastic material using a spring-mass system. They use a large number of particules to create a randomly connected mesh to mimic the structure of polymeric materials and hence their viscoelascity characteristics. \cite{Basafa10} went even further and extended a mass-spring system to simulate non-linear viscoelastic deformations of soft tissue for laparoscopic surgery. They tune their parameters by a simple optimisation procedure to fit the mechanical response obtained on a set of experimental data. 
 
 
-	\subsection{Modal analysis}
-
-
+The most complete mathematical formalism available to describe the mechanical behaviour of a solid is provided by continuum mechanics. Consequently, it feels natural to derive computational models from the equations of continuum mechanics and a few techniques based on these equations will now be introduced. 
 	
 		
 \section{Techniques based on continuum mechanics}	
-
-	\subsection{Point-based}
 	
+
 	\subsection{FEM with mesh (highlight evolution: linear, topological changes, co-rotational, non-linear, GPU)}
 	
-	\subsection{Meshless (supposedly good for handling topological changes but other issues}
+	\subsection{Meshless, position-based dynamics (supposedly good for handling topological changes but other issues)}
 	
 	
 	
