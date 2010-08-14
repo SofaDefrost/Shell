@@ -193,9 +193,12 @@ The most complete mathematical formalism available to describe the mechanical be
 	
 		
 \section{Techniques based on continuum mechanics}	
-	
 
 	\subsection{FEM with mesh (highlight evolution: linear, topological changes, co-rotational, non-linear, GPU)}
+The finite element method brings accuracy a step further. The method will not be explained here since it was already discussed with great details in chapter~\ref{chap3}. This is the method of first choice for modelling deformable objects with precision as it is directly derived from the most complete theory available for describing the mechanical response of a continuum. However, because of its complexity, this method is substantially more computationally expensive than the ones introduced so far. And this has been a problem in computer graphics and interactive simulation for many years. So researchers came up with simplifying assumptions and ideas to make the computations more efficient. Over time, with the increase in computational power, the simplifications were progressively relaxed and the observed tendency for real-time simulation is now towards more and more complete finite element methods. In this section, we will describe this evolution in the use of finite element methods for interactive simulation. 
+
+ The use of the finite element method in computer graphics was pioneered by \cite{Terzopoulost87} for simulations of elastic deformations. 
+	
 	
 	\subsection{Meshless, position-based dynamics (supposedly good for handling topological changes but other issues)}
 	
