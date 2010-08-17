@@ -155,7 +155,7 @@ where $ \mathbf{H} $ is a $ 3 \times m $ matrix built from submatrices $ \mathbf
 Most of the time, we choose to interpolate the solution and the element geometry with the same interpolation functions. In this case, the elements are said to be \emph{isoparametric}. Under this configuration, natural coordinates appear as parameters that define the shape functions. Note that the shape functions describe the geometry and the solution with the same degree of interpolation. Because isoparametric elements are very common in practice, the use of the phrase \emph{shape functions} is often extented to denote the interpolation functions employed to approximate the solution.
 	
 	
-\section{Derivation of element equations}	
+\section{Derivation of element equations}	\label{chap3:derivationEquations}
 
 Let us sum up where we are into the finite element analysis process so far. The whole domain has been divided into sub-domains, smaller, that we call elements, for which the solution to be sought will be simpler to find. We know how to approximate the solution within each of these elements using a linear combination of shape functions. And we even have a method to simplify the expression of these shape functions using natural coordinates. 
 
@@ -202,7 +202,7 @@ where $ \mathbf{M}^e $ is a constant mass matrix, $\mathbf{D}^e$ is a constant d
 
 
 	\subsection{Static system of equations}	\label{chap3:static}
-Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, let us consider the problem of finding the maximum load that a desk can sustain. It is fair to say that strain and stress within the structure does not fluctuate over time: the system is in an equilibrium state. At all times, the sum of all forces applied on the system is equal to $ 0 $. Therefore, we can assume that the equations describing the structure do not depend on time: the problem is said to be \emph{static}. Accelerations can be neglected. In this case, the static system of equations can be easily obtained by merely dropping out the dynamics terms in \eqref{chap3:eqDynamic}. Indeed, the static case may just be seen as a special case of the dynamic equations and the static equations are:
+Under some assumption, \eqref{chap3:eqDynamic} may be simplified. For instance, let us consider the problem of finding the maximum load that a desk can sustain. It is fair to say that strain and stress within the structure does not fluctuate over time: the system is in an equilibrium state. At all times, the sum of all forces applied on the system is equal to $ 0 $. Therefore, we can assume that the equations describing the structure do not depend on time: the problem is said to be \emph{static}. Static analyses assume that loading of a body occurs slowly enough that inertial and damping terms may be neglected. In this case, the static system of equations can be easily obtained by merely dropping out the dynamics terms in \eqref{chap3:eqDynamic}. Indeed, the static case may just be seen as a special case of the dynamic equations and the static equations are:
 \begin{equation}
 \label{chap3:eqStatic}
 \mathbf{K}^e (\mathbf{U}^e ) \cdot \mathbf{U}^e  = \mathbf{R}^e .

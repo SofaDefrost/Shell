@@ -195,11 +195,76 @@ If mass-spring systems are quite versatile and easy to implement, the most compl
 		
 \section{Techniques based on continuum mechanics}	
 
-	\subsection{FEM with mesh (highlight evolution: linear, topological changes, co-rotational, non-linear, GPU)}
-The finite element method brings accuracy a step further. The method will not be explained here since it was already discussed with great details in chapter~\ref{chap3}. This is the method of first choice for modelling deformable objects with precision as it is directly derived from the most complete theory available for describing the mechanical response of a continuum. However, because of its complexity, this method is substantially more computationally expensive than the ones introduced so far. And this has been a problem in computer graphics and interactive simulation for many years. So researchers came up with simplifying assumptions and ideas to make the computations more efficient. Over time, with the increase in computational power, the simplifications were progressively relaxed and the observed tendency for real-time simulation is now towards more and more complete finite element methods. In this section, we will describe this evolution in the use of finite element methods for interactive simulation. 
+	\subsection{The Finite Element Method}
+The finite element method brings accuracy a step further. The method will not be explained here since it was already discussed with great details in chapter~\ref{chap3}. This is the method of first choice for modelling deformable objects with precision as it is directly derived from the most complete theory available for describing the mechanical response of a continuum. Different kind of analysis may be carried out with the finite element method. As seen in section~\ref{chap3:derivationEquations}, an analysis may be either static (that is, the transient response is ignored) or dynamic (more general). In all analyses, the deformation of the body at a point is described by some measure of strain. If this measure is chosen to be linear (see section~\ref{chap2:infinitesimalStrainTensor} for details), the analysis is said to be \emph{geometrically} linear. In general, we consider this assumption to be valid for strain less than $ 10 \,$\%. In contrast, geometrically non-linear analyses make use of a non-linear strain tensor to measure the deformation and thus may handle large deformations. Another characteristic of an analysis is whether the relationship between strain and stress (the constitutive model) is assumed to be linear or non-linear. The analysis is qualified as \emph{materially} linear or non-linear, respectively. 
 
- The use of the finite element method in computer graphics was pioneered by \cite{Terzopoulost87} for simulations of elastic deformations. 
-	
+Because of its complexity, the finite element method is substantially more computationally expensive than the ones introduced so far. And this has been a problem in computer graphics and interactive simulation for many years. So researchers came up with simplifying assumptions and ideas to make the computations more efficient. Over time, with the increase in computational power, the simplifications were progressively relaxed and the observed tendency for real-time simulation is now towards more and more complete finite element methods. In this section, we will describe this evolution in the use of finite element methods for interactive simulation. 
+
+\bigskip
+
+The use of the finite element method in computer graphics was pioneered by \cite{Terzopoulos87} for simulations of elastic deformations. They derived a geometrically non-linear strain tensor from differential geometry theory. Obviously, the computations were not carried out in real-time but this technique allows \citeauthor{Terzopoulos87} to calculate the interaction between solid and deformable models in a physically realistic manner (see Fig.~\ref{chap4:fig-ball}).
+ %
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=7cm]{chapter4/ball.pdf}
+\end{center}
+\caption[Ball on a deformable model]{A ball resting on a supporting elastic solid as computed by \citeauthor{Terzopoulos87}.} 
+\label{chap4:fig-ball}
+\end{figure}	
+In order to speed up the computations, linear strain measures started to be used (see section~\ref{chap2:infinitesimalStrainTensor}). For instance, \cite{Gourret89} make use of a linear finite element method to model the deformation of grasped objects. The equations are however solved in static for simplicity. An approach to solve the system of equations in dynamic in a reasonable amount of time is to decrease the number of elements. This reduction must be compensated by the use of high-order elements, that is the degree of the shape functions used in the interpolation of the solution is higher to maintain the overall accuracy. This approach was applied to an elaborate model of a muscle by \cite{Chen92} and to modelling skin in a simulator of plastic surgery by \cite{Pieper92} where they both use 20-node brick elements. Yet, finite element modelling remained very computationally expensive and the interactivity required for medical simulators was still to be reached. 
+
+In 1996, \citeauthor{Bro-Nielsen96} developed a real-time finite element method formulation by introducing three improvements. The first one is to compress the stiffness matrix of the volumetric system into a matrix with the same complexity as a surface model of the same object. This technique is called \emph{condensation}. The deformation is solved only at surface points while still taking the volumetric nature of the object into account. The second improvement concerns the fact that they explicitly precompute the inverse of the stiffness matrix and use matrix vector multiplication with this matrix to achieve a low calculation time. Finally, they exploit the sparse structure of the force vector. They showed the efficiency of their method by modelling a leg with 700 nodes at 20 frames per second. 
+
+Later, \cite{James99} had another idea to improve the speed of the computation. They based their model on boundary integrals and the \emph{boundary element method}, used for the first time in computer graphics. The method consists of calculating only boundary displacements and forces. Unfortunately, the authors do not provide the performance of their framework.
+
+\cite{Cotin99} took advantage of the superposition principle which applies to linear problems. Their idea was to approximate the deformation of a solid object with a linear combination of pre-computed states. In addition, they enhanced the formulation by adding a non-linear radial component. This method was applied to compute the deformation of liver in a hepatic surgery simulator. Their approach substantially improved the computational time for a finite element model as it allowed them to compute the positions and the forces of a $1\,500$ node liver at $300\,$Hz. An important drawback emphasised by the authors themselves is the impossibility to simulate tissue cutting. Indeed, the large precomputations associated with this method are dependent of the geometry of the mesh and therefore cannot be updated in real-time. 
+
+\bigskip
+
+As we know, the assumption of linearity is usually only valid for very small deformations and strains. If this is often an acceptable trade-off between the visual deformation result and the speed of the system, research was carried out to handle large deformations. However, since geometrically non-linear analyses are highly computationally demanding, another approach was found which allows large deformation while still relying on a linear strain measure: the \emph{co-rotational} methods. A very complete description of the co-rotational approach is given by \cite{Felippa00}. The problem with geometrically linear analyses is the error brought by the approximated (linear) strain measure, which increases with the rotation of the element. The idea behind co-rotational methods is the decomposition of the motion into a rigid-body and deformational components. In other words, the deformation of each element may be seen as measured in a coordinate system which follows the rigid-body motion of the element, hence cancelling the part of the error due to the rotation in the strain measure. Consequently, co-rotational formulations allow large displacements and rotations (since the rigid-body motion is not considered) as long as the strain remains small (the strain measure is still linear). 
+
+Among the firsts to apply this technique to static analyses are \cite{Argyris64} and \cite{Wempner69}. Although the birth of co-rotational methods is not very clear \citep{Felippa05}, \cite{Belytschko73} had a similar thinking and introduced the so-called \emph{convected coordinates} for solving dynamic equations. However, while the spirit is the same than co-rotational methods, convected coordinates forms a curvilinear system that fits the change of metric as the body deforms, therefore the convected metric necessarily emcompasses deformations. In other words, the decomposition in rigid-body and deformational components is not exact. During the last decade, the co-rotational approach has regained interest in the computer graphics community. 
+
+\cite{Hauth04} made use of the polar decomposition of the deformation gradient to extract the rotation. They also applied this formulation in a hierarchical finite element setting where the coarse level is computed with a fully non-linear strain tensor and the finer levels are computed with a co-rotational method. In addition, they examined the error that is arising from using the co-rotational approximation instead of a non-linear strain tensor. They measured that the co-rotational approximation induces an error of about $5-20\,$\% but can give a speedup of about a factor seven or more. 
+
+\cite{Pouliquen05} addressed the simulation of human fingers with haptic feedback. During the grasping task, the deformable finger pads undergo large rotations while their deformation remains small. Using a co-rotational approach for modelling the finger pads allows them to efficiently compute the contact forces between the deformable pads and the rigid object to be grasped. 
+
+\bigskip
+
+Another major concern in medical simulators is the ability to cutting through soft tissue models. \cite{Mor00} proposed a technique to generate a minimal set of new elements to replace intersected tetrahedra along the path formed by the cut. The method do not wait for the cut to be completed for splitting an element, instead, a minimal subdivision of a partially cute tetrahedron is generated. The authors used a very small time step to insure the stability of the soft tissue model and their simulations were not real-time. In addition, their method can create very small elements and the model can become unstable. This occurs because the stiffness matrices for the small elements are quite large, and even small displacements can generate very large forces. 
+
+\cite{Cotin00} proposed a hybrid model allowing real-time cutting. They combined a quasi-static precomputed model, which is very efficient but does not allow topology changes, with a tensor-mass model which requires more computation but authorises cutting. The key idea is to separate a same structure into two parts: one susceptible to be cut during the surgery procedure and one that will not be submitted to any topological change. While the former will be simulated with the tensor-mass model, the deformation of the latter will be computed using the precomputed model. Since both linearly elastic models follow the same physical law, the combination of these two models should behave exactly as a global, linearly elastic model. To achieve this goal, \citeauthor{Cotin00} describe how to impose the additional boundary conditions at the connection nodes for the global model to be consistent in terms of forces and displacements. The efficiency of this hybrid model was demonstrated by simulating an hepatectomy (removing of one of the eight anatomical segments of the liver). They reported the simulation (allowing deformation and cutting) of a mesh with more than $ 8\,000 $ tetrahedra in real-time (see Fig.~\ref{chap4:fig-hybridModel}).
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[height=4.5cm]{chapter4/hybrid1.pdf}
+\hspace{0.2cm}
+\includegraphics[height=4.5cm]{chapter4/hybrid2.pdf}
+\end{center}
+\caption[Simulation of a hepatectomy using a hybrid model]{Simulation of a hepatectomy using a hybrid model. $ 18 $\% of the mesh was modelled with the tensor-mass model (green) and therefore could be cut out. The rest of the mesh was simulated with the precomputed finite element model. } 
+\label{chap4:fig-hybridModel}
+\end{figure}
+
+\cite{Serby01} described a new approach to cutting in finite element models. The central idea is not to introduce new nodes/elements but to displace the existing ones to account for the topological changes introduced by a cut. They also added a step of homogenisation of the mesh to avoid tiny elements. Thus, the problem of decreasing element size is minimised and consequently the stability of the solution of the equations of motion is increased. 
+
+Cutting is a problem for all techniques precomputing the inverse of the stiffness matrix. Indeed, topological changes require updates of this matrix, which is too computationally heavy to be done in real-time. \cite{Nienhuys01} avoid the precomputations by approximating the inverse at runtime with an iterative algorithm (Conjugate Gradient). Moreover, instead of subdividing each tetrahedron to make the cut appear where the user performed it, they adapt the mesh locally so that there are always triangles on the scalpel path, and perform the cut along those triangles. If the approach is interesting, the authors reported a lag between the scalpel and the realised cut. In addition, repositioning the nodes within the mesh can easily generate degeneracies, which have to be eliminated. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13cm]{chapter4/cutUnderScalpel.pdf}
+\end{center}
+\caption[The three steps in performing a cut]{The three steps in performing a cut (represented here in 2D).} 
+\label{chap4:fig-cutUnderScalpel}
+\end{figure}
+
+\bigskip
+
+viscoelastic + non-linear
+
+\bigskip
+
+GPU stuff
+
 	
 	\subsection{Meshless, position-based dynamics (supposedly good for handling topological changes but other issues)}
 	
