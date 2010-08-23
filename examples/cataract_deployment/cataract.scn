@@ -127,7 +127,7 @@
 					<OglFloatVariable id="border_alpha" value="1.0"/>
 					<OglIntVariable id="axis" value="2"/>
 					<OglFloatVector4Variable id="colors" value="1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 1.0"/>
-					<OglTexture2D texture2DFilename="textures/lights4-small-noise.bmp" textureUnit="1" id="planeTexture" />
+					<OglTexture textureFilename="textures/lights4-small-noise.bmp" textureUnit="1" id="planeTexture" />
 					
 					<OglModel name="Sclera" fileMesh="data/mesh/sclera.obj" texturename="data/textures/sclera.bmp" castshadow="0" premultipliedAlpha="true" />
 				</Node>
@@ -144,7 +144,7 @@
 					<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
 					<OglShaderDefineMacro id="PLANE_ENVIRONMENT_MAPPING" />
 					<OglFloatVariable id="altitude" value="0.0000001"/>
-					<OglTexture2D texture2DFilename="textures/lights4-small-noise.bmp" textureUnit="2" id="planeTexture"/>
+					<OglTexture textureFilename="textures/lights4-small-noise.bmp" textureUnit="2" id="planeTexture"/>
 					<OglModel name="Cornea"  fileMesh="data/mesh/cornea.obj" premultipliedAlpha="true"
 						material="texture Ambient 1 0.2 0.2 0.2 1.0 Diffuse 1 1.0 1.0 1.0 0.8 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 500"/>
 						/>
@@ -189,8 +189,8 @@
 		
 		<OglFloatVariable id="bumpFactor" value="1.0" />
 		<OglFloatVariable id="showDebug" value="1.0" />
-		<OglTexture2D name="color" id="colorTexture" texture2DFilename="data/textures/face_color.jpg" textureUnit="1" repeat="true"/>
-		<OglTexture2D name="bump" id="normalMap" texture2DFilename="data/textures/face_normalMap.jpg" textureUnit="2" repeat="true"/>
+		<OglTexture name="color" id="colorTexture" textureFilename="data/textures/face_color.jpg" textureUnit="1" repeat="true"/>
+		<OglTexture name="bump" id="normalMap" textureFilename="data/textures/face_normalMap.jpg" textureUnit="2" repeat="true"/>
 		<OglModel name="Skin" fileMesh="data/mesh/face.obj"  putOnlyTexCoords="true" /> 
 	</Node>
 
