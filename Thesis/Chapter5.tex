@@ -1,10 +1,197 @@
-\chapter{Introduction of TLED}
+\chapter{The total Lagrangian explicit dynamics (TLED) algorithm}
 \label{chap5}
 \begin{shortAbstract}
 A short abstract for the upcoming chapter
 \end{shortAbstract}
 
 
-\section{Description of the algorithm (neo-Hookean, explicit integration, independent elements, parallelisable on GPU)}
+\section{Description of the TLED algorithm}
 
-\section{Visco-elasticity and anisotropy added \OC{MICCAI 2008; MedIA 2009}}
+	\subsection{Key ideas}
+
+The total Lagrangian explicit dynamics (TLED) algorithm was first introduced to the field of medical simulation by \cite{Miller07}. More details on this finite element method formulation may also be found in \cite{Bathe95}. It is worth noting that the finite element analysis carried out by the TLED algorithm is dynamic and fully non-linear (geometrically and materially). Let us begin by exposing the key ideas of the approach. 
+
+The deformation of a body may be described by two different kind of description: Lagrangian or Eulerian (see section~\ref{chap2:descriptionMotion}). Because the Lagrangian description focuses its attention on the particles of the continuous body, it is usually used in solid mechanics. In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration. For the great majority of commercial finite element programs, the reference configuration is the previous configuration, that is the one at the end of the previous time step. In this case, where all variables are referred to the previous configuration, the formulation is called \emph{updated Lagrangian}. The advantage of this approach is the simplicity of the incremental strain description. The disadvantage is that all derivatives with respect to spatial coordinates must be recomputed in each time step, because the reference configuration is changing. The reason for this choice is historical, at the time of solver development the memory was expensive and caused more problems than actual speed of computations \citep{Miller07}. 
+
+The first key idea of the TLED algorithm is to refer all variables to the underformed configuration. This type of formulation is said to be \emph{total Lagrangian}. Because of this, the choice of the second Piola-Kirchhoff stress tensor as a measure of stress is required. The strain measure that is work-conjugate with the second Piola-Kirchhoff stress is the Green-St.Venant strain tensor. That is,  the work of stress increments on the strain increments gives an accurate expression for work \citep{Ji10}. We should note that all derivatives in the definition of the Green tensor are with respect to the initial and undeformed configuration. The decisive advantage is that all derivatives are calculated with respect to the undeformed configuration and therefore can be precomputed. This is at the cost to a more complex strain-displacement matrix due an initial displacement effect in the incremental strain \citep{Bathe95}. However, the TLED algorithm performs significantly fewer mathematical operations in each time step. 
+
+The second crucial idea is to use the central difference method for an explicit time integration of dynamic equilibrium equations. The advantage is that the stiffness term $ \mathbf{K(\mathbf{U}).\mathbf{U}} $ of the system of equations may be computed from:
+\begin{equation}
+\mathbf{K(\mathbf{U}).\mathbf{U}} = \mathbf{F}(\mathbf{U}) = \sum_e \mathbf{\tilde{F}}^e,
+\end{equation}
+where $ \mathbf{\tilde{F}}^e $ are the global nodal force contributions due to stresses in element $ \Omega_e $. This implies that the stiffness matrix does not need to be assembled since element nodal force contributions can be computed at the element level instead, which is a decisive computational advantage. 
+
+
+	\subsection{Computation of element nodal forces}
+	
+We adopt the notation of \citeauthor{Bathe95} with respect to indication of the relevant configuration of the body: a left superscript indicates the configuration in which a quantity occurs and, when applicable, a left subscript indicates the configuration with respect to which the quantity is measured. We note the coordinates of a point at time t $ ^t \mathbf{x}$.
+
+\subsubsection*{The deformation gradient} 
+As we know, a fundamental measure of deformation is the deformation gradient tensor $ _0^t \mathbf{X} $ and we recall that it may be written as:
+\begin{equation}
+_0^t\mathbf{X} = \pd{^t\mathbf{x}}{^0\mathbf{x}}.
+\end{equation}
+This tensor describes the stretches and rotations that the material fibres have undergone from time $0$ to time $t$. In order to compute the element deformation gradients, we first compute derivatives of displacements $ u_{i,j} $ with respect to global coordinates. Since we use a total Lagrangian framework, the derivatives are referred to the undeformed configuration and we have:
+\begin{equation}
+_0^t u_{i,j} = \pd{^t u_i}{_0 x_j} = \sum_{a=1}^N \pd{h_a}{_0 x_j} \, ^t u_{ai},
+\end{equation}
+where $ h_a $ is the shape function associated with node $ a $ and $ N $ the number of nodes of the element. If we define a matrix $ _0^t \mathbf{\partial u_x} $ of displacements derivatives 
+\begin{equation}
+_0^t\mathbf{\partial u_x} = 
+	\begin{bmatrix}
+	_0^t u_{1,1} &         _0^t u_{1,2}      &        _0^t u_{1,3}       \\\\
+	_0^t u_{2,1} &         _0^t u_{2,2}      &        _0^t u_{2,3}       \\\\
+	_0^t u_{3,1} &         _0^t u_{3,2}      &        _0^t u_{3,3}       
+	\end{bmatrix}	
+\end{equation}
+The deformation gradient may be obtained from the displacement derivatives with:
+\begin{equation}
+_0^t\mathbf{X} = \leftidx{_0^t}{ \partial \mathbf{u}}{\mathbf{x}} + \mathbf{I}.
+\end{equation}
+
+\subsubsection*{The Green-Lagrange strain tensor} 
+From the deformation gradient we may obtain the right Cauchy-Green deformation tensor $ _0^t \mathbf{C}  $:
+\begin{equation}
+_0^t\mathbf{C} = \leftidx{_0^t}{ \mathbf{X} }{^T} \, _0^t\mathbf{X},
+\end{equation}
+and then yields the Green-Lagrange strain tensor $ _0^t \mathbf{E}  $:
+\begin{equation}
+\label{chap5:E}
+_0^t\mathbf{E}  = \dfrac{1}{2} (_0^t\mathbf{C} - \mathbf{I}), 
+\end{equation}
+where $ \mathbf{I} $ is the rank $ 2 $ identity tensor. 
+
+		\subsubsection*{Constitutive equations and evaluation of stress}
+We know that the stresses result from the deformation of the material and they may be expressed in terms of some measure of this deformation such as the strain. The constitutive equations, which depends on the material under consideration, relate the stresses to the strain. As we have seen in section \ref{chap2:elasticity}, hyperelastic materials are a general class of materials in which the constitutive relationship is expressed in the form of a strain energy density function $ _0^t W $. In such materials, the stresses are obtained by differentiating this energy density function with respect to the appropriate strain measure (that is energically conjugate). In a total Lagrangian framework, the appropriate stress and strain measures are second Piola-Kirchhoff stress $ _0^t \mathbf{S} $ and Green-Lagrange strain $ _0^t \mathbf{E} $. Consequently, the stress may be computed from:
+\begin{equation}
+_0^t\mathbf{S} = \pd{ \leftidx{_0^t}{ \mathbf{W} }{} }{_0^t \mathbf{E}}.
+\end{equation}
+
+The form of the strain energy function depends on the chosen material. For the TLED algorithm we choose a neo-Hookean material already described section \ref{chap2:non-linear}. For a compressible neo-Hookean material, the strain energy density is given by:
+\begin{equation}
+_0^t W = \dfrac{1}{2} \mu (_0^t I_1 - 3 - 2 \ln ^t J) + \dfrac{1}{2} \lambda (^t J - 1)^2,
+\end{equation}
+where $_0^t I_1 $ is the first invariant of the right Cauchy-Green deformation tensor $ _0^t \mathbf{C} $ given by $ _0^t I_1 = tr(_0^t \mathbf{C}) $ and $ ^t J = det(_0^t \mathbf{X}) = det(_0^t \mathbf{C})^2 $ is the Jacobian. 
+%		
+Then, using the chain rule we have:
+\begin{equation}
+\pd{_0^t W}{_0^t\mathbf{E}} = \pd{_0^t W}{_0^t\mathbf{C}} \pd{_0^t\mathbf{C}}{_0^t\mathbf{E}}.
+\end{equation}
+Noting that
+\begin{equation}
+\pd{_0^t\mathbf{C}}{_0^t\mathbf{E}} = 2 \quad \mbox{by \eqref{chap5:E}},
+\end{equation}
+Therefore, we may evaluate the stress from:
+\begin{equation}
+_0^t\mathbf{S}  = 2 \pd{_0^t W}{_0^t\mathbf{C}},
+\end{equation}
+which we can then expressed as the following:
+\begin{equation}
+_0^t\mathbf{S}  = 2 \left( \pd{_0^t W}{_0^t\mathbf{I_1}} \pd{_0^t\mathbf{I_1}}{_0^t\mathbf{E}} + \pd{_0^t W}{^t J} \pd{^t J}{_0^t\mathbf{E}} \right). 
+\end{equation}
+It may be shown that this yields:
+\begin{equation}
+_0^t S_{ij} = \mu (\delta_{ij} - _0^tC_{ij}^{-1}) + \lambda ^t J (^t J -1) _0^t C_{ij}^{-1}.
+\end{equation}
+
+		\subsubsection*{Element nodal forces}
+For a given element at time $ t $, the global nodal force contributions $ \mathbf{\tilde{F}} $ due to stresses in the element may be computed from:
+\begin{equation}
+\label{chap5:elementForce}
+\leftidx{^t}{ \mathbf{\tilde{F}} }{} = \int_{^0 V} \, \leftidx{_0^t}{ \mathbf{B} }{_L^t} \, \leftidx{_0^t}{ \mathbf{\hat{S}} }{} \, d\leftidx{^0}{ V }{},
+\end{equation}
+where $ _0^t\mathbf{\hat{S}} $ is the vector form of the second Piola-Kirchhoff stress given by:
+\begin{equation}
+_0^t\mathbf{\hat{S}} = \left[ _0^t S_{11} \quad _0^t S_{22} \quad _0^t S_{33} \quad _0^t S_{12} \quad _0^t S_{23} \quad _0^t S_{13} \right] ^T,
+\end{equation}
+$ _0^t\mathbf{B}^T_L $ is the strain-displacement matrix and $ d^0V $ is the initial (undeformed) volume of the element. The strain-displacement matrix $ \mathbf{B}_L $ relates the strains in an element to the element's nodal displacements. If an implicit analysis is performed, the strain-displacement matrix is used in the assembly of the stiffness matrix. In explicit analyses it is used to compute element nodal force contributions according to \eqref{chap5:elementForce}. In geometrically linear analyses, we assume that the displacements are infinitesimally small so that the geometry of an element does not change over time and the strain-displacement matrix is constant. Conversely, because geometrically non-linear analyses (such as carried out by the TLED algorithm) take the change of geometry of the elements into account, the strain-displacement matrix $ \mathbf{B}_L = _0^t\mathbf{B}_L $ varies. However, the strain-displacement matrix at time $ t $ may be computed by transforming a stationary matrix $ _0^t\mathbf{B}_{L0} $ using the deformation gradient. We begin by defining the stationary matrix as:
+\begin{equation}
+_0^t\mathbf{B}_{L0} = \left[ _0\mathbf{B}_{L0}^{(1)} \quad _0\mathbf{B}_{L0}^{(2)} \quad \ldots \quad _0\mathbf{B}_{L0}^{(N)} \right],
+\end{equation}
+where $ N $ is the number of nodes per element and the submatrix $ _0\mathbf{B}_{L0}^{(a)}  $ are given by:
+\begin{equation}
+_0\mathbf{B}_{L0}^{(a)} =
+	\begin{bmatrix}
+	_0 h_{a,1} & 0 & 0 \\
+	0 & _0 h_{a,2} & 0 \\
+	0 & 0 & _0 h_{a,3} \\
+	_0 h_{a,2} & _0 h_{a,1} & 0 \\
+	0 & _0 h_{a,3} & _0 h_{a,2} \\
+	_0 h_{a,3} & 0 & _0 h_{a,1}
+	\end{bmatrix}
+\quad a = 1, 2, \ldots, N.
+\end{equation}
+The subscripted comma denotes partial differentiation such as:
+\begin{equation}
+_0 h_{a,i} = \pd{h_a}{^0 x_i}.
+\end{equation}
+The full strain-displacement matrix (accounting for initial displacement effect) is then computed via
+\begin{equation}
+_0^t\mathbf{B}_{L}^{(a)} = \leftidx{_0^t}{ \mathbf{B} }{_{L0}^{(a)}} \, \leftidx{_0^t}{ \mathbf{X} }{^T}.
+\end{equation} 
+We note that the stationary strain-displacement matrix is composed of derivatives of shape functions with respect to the original undeformed coordinates of the body. These derivatives are therefore constant and may be precomputed, affording the total Lagrangian formulation a significant computational advantage. 
+
+	\subsection{Computation of node displacements}
+We recall that the dynamic system of equations describing a deformable solid is the following (see section \ref{chap3:dynamic2}:
+\begin{equation}
+\label{chap5:eqDynamic}
+\mathbf{M} \mathbf{\ddot U} + \mathbf{D} \mathbf{ \dot U} + \mathbf{K}(\mathbf{U}) \cdot \mathbf{U} = \mathbf{R}.
+\end{equation}		
+where $ \mathbf{M} $ is a constant mass matrix, $\mathbf{D}$ is a constant damping matrix, $ \mathbf{K}^e(\mathbf{U}^e) $ is the stiffness matrix, which is a function of nodal displacements $\mathbf{U}$, and $\mathbf{R}$ are externally applied loads. And we seek the unknown displacements $ \mathbf{U} $.
+	
+		\subsubsection*{Mass and damping matrices}					
+The mass matrix for the system may be computed by summing contributions from individual elements:
+\begin{equation}
+\mathbf{M} = \sum_e \mathbf{M}^e,
+\end{equation}		
+where $ \mathbf{M}^e $ is the mass contribution from element $ \Omega_e $ given by:
+\begin{equation}
+\mathbf{M}^e = \int_{^0 V_e} \rho_e \mathbf{H}^T \mathbf{H} \, d^0 V.
+\end{equation}
+Following the total Lagrangian framework, we observe that the expression is integrated over the undeformed volume and the mass density $ \rho_e $ of the undeformed configuration is also used. We then diagonalise the mass matrix by applying the technique of mass lumping as explained in section \ref{chap3:wordOnMatrices}. Therefore, the mass matrix may be built by directly computing the mass of each element and assigning an equal proportion of this to each of the element's nodes. In other words, if the mass of element $ \Omega_e $ is $ m_e $ then for every node $ a $ which is attached to this element, the $ a^{th} $ diagonal component $ M_{aa} $ of the global mass matrix will receive a contribution of $ m_e/N $ where $ N $ is the number of nodes per element. The complete matrix is compiled by summing contributions from all elements. 
+
+We also employ a Rayleigh damping from which we only consider the mass-proportional component to obtain a diagonal damping matrix. Consequently, $ \mathbf{D} $ is computed from:
+\begin{equation}
+\mathbf{D} = \alpha \mathbf{M}.
+\end{equation}
+
+
+		\subsubsection*{Gathering of nodal forces}
+As stated early in this chapter, the stiffness matrix of \eqref{chap5:eqDynamic} may be obtained from
+\begin{equation}
+\mathbf{K(\mathbf{U}).\mathbf{U}} = \mathbf{F}(\mathbf{U}) = \sum_e \mathbf{\tilde{F}}^e.
+\end{equation}
+The previous section detailed how to calculate element nodal forces $ \mathbf{\tilde{F}}^e $. For each node we can now add the element force contributions up from all elements attached to this node. Gathering those nodal force contributions allows us to compute the stiffness term of the equilibrium equations $ ^t\mathbf{F} $. Therefore, \eqref{chap5:eqDynamic} may be re-written as the following:
+\begin{equation}
+\label{chap5:eqDynamic2}
+\mathbf{M} \leftidx{^t}{ \mathbf{\mathbf{\ddot U}} }{} + \mathbf{D} \leftidx{^t}{ \mathbf{\mathbf{\dot U}} }{} + \leftidx{^t}{\mathbf{F}}{} = \leftidx{^t}{\mathbf{R}}{}.
+\end{equation}
+		
+		\subsubsection*{Explicit time integration}
+The remaining step is the time integration of \eqref{chap5:eqDynamic2} to find out the expression of $ ^t\mathbf{U} $. For this, we employ the explicit central difference method described page \pageref{chap3:centralDifferenceMethod}. We assume that all displacements, velocities and accelerations for the current time step is known and we seek a formula for computing displacements at time $ t+\Delta t $. Let us remind \eqref{chap3:relationCDM} for convenience:
+\begin{equation}
+\left( \dfrac{\mathbf{M}}{(\Delta t)^2} + \dfrac{\mathbf{D}}{2 \Delta t} \right) \mathbf{U}^{t+\Delta t} = \mathbf{R}^t - \mathbf{F}^t + \dfrac{2 \mathbf{M}}{(\Delta t)^2} \mathbf{U}^t + \left( \dfrac{\mathbf{D}}{2 \Delta t} - \dfrac{\mathbf{M}}{(\Delta t)^2} \right) \mathbf{U}^{t-\Delta t}.
+\end{equation}
+By using diagonalised mass and damping matrices, this expression may be rearranged to give a formula for updating displacements component-wise:
+\begin{equation}
+\label{chap5:CDMcomponents}
+\leftidx{^{t+\Delta t}}{ \mathbf{U} }{_i} = \dfrac{\leftidx{^t}{R}{_i} - \leftidx{^t}{F}{_i} + \frac{2 M_{ii}}{\Delta t^2} \leftidx{^t}{U}{_i}  + \left( \frac{D_{ii}}{2 \Delta t} -\frac{M_{ii}}{\Delta t^2} \right) \leftidx{^{t-\Delta t}}{U}{_i} }{ \frac{D_{ii}}{2 \Delta t} +\frac{M_{ii}}{\Delta t^2} }
+\end{equation}
+Let us define the following vectors:
+\begin{align}
+A_i &= \dfrac{1}{ \frac{D_{ii}}{2 \Delta t} +\frac{M_{ii}}{\Delta t^2} } \\
+B_i &= \dfrac{ \frac{2 M_{ii}}{\Delta t^2} }{ \frac{D_{ii}}{2 \Delta t} +\frac{M_{ii}}{\Delta t^2} } = \dfrac{2 M_{ii}}{\Delta t^2} A_i \\
+C_i &= \dfrac{ \frac{D_{ii}}{2 \Delta t} -\frac{M_{ii}}{\Delta t^2} }{ \frac{D_{ii}}{2 \Delta t} +\frac{M_{ii}}{\Delta t^2} } = \dfrac{D_{ii}}{2\Delta t} A_i - \dfrac{B_i}{2},
+\end{align}
+Equation \eqref{chap5:CDMcomponents} may be rewritten as:
+\begin{equation}
+\leftidx{^{t+\Delta t}}{ \mathbf{U} }{_i} = A_i \, (\leftidx{^t}{R}{_i} - \leftidx{^t}{F}{_i}) + B_i \, \leftidx{^t}{U}{_i} + C_i \, \leftidx{^{t-\Delta t}}{U}{_i}.
+\end{equation}
+It is worth noting that the coefficient vectors $ \mathbf{A} $, $ \mathbf{B} $ and $ \mathbf{C} $ can be precomputed. 
+
+
+\section{Anisotropic and viscoelastic constitutive equation \OC{MICCAI 2008; MedIA 2009}}
+
+
+%\section{Summary of the procedure (algo type of thing)}
+		

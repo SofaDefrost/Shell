@@ -13,7 +13,7 @@ Modelling anatomical structures requires an understanding of the deformation and
 %This chapter will not only deal with those two aspects but will also introduce experiments carried out on organs in order to assess the physical parameters used in the mathematical models. 
 
 
-\section{Description of motion}
+\section{Description of motion} 	\label{chap2:descriptionMotion}
 Let us consider a body $\textbf{\textit{B}}$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\textbf{\textit{B}}$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. Deformation implies the change in shape and\slash or size of the body from an initial configuration noted $\kappa_{0}$ to a new configuration $\kappa$ called the \emph{current} or \emph{deformed configuration}. 
 
 Let us now consider a given particle of the body that we call $X$. What we will call particle in the following is in fact an infinitesimal volume of material. We denote the position it occupies in the initial configuration $\mathbf{X}$ and note its position in the deformed configuration $\mathbf{x}$, both expressed in the chosen frame of reference. The mapping $\chi$ defined as the following:
@@ -23,7 +23,7 @@ Let us now consider a given particle of the body that we call $X$. What we will 
 \end{equation} 
 is called the \emph{deforming mapping} of the body $\textbf{\textit{B}}$ from $\kappa_{0}$ to $\kappa$. When analysing the deformation of a continuous body, it is necessary to describe the evolution of configurations through time. Its mathematical description follows one of the two approaches: the material description or the spatial description. The material description is known as \emph{Lagrangian description} whereas the spatial description is called \emph{Eulerian description}. These two approaches are detailed next. 
 
-	\subsection{Lagrangian description}
+	\subsection{Lagrangian description}	
 In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. Thus, the current coordinates ($\mathbf{x} \in \kappa$) are expressed in terms of the reference coordinates ($\mathbf{X} \in \kappa_{0}$): 
 \begin{equation}
 \textbf{x} = \chi(\textbf{X}, t), \quad \chi(\textbf{X}, 0) = \textbf{X},
@@ -202,13 +202,13 @@ By definition, $\mathbf{C}$ is a symmetric second-order tensor. The transpose of
 \end{equation}
 
 	
-	\subsection{Green strain tensor}
+	\subsection{Green-Lagrange strain tensor}
 Using \eqref{chap2:dS} and \eqref{chap2:ds}, the change in the squared lengths due to the body deformation between the reference and the current configuration can be expressed as:
 \begin{align}
 (ds)^2 - (dS)^2 &= d\mathbf{X} \cdot (\mathbf{C} \, d\mathbf{X}) - d\mathbf{X} \cdot d\mathbf{X} \notag \\
 &= d\mathbf{X} \cdot  (\mathbf{C} - \mathbf{I}) \, d\mathbf{X}.
 \end{align}
-Let us define the \emph{Green-St.\,Venant strain tensor} $\mathbf{E}$ as:
+Let us define the \emph{Green-Lagrange strain tensor} $\mathbf{E}$ as:
 \begin{equation}
 \mathbf{E} = \frac{1}{2}	 (\mathbf{C} - \mathbf{I})
 \end{equation}
@@ -216,7 +216,7 @@ so we can write:
 \begin{equation}
 (ds)^2 - (dS)^2 = 2 \, d\mathbf{X} \cdot \mathbf{E} \, d\mathbf{X}.
 \end{equation}
-By definition, the Green strain tensor is a symmetric second-order tensor. Also, the change in squared lengths is zero if and only if $\mathbf{E} = \mathbf{0}$. Using \eqref{chap2:gradient}, the Green strain tensor may be expanded as the following:
+By definition, the Green-Lagrange strain tensor is a symmetric second-order tensor. Also, the change in squared lengths is zero if and only if $\mathbf{E} = \mathbf{0}$. Using \eqref{chap2:gradient}, the Green strain tensor may be expanded as the following:
 \begin{align}
 \mathbf{E} &= \frac{1}{2} (\mathbf{F}^T \mathbf{F} - \mathbf{I}) \notag \\
 &= \frac{1}{2} \left[ (\nabla_{0} \mathbf{u} + \mathbf{I})^T (\nabla_{0} \mathbf{u} + \mathbf{I}) - \mathbf{I} \right] \notag \\
@@ -409,7 +409,7 @@ The relationship between stress and strain depends on the nature, or constitutio
 This section will now introduce the most common constitutive models relevant to soft-tissue modelling. 
     
     
-	\subsection{Elasticity}	
+	\subsection{Elasticity}	\label{chap2:elasticity}
 If under applied loads a material stores but does not dissipate energy, and it returns to its orginal shape when the loads are removed, we call that material \emph{elastic}. The work done by the stress is generally dependent on the deformation path. However, for elastic materials the stress does not depend on the path of deformation and therefore the state of stress in the deformed configuration is determined only by the state of deformation. It means that the stress does not depend on the time taken to achieve the deformation or the rate at which the state of deformation is reached. 
 
 One special case of elastic materials are \emph{hyperelastic} materials. A material is said to be hyperelastic if there exists a \emph{strain energy density} function $U_0(\varepsilon)$ such that
@@ -586,7 +586,7 @@ and the constitutive equation for the stress may be written as:
 \begin{equation}
 \sigma = -p \mathbf{I} + 2 \rho C_1 \mathbf{B}.
 \end{equation}
-The neo-Hookean model provides a reasonable approximation of rubber-like material for moderate strains. It is typically accurate for strains less than $20\, \%$ \citep{Gent01}.
+The neo-Hookean model provides a reasonable approximation of rubber-like material for moderate strains. \TODO{Do I keep this range of validity, which seems somewhat limited...} It is typically accurate for strains less than $20\, \%$ \citep{Gent01}.
 			
 			
 	\subsection{Viscoelastic materials}

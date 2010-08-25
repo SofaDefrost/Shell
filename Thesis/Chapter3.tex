@@ -217,7 +217,7 @@ The mass matrix $ \mathbf{M} $ for the whole domain may be computed by summing t
 \end{equation}
 where $ \mathbf{M}^e $ is the mass of element $ \Omega_e $ given by:
 \begin{equation}
-\mathbf{M}^e = \int_{V^e} \rho^e \mathbf{H}^T \mathbf{H} dV
+\mathbf{M}^e = \int_{V^e} \rho^e \mathbf{H}^T \mathbf{H} \, dV
 \end{equation}
 where $ \rho $ the mass density, $ V^e $ the volume of the element and $ \mathbf{H} $ is the shape function matrix defined by \eqref{chap3:H}. This integral may be evaluated using a procedure of numerical integration and generally results in a band mass matrix (non-zero entries are confined to a diagonal band, comprising the main diagonal and more diagonals on either side). This method for computing the mass matrix is called \emph{variational mass lumping}.
 
@@ -234,7 +234,7 @@ In a similar way to the mass matrix, a damping matrix may be defined by summing 
 \end{equation}
 where $ \mathbf{D}^e $ is the damping of element $ \Omega_e $ given by:
 \begin{equation}
-\mathbf{D}^e = \int_{V^e} \kappa^e \mathbf{H}^T \mathbf{H} dV
+\mathbf{D}^e = \int_{V^e} \kappa^e \mathbf{H}^T \mathbf{H} \, dV
 \end{equation}
 where $ \kappa^e $ is a damping parameter. In practice, the components of damping matrices are difficult to determine experimentally. Therefore, it is common to employ the \emph{Rayleigh damping}. The Rayleigh damping assumes that the damping may be written in the form of:
 \begin{equation}
@@ -347,7 +347,7 @@ This formula is usually applied in a recursive scheme. We choose a time step $ \
 This method is called \emph{Euler method} and is said to be explicit because the new value $ \mathbf{U}^{n+1} $ is defined in terms of variables from the previous time step $ \mathbf{U}^n $.
 
 
-		\subsubsection*{The central difference method}	
+		\subsubsection*{The central difference method}		\label{chap3:centralDifferenceMethod}
 The central difference method is one of the most popular explicit methods in computational mechanics. This method is based on central difference formulas for the velocity and acceleration. Let us the time $ t $ of the simulation be subdivided into time steps $ \Delta t $. Let us denote by $ \mathbf{U}^t $, $ \mathbf{\dot U}^t $ and $ \mathbf{\ddot U }^t $ the matrices of nodal displacements, velocities and accelerations, respectively, at time $ t $. The central difference method makes use of the following finite differences approximations for acceleration and velocity:
 \begin{align}
 \mathbf{\ddot U}^t &= \dfrac{1}{(\Delta t)^2} \left( \mathbf{U}^{t-\Delta t} - 2 \mathbf{U}^{t} +\mathbf{U}^{t+\Delta t} \right) \label{chap3:accelerationApprox}\\
@@ -361,6 +361,7 @@ where $ \tilde{\mathbf{F}}^e $ are the global nodal force contributions due to s
 
 By subtituting \eqref{chap3:accelerationApprox} and \eqref{chap3:velocityApprox} into \eqref{chap3:dynamic2} we obtain:
 \begin{equation}
+\label{chap3:relationCDM}
 \left( \dfrac{\mathbf{M}}{(\Delta t)^2} + \dfrac{\mathbf{D}}{2 \Delta t} \right) \mathbf{U}^{t+\Delta t} = \mathbf{R}^t - \mathbf{F}^t + \dfrac{2 \mathbf{M}}{(\Delta t)^2} \mathbf{U}^t + \left( \dfrac{\mathbf{D}}{2 \Delta t} - \dfrac{\mathbf{M}}{(\Delta t)^2} \right) \mathbf{U}^{t-\Delta t}.
 \end{equation}
 Both the right-hand side of the equation and the factor in front $ \mathbf{U}^{t+\Delta t} $ may be evaluated, which gives the nodal displacements for the next time step. The entire update can be accomplished without solving any system of equations provided that the mass matrix $ \mathbf{M} $ and the damping matrix $ \mathbf{D} $ are diagonal. As we have seen in section \ref{chap3:wordOnMatrices}, these approximations are often used in practice. And this is the characteristic of an explicit method: the time integration of the general system of equations for finite element model does not require the solution of any equations. This is a key point because it gives explicit methods a tremendous computational advantage. However, explicit methods are only conditionally stable. If the time step exceeds a critical value, the solution may be erroneous. This critical time step depends on the mesh and the material properties. It will decrease with mesh refinement and increasing stiffness of the material. 
@@ -559,6 +560,8 @@ for a $ N \times N $ matrix $ \mathbf{A} $. We then solve \eqref{chap3:eqUxy} in
 	\end{aligned} 
 \right.
 \end{equation}
+
+\paragraph*{\TODO{Cholesky decomposition?}}
 
 
 		\subsubsection*{Iterative solvers}
