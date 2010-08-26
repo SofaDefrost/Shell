@@ -4,14 +4,67 @@
 A short abstract for the upcoming chapter
 \end{shortAbstract}
 
-\section{Re-formulation of the algorithm for its Cg implementation}
+\section{Summary of the TLED formulation}
+A complete description of the TLED algorithm for soft tissue simulation was given in the previous chapter. However, let us remind the main steps of the algorithm before tackling the implementation. Briefly, the algorithm consists of a precomputation phase in which element shape function derivatives $ \partial \mathbf{h} $ (and other quantities) and the system mass matrix $ \mathbf{M} $ are calculated, followed by a time-loop in which incremental solutions for the node displacements $ \mathbf{U} $ are found. During each step of the time-loop we:
+\begin{enumerate}
+\item Apply loads (displacements and/or forces) and boundary conditions to relevant nodal degrees of freedom
+\item For each element compute
+\begin{description}
+\item[(a)] deformation gradient $ \mathbf{X} $ and right Cauchy-Green deformation tensor $ \mathbf{C} $
+\item[(b)] linear strain-displacement matrix $ \mathbf{B}_L $
+\item[(c)] second Piola-Kirchhoff stress $ \mathbf{S} $
+\item[(d)] element nodal forces $ \mathbf{\tilde{F}} $, and add these forces to the total nodal forces $ \mathbf{F} $
+\end{description}
+\item For each node compute new displacements $ \mathbf{U} $ using the central difference method.
+\end{enumerate}
+
+\bigskip
+
+\noindent The nodal force contributions $ \mathbf{\tilde{F}} $ from each element are obtained 
+\begin{equation}
+\mathbf{\tilde{F}} = \int_{^0 V} \, \mathbf{B}_L^t \, \mathbf{\hat{S}} \, d\leftidx{^0}{ V }{},
+\end{equation}
+where $ ^0 V $ is the initial volume of the element and $ \mathbf{\hat{S}} $ is the vector form of the stress tensor $ \mathbf{S} $. This integral is generally evaluated numerically, for ex- ample using Gaussian quadrature. For reduced integration 8-node hexahedral elements we obtain
+\begin{equation}
+\mathbf{\tilde{F}} = 8 \, \mathbf{B}_L^t \, \mathbf{\hat{S}} \, J
+\end{equation}
+where $ J $ is the Jacobian determinant. For 4-node tetrahedral elements we obtain
+\begin{equation}
+\mathbf{\tilde{F}} = V \, \mathbf{B}_L^t \, \mathbf{\hat{S}}.
+\end{equation}
+The above equations make no assumption concerning the constitutive model employed. The deformation state $ \mathbf{F} $ in each element is known, allowing stresses $ \mathbf{S} $ to be computed from any valid constitutive equation. 
+
+
+\section{General-purpose computation on graphics processing units}
+
+	\subsection{Goal and motivation}
+Graphics processing units (GPU) functionality has, traditionally, been very limited. In fact, for many years the GPU was only used to accelerate certain parts of the graphics pipeline. A GPU is essentially a special purpose hardware designed to accelerate each stage of the geometry pipeline, the process of matching image data or a computer model to the pixels on the computer's screen. Initially, GPU could only run two kinds of program: vertex and pixel shaders. Vertex shaders are run once for each vertex given to the graphics processor. The purpose is to transform each vertex's 3D position in virtual space to the 2D coordinate at which it appears on the screen. Vertex shaders can manipulate properties such as position, color, texture coordinate and normal vector. Pixel shaders are functions that compute color and other attributes of each pixel. They range from always outputting the same color, to applying a lighting value, to doing shadows, specular highlights or translucency for instance.
+
+Eventually, vertex and pixel shaders became programmable to enable game programmers to generate even more realistic effects. Programmable pixel shaders allow the programmer to substitute, for example, a lighting model other than those provided by default by the graphics card. Shaders have enabled graphics programmers to create lens effects, displacement mapping, and depth of field. This evolution of GPU's hardware and the increasing programmable capability naturally lead to use GPUs for non-graphics applications. The term GPGPU (General-purpose computation on graphics processing units) was coined by Mark Harris in 2002 when he recognised an early trend of using GPUs for non-graphics applications. However, capabilities of GPU's were still fairly limited for non-graphics applications. 
+
+Things dramatically changed in 2007 when the two types of shaders were unified. While early shader models used very different instruction sets for vertex and pixel shaders, unified shader models have almost the same capabilities. An unified shader architecture allows more flexible use of the graphics rendering hardware. The computing units of the GPU can run vertex or pixel shaders according to work loads. Along with unified shader models, a new type of shader was created: geometry shaders. They are executed after vertex shaders and can generate new graphics primitives, such as points, lines and triangles. 
+
+\bigskip
+
+GPUs may be seen as high-performance many-core processors that can be used to accelerate a wide range of applications. An example (given by Sanford Russell from NVIDIA) to think about to illustrate the difference between a traditional CPU and a GPU is this: if you were looking for a word in a book, and handed the task to a CPU, it would start at page $ 1 $ and read it all the way to the end, because it's a serial processor. It would be fast, but would take time because it has to go in order. A GPU, which is a parallel processor, would tear the book into a thousand pieces and read it all at the same time. Even if each individual word is read more slowly, the book may be read in its entirety quicker, because words are read simultaneously. 
+
+In addition to an increasing programmability, it is easy to understand why the development of GPGPU is soaring. GPU is now used in imaging, finance, signal processing, simulation, video and many other fields. A recent review of GPGPU algorithms may be found in \cite{Owens07}. This is therefore not surprising that research has been carried out to leverage the power of GPUs to solve partial differential equations of continuum mechanics via the computationally expensive finite element method. Indeed, we have already insisted on the strong time constraints demanded by the field of medical simulation and the path towards GPGPU is natural. A non-exhaustive review of algorithms implemented on GPU in the context of medical simulation was given chapter \ref{chap4} (page~\pageref{chap4:GPUMedicalSimulation}). 
+
+Before introducing our own GPU implementation of the TLED formulation, we will discuss the different GPU programming languages at our disposal. 
+
+
+	\subsection{Programming languages for GPUs}
+	
+		\subsubsection*{Graphics API}
 		
-\section{CUDA implementation/optimisations \OC{ISBMS 2008a}}
+		\subsubsection*{Non-graphics API}
+
+		
 	
 \section{Implementation into SOFA}
 	\subsection{Presentation of SOFA project and architecture}
-	\subsection{CUDA description}
-	\subsection{GPU implementation of TLED in SOFA and release in open-source}
+	\subsection{CUDA description (why CUDA over Cg?)}	
+	\subsection{GPU implementation of TLED in SOFA and release in open-source \OC{ISBMS 2008a}}
 	
 \section{Results}	
 	\subsection{Pure shear of a cube}

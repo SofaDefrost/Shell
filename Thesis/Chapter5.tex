@@ -1,7 +1,10 @@
 \chapter{The total Lagrangian explicit dynamics (TLED) algorithm}
 \label{chap5}
 \begin{shortAbstract}
-A short abstract for the upcoming chapter
+TLED proposed by Miller almost real-time \\
+GPU implementation to reach real-time \\
+But first: TLED description \\
+\OC{MICCAI 2008; MedIA 2009}
 \end{shortAbstract}
 
 
@@ -17,9 +20,11 @@ The first key idea of the TLED algorithm is to refer all variables to the underf
 
 The second crucial idea is to use the central difference method for an explicit time integration of dynamic equilibrium equations. The advantage is that the stiffness term $ \mathbf{K(\mathbf{U}).\mathbf{U}} $ of the system of equations may be computed from:
 \begin{equation}
-\mathbf{K(\mathbf{U}).\mathbf{U}} = \mathbf{F}(\mathbf{U}) = \sum_e \mathbf{\tilde{F}}^e,
+\mathbf{K(\mathbf{U}) \cdot \mathbf{U}} = \mathbf{F}(\mathbf{U}) = \sum_e \mathbf{\tilde{F}}^e,
 \end{equation}
 where $ \mathbf{\tilde{F}}^e $ are the global nodal force contributions due to stresses in element $ \Omega_e $. This implies that the stiffness matrix does not need to be assembled since element nodal force contributions can be computed at the element level instead, which is a decisive computational advantage. 
+
+We will first explain how to compute element nodal forces based on the deformation gradient and a neo-Hookean constitutive model. We will then show how to use these element nodal forces to calculate the unknown displacements for each node of the model \citep{Taylor06}. 
 
 
 	\subsection{Computation of element nodal forces}
@@ -69,9 +74,10 @@ _0^t\mathbf{S} = \pd{ \leftidx{_0^t}{ \mathbf{W} }{} }{_0^t \mathbf{E}}.
 
 The form of the strain energy function depends on the chosen material. For the TLED algorithm we choose a neo-Hookean material already described section \ref{chap2:non-linear}. For a compressible neo-Hookean material, the strain energy density is given by:
 \begin{equation}
+\label{chap5:strainEnergyFunction}
 _0^t W = \dfrac{1}{2} \mu (_0^t I_1 - 3 - 2 \ln ^t J) + \dfrac{1}{2} \lambda (^t J - 1)^2,
 \end{equation}
-where $_0^t I_1 $ is the first invariant of the right Cauchy-Green deformation tensor $ _0^t \mathbf{C} $ given by $ _0^t I_1 = tr(_0^t \mathbf{C}) $ and $ ^t J = det(_0^t \mathbf{X}) = det(_0^t \mathbf{C})^2 $ is the Jacobian. 
+where $_0^t I_1 $ is the first invariant of the right Cauchy-Green deformation tensor $ _0^t \mathbf{C} $ given by $ _0^t I_1 = tr(_0^t \mathbf{C}) $ and $ ^t J = det(_0^t \mathbf{X}) = det(_0^t \mathbf{C})^2 $ is the Jacobian.
 %		
 Then, using the chain rule we have:
 \begin{equation}
@@ -104,7 +110,7 @@ where $ _0^t\mathbf{\hat{S}} $ is the vector form of the second Piola-Kirchhoff 
 \begin{equation}
 _0^t\mathbf{\hat{S}} = \left[ _0^t S_{11} \quad _0^t S_{22} \quad _0^t S_{33} \quad _0^t S_{12} \quad _0^t S_{23} \quad _0^t S_{13} \right] ^T,
 \end{equation}
-$ _0^t\mathbf{B}^T_L $ is the strain-displacement matrix and $ d^0V $ is the initial (undeformed) volume of the element. The strain-displacement matrix $ \mathbf{B}_L $ relates the strains in an element to the element's nodal displacements. If an implicit analysis is performed, the strain-displacement matrix is used in the assembly of the stiffness matrix. In explicit analyses it is used to compute element nodal force contributions according to \eqref{chap5:elementForce}. In geometrically linear analyses, we assume that the displacements are infinitesimally small so that the geometry of an element does not change over time and the strain-displacement matrix is constant. Conversely, because geometrically non-linear analyses (such as carried out by the TLED algorithm) take the change of geometry of the elements into account, the strain-displacement matrix $ \mathbf{B}_L = _0^t\mathbf{B}_L $ varies. However, the strain-displacement matrix at time $ t $ may be computed by transforming a stationary matrix $ _0^t\mathbf{B}_{L0} $ using the deformation gradient. We begin by defining the stationary matrix as:
+$ _0^t\mathbf{B}^T_L $ is the strain-displacement matrix and $ d^0V $ is the initial (undeformed) volume of the element. The strain-displacement matrix $ \mathbf{B}_L $ relates the strains in an element to the element's nodal displacements. If an implicit analysis is performed, the strain-displacement matrix is used in the assembly of the stiffness matrix. In explicit analyses it is used to compute element nodal force contributions according to \eqref{chap5:elementForce}. In geometrically linear analyses, we assume that the displacements are infinitesimally small so that the geometry of an element does not change over time and the strain-displacement matrix is constant. Conversely, because geometrically non-linear analyses (such as carried out by the TLED algorithm) take the change of geometry of the elements into account, the strain-displacement matrix $ \mathbf{B}_L = _0^t\mathbf{B}_L $ varies. However, the strain-displacement matrix at time $ t $ may be computed by transforming a linear matrix $ _0^t\mathbf{B}_{L0} $ using the deformation gradient. We begin by defining the linear matrix as:
 \begin{equation}
 _0^t\mathbf{B}_{L0} = \left[ _0\mathbf{B}_{L0}^{(1)} \quad _0\mathbf{B}_{L0}^{(2)} \quad \ldots \quad _0\mathbf{B}_{L0}^{(N)} \right],
 \end{equation}
@@ -129,7 +135,7 @@ The full strain-displacement matrix (accounting for initial displacement effect)
 \begin{equation}
 _0^t\mathbf{B}_{L}^{(a)} = \leftidx{_0^t}{ \mathbf{B} }{_{L0}^{(a)}} \, \leftidx{_0^t}{ \mathbf{X} }{^T}.
 \end{equation} 
-We note that the stationary strain-displacement matrix is composed of derivatives of shape functions with respect to the original undeformed coordinates of the body. These derivatives are therefore constant and may be precomputed, affording the total Lagrangian formulation a significant computational advantage. 
+We note that the linear strain-displacement matrix is composed of derivatives of shape functions with respect to the original undeformed coordinates of the body. These derivatives are therefore constant and may be precomputed, affording the total Lagrangian formulation a significant computational advantage. 
 
 	\subsection{Computation of node displacements}
 We recall that the dynamic system of equations describing a deformable solid is the following (see section \ref{chap3:dynamic2}:
@@ -190,8 +196,191 @@ Equation \eqref{chap5:CDMcomponents} may be rewritten as:
 It is worth noting that the coefficient vectors $ \mathbf{A} $, $ \mathbf{B} $ and $ \mathbf{C} $ can be precomputed. 
 
 
-\section{Anisotropic and viscoelastic constitutive equation \OC{MICCAI 2008; MedIA 2009}}
+\section{Anisotropic and viscoelastic constitutive equations}
 
+	\subsection{An extension to the TLED algorithm}	
+An attractive feature of explicit analyses is the relative ease with which arbitrarily complicated constitutive models may be incorporated. This arises from the fact that element stresses are computed directly from strains in the course of the procedure. Additionally, there is no requirement for computation of tangent matrices as in implicit or quasi-static procedures, since there is no involvement of Newtonian iterations. While the developments above incorporated a hyperelastic constitutive formulation (neo-Hookean), thus accommodating nonlinearity of the strain-related tissue stress response, the formulation was intentionally simple nonetheless since the focus was on validation of the computational framework. Two further key features of the response of most biological tissues are time- (and rate-)dependence and anisotropy \citep{Fung93}. 
 
-%\section{Summary of the procedure (algo type of thing)}
+Time-dependence manifests itself in many aspects of the mechanical response. Soft tissues under constant load generally exhibit creep, while those under constant deformation exhibit stress relaxation. Additionally, most tissues appear stiffer at higher loading velocities. In particular, so-called visco-hyperelastic models based on strain energy functions with time-dependent parameters have been shown to reproduce both the time-dependent and large strain aspects of the response \citep{Miller97,Miller00,Nava08}. 
+
+Anisotropic mechanical response may arise, for example, from the presence of a highly organised microstructure such as those of connective tissues. These are predominantly composed of collagen or elastin fibres embedded in an amorphous matrix \citep{Fung93}, and may be considered as fibre reinforced composites in some cases. Alternatively, the presence of vasculature and other functional components means even non-load bearing organs may exhibit directional dependence \citep{Picinbono01,Prange02}. Whereas isotropic constitutive models may be formulated in terms of the usual principal strain invariants (as used in \eqref{chap5:strainEnergyFunction} for a neo-Hookean material), directional dependence requires inclusion of so-called pseudo-invariants of strain and material direction. 
+
+In order to model such soft-tissue features with the explicit TLED formulation without significant performance penalties, an efficient constitutive update procedure involving time integration of the relevant hereditary equations is required. We address this problem by presenting a procedure similar to that developed by \cite{Poon98} for analysis of anisotropic linear viscoelastic models. This was also adapted by \cite{Taylor07} for solution of their fibre composite-based microstructural model. In these cases the rate independent responses were based on linear elasticity, rather than a hyperelastic formulation suitable for large deformations. In the present work we begin with a class of anisotropic visco-hyperelastic models, and develop a constitutive update procedure for explicit analyses based on these. 
 		
+	\subsection{Visco-hyperelasticity}
+Large recoverable deformations and the time- and rate-dependence of the mechanical response of soft-tissues have led to the formulation of visco-hyperelastic constitutive models in which an underlying hyperelastic formulation is augmented by time dependent (viscoelastic) material parameters. Models of this type are well known in the continuum mechanics community, and provide a kinematically consistent basis for modelling non-linear materials at large deformations.
+	
+For such materials the constitutive response is defined in terms of a time-dependent Helmholtz free energy (strain energy) function $ \hat{\Psi} $, expressed in the form of a convolution integral:
+\begin{equation}
+\hat{\Psi} (\Psi ,t) = \int_0^t \alpha (t-s) \pd{\Psi}{s} ds,
+\end{equation}
+where $ t $ is time and $ \Psi $ is the underlying hyperelastic strain energy function. The relaxation functions $ \alpha (t) $ commonly assume the form of a Prony series:
+\begin{equation}
+\label{chap5:PronySeries}
+\alpha (t) = \alpha_{\infty} + \sum_{i=1}^N \alpha_i e^{-t/\tau_i},
+\end{equation}
+where $ \alpha_{\infty} $, $ \alpha_i $ and $ \tau_i $are positive real constants. Such forms for the relaxation functions have a physical interpretation, namely that of a generalised Maxwell model \citep{Holzapfel96}. If we impose the condition
+\begin{equation}
+\left( \alpha_{\infty} + \sum_{i=1}^N \alpha_i \right) = 1
+\end{equation}
+we may rewrite\eqref{chap5:PronySeries} as
+\begin{equation}
+\label{chap5:PronySeries2}
+\alpha (t) = 1 - \sum_{i=1}^N \alpha_i (1-e^{-t/\tau_i}),
+\end{equation}
+which will be of use in subsequent sections. 
+
+\bigskip
+
+\noindent The required stress $ \mathbf{S} $ may be obtained via differentiation with respect to strain:
+\begin{equation}
+\label{chap5:stress}
+\mathbf{S} = 2 \pd{\hat{\Psi}(\Psi , t)}{\mathbf{C}} = \int_0^t \alpha (t-s) \left( 2 \pd{}{s} \pd{\Psi}{\mathbf{C}} \right) ds = \int_0^t \alpha (t-s) \pd{\boldsymbol \Phi}{s} ds,
+\end{equation}
+where $ \mathbf{C} $ is the right Cauchy-Green deformation tensor, and we have introduced $ \boldsymbol \Phi \, {\buildrel\rm	def\over=} \, 2 \partial \Psi / \partial \mathbf{C} $ as the instantaneous hyperelastic stress response.
+
+\bigskip
+
+Models of this form have been presented by Miller and co-workers for analysis of brain tissue \citep{Miller97,Miller02} and of liver and kidney \citep{Miller00}. They were shown to model the tissue responses to compressive (and in the case of brain, tensile) loading at strain rates varying over two orders of magnitude very well. We next consider evaluation of the hyperelastic stress response $ \boldsymbol \Phi $.
+
+	\subsection{Hyperelastic response}
+We firstly consider the case of isotropic materials, from which anisotropic formulations follow. We then consider the standard cases of transverse isotropy and orthotropy, which may be viewed as arising from, for example, the presence of mutually orthogonal reinforcing fibre phases. In considering these cases we encompass constitutive equations which have been proposed for a wide variety of biological tissues.
+	
+	\subsubsection*{Isotropic materials}
+For isotropic materials the strain energy is a function of strain only, hence $ \Psi = \Psi (\mathbf{C}) $. In this work we consider strain energy functions with separated isochoric (volume preserving) and volumetric components \citep{Holzapfel00}:
+\begin{equation}
+\label{chap5:IstrainEnergy}
+\Psi (\mathbf{C}) = \Psi ^{iso} (\mathbf{\bar{C}}) + \Psi ^{vol} (J) = \Psi ^{iso} (\bar{I}_1, \bar{I}_2) + \Psi ^{vol} (J),
+\end{equation}
+where $ J $ is the Jacobian determinant, $ \mathbf{\bar{C}} = J^{2/3} \mathbf{C} $ is the modified right Cauchy-Green deformation, and $ \bar{I}_1 = tr \mathbf{\bar{C}} $ and $ \bar{I}_2 = \left[ (tr \mathbf{\bar{C}})^2 - tr (\mathbf{\bar{C}}^2) \right] / 2 $ are invariants of $ \mathbf{\bar{C}} $. The hyperelastic stress $ \boldsymbol \Phi $ then also consists of isochoric and volumetric components: 
+\begin{equation}
+\boldsymbol \Phi = \boldsymbol \Phi^{iso} +\boldsymbol \Phi^{vol} ,
+\end{equation}
+where
+\begin{align}
+\boldsymbol \Phi^{vol} &= 2 \pd{\Psi^{vol}(J)}{\mathbf{C}} = J \dfrac{d\Psi^{vol}(J)}{dJ} \mathbf{C}^{-1}, \label{chap5:Phi_vol} \\
+\intertext{and}
+\boldsymbol \Phi^{iso} &= 2 \pd{\Psi^{iso}(\mathbf{\bar{C}})}{\mathbf{C}} = J^{-2/3} \mbox{Dev}  \bar{\boldsymbol \Phi}, \label{chap5:Phi_iso}
+\end{align}
+where Dev$(\bullet) = (\bullet) - (1/3)[(\bullet) : \mathbf{C}] \mathbf{C}^{-1}$ is the referential configuration deviatoric operator for a second order tensor \citep{Holzapfel00}, and
+\begin{equation}
+\label{chap5:PhiBar}
+\bar{\boldsymbol \Phi} = 2 \pd{\Psi^{iso}(\mathbf{\bar{C}})}{\mathbf{\bar{C}}} = \bar{\gamma}_1 \mathbf{I} + \bar{\gamma}_2 \mathbf{\bar{C}},
+\end{equation}
+with 
+\begin{equation}
+\bar{\gamma}_1 = 2 \left( \pd{\Psi^{iso}}{\bar{I}_1} + \bar{I}_1 \pd{\Psi^{iso}}{\bar{I}_2} \right) \quad \mbox{and} \quad \bar{\gamma}_2 = -2 \pd{\Psi^{iso}}{\bar{I}_2}.
+\end{equation}
+
+	
+	\subsubsection*{Transversely isotropic materials}
+Transversely isotropic materials are characterised by a single preferred direction $\mathbf{a}_0$ in the reference configuration; the mechanical response is isotropic in the plane orthogonal to this direction. The strain energy is then a function of both $  \mathbf{C} $ and a structure tensor $\mathbf{A}_0 \, {\buildrel\rm	def\over=} \,  \mathbf{a}_0 \otimes \mathbf{a}_0$, where $\otimes$ denotes a tensor product. Analogous to the isotropic case, we consider strain energy functions of the form	
+\begin{equation}
+\label{chap5:TIstrainEnergy}
+\Psi (\mathbf{C}, \mathbf{A}_0) = \Psi^{iso}(\bar{I}_1, \bar{I}_2, \bar{I}_4, \bar{I}_5) + \Psi^{vol}(J),
+\end{equation}
+where $ \bar{I}_4 = \mathbf{a}_0 \cdot \mathbf{\bar{C}} \mathbf{a}_0$ and $ \bar{I}_5 = \mathbf{a}_0 \cdot \mathbf{\bar{C}}^2 \mathbf{a}_0 $ are pseudo-invariants of $ \mathbf{\bar{C}} $ and $ \mathbf{A}_0 $. 
+
+\bigskip
+
+\noindent As can be seen transversely isotropic strain energy functions \eqref{chap5:TIstrainEnergy} differ from isotropic ones \eqref{chap5:IstrainEnergy} only in the form of the isochoric term. Therefore the volumetric and isochoric stresses $ \boldsymbol \Phi^{vol} $ and $ \boldsymbol \Phi^{iso} $ remain as in \eqref{chap5:Phi_vol} and \eqref{chap5:Phi_iso} but with $\bar{\boldsymbol \Phi} $ given by
+\begin{equation}
+\label{chap5:PhiBarTI}
+\bar{\boldsymbol \Phi} = \bar{\gamma}_1 \mathbf{I} + \bar{\gamma}_2 \mathbf{\bar{C}} + \bar{\gamma}_4 \mathbf{A}_0 + \bar{\gamma}_5 ( \mathbf{a}_0 \otimes \mathbf{\bar{C}} \mathbf{a}_0 +  \mathbf{\bar{C}} \mathbf{a}_0 \otimes \mathbf{a}_0 ),
+\end{equation}
+with 
+\begin{equation}
+\bar{\gamma}_a = 2 \pd{\Psi^{iso}}{\bar{I}_a}, \quad a = 4, 5.
+\end{equation}
+
+	
+	\subsubsection*{Orthotropic materials}
+Orthotropic materials are characterised by three mutually orthogonal preferred directions, which we identify with unit vectors $\mathbf{a}_0$ and $\mathbf{b}_0$ (and corresponding structure tensors $\mathbf{A}_0$ and $\mathbf{B}_0$), in the reference configuration. We need specify only two vectors, since the direction orthogonal to these naturally emerges as a preferred direction also. Orthotropic strain energy functions are then of the form
+\begin{equation}
+\Psi (\mathbf{C}, \mathbf{A}_0, \mathbf{B}_0) = \Psi^{iso}(\bar{I}_1, \bar{I}_2, \bar{I}_4, \bar{I}_5, \bar{I}_6, \bar{I}_7) + \Psi^{vol}(J),
+\end{equation}
+where $ \bar{I}_6 = \mathbf{b}_0 \cdot \mathbf{\bar{C}} \mathbf{b}_0 $ and $ \bar{I}_7 =  \mathbf{b}_0 \cdot \mathbf{\bar{C}}^2 \mathbf{b}_0 $ are pseudo-invariants of $ \mathbf{\bar{C}} $ and $ \mathbf{B}_0 $. In a similar manner to the transversely isotropic case we obtain $ \boldsymbol \Phi^{vol} $ and $ \boldsymbol \Phi^{iso} $ from \eqref{chap5:Phi_vol} and \eqref{chap5:Phi_iso}, with $\bar{\boldsymbol \Phi} $ now given by
+\begin{equation}
+\label{chap5:PhiBarOrtho}
+\begin{split}
+\bar{\boldsymbol \Phi} = \bar{\gamma}_1 \mathbf{I} + \bar{\gamma}_2 \mathbf{\bar{C}} + \bar{\gamma}_4 \mathbf{A}_0 + \bar{\gamma}_5 ( \mathbf{a}_0 \otimes \mathbf{\bar{C}} \mathbf{a}_0 +  \mathbf{\bar{C}} \mathbf{a}_0 \otimes \mathbf{a}_0 ) \\
++ \bar{\gamma}_6 \mathbf{B}_0 + \bar{\gamma}_7 ( \mathbf{b}_0 \otimes \mathbf{\bar{C}} \mathbf{b}_0 +  \mathbf{\bar{C}} \mathbf{b}_0 \otimes \mathbf{b}_0 )
+\end{split}
+\end{equation}
+where
+\begin{equation}
+\bar{\gamma}_a = 2 \pd{\Psi^{iso}}{\bar{I}_a}, \quad a = 6, 7.
+\end{equation}
+	
+	\subsection{Recapitulation}	
+For a visco-hyperelastic material stress may be obtained from \eqref{chap5:stress}. This form is general in the sense that any underlying hyperelastic response may be used, including the anisotropic formulations described \eqref{chap5:IstrainEnergy}, supplemented with \eqref{chap5:Phi_vol}, \eqref{chap5:Phi_iso}, and \eqref{chap5:PhiBar} is the general form of an isotropic hyperelastic stress response, defined in terms of invariants. Transversely isotropic or orthotropic models may be produced by substituting \eqref{chap5:PhiBar} for \eqref{chap5:PhiBarTI} or \eqref{chap5:PhiBarOrtho}, respectively. The specification of particular forms of  $ \Psi^{vol} $ and $ \Psi^{iso} $ would be motivated by the particular tissue/material under analysis, and may stem from phenomenological or microstructural considerations. Finally we note that for separated isochoric and volumetric hyperelastic functions as used here, viscoelastic terms may be applied to either or both independently. 
+	
+	
+\section{Constitutive update procedure for explicit analyses}
+
+Use of the above visco-hyperelastic models within the TLED algorithm (or any other explicit dynamic finite element procedure) requires a constitutive update scheme involving time integration of \eqref{chap5:stress}. 
+
+	\subsection{Stress update equations}	
+We proceed by restating \eqref{chap5:stress} and using \eqref{chap5:PronySeries2}:	
+\begin{equation}
+\mathbf{S} = \int_0^t \left[ 1 - \sum_{i=1}^N \alpha_i (1-e^{(s-t)/\tau_i}) \right] \pd{\boldsymbol \Phi}{s} ds .
+\end{equation}
+This may be separated into rate-dependent and -independent terms as
+\begin{equation}
+\mathbf{S} = \boldsymbol \Phi - \sum_{i=1}^N \boldsymbol \Upsilon_i,
+\end{equation}
+where
+\begin{equation}
+\label{chap5:Upsilon}
+\boldsymbol \Upsilon_i = \int_0^t \alpha_i \left( 1-e^{(s-t)/\tau_i} \right) \pd{\boldsymbol \Phi}{s} ds, \quad i \in [1, N]
+\end{equation}
+are rate-dependent terms associated with each term in the Prony series. 
+
+\bigskip
+
+\noindent In an incremental analysis we require the stress at the current increment given the deformation state and history of the material. Adding superscripts to indicate time increments the stress may be updated using
+\begin{equation}
+\label{chap5:updateStress}
+\mathbf{S}^n = \boldsymbol \Phi^n - \sum_{i=1}^N \boldsymbol \Upsilon_i^n. 
+\end{equation}
+The instantaneous terms $ \boldsymbol \Phi^n $ may be computed directly from the (known) current deformation $ \mathbf{C}^n $. The main difficulty is then computation of the in- cremental rate-dependent terms $ \boldsymbol \Upsilon_i^n $ . Following \cite{Poon98}, our strategy is to maintain each $ \boldsymbol \Upsilon_i^n $ as a separate state variable to be updated at each increment also.
+
+	\subsection{State variable update equations}	
+Our approach is to convert the integral equation \eqref{chap5:Upsilon} into a rate form which may then be numerically integrated to produce an incremental update formula for $ \boldsymbol \Upsilon_i^n $. We note that \eqref{chap5:Upsilon} is of the form
+\begin{equation}
+y(t) = \int_0^t f(t,s) ds.
+\end{equation}
+\cite{Poon98} provide the following formula for differentiating such equations with respect to $ t $:
+\begin{equation}
+\dot y = f(t, t) + \int_0^t \dot f(t,s) ds.
+\end{equation}
+Applying this formula to \eqref{chap5:Upsilon} we obtain
+\begin{align}
+f(t, t) &= \alpha_i \left( 1-e^{(t-t)/\tau_i} \right) \pd{\boldsymbol \Phi}{s} \notag \\
+&= 0 \\
+\intertext{and}
+\dot f(t, s) &= \dfrac{d}{dt} \left[ \alpha_i \left( 1-e^{(s-t)/\tau_i} \right) \pd{\boldsymbol \Phi}{s} \right] \notag \\
+&= \alpha_i e^{(s-t)/\tau_i} \pd{\boldsymbol \Phi}{s} \dfrac{1}{\tau_i},
+\end{align}
+leading to the required rate form for $ \boldsymbol \Upsilon_i $:
+\begin{align}
+\dot{\boldsymbol \Upsilon_i}  &= \dfrac{1}{\tau_i} \int_0^t \alpha_i e^{(s-t)/\tau_i} \pd{\boldsymbol \Phi}{s} ds \notag \\
+&= \dfrac{1}{\tau_i} (\alpha_i \boldsymbol \Phi - \boldsymbol \Upsilon_i). \label{chap5:UpsilonRate}
+\end{align}
+
+\bigskip
+
+\noindent Equation \eqref{chap5:UpsilonRate} may be integrated using a convenient numerical method. In particular the unconditionally stable backward Euler method suggested by \cite{Poon98} yields the following formula for $ \boldsymbol \Upsilon_i^n $:
+\begin{align}
+\boldsymbol \Upsilon_i^n &= \left( \dfrac{\alpha_i \boldsymbol \Phi^n}{\tau_i} + \dfrac{\boldsymbol \Upsilon_i^{n-1}}{\Delta t} \right) / \left(\dfrac{1}{\Delta t} + \dfrac{1}{\tau_i} \right) \notag \\
+&= A \boldsymbol \Phi^n + B \boldsymbol \Upsilon_i^{n-1}, \label{chap5:updateStateVar}
+\end{align}
+where $ \Delta t $ is the time step size, and $ A = \Delta t \alpha_i / (\Delta t + \tau_i) $ and $ B = \tau_i / (\Delta t + \tau_i) $ are constant coefficients. 
+	
+	\subsection{Summary}	
+The constitutive update procedure consists of
+\begin{enumerate}
+\item Updating state variables (one for each Prony term) via \eqref{chap5:updateStateVar}.
+\item Updating stresses via \eqref{chap5:updateStress}.
+\end{enumerate}
+Assuming a constant time step size $ \Delta t $, the coefficients $ A $ and $ B $ may be precomputed. 
