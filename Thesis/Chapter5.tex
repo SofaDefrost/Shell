@@ -27,7 +27,7 @@ where $ \mathbf{\tilde{F}}^e $ are the global nodal force contributions due to s
 We will first explain how to compute element nodal forces based on the deformation gradient and a neo-Hookean constitutive model. We will then show how to use these element nodal forces to calculate the unknown displacements for each node of the model \citep{Taylor06}. 
 
 
-	\subsection{Computation of element nodal forces}
+	\subsection{Computation of element nodal forces} 
 	
 We adopt the notation of \citeauthor{Bathe95} with respect to indication of the relevant configuration of the body: a left superscript indicates the configuration in which a quantity occurs and, when applicable, a left subscript indicates the configuration with respect to which the quantity is measured. We note the coordinates of a point at time t $ ^t \mathbf{x}$.
 
@@ -137,7 +137,7 @@ _0^t\mathbf{B}_{L}^{(a)} = \leftidx{_0^t}{ \mathbf{B} }{_{L0}^{(a)}} \, \leftidx
 \end{equation} 
 We note that the linear strain-displacement matrix is composed of derivatives of shape functions with respect to the original undeformed coordinates of the body. These derivatives are therefore constant and may be precomputed, affording the total Lagrangian formulation a significant computational advantage. 
 
-	\subsection{Computation of node displacements}
+	\subsection{Computation of node displacements} \label{chap5:computeNodalDisp}
 We recall that the dynamic system of equations describing a deformable solid is the following (see section \ref{chap3:dynamic2}:
 \begin{equation}
 \label{chap5:eqDynamic}
@@ -194,6 +194,23 @@ Equation \eqref{chap5:CDMcomponents} may be rewritten as:
 \leftidx{^{t+\Delta t}}{ \mathbf{U} }{_i} = A_i \, (\leftidx{^t}{R}{_i} - \leftidx{^t}{F}{_i}) + B_i \, \leftidx{^t}{U}{_i} + C_i \, \leftidx{^{t-\Delta t}}{U}{_i}.
 \end{equation}
 It is worth noting that the coefficient vectors $ \mathbf{A} $, $ \mathbf{B} $ and $ \mathbf{C} $ can be precomputed. 
+
+\bigskip
+
+Of crucial importance in explicit analyses is the restriction on time step sizes imposed by stability constraints \label{chap5:discussionTimestep}. As mentioned, the central difference method is only stable if $ \Delta t <  \Delta t_{cr} $. Essentially, stability requires that the time step be not larger than the time required for a dilatational wave to propagate through the smallest element. In linear analyses this translates into the following formula for $ \Delta t_{cr}$:
+\begin{equation}
+\label{chap5:criticalTimestep}
+\Delta t_{cr} = \dfrac{L_e}{c},
+\end{equation}
+where $ L_e $ is the smallest characteristic element length (roughly interpreted as the smallest edge length) in the assembly, and $c$ is the dilatational wave speed of the material, given by
+\begin{equation}
+\label{chap5:waveSpeed}
+c = \sqrt{\dfrac{E (1 - \nu)}{\rho (1+\nu)(1-2\nu)}},
+\end{equation}
+where $E$ is Young's modulus and $\nu$ is Poisson's ratio. If nonlinear analyses (either geometric or material) are conducted, a somewhat smaller time step must be employed since $c$ will change with deformation, and in particular will generally increase. Additionally, the presence of damping necessitates a further decrease in the limit. Nonetheless, \eqref{chap5:waveSpeed} may be used to estimate $ \Delta t_{cr}$. 
+
+Some important observations arise from \eqref{chap5:criticalTimestep} and \eqref{chap5:waveSpeed}. Firstly, since the stiffness of soft tissues is very much smaller than that of common engineering materials ($E \approx 3 \times 10^3\, $Pa for brain tissue versus $\approx 2 \times 10^{11}\, $Pa for steel), the allowable time step is much larger for analysis of the former. This is a key reason for the expediency of explicit time integration for analysis of soft tissues. Secondly, soft tissues are generally considered to be incompressible, leading to $\nu \approx 0.49$ commonly being employed. However, if this value can be relaxed even further, significant increases in $ \Delta t_{cr}$ are possible. As an example, for a given $ Le $ a material with $E = 3\,000\, $Pa and $\nu = 0.45$ allows a time step of more than double that of a material with $\nu = 0.49$. Of course, lowering the Poisson ratio introduces inaccuracies, but for some applications (interactive medical simulation for instance) it may be that this is acceptable. Finally, it must be highlighted that $ \Delta t_{cr}$ is proportional to $ L_e $. If the element size is decreased (by using a finer mesh, or by analysing very small objects), inexorably $ \Delta t_{cr}$ is also reduced. 
+
 
 
 \section{Anisotropic and viscoelastic constitutive equations}

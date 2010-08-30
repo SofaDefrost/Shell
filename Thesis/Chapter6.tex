@@ -172,18 +172,157 @@ In the precomputation phase, nodes and elements are sorted by block to leave eno
 \TODO{If time, try this implementation on Geforce GTX 480 as it features 3 times the amount of shared memory.}
 
 	\subsection{Third implementation: atomic writes}
-In April 2010, NVIDIA released a family of graphics cards based on a new GPU architecture called Fermi. Among many new features and improvements over previous generation, these cards added the capability of so-called \emph{atomic writes} for floats. The write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, no other thread can access this address until the operation is complete. The concurrent writes are simply serialised in hardware. This feature allows us to implement the TLED algorithm as we would on a CPU, using a single kernel for all computations, and without the need to re-order the nodes and elements organisation as in the second implementation. 
+In April 2010, NVIDIA released a family of graphics cards based on a new GPU architecture called Fermi. Among many new features and improvements over previous generation, these cards added the capability of so-called \emph{atomic writes} for floats. The write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, no other thread can access this address until the operation is complete. The concurrent writes are simply serialised in hardware. This feature allows us to implement the TLED algorithm as we would on a CPU, using a single kernel for all computations, and without the need to re-order the nodes and elements organisation as with the second implementation. 
 
 \TODO{If time, try simple implementation using atomic writes with floats on Geforce GTX 480}
 
 	
 \section{Results}	
+
+We present a series of examples based on pure shear and compression of cube models to demonstrate the validity of the constitutive update procedure and the performance of the GPU-based implementation. We conclude with an example of simulation of liver deformation, since as mentioned there is experimental evidence that liver exhibits an anisotropic response \citep{Chui07}. In each case we used a transversely isotropic visco-hyperelastic model with elastic strain energy components defined by
+\begin{align}
+\Psi^{iso} &= \Psi^{I}(\bar{I}_1) + \Psi^{TI}(\bar{I}_4) \notag \\
+&= \dfrac{\mu}{2} (\bar{I}_1 - 3) + \dfrac{\eta}{2} (\bar{I}_4 - 1)^2, \\
+\Psi^{vol} &= \dfrac{\kappa}{2} (J - 1)^2,
+\end{align}
+where $ \Psi^{I} $ and $ \Psi^{TI} $ are isotropic and transversely isotropic components, respectively, $ \mu $ is the small strain shear modulus, $ \kappa $ is the bulk modulus, and $ \eta $ is a material parameter with units of Pa. The isotropic component $ \Psi^{I} $ represents the well known neo-Hookean model, while the anisotropic component $ \Psi^{TI} $ is the same form used by \cite{Picinbono01}. Here the dependence of $ \Psi^{TI} $ on $ \bar{I}_5 $ is omitted and we include only $ \bar{I}_4 $ terms. This was done foremost for simplicity, but is also a common practical feature of anisotropic models for soft tissues. The main reason is the clear physical interpretation of $ \bar{I}_4 $ as the square of the stretch $ \lambda $ \footnote{Strictly, $ \bar{I}_4 = J^{-2/3} \lambda^2 $} along the preferred direction $ \mathbf{a}_0 $ \cite{Holzapfel00}, whereas $ \bar{I}_5 $ has a less clear physical meaning. $ \bar{I}_4 $ terms are therefore more amenable to experimental investigation, and of more use in modelling structural elements (e.g. fibres) responsible for the anisotropy. It must be emphasised that this model is used as an example only, and we make no claim concerning its appropriateness for any particular tissue.
+
+\bigskip
+
+The instantaneous isochoric and volumetric responses are then given by
+\begin{align}
+\boldsymbol \Phi^{iso} &= J^{-2/3} \left[ \mu \left( \mathbf{I} + \dfrac{I_1}{3} \mathbf{C}^{-1} \right) + \eta (\bar{I}_4 - 1) \left( \mathbf{A}_0 + \dfrac{I_4}{3} \mathbf{C}^{-1} \right) \right], \\
+\boldsymbol \Phi^{vol} &= \kappa J (J - 1) \mathbf{C}^{-1}.
+\end{align}
+We used viscoelastic isochoric terms only, with a single Prony series term for simplicity. The complete stress response is then
+\begin{align}
+\mathbf{S} &= \boldsymbol \Phi^{vol} + \int_0^t \left[ 1 - \alpha_1 \left(1-e^{(s-t)/\tau_1} \right) \right] \pd{\boldsymbol \Phi^{iso}}{\tau} ds \notag \\
+&= \boldsymbol \Phi^{vol} + \boldsymbol \Phi^{iso}(1 - \alpha_1) + \alpha_1 \int_0^t e^{(s-t)/\tau_1} \pd{\boldsymbol \Phi^{iso}}{\tau} ds.
+\end{align}
+Note that in this case the developed constitutive update procedure need only to be employed for isochoric terms. 
+
+\bigskip
+
+Material parameters were chosen based on recent results for the viscoelastic response of human liver in vivo. \cite{Nava08} used an aspiration device to obtain an estimate of $\mu = 19\,700\,$Pa for the combined liver/liver capsule. However, they noted that an earlier study suggested the presence of the liver capsule meant this value could overestimate liver parenchyma stiffness by up to $3 \times$. Since it is the parenchyma we are concerned with, we employed a value of $\mu = 19\,700/3 = 6\,567\,$Pa. Assuming near incompressibility we specified $\kappa = 326\,210\,$Pa (corresponding to a Poisson ratio of 0.49). \citeauthor{Nava08} employed two Prony terms, and we use parameters from the first of these: $\alpha_1 = 0.5, \tau_1 = 0.58$. The short time constant $ \tau_1 $ means this Prony term most affects faster loadings, which are of interest in surgical simulations. Finally, since \citeauthor{Nava08} assumed an isotropic response their data provide no basis for estimating $ \eta $. Therefore we chose a conservative value of $\eta = 2\mu$, conservative since \cite{Picinbono01} used a value closer to $\eta = 16\mu$. 
+
+
 	\subsection{Pure shear of a cube}
+The first example involved shearing of a unit cube model. We imposed a ramped loading such that the displacements $u$ of the loaded nodes at time $t$ were given by $u = rt$, where $r$ is the loading speed, and we chose the $x$-direction to be the preferred material direction ($\mathbf{a}_0 = [1\, 0\, 0 ]$). Since the deformation is homogenous only a single element was required to reproduce the stresses exactly. Moreover an analytical solution is available with which numerical results may be compared \citep{Taylor2009}. Four independent nonzero stress terms are produced. 
+	
+In \fig{chap6:fig-stressCurvesCube1} we demonstrate the effects of material anisotropy independent of viscoelastic effects by plotting the limiting instantaneous (hyperelastic) stress curves, produced by setting the relaxation parameter $\alpha_1 = 0$. \fig{chap6:fig-stressCurvesCube1}(a) shows curves for the anisotropic model, while \fig{chap6:fig-stressCurvesCube1}(b) shows curves for an equivalent isotropic model (i.e. with $\eta = 0$). Firstly we confirm that the FE solutions (data marks) match the analytical solutions (solid curves) very accurately. Secondly we observe that the anisotropic term significantly affects both the magnitude and shape of the stress curves. In particular the $S_{11}$ curve which is coincident with the $S_{33}$ curve in the isotropic model actually changes sign when anisotropy is introduced. The other curves exhibit a more pronounced stiffening for the anisotropic case. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13.9cm]{chapter6/stressCurvesCube1.pdf}
+\end{center}
+\caption[Stress comparison with analytical solution for a pure shear of a cube]{Instantaneous stress curves for pure shear deformation of (a) the anisotropic model compared with those of (b) an isotropic model. Solid lines correspond to the analytical solution, while markers indicate the FE solution.}
+\label{chap6:fig-stressCurvesCube1}
+\end{figure}
+
+In \fig{chap6:fig-stressCurvesCube2} we demonstrate the effect of loading rate on the complete viscoelastic model by plotting the $S_{11}$ component for strain rates of $2.5\,s^{-1}, 0.25\,s^{-1}$, and $0.025\,s^{-1}$, plus the bounding instantaneous and equilibrium responses. The strain rate-dependence introduced by the model (and commonly observed in biological tissues) is clearly shown. Additionally the close match between the analytic and numerical solutions demonstrates the validity of the developed constitutive update scheme.
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=10cm]{chapter6/stressCurvesCube2.pdf}
+\end{center}
+\caption[Stress comparison with analytical solution for a pure shear of a cube at various strain rate]{$S_{11}$ curves for pure shear deformation of the anisotropic viscoelastic model at varying strain rates. Curves for strain rates of $2.5\,s^{-1}, 0.25\,s^{-1}$, and $0.025\,s^{-1}$ are given (as labelled), along with the bounding instantaneous and equilibrium responses. The latter two are labelled $ \infty $ and $0^+$, respectively, indicating that they correspond to strain rates approaching these values. Solid lines correspond to the analytical solution, while markers indicate the FE solution.}
+\label{chap6:fig-stressCurvesCube2}
+\end{figure}
+
+
 	\subsection{Compression of a cube}
-	\subsection{GPU performance (+comparison of different implementations)}
-	\subsection{Simulation of liver deformation}
-	\subsection{A medical application: cataract surgery}
+The second example involved compression of a cube of edge length $0.1\,$m (comparable to some human organs). The cube was imagined to be fixed to opposing load platens and free on the remaining four faces. Compression was applied along the $x$-axis. A stress-relaxation type test protocol was simulated, in which the cube was compressed by $30\, \%$ in 0.5 seconds and the compression was held for a further 4.5 seconds. We demonstrate the effects of anisotropy on the deformation response by comparing the deformed shapes of anisotropic models with $\mathbf{a}_0 = [0\, 1\, 0] \, {\buildrel\rm	def\over=} \, \mathbf{a}_0^y $ and $\mathbf{a}_0 = [0\, \frac{1}{\sqrt{2}} \, \frac{1}{\sqrt{2}}] \, {\buildrel\rm	def\over=} \, \mathbf{a}_0^{yz} $  with that of an isotropic model (with $\eta = 0$).
+
+\bigskip
+
+Figure \ref{chap6:fig-cubeAnisotropic}(a) shows the undeformed cube, while \fig{chap6:fig-cubeAnisotropic}(b) shows the deformed isotropic model. With no preferred direction the lateral expansion was uniform. In \fig{chap6:fig-cubeAnisotropic}(c) the increased $y$-direction stiffness of the first anisotropic model lead to a much reduced expansion in this direction (vertical in the image), and an accompanying increase in the orthogonal $z$-direction. For the second anisotropic model the direction defined by $y = z$ was stiffened, and \fig{chap6:fig-cubeAnisotropic}(d) shows the resulting reduced expansion along this axis and the increased orthogonal expansion. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13.9cm]{chapter6/cubeAnisotropic.pdf}
+\end{center}
+\caption[Deformation patterns of transversely isotropic models compared with that of an isotropic model]{Deformation patterns of transversely isotropic models compared with that of an isotropic model: (a) the undeformed cube, (b) the deformed isotropic model, (c) the deformed anisotropic model with $ \mathbf{a}_0 = \mathbf{a}_0^y $, (d) the deformed anisotropic model with $\mathbf{a}_0^{yz}$. Colour maps indicate relative magnitude of lateral displacement  $((u_y^2 + u_z^2)^{1/2})$.}
+\label{chap6:fig-cubeAnisotropic}
+\end{figure}
+
+\bigskip
+
+The end face reaction force history for each model is shown in \fig{chap6:fig-stressDecay}. A distinct decay curve resulting from stress relaxation, and similar to that commonly noted in biological tissues \citep{Fung93}, was observed. The increased stiffness afforded by the anisotropic models (albeit in an orthogonal direction to the loading) result in greater reaction forces than the isotropic model.
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=10cm]{chapter6/stressDecay.pdf}
+\end{center}
+\caption[FE computed reaction forces on the end faces of the cube models over time.]{FE computed reaction forces on the end faces of the cube models over time. Curves are labelled according to the constitutive model used, where \emph{Anisotropic 1} refers to the transversely isotropic viscoelastic model with $\mathbf{a}_0 = \mathbf{a}_0^y$ and \emph{Anisotropic 2} refers to the case of $\mathbf{a}_0 = \mathbf{a}_0^{yz}$. Note that in this figure both markers and solid lines correspond to FE solutions.}
+\label{chap6:fig-stressDecay}
+\end{figure}
+	
+	\subsection{GPU performance}
+	
+		\subsubsection*{General GPU performance}
+Next, we assessed the computational performance of the GPU implementation and efficiency of the constitutive update scheme by measuring computation times for a range of mesh densities. Using the cube geometry as above we generated models with mesh sizes ranging from $3\,993$ DOF ($1\,331$ nodes, $1\,000$ hexahedral elements) to $177\,957$ DOF ($59\,319$ nodes, $54\,872$ hexahedral elements). We compared the GPU solution times for a single time step with those of a CPU-based implementation developed using C++. The test machine included an Intel Core2Duo 2.4GHz CPU, 2GB RAM, and an NVIDIA GeForce 8800GTX GPU. Three constitutive models were considered: the transversely isotropic viscoelastic model (TIV), TIV minus the viscoelastic terms (TIE), and TIE minus the anisotropy terms (NHE). Comparison of times for TIV and TIE indicates the computational load introduced by the developed viscoelastic constitutive update scheme. Comparison of times for TIE and NHE indicates the computational load introduced by material anisotropy. Figure~\ref{chap6:fig-timingsGPU} shows the results of the experiments. 
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13.9cm]{chapter6/timingsGPU.pdf}
+\end{center}
+\caption[GPU solution times]{(a), (b) show CPU and GPU solution times, respectively, for a single time step for each constitutive model as a function of model size, (c) shows the ratio of CPU to GPU solution times for model TIV, and (d) shows ratios of GPU solution times for the constitutive models: TIV to TIE, TIE to NHE, and TIV to NHE. (b) also shows the critical time steps $ \Delta t_{cr} $ for each model size using liver-like and brain-like properties.} 
+\label{chap6:fig-timingsGPU}
+\end{figure}
+	
+In \fig{chap6:fig-timingsGPU}(a) and \fig{chap6:fig-timingsGPU}(b) it can be seen that GPU solution affords significant speed improvements over CPU solution for all constitutive models. Additionally it appears that solution times are little affected by the introduction of the more complex constitutive models, and importantly by the use of the developed constitutive update scheme. This is borne out in \fig{chap6:fig-timingsGPU}(d), where we observe that the maximum solution time ratio for model TIE to model NHE (anisotropy vs isotropy) was $1.013$, and that of model TIV to model TIE (viscoelastic vs elastic) was $1.043$. The largest total solution time increase for an anisotropic viscoelastic model compared with an isotropic hyperelastic one was $5.1\, \%$ We conclude that the key features of anisotropy and viscoelasticity may be included in simulations at very little additional computational cost. Referring to \fig{chap6:fig-timingsGPU}(c) we observe a maximum speed improvement for GPU solution over CPU solution of $56.3 \times$. 
+	
+\fig{chap6:fig-timingsGPU}(b) also shows the decreasing critical time steps $ \Delta t_{cr} $ with increasing model sizes (which results from the decreasing element sizes), using liver-like and brain-like materials. We define liver-like materials to be those described by model TIV with material parameters quoted at the beginning of the section, whereas brain-like materials are those described by model NHE with material parameters $\mu = 1006.71\, $Pa and Poisson?s ratio $\nu = 0.45$. The intersections of these curves with the solution time curves provide an estimate of the real-time capacity of the implementation. This is discussed further in section~\ref{chap6:criticalTimestep}. 
+
+\TODO{Add comparison of different implementations}
+	
+
+		\subsubsection*{Performance within SOFA}
+The efficiency and the side-effects of porting the algorithm into the flexible SOFA framework need to be measured. Therefore the performance has been assessed by comparing the computational time of the algorithm running within and outside SOFA. NVIDIA provides a tool to check the GPU implementation by evaluating many variables during the execution like for instance timings, counts of inconsistent reads and writes or GPU occupancy. We used this tool to carry out two measures:
+\begin{enumerate}
+\item GPU time only estimates the GPU computational time.
+\item CPU time allows the evaluation of the execution time with the additional overhead due to the framework.
+\end{enumerate}
+
+\begin{figure}
+\includegraphics[width=13.9cm]{chapter6/cube_and_curves.pdf}
+\caption [Computational timings within SOFA] {\textbf{Left:} FEM mesh of cube with $29\,791$ nodes deformed under a uniformed load. \textbf{Right:} Comparison of GPU computational timings and CPU overheads between the SOFA and standalone implementations for different mesh sizes.}
+\label{chap6:fig-cube_and_curves}
+\end{figure}
+
+The tests were performed on a simple test scene featuring a cube under gravity. Hexahedral meshes with different resolutions from $1\,331$ to $29\,791$ nodes were used and the results are presented in figure \ref{chap6:fig-cube_and_curves}. In our standalone implementation, the second kernel not only accumulates nodal forces but also adds gravity and updates positions based on the central difference integration scheme. These operations are split into separated components in SOFA, in order to introduce more flexibility (such as applying additional forces or changing the integration algorithm). While this introduces no noticeable difference on a CPU-based simulation, when using the GPU it is more costly due to overheads in the CUDA API for the additional kernel launches. Although it reduces the performance by $8.4\, \%$ for large meshes, this could be optimised away by adding a kernel specific to a given combination of components.
+		
+	
+	\subsection{Simulation of liver deformation} \label{chap6:liverSimu}
+Finally, we performed simulations of manipulation of a liver model in order to demonstrate the feasibility of the procedure with more realistic organ geometries. The model geometry was based on the liver mesh available in the SOFA framework, which we smoothed and remeshed to improve uniformity of element sizes and node valencies. A mesh of 748 nodes and $2\,428$ tetrahedral elements was solvable in real-time. For anisotropic models a preferred material direction $\mathbf{a}_0 = [0\, 1\, 0] $ was used, corresponding to the vertical direction in \fig{chap6:fig-liver}. We note that in a real organ the preferred direction likely varies depending on the local vasculature and orientation of lobules \citep{Chui07}, but in the absence of experimental data for the present specimen the mentioned direction was assumed throughout. Moreover, on this point we note that different preferred directions may be specified for each element in the mesh, if such data are available. 
+
+\bigskip
+
+The Von Mises equivalent stress distributions resulting from stretching the model with and without inclusion of viscoelasticity are compared in \fig{chap6:fig-liver}. For the viscoelastic case (\fig{chap6:fig-liver}, right image) the model is depicted several seconds after the completion of the stretch, so that stresses had reached an approximately steady state. The stress dissipation introduced by the viscoelastic model is clearly evident, and for example would result in significantly altered virtual tool reaction forces.	
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=13.9cm]{chapter6/liver.pdf}
+\end{center}
+\caption[GPU solution times]{Deformation of a liver model using the TI model (middle) and the TIV model (right). The undeformed mesh is shown on the left. Colour maps indicate the relative Von Mises equivalent stress magnitude.} 
+\label{chap6:fig-liver}
+\end{figure}
+	
+\TODO{Add movies online? If possible...}	
 	
 \section{Discussion}
-	\subsection{Critical time step}
-	\subsection{Difficulties to handle contacts}
+
+	\subsection{Critical time step}	\label{chap6:criticalTimestep}
+As already emphasised in section~\ref{chap5:computeNodalDisp} page \pageref{chap5:discussionTimestep}, the use of an explicit integration scheme imposes that the solution time remains below the critical time step. This critical time step depends on two kind of criterion: the size of the elements (due to the choice of the mesh) and the material's properties (Young's modulus and Poisson's ratio).
+
+The first factor leads to a strong constraint on the quality of the mesh. Indeed, meshing a complex shape with good and uniform elements is not a straightforward task and rather often bad and very small elements are created. In such a case, the critical time step for the whole simulation would be small even if there is only a single small element in the mesh. As an example, the liver mesh used in the section~\ref{chap6:liverSimu} had to be smoothed and remeshed properly to allow a decent simulation. 
+
+Material's properties are also a very influent factor for the determination of a critical time step. If the critical time step may be fairly large for very soft tissue (like brain), it is already divided by 2 when modelling liver. As we have seen, the value of the Poisson's ratio may be relaxed from 0.49 to 0.45 for instance. If it allows a time step twice as large, this relaxation introduces inaccuracies. If this is certainly acceptable for medical training simulators, the demand in precision for surgical planning or per-operating assistance would probably prevent such an approximation. 
+
+In a nutshell, additional care must be taken to produce quality meshes and the range of materials that may be used while maintaining interactive computations is limited when using an explicit time integration scheme. However, it allows a huge gain in speed for very soft tissue when the compromises on material's properties are acceptable for the desired application, as with medical simulators used for training. For the interested reader, a more thorough discussion on the critical time step of explicit analyses may be found in \cite{Taylor08}. 
+
+	
+	\subsection{Handling contacts}
+The present work was entirely concerned with numerical solution of constitutive models in explicit FE analyses, however an equally important issue from the point of view of interactive simulation is the modelling of interaction between organs and virtual tools, and its possible impact on $ \Delta t_{cr} $ and the stability of the simulation. Explicit time integration schemes are known to be more sensitive to contacts than implicit schemes. While this is beyond the scope of the present work, we note that a range of contact formulations are available in industry standard commercial explicit FE codes (e.g. LS-Dyna and ABAQUS). The methods are well tested and understood in the computational mechanics community, with two main types in common use: penalty methods and kinematic constraint methods. Penalty methods involve use of fictitious contact springs at interfaces, effectively to penalise interpenetration of opposing surfaces. If excessively stiff springs are used $ \Delta t_{cr} $ may indeed be reduced, however except in extreme conditions (e.g. from explosive or high speed impacts, or imposition of very large forces on highly constrained objects) spring stiffnesses of the same order of magnitude as the material stiffness are suitable. The effect on $ \Delta t_{cr} $ is therefore minimal \citep{Hallquist06}. Kinematic constraint methods involve (loosely) direct relocation of penetrating nodes back to the outside surface of the penetrated body, and have no effect on $ \Delta t_{cr} $. These may be especially useful for modelling interaction between soft tissues and stiff (effectively rigid) surgical tools. The computational cost of either variety has not been investigated here. 
+	
+	
