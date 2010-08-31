@@ -1,7 +1,7 @@
 \chapter{GPU implementation of TLED}
 \label{chap6}
 \begin{shortAbstract}
-\OC{ISBMS 2008a}
+The previous chapter introduced the TLED algorithm in details as well as enhancements with a viscoelastic and anisotropic formulation. If the TLED algorithm had already been implemented on GPU by \cite{Taylor07b}, restrictions due to using a graphics-based API and the limited hardware possibilities of GPUs necessitated reformulation of the force summation in their implementation. With the release by NVIDIA of a new graphics card architecture along with a new and more flexible non-graphics API specially designed for general computation on GPU, we decided to investigate the re-implementation of the TLED for this new architecture with the aim to achieve a more straightforward and efficient implementation. The aim was also to enhance the GPU-based implementation of the TLED with a viscoelastic and anisotropic formulation. This chapter will describe the implementation of this non-linear, viscoelastic and anisotropic finite element method algorithm in the open source framework SOFA. By providing an efficient and accurate non-linear FEM for soft tissue modelling to worldwide researchers, we thus hope to assist in enhancing the realism of medical simulators. This work has led to three publications \citep{Comas2008,Taylor2008,Taylor2009}.
 \end{shortAbstract}
 
 \section{Summary of the TLED formulation}
@@ -60,7 +60,7 @@ Interface with a GPU has traditionally been via a graphic application programmin
 Because OpenGL and DirectX are both low-level APIs and include many irrelevant functionality from a GPGPU perspective, higher level languages were designed to give developers more direct control of the graphics pipeline without having to use assembly language or hardware-specific languages. 
 	
 		\subsubsection*{Graphics API}
-OpenGL (version 1.5 and newer) provides shader language based on the C programming language called OpenGL shading language (GLSL). In the DirectX API (DirectX 9 and newer), shaders are programmed with the high level shader language (HLSL). Cg is another high-level shading language developed by NVIDIA in close collaboration with Microsoft and it is very similar to Microsoft's HLSL. However, the Cg compiler is not specific to a graphics API and can output both OpenGL and DirectX shader programs. 
+OpenGL (version 1.5 and newer) provides shader language based on the C programming language called OpenGL shading language (GLSL). In the DirectX API (DirectX 9 and newer), shaders are programmed with the high level shader language (HLSL). Cg is another high-level shading language developed by NVIDIA in close collaboration with Microsoft and it is very similar to Microsoft's HLSL \citep{Mark03}. However, the Cg compiler is not specific to a graphics API and can output both OpenGL and DirectX shader programs. 
 
 These languages all share basic data types (float, integer, bool etc.) and also feature vector and matrix data types that are based on the basic data types (like float3 or float4x4 in Cg and vec3 or mat4 in GLSL) and standard library functions are provided (vector and matrix multiplication, cross product etc.). In addition, they support loops and branching like if/else, while, and for. However, because these languages are just an abstraction on the top of graphics API, there are significant restrictions on what they can do. Specifically, shader programs are unable to determine the destination of their outputs. They merely operate on fragment data (color, texture coordinates, normal etc.) and return the modified fragment at the same location. Each shader is also executed independently of its neighbours since no communication is allowed between processors. Note that while this was made possible on recent hardware, these graphics API do not take advantage of this feature and therefore this statement remains valid. 
 
@@ -304,7 +304,7 @@ The Von Mises equivalent stress distributions resulting from stretching the mode
 \begin{center}
 \includegraphics[width=13.9cm]{chapter6/liver.pdf}
 \end{center}
-\caption[GPU solution times]{Deformation of a liver model using the TI model (middle) and the TIV model (right). The undeformed mesh is shown on the left. Colour maps indicate the relative Von Mises equivalent stress magnitude.} 
+\caption[GPU solution times]{Deformation of a liver model using the TI model \textbf{(middle)} and the TIV model \textbf{(right)}. The undeformed mesh is shown on the left. Colour maps indicate the relative Von Mises equivalent stress magnitude.} 
 \label{chap6:fig-liver}
 \end{figure}
 	

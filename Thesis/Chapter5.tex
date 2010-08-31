@@ -1,10 +1,7 @@
 \chapter{The total Lagrangian explicit dynamics (TLED) algorithm}
 \label{chap5}
 \begin{shortAbstract}
-TLED proposed by Miller almost real-time \\
-GPU implementation to reach real-time \\
-But first: TLED description \\
-\OC{MICCAI 2008; MedIA 2009}
+In 2007, \citeauthor{Miller07} proposed the total Lagrangian explicit dynamics (TLED) algorithm, a very efficient fully non-linear formulation. The authors reported that the average number of floating-point operations per element per time step is $35\, $\% lower than for the similar implementation of the algorithm based on updated Lagrangian formulation. Their work constituted a step towards the simulation of entire organs in real-time. Later in the year, \citeauthor{Taylor07b} reformulated the TLED algorithm to propose the first GPU implementation of a fully non-linear finite element method. However, restrictions due to using a graphics-based API necessitated reformulation of the force summation in their implementation. \cite{Taylor07a} also presented an efficient constitutive update procedure for viscoelastic models formulated for use in explicit dynamic finite element algorithms like the TLED algorithm. With the release by NVIDIA of a new graphics card architecture along with a new and more flexible non-graphics API specially designed for general-purpose GPU, we decided to investigate the re-implementation of the TLED for this new architecture with the idea of a more straightforward and efficient implementation in mind. We also wanted to extend the simple non-linear TLED formulation by adding the constitutive update procedure for viscoelastic models introduced by \citeauthor{Taylor07a} and an anisotropic constitutive formulation as well. This work eventually yields a very efficient GPU-based non-linear, viscoelastic and anisotropic formulation for modelling solid organs in medical simulation and was the object of three publications \citep{Comas2008,Taylor2008,Taylor2009}. This chapter aims at describing the TLED algorithm in details, as well as introducing the viscoelasticity and anisotropy extensions. Their GPU implementations will be the object of the next chapter. 
 \end{shortAbstract}
 
 
@@ -29,7 +26,7 @@ We will first explain how to compute element nodal forces based on the deformati
 
 	\subsection{Computation of element nodal forces} 
 	
-We adopt the notation of \citeauthor{Bathe95} with respect to indication of the relevant configuration of the body: a left superscript indicates the configuration in which a quantity occurs and, when applicable, a left subscript indicates the configuration with respect to which the quantity is measured. We note the coordinates of a point at time t $ ^t \mathbf{x}$.
+We adopt the notation of \citeauthor{Bathe95} with respect to indication of the relevant configuration of the body: a left superscript indicates the configuration in which a quantity occurs and, when applicable, a left subscript indicates the configuration with respect to which the quantity is measured. We note the coordinates of a point $ ^t \mathbf{x}$ at time t. 
 
 \subsubsection*{The deformation gradient} 
 As we know, a fundamental measure of deformation is the deformation gradient tensor $ _0^t \mathbf{X} $ and we recall that it may be written as:
@@ -110,7 +107,7 @@ where $ _0^t\mathbf{\hat{S}} $ is the vector form of the second Piola-Kirchhoff 
 \begin{equation}
 _0^t\mathbf{\hat{S}} = \left[ _0^t S_{11} \quad _0^t S_{22} \quad _0^t S_{33} \quad _0^t S_{12} \quad _0^t S_{23} \quad _0^t S_{13} \right] ^T,
 \end{equation}
-$ _0^t\mathbf{B}^T_L $ is the strain-displacement matrix and $ d^0V $ is the initial (undeformed) volume of the element. The strain-displacement matrix $ \mathbf{B}_L $ relates the strains in an element to the element's nodal displacements. If an implicit analysis is performed, the strain-displacement matrix is used in the assembly of the stiffness matrix. In explicit analyses it is used to compute element nodal force contributions according to \eqref{chap5:elementForce}. In geometrically linear analyses, we assume that the displacements are infinitesimally small so that the geometry of an element does not change over time and the strain-displacement matrix is constant. Conversely, because geometrically non-linear analyses (such as carried out by the TLED algorithm) take the change of geometry of the elements into account, the strain-displacement matrix $ \mathbf{B}_L = _0^t\mathbf{B}_L $ varies. However, the strain-displacement matrix at time $ t $ may be computed by transforming a linear matrix $ _0^t\mathbf{B}_{L0} $ using the deformation gradient. We begin by defining the linear matrix as:
+$ _0^t\mathbf{B}^T_L $ is the strain-displacement matrix and $ d^0V $ is the initial (undeformed) volume of the element. The strain-displacement matrix $ \mathbf{B}_L $ relates the strains in an element to the element's nodal displacements. If an implicit analysis is performed, the strain-displacement matrix is used in the assembly of the stiffness matrix. In explicit analyses it is used to compute element nodal force contributions according to \eqref{chap5:elementForce}. In geometrically linear analyses, we assume that the displacements are infinitesimally small so that the geometry of an element does not change over time and the strain-displacement matrix is constant. Conversely, because geometrically non-linear analyses (such as carried out by the TLED algorithm) take the change of geometry of the elements into account, the strain-displacement matrix $ \mathbf{B}_L = \leftidx{_0^t}{\mathbf{B}}{_L} $ varies. However, the strain-displacement matrix at time $ t $ may be computed by transforming a linear matrix $ _0^t\mathbf{B}_{L0} $ using the deformation gradient. We begin by defining the linear matrix as:
 \begin{equation}
 _0^t\mathbf{B}_{L0} = \left[ _0\mathbf{B}_{L0}^{(1)} \quad _0\mathbf{B}_{L0}^{(2)} \quad \ldots \quad _0\mathbf{B}_{L0}^{(N)} \right],
 \end{equation}
