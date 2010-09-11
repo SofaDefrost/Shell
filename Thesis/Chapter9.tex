@@ -12,7 +12,7 @@ We propose to define a triangular shell element by combining a two-dimensional i
 
 \subsection{Triangular elastic membrane}
 
-The computation of the triangular elastic membrane stiffness matrix can be derived from previous works dealing with tetrahedral co-rotational elements \citep[like][for instance]{Muller04}. The element stiffness matrix $\textbf{K}_e$ can be computed as follows:
+The computation of the triangular elastic membrane stiffness matrix can be derived from previous works dealing with tetrahedral co-rotational elements \citep[like][for instance]{Muller04b}. The element stiffness matrix $\textbf{K}_e$ can be computed as follows:
 %
 \begin{equation}
 \textbf{K}_e = \int_v \textbf{J} \boldsymbol\chi \textbf{J}^{T} dV,
@@ -112,32 +112,234 @@ where $\textbf{b} = \textbf{DC}^{-1}$.
 \end{equation} 
 where $\boldsymbol\chi$ is the material matrix, the substitution of $\textbf{b}$ into this expression yields
 \begin{equation}
+\label{chap9:Ke}
 \textbf{K}_e = (\textbf{C}^{-1})^T \int_v \textbf{D}^{T} \boldsymbol\chi \textbf{D} dV \textbf{C}^{-1}.
 \end{equation} 
-The integration is carried out numerically using Gauss points located at the middle of each edge of the triangle. 
 
-\subsection{Implementation}
 
+\section{Mechanical interactions with the curved surface of shells}	\label{chap9:interactions}
+
+The practical interest of modelling complex behaviours such as bending and twisting would remain fairly low for medical simulation if contacts and constraints were not handled properly. In our case the difficulty comes from different sources. First the collision detection must be carried out with the curved surface of shell elements as opposed to the classic detection on plane triangles. Then forces applied to a given triangle need to be distributed between linear forces and torques onto its three vertices. As we will see, the same polynomial interpolation function chosen to compute the bending energy in our FEM formulation is also used to capture the interactions between the curved surface and other objects. 
+
+In order to detect the collision with the bent surface, we have chosen the subdivision approach. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using \eqref{chap9:eq-deflection} according to the displacements and slopes at the three vertices of the triangular element. This process of subdivision allows us to render each shell as a curved triangle (\fig{chap9:fig-shell} (a) and (b)) and detect any collision with the curved surface of the shell using any of the classic collision detection algorithms working on flat triangles.
+
+Once a collision has been detected, it must be processed by distributing the linear force received on the bent surface between the three vertices of the triangle. First the linear part of the force is simply transmitted on each node using the barycentric coordinates of the contact point's projection onto the triangle. 
+
+The main difficulty is to convert the normal component of the force applied to the bent surface into a torque at each of the three nodes (\fig{chap9:fig-shell} (c)). Our approach is the following: during force computation, we use the change in orientation measured at each node to compute the local deflection of each subvertex within the triangle. Differentiating the formulation twice yields a relation between the torque applied at each node and the generated force in bending. We therefore need to invert the latter formulation to convert a bending force into torques at each vertex. Thus, we are able to transmit any force coming from interactions with the curved surface of shells to the mechanical vertices used in our FEM formulation. 
+%
+\begin{figure}
+\centering
+\includegraphics[width=12cm]{chapter9/shell_curvature.pdf}
+\caption {(a)  The triangle formed by the three vertices of the shell has been recursively subdivided 3 times and the deflection of each new vertex was computed according to the same deflection function used in our shell FEM. (b) Sampling the actual surface of the shell allows more accurate rendering and collision detection. (c) The shape function is used to distribute an external force $F$ onto the triangle nodes.}
+\label{chap9:fig-shell}
+\end{figure}
+
+
+\section{Implementation}
+
+The co-rotational shell formulation has been successfully implemented as a Force Field into the open-source framework SOFA \citep{Allard07}. A description of SOFA's architecture was given in section \ref{chap6:SOFA}. We will now review the key points of the implementation.
+
+	\subsection{Evaluation of displacements}
+The computation of the stiffness matrix, and subsequently the internal forces, starts with the measure of the displacements at the three vertices of every element. As defined by \eqref{chap9:ui}, we need to measure the displacement along the z axis and the rotations around local x and y axes for each vertex. For \cite{Przemieniecki68}, the deflection z is measured in the global frame. But in a co-rotational formulation, a local frame is attached to each triangle and used to compute displacements and forces. In this local frame (formed from the 3 vertices) the deflection is therefore always null (hence, $ u_1, u_4, u_7 $ are null). To evaluate the remaining rotations, we first associate a quaternion at each vertex which embodies its frame (or its orientation). In mathematics, quaternions are an extension of complex numbers and may be written as follows:
+\begin{equation}
+q = w + x i + y j + z k \quad \mbox{with } i^2 = j^2 = k^2 = -1.
+\end{equation}
+For use in geometry, quaternions are often written as a sum of a scalar and a vector:
+\begin{equation}
+q = w + (x, y, z) = \cos (\frac{\alpha}{2}) + \mathbf{u} \sin (\frac{\alpha}{2}),
+\end{equation}
+where $ \mathbf{u} $ is a unit vector and $ \alpha $ a scalar. We denote by $ \mathbf{v} $ a vector in $\field{R}^3$ and it can be shown that the quaternion product $ q \mathbf{v} q^{-1} $ yields a vector which is the rotation of $ \mathbf{v} $ by an angle $ \alpha $ around the axis $ \mathbf{u} $. Quaternions require less storage than rotation matrices and are known to be more numerically stable. 
+
+From there, our approach to measure the rotations around local x and y axes is simple. At runtime and for each vertex, we compute the rotation that we need to apply to transform the z axis of the triangle's frame into the z axis of the vertex's frame (see listing \ref{chap9:qDiffZ}). The differences with the same quantities computed for the rest position during the initialisation lead to the desired displacements. 
+
+\begin{lstlisting}[caption={Method used to compute the rotation of the z axis between the frames embodied by two quaternions},label=chap9:qDiffZ]
+inline Quat qDiffZ(const Quat& Qvertex, const Quat& Qtriangle)
+{
+    // dQ is the quaternion that embodies the rotation between the z axis of the vertex and the z axis of the local triangle's frame (in local space)
+    Quat dQ;
+
+    // u = z axis of the triangle's frame (in local space)
+    Vec3d u(0,0,1);
+
+    // v = z axis of the vertex's frame is expressed into world space
+    Vec3d v = Qvertex.rotate(Vec3d(0.0, 0.0, 1.0));
+    
+    // v0 = v expressed into local triangle's frame
+    Vec3d v0 = Qtriangle.rotate(v);
+
+    // Axis of rotation between the 2 vectors u and v lies into the plan of the 2 vectors
+    Vec3d axis = cross(u, v0);
+    
+    // Shortest angle between the 2 vectors
+    double angle = acos(dot(u, v0));
+
+    // Quaternion associated to this axis and this angle
+    if (fabs(angle)>1e-6)
+    {
+        dQ.axisToQuat(axis,angle);
+    }
+    else
+    {
+        dQ = Quat(0,0,0,1);
+    }
+
+    return dQ;
+}
+\end{lstlisting}
+
+
+	\subsection{Inversion of matrix $ \mathbf{C} $}
+\cite{Przemieniecki68} described the condition of non-inversion for the matrix $\mathbf{C}$ as the following:
+\TODO{add condition of inversion... but need the book :)}
+
+Each triangle of a mesh obtained from a regular grid of points fits this condition of non-inversion (right triangles). We fixed this limitation by choosing a different local coordinate system that the one introduced by \citeauthor{Przemieniecki68}. 
+
+\TODO{add figure with the two different coordinate system}
+
+
+	\subsection{Numerical integration}
+In practice, the integration of the integral in \eqref{chap9:Ke} must be carried out numerically using Gaussian quadrature, a numerical technique which allows to calculate the value of an integral. The Gaussian quadrature states that the integral of a function $ f $ over the area $ A $ of a triangular surface may be evaluated as a weighted sum of function values at specific points within the area of integration \citep{Cowper73}. In other words, we have
+\begin{equation}
+\int_{A} f dA = A \sum_{i=1}^n w_i f_i,
+\end{equation}
+where $ w_i $ is a weight factor and $ f_i $ is the evaluation of $ f $ at the Gauss point $ i $. Different numbers and locations may be chosen for the integration points depending on the order of accuracy desired. We classically choose 3 integration points located at the middle of each edge of the triangle, for which the weight factors $ w_i $ are $ 1/3 $. The required integration over the volume is achieved by multiplying the result by the thickness $ t $ of the shell. Therefore, \eqref{chap9:Ke} may be numerically evaluated as
+\begin{equation}
+\textbf{K}_e = \dfrac{A t}{3} (\textbf{C}^{-1})^T \sum_{i=1}^3 \textbf{D}_i^{T} \boldsymbol\chi \textbf{D}_i  \textbf{C}^{-1},
+\end{equation}
+where $ D_i $ is the evaluation of the matrix $ \mathbf{D} $ defined by \eqref{chap9:eq-strains} at each Gauss point $ i $. 
+
+\bigskip
+
+\subsection{Computation of stiffness matrix: summary}	\label{chap9:summary}
 In practical terms, the different computations associated with each triangular shell element can be described as follows:
 %
 \begin{enumerate}
 \item Compute the rotation matrix $\textbf{R}$ from global to triangle (local) frame
-\item Compute the local displacement vector $\textbf{u} = \{v_1, v_2, 0, u_2, u_3, v_3, v_4, 0, u_5, u_6,$ $v_5, v_6, 0, u_8, u_9 \} $ for each triangle, where $ (v_1, v_2), (v_3, v_4) and (v_5, v_6) $ are the in-plane displacements on x and y local axes and $ u_i $ were defined by \eqref{chap9:ui}. As we are in a co-rotational framework the normal displacements $u_1, u_4, u_7$ at each of the three nodes are null in the local frame of the triangle. 
+\item Compute the local displacement vector $\textbf{u} = \{v_1, v_2, 0, u_2, u_3, v_3, v_4, 0, u_5, u_6,$ $v_5, v_6, 0, u_8, u_9 \} $ for each triangle, where $ (v_1, v_2), (v_3, v_4) and (v_5, v_6) $ are the in-plane displacements on x and y local axes and $ u_i $ were defined by \eqref{chap9:ui}. As we are in a co-rotational framework, we recall that the normal displacements $u_1, u_4, u_7$ at each of the three nodes are null in the local frame of the triangle. 
 \item Compute matrix $\textbf{D}_i$  at each Gauss point $i$
 \item The strain-displacement matrix at each Gauss point $i$ is computed with $\textbf{J}_i = \textbf{D}_i \textbf{C}^{-1}$
 \item Compute the local stiffness matrix $\textbf{K}_e$ of the element as $\textbf{K}_e = \displaystyle{\sum^3_{i=1}} \textbf{J}_i \boldsymbol\chi \textbf{J}_i^T$
 \item Transform the local element stiffness matrix into the global frame and add it to a global stiffness matrix
 \end{enumerate}
 
-The co-rotational shell formulation has been successfully implemented as a ForceField into the open-source framework SOFA \citep{Allard07}.
 
-\bigskip
+	\subsection{Concept of mappings in SOFA}	\label{chap9:mappings}
+Let us explain the concept of \emph{mappings} and \emph{mechanical mappings} in SOFA. In SOFA, the state of a simulated system can be described by the values and time derivatives of its independent degrees of freedom (DOF) gathered in two vectors $x_0$ and $v_0$. Geometry can be attached to the DOF for visualisation or contact computation. We call it the \emph{shape}. It is typically defined by points, such as triangle vertices or sphere centers, and additional data such as triangle connectivity or sphere radii. We call these points the vertices. Their positions, velocities and associated forces are stored in vectors $x_1$ , $v_1$ and $f_1$, respectively. They are not independent variables, since the positions and velocities are bound to the DOF using kinematic operators which we call the \emph{mappings}:
+\begin{eqnarray*}
+x_1 &=&\JNL_1(x_0)\\ 
+v_1 &=& J_1 v_0
+\end{eqnarray*}
+When the vertices and the DOF are the same, the mapping is the identity. Matrix $J_1 = \frac{\partial x_1}{\partial x_0}$ encodes the linear relation between the DOF velocities and the shape velocities. Due to linearity, the same relation holds on elementary displacements $dx$. It also holds on accelerations, with an additional offset due to velocities when the position mapping \JNL is nonlinear. In most cases, operators \JNL~ and \J~ are the same, but in the case of rigid bodies, \JNL~ is nonlinear with respect to $x$ and it can not be written as a matrix.
 
-\TODO{add a few words about a GPU implementation.}
+When shapes collide, additional geometry can be necessary to model the contact. For instance, when an edge intersects another one, a contact force is applied to the intersection points. These points are defined by their barycentric coordinates with respect to their edge vertices. Other relations can be used, depending on the kind of geometrical primitives in contact. This additional geometry requires another geometrical layer connected to the shape by a mapping, as illustrated in \fig{chap9:fig-mappings}.
+
+\begin{figure}
+	\begin{center}
+ 		\includegraphics[width=13cm]{chapter9/mappings}
+ 	\end{center}
+ \caption[Concept of mappings in SOFA]{Mappings from the DOFs to a contact point. Top: two simulated objects in contact (red point). Bottom: hierarchy of geometrical layers. Positions and velocities are propagated top-down. The contact force $f_c$ is accumulated in the contact layers. Forces are then propagated bottom-up. Image courtesy of SOFA's documentation. }
+\label{chap9:fig-mappings}
+\end{figure}
+
+Positions and velocities can be propagated top-down through our layer hierarchy using the relations presented. In order to take the contact forces into account in the dynamics equation, we have to convert the contact forces applied to the contact points to forces applied to the DOF, where our mechanical model is applied. This requires an extension to the position and velocity mappings presented: we call it \emph{mechanical mapping}. This is a general method to propagate forces bottom-up through the layers of the geometrical hierarchy. Given forces $f_n$ applied to a geometry layer $n$, we derive the equivalent force applied to its parent layer $n-1$. Equivalent forces must have the same power. Thus, we have to compute $f_{n-1}$ such that:
+$$
+v_{n-1}^T f_{n-1} = v_n^T f_n
+$$
+The relation $v_{n} = J_{n}v_{n-1}$ allows us to rewrite the previous equation as
+$$
+v_{n-1}^T f_{n-1} = v_{n-1}^T J_{n}^T f_n
+$$
+Since this relation must hold for any velocity $v_{n-1}$, we simplify it and get
+\begin{equation} \label{eq:mapF}
+f_{n-1} = J_n^T f_n
+\end{equation}
+This corresponds to the principle of virtual work.
+
+
+\subsection{Visualisation}
+Because shells have a curved surface, a specific rendering technique is required to visualise the deformation in bending. Without any consideration, the shells would appear flat (as simple triangles). Our idea is to make use of a higher resolution mesh whose deformation would be controlled by the underlying physical mesh of shells. In other words, a mapping was implemented to connect the DOFs of our mechanical model to a set of vertices useful for rendering. In SOFA, a mapping has only 2 methods: init(), which allows computations during the initialisation phase, and apply() called at runtime and in charge of updating the positions of the high resolution mesh according to the coarser mesh constituted by the shell elements. 
+
+\begin{itemize}
+\item \textbf{init()} \\
+During the initialisation phase, each vertex from the high resolution mesh is projected onto the coarse mesh. Thus, for each vertex we find the closest primitive (DOF, edge or triangle) on the coarse mesh and we take the list of triangles attached to it. Then, the barycentric coordinates of the projected point is computed within each triangle of this list.
+%
+\item \textbf{apply()} deals with the relation between the DOFs and the vertices used for rendering (shape vertices). The position of each vertex from the high resolution mesh must be updated according to the underlying mesh. After the initialisation phase, we have associated each rendering vertex to a triangle and its barycentric coordinates within this triangle are known. Therefore, we first start by computing the new position of the rendering vertex by weighting the coordinates of each triangle's vertex with the associated barycentric weight. Hence, we obtain a new position in the plane of the triangle. If we were to stop the procedure here, the shell elements would still be rendered as flat triangles since all rendering vertex are located in the plane of the triangles. Consequently, the additional step of computing the deflection is required. We know that the deflection at any point of local coordinates $(x, y)$ may be computed from $u_z = c_1 + c_2x + c_3y + c_4x^2 + c_5xy + c_6y^2 + c_7x^3 + c_8xy^2 + c_9y^3$ as described by \eqref{chap9:eq-deflection}. Hence, we calculate the local coordinates $(x, y)$ of each rendering vertex within its associated triangle. Moreover, we notice that the coefficients $ \mathbf{c} = \left\{c_1 c_2 \ldots c_9 \right\} $ may be evaluated using \eqref{chap9:eq-U} from
+\begin{equation}
+\mathbf{c} = \mathbf{C}^{-1} \mathbf{u},
+\end{equation}
+The deflection may therefore be computed for each vertex and added to the in-plane position previously calculated. 
+\end{itemize}
+
+It is worth noting that a high resolution mesh may be obtained by recursively subdividing each triangle. However, the vertices are closely related to the structure of the mechanical mesh and rendering artifacts may appear. As we can notice on \fig{chap9:fig-rendering}, the quality of the visualisation may be improved by using a totally different mesh.
+%
+%\begin{figure}
+%	\begin{center}
+%		\begin{tabular}{cc}
+%			\includegraphics[width=6cm]{chapter9/sub_grid_red.png} & \includegraphics[width=6cm]{chapter9/irregular_grid_red.png} \\
+%			\includegraphics[width=6cm]{chapter9/sub_grid_mesh.png} & \includegraphics[width=6cm]{chapter9/irregular_grid_mesh.png} \\
+%			Subdivided triangles & Irregular grid			
+%		\end{tabular}
+%	\end{center}
+%	\label{chap9:fig-rendering}
+%	\caption{We can notice some rendering artifacts when we use subdivided triangles. Using an irregular mesh instead reduces the impact.}
+%\end{figure}
+%
+\begin{figure}[ht]
+\centering 
+\subfloat[Subdivided triangles]{\includegraphics[width=6.5cm]{chapter9/sub_grid_red.png}}
+\hfill 
+\subfloat[Irregular grid]{\includegraphics[width=6.5cm]{chapter9/irregular_grid_red.png}} \\
+\subfloat[Subdivided triangles]{\includegraphics[width=6.5cm]{chapter9/sub_grid_mesh.png}}
+\hfill
+\subfloat[Irregular grid]{\includegraphics[width=6.5cm]{chapter9/irregular_grid_mesh.png}}
+\caption[Visual artifacts using triangle subdivisions]{In some situations, some rendering artifacts may appear when we use subdivided triangles to render the shells (a,c). Using an irregular mesh which is not closely related to the structure of the mechanical mesh reduces the impact (b,d).}
+\label{chap9:fig-rendering}
+\end{figure}
+
+
+	\subsection{Contacts with the curved surface of shells}
+If a specific rendering technique was developed to visualise the curved shape of the shells, it is also essential to interact with it. Indeed, as explained section \ref{chap9:interactions}, the force applied onto the curved surface of the shell must be processed by distributing the linear force received on the bent surface between the three vertices of the triangle. Consequently, the mapping previously described is extented to a mechanical mapping and two additional methods need to be implemented: applyJ and applyJT. 
+%
+\begin{itemize}
+\item \textbf{applyJ()} encodes the linear relation between the DOF velocities and the shape velocities as described in section \ref{chap9:mappings}. applyJ() basically embodies the same computations than apply() except that the vector of displacement $\mathbf{u}$ is different. Whereas the local displacement in rotation is measured from the positions to create the vector $\mathbf{u}$, this time the vector is directly obtained from the angular velocities we had at each vertex (once converted into the local frame). We therefore have a relation between the angular velocities at each vertex and the velocity of the deflection in the direction normal to each triangle. 
+\item \textbf{applyJT()} must convert the contact forces applied to the contact points to forces applied to the DOF. If the linear forces are easily distributed between DOFs using barycentric coordinates, it also encodes the relation between the vertical force $ \mathbf{F} $ applied onto the bent surface of the plate and the torque at each DOF. We start by retrieving the normal component of the applied force vector $F_{\mathrm{z}}$. We project the application point of the force into the triangle's plane and compute its local coordinates $(x,y)$. We create the polynom $P$ such as 
+%
+\begin{equation}
+P = F_{\mathrm{z}}(1 \hspace{0.2cm} x \hspace{0.2cm} y \hspace{0.2cm} x^2 \hspace{0.2cm} xy \hspace{0.2cm} y^2 \hspace{0.2cm} x^3 \hspace{0.2cm} xy^2 \hspace{0.2cm} y^3)^T. 
+\end{equation}
+%
+The moments at each vertex are then obtained with 
+\begin{equation}
+\Omega = (\textbf{C}^{-1})^T P.
+\end{equation}
+\end{itemize}
+
+
+\subsection{Allowing a curved rest configuration}
+In \cite{Przemieniecki68}, the rest and initial configurations are both assumed to be the flat one. The only way to have an initial deformed shape is to apply a torque on the vertices of the shells. However, in this configuration we would compute a displacement vector $ \mathbf{u} $ that is not null, which leads to a bending energy. In order to define a curved rest configuration for our shells, we propose to compute the bending energy between the initial and rest configuration during the initialisation phase, and add the energy between the current and initial configurations at runtime. Consequently, by separating initial and rest configurations, it is possible to have an initial deformed shape without any initial bending energy. In other words, we shifted the zero energy configuration.
+
+
+\subsection{Possible extension: parallel implementation on GPU}
+If we look closely all the steps required to compute the local stiffness matrix for each element (see section \ref{chap9:summary} for a summary), one may notice that the operations carried out for a given shell element are independent of the other elements. This feature makes our co-rotational shell FEM implementation highly parallelisable. One potential problem however, is the assembly of the global stiffness matrix. Indeed, in a parallel implementation, many elements are processed concurrently. Inevitably, two elements sharing a node may be processed in the same time and may therefore try to both write their element contribution into the exact same location in the global stiffness matrix, and therefore the same location in GPU's memory. As with the TLED implementation described in chapter \ref{chap6}, there is two solutions. The first one would be to re-order the elements organisation so that no concurrent writes will occur. Unfortunately, this re-organisation of the element reduces the number of elements that can be processed in parallel. The second solution would be to take advantage of a new GPU NVIDIA architecture called Fermi, which added the capability atomic writes for floats. We recall that the write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, the concurrent writes are simply serialised in hardware. Obviously, an additional overhead is to be expected. 
+
+To conclude on a possible parallelisation of the algorithm, an optimal GPU implementation is always a challenge to achieve. One needs to choose wisely the type of memory to be used for each variable and optimise the access patterns. However, it seems that there is no major obstacle to a GPU implementation. 
+
+\TODO{enough details?}
+
+
 
 \section{Validation}
 
-We compared our model with some theoretical results reported by \cite{Zhongnian86} to assess its quality in modelling bending. The test that we carried out uses a square shape mesh clamped on all four edges. A uniform load is then applied on the square and the maximum deflection $z_{max}$ at the centre can be calculated. Several simulations are performed with increasing load values $q$ (ranging from $1$ to $5 N/m^2$) and the following parameters were used: Young's Modulus $E = 1.092 \times 10^6 \,Pa$, Poisson's ratio $\nu = 0.3$, square edge length $L = 10\,m$, thickness $h = 0.1\,m$. Using these particular values it can be shown that $z_{max} = 0.126\,q$. The maximum deflection obtained in our simulations are reported in Table~\ref{chap9:tab-results}. In average we found $z_{max} = 0.1248\,q $, resulting in a $0.93\,\%$ error between our model and theoretical results on that test. 
+We compared our model with some theoretical results reported by \cite{Zhongnian86} to assess its quality in modelling bending. The test that we carried out uses a square shape mesh clamped on all four edges. A uniform load is then applied on the square and the maximum deflection $z_{max}$ at the centre can be calculated. Several simulations are performed with increasing load values $q$ (ranging from $1$ to $5 N/m^2$) and the following parameters were used: 
+\begin{itemize}
+ \item Young Modulus $E = 1.092 \times 10^6$
+ \item Poisson's ratio $\nu = 0.3$
+ \item edge of the square $L = 10\,m$
+ \item thickness $h = 0.1\,m$
+ \item pressure q is a uniformly distributed load per unit area
+\end{itemize}
+
+Using these particular values it can be shown that $z_{max} = 0.126\,q$. The maximum deflection obtained in our simulations are reported in Table~\ref{chap9:tab-results}. In average we found $z_{max} = 0.1248\,q $, resulting in a $0.93\,\%$ error between our model and theoretical results on that test. 
 %
 \begin{table}[ht]
 	\centering
@@ -157,34 +359,9 @@ We compared our model with some theoretical results reported by \cite{Zhongnian8
 	\label{chap9:tab-results}
 \end{table}
 
+\bigskip
 
-\section{Mechanical interactions with the curved surface of shells}	\label{chap9:interactions}
-
-The practical interest of modelling complex behaviours such as bending and twisting would remain fairly low for medical simulation if contacts and constraints were not handled properly. In our case the difficulty comes from different sources. First the collision detection must be carried out with the curved surface of shell elements as opposed to the classic detection on plane triangles. Then forces applied to a given triangle need to be distributed between linear forces and torques onto its three vertices. As we will see, the same polynomial interpolation function chosen to compute the bending energy in our FEM formulation is also used to capture the interactions between the curved surface and other objects. 
-
-In order to detect the collision with the bent surface, we have chosen the subdivision approach. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using \eqref{chap9:eq-deflection} according to the displacements and slopes at the three vertices of the triangular element. This process of subdivision allows us to render each shell as a curved triangle (\fig{chap9:fig-shell} (a) and (b)) and detect any collision with the curved surface of the shell using any of the classic collision detection algorithms working on flat triangles.
-
-Once a collision has been detected, it must be processed by distributing the linear force received on the bent surface between the three vertices of the triangle. First the linear part of the force is simply transmitted on each node using the barycentric coordinates of the contact point's projection onto the triangle. 
-
-The main difficulty is to convert the normal component of the force applied to the bent surface into a torque at each of the three nodes (\fig{chap9:fig-shell} (c)). Our approach is the following: during force computation, we use the change in orientation measured at each node to compute the local deflection of each subvertex within the triangle. Differentiating the formulation twice yields a relation between the torque applied at each node and the generated force in bending. We therefore need to invert the latter formulation to convert a bending force into torques at each vertex. We start by retrieving the normal component of the applied force vector $F_{\mathrm{z}}$. We project the application point of the force into the triangle's plane and compute its local coordinates $(x,y)$. We create the polynom $P$ such as 
-%
-\begin{equation}
-P = F_{\mathrm{z}}(1 \hspace{0.2cm} x \hspace{0.2cm} y \hspace{0.2cm} x^2 \hspace{0.2cm} xy \hspace{0.2cm} y^2 \hspace{0.2cm} x^3 \hspace{0.2cm} xy^2 \hspace{0.2cm} y^3)^T. 
-\end{equation}
-%
-The moments at each vertex are then obtained with 
-\begin{equation}
-\Omega = (\textbf{C}^{-1})^T P.
-\end{equation}
-%
-Thus, we are able to transmit any force coming from interactions with the curved surface of shells to the mechanical vertices used in our FEM formulation. 
-%
-\begin{figure}
-\centering
-\includegraphics[width=12cm]{chapter9/shell_curvature.pdf}
-\caption {(a)  The triangle formed by the three vertices of the shell has been recursively subdivided 3 times and the deflection of each new vertex was computed according to the same deflection function used in our shell FEM. (b) Sampling the actual surface of the shell allows more accurate rendering and collision detection. (c) The shape function is used to distribute an external force $F$ onto the triangle nodes.}
-\label{chap9:fig-shell}
-\end{figure}
+\TODO{maybe a bit short for a so-called validation...}
 
 
 \section{Application to implant deployment simulation in cataract surgery}

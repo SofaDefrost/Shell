@@ -110,9 +110,41 @@ urlcolor=linkcol % Color for linked URLs
 \usepackage{amsfonts}
 \newcommand{\field}[1]{\mathbb{#1}}			% For sets of reals, complex etc. 
   
-% For algorithmics
-%\usepackage{algorithm}
-%\usepackage[noend]{algorithmic}
+% For snipsets of code
+\usepackage{listings}
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstset{
+	language=C++,
+	keywordstyle=\bfseries\ttfamily\color[rgb]{0,0,1},
+	identifierstyle=\ttfamily,
+	commentstyle=\color[rgb]{0.133,0.545,0.133},
+	stringstyle=\ttfamily\color[rgb]{0.627,0.126,0.941},
+	showstringspaces=false,
+	basicstyle=\small,
+	numberstyle=\footnotesize,
+	numbers=left,
+	stepnumber=1,
+	numbersep=10pt,
+	tabsize=2,
+	breaklines=true,
+	prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+	breakatwhitespace=false,
+	aboveskip={1.5\baselineskip},
+  columns=fixed,
+  upquote=true,
+  extendedchars=true,
+ frame=single,
+emph={Vec3d,Quat},
+emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
+% backgroundcolor=\color{lbcolor},
+}
+
+% Two definitions for chapter 9
+\newcommand{\JNL}{\ensuremath{\mathcal{J}}}     % positions
+\newcommand{\J}{\ensuremath{J}}     					% linear mapping
+
 
 % For sub-captions in figures
 \usepackage{caption}
