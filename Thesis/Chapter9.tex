@@ -8,7 +8,7 @@ A short abstract for the upcoming chapter \\
 
 \section{Model description}
 
-We propose to define a triangular shell element by combining a two-dimensional in-plane membrane energy, with an off-plane energy for describing bending and twist. To allow for real-time simulation, a computationally efficient formulation is needed. We therefore propose to extend the co-rotational idea introduced by \cite{Felippa00}. Indeed, as we have seen in the previous chapters, co-rotational approaches have been successfully applied to real-time simulation over the last few years. They offer a good trade-off between computational efficiency and accuracy by allowing small deformations but large displacements. We propose to improve and extend a plate model first introduced by \cite{Przemieniecki68} to a co-rotational formulation. Once combined with an in-plane membrane formulation we obtain an accurate, yet computationally efficient, shell finite element method featuring both membrane and bending energies. 
+We propose to define a triangular shell element by combining a two-dimensional in-plane membrane energy, with an off-plane energy for describing bending and twist. To allow for real-time simulation, a computationally efficient formulation is needed. We therefore propose to extend the co-rotational idea introduced by \cite{Felippa00}. Indeed, as we have seen in the previous chapters, co-rotational approaches have been successfully applied to real-time simulation over the last few years. They offer a good trade-off between computational efficiency and accuracy by allowing small deformations but large displacements. We propose to improve and extend a plate model first introduced by \cite{Przemieniecki85} to a co-rotational formulation. Once combined with an in-plane membrane formulation we obtain an accurate, yet computationally efficient, shell finite element method featuring both membrane and bending energies. 
 
 \subsection{Triangular elastic membrane}
 
@@ -44,7 +44,7 @@ To calculate the stiffness matrix for the transverse deflections and rotations s
  u_z = c_1 + c_2x + c_3y + c_4x^2 + c_5xy + c_6y^2 + c_7x^3 + c_8xy^2 + c_9y^3,
 \label{chap9:eq-deflection}
 \end{equation} 
-where $c_1$, \ldots , $c_9$ are constants. Equation~\ref{chap9:eq-deflection} solves an issue of symmetry which was observed with the deflection function proposed by \cite{Przemieniecki68}. These constants can be evaluated in terms of the displacements and slopes at the three corners of the triangular plate using 
+where $c_1$, \ldots , $c_9$ are constants. Equation~\ref{chap9:eq-deflection} solves an issue of symmetry which was observed with the deflection function proposed by \cite{Przemieniecki85}. These constants can be evaluated in terms of the displacements and slopes at the three corners of the triangular plate using 
 \begin{equation}
 \textbf{u} = \textbf{Cc}
 \label{chap9:eq-U}
@@ -113,15 +113,17 @@ where $\textbf{b} = \textbf{DC}^{-1}$.
 where $\boldsymbol\chi$ is the material matrix, the substitution of $\textbf{b}$ into this expression yields
 \begin{equation}
 \label{chap9:Ke}
-\textbf{K}_e = (\textbf{C}^{-1})^T \int_v \textbf{D}^{T} \boldsymbol\chi \textbf{D} dV \textbf{C}^{-1}.
+\textbf{K}_e = (\textbf{C}^{-1})^T \int_v \textbf{D}^{T} \boldsymbol\chi \textbf{D} dV \, \textbf{C}^{-1}.
 \end{equation} 
+
+Similarly to the membrane stiffness matrix, the bending stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element: $\textbf{K} = \textbf{R} \textbf{K}_e \textbf{R}^{T}$.
 
 
 \section{Mechanical interactions with the curved surface of shells}	\label{chap9:interactions}
 
 The practical interest of modelling complex behaviours such as bending and twisting would remain fairly low for medical simulation if contacts and constraints were not handled properly. In our case the difficulty comes from different sources. First the collision detection must be carried out with the curved surface of shell elements as opposed to the classic detection on plane triangles. Then forces applied to a given triangle need to be distributed between linear forces and torques onto its three vertices. As we will see, the same polynomial interpolation function chosen to compute the bending energy in our FEM formulation is also used to capture the interactions between the curved surface and other objects. 
 
-In order to detect the collision with the bent surface, we have chosen the subdivision approach. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using \eqref{chap9:eq-deflection} according to the displacements and slopes at the three vertices of the triangular element. This process of subdivision allows us to render each shell as a curved triangle (\fig{chap9:fig-shell} (a) and (b)) and detect any collision with the curved surface of the shell using any of the classic collision detection algorithms working on flat triangles.
+In order to detect the collision with the bent surface, we have chosen the subdivision approach. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using \eqref{chap9:eq-deflection} according to the displacements and slopes at the three vertices of the triangular element. This process of subdivision may also allow us to render each shell as a curved triangle (\fig{chap9:fig-shell} (a) and (b)) and detect any collision with the curved surface of the shell using any of the classic collision detection algorithms working on flat triangles.
 
 Once a collision has been detected, it must be processed by distributing the linear force received on the bent surface between the three vertices of the triangle. First the linear part of the force is simply transmitted on each node using the barycentric coordinates of the contact point's projection onto the triangle. 
 
@@ -140,7 +142,7 @@ The main difficulty is to convert the normal component of the force applied to t
 The co-rotational shell formulation has been successfully implemented as a Force Field into the open-source framework SOFA \citep{Allard07}. A description of SOFA's architecture was given in section \ref{chap6:SOFA}. We will now review the key points of the implementation.
 
 	\subsection{Evaluation of displacements}
-The computation of the stiffness matrix, and subsequently the internal forces, starts with the measure of the displacements at the three vertices of every element. As defined by \eqref{chap9:ui}, we need to measure the displacement along the z axis and the rotations around local x and y axes for each vertex. For \cite{Przemieniecki68}, the deflection z is measured in the global frame. But in a co-rotational formulation, a local frame is attached to each triangle and used to compute displacements and forces. In this local frame (formed from the 3 vertices) the deflection is therefore always null (hence, $ u_1, u_4, u_7 $ are null). To evaluate the remaining rotations, we first associate a quaternion at each vertex which embodies its frame (or its orientation). In mathematics, quaternions are an extension of complex numbers and may be written as follows:
+The computation of the stiffness matrix, and subsequently the internal forces, starts with the measure of the displacements $\left\{u_1 u_2 \ldots u_9 \right\} $ for every element. As defined by \eqref{chap9:ui}, we need to measure the displacement along the z axis and the rotations around local x and y axes for each vertex. For \cite{Przemieniecki85}, the deflection z is measured in the global frame. But in a co-rotational formulation, a local frame is attached to each triangle and used to compute displacements and forces. In this local frame (formed from the 3 vertices) the deflection is therefore always null (hence, $ u_1, u_4, u_7 $ are null). To evaluate the remaining rotations, we first associate a quaternion at each vertex which embodies its frame (or its orientation). In mathematics, quaternions are an extension of complex numbers and may be written as follows:
 \begin{equation}
 q = w + x i + y j + z k \quad \mbox{with } i^2 = j^2 = k^2 = -1.
 \end{equation}
@@ -148,9 +150,9 @@ For use in geometry, quaternions are often written as a sum of a scalar and a ve
 \begin{equation}
 q = w + (x, y, z) = \cos (\frac{\alpha}{2}) + \mathbf{u} \sin (\frac{\alpha}{2}),
 \end{equation}
-where $ \mathbf{u} $ is a unit vector and $ \alpha $ a scalar. We denote by $ \mathbf{v} $ a vector in $\field{R}^3$ and it can be shown that the quaternion product $ q \mathbf{v} q^{-1} $ yields a vector which is the rotation of $ \mathbf{v} $ by an angle $ \alpha $ around the axis $ \mathbf{u} $. Quaternions require less storage than rotation matrices and are known to be more numerically stable. 
+where $ \mathbf{u} $ is a unit vector and $ \alpha $ a scalar. If we denote by $ \mathbf{v} $ a vector in $\field{R}^3$, it can be shown that the quaternion product $ q \mathbf{v} q^{-1} $ yields a vector which is the rotation of $ \mathbf{v} $ by an angle $ \alpha $ around the axis $ \mathbf{u} $. Quaternions require less storage than rotation matrices and are known to be more numerically stable. 
 
-From there, our approach to measure the rotations around local x and y axes is simple. At runtime and for each vertex, we compute the rotation that we need to apply to transform the z axis of the triangle's frame into the z axis of the vertex's frame (see listing \ref{chap9:qDiffZ}). The differences with the same quantities computed for the rest position during the initialisation lead to the desired displacements. 
+From there, our approach to measure the rotations around local x and y axes is simple. At runtime and for each vertex, we compute the rotation that we need to transform the z axis of the triangle's frame into the z axis of the vertex's frame (see listing \ref{chap9:qDiffZ}). The differences with the same quantities computed for the rest position during the initialisation lead to the desired displacements. 
 
 \begin{lstlisting}[caption={Method used to compute the rotation of the z axis between the frames embodied by two quaternions},label=chap9:qDiffZ]
 inline Quat qDiffZ(const Quat& Qvertex, const Quat& Qtriangle)
@@ -189,10 +191,10 @@ inline Quat qDiffZ(const Quat& Qvertex, const Quat& Qtriangle)
 
 
 	\subsection{Inversion of matrix $ \mathbf{C} $}
-\cite{Przemieniecki68} described the condition of non-inversion for the matrix $\mathbf{C}$ as the following:
+\cite{Przemieniecki85} described the condition of non-inversion for the matrix $\mathbf{C}$ as the following:
 \TODO{add condition of inversion... but need the book :)}
 
-Each triangle of a mesh obtained from a regular grid of points fits this condition of non-inversion (right triangles). We fixed this limitation by choosing a different local coordinate system that the one introduced by \citeauthor{Przemieniecki68}. 
+Each triangle of a mesh obtained from a regular grid of points fits this condition of non-inversion (right triangles). We fixed this limitation by choosing a different local coordinate system that the one introduced by \citeauthor{Przemieniecki85}. 
 
 \TODO{add figure with the two different coordinate system}
 
@@ -202,9 +204,9 @@ In practice, the integration of the integral in \eqref{chap9:Ke} must be carried
 \begin{equation}
 \int_{A} f dA = A \sum_{i=1}^n w_i f_i,
 \end{equation}
-where $ w_i $ is a weight factor and $ f_i $ is the evaluation of $ f $ at the Gauss point $ i $. Different numbers and locations may be chosen for the integration points depending on the order of accuracy desired. We classically choose 3 integration points located at the middle of each edge of the triangle, for which the weight factors $ w_i $ are $ 1/3 $. The required integration over the volume is achieved by multiplying the result by the thickness $ t $ of the shell. Therefore, \eqref{chap9:Ke} may be numerically evaluated as
+where $ w_i $ is a weight factor and $ f_i $ is the evaluation of $ f $ at the integration point $ i $ (also called Gauss points). The choice of the number and the locations of the integration points depends on the order of accuracy desired. We classically choose 3 integration points located at the middle of each edge of the triangle, for which the weight factors $ w_i $ are $ 1/3 $. The required integration over the volume is achieved by multiplying the result by the thickness $ t $ of the shell. Therefore, \eqref{chap9:Ke} may be numerically evaluated as
 \begin{equation}
-\textbf{K}_e = \dfrac{A t}{3} (\textbf{C}^{-1})^T \sum_{i=1}^3 \textbf{D}_i^{T} \boldsymbol\chi \textbf{D}_i  \textbf{C}^{-1},
+\textbf{K}_e = \dfrac{A t}{3} (\textbf{C}^{-1})^T \sum_{i=1}^3 \textbf{D}_i^{T} \boldsymbol\chi \textbf{D}_i  \, \textbf{C}^{-1},
 \end{equation}
 where $ D_i $ is the evaluation of the matrix $ \mathbf{D} $ defined by \eqref{chap9:eq-strains} at each Gauss point $ i $. 
 
@@ -219,7 +221,7 @@ In practical terms, the different computations associated with each triangular s
 \item Compute matrix $\textbf{D}_i$  at each Gauss point $i$
 \item The strain-displacement matrix at each Gauss point $i$ is computed with $\textbf{J}_i = \textbf{D}_i \textbf{C}^{-1}$
 \item Compute the local stiffness matrix $\textbf{K}_e$ of the element as $\textbf{K}_e = \displaystyle{\sum^3_{i=1}} \textbf{J}_i \boldsymbol\chi \textbf{J}_i^T$
-\item Transform the local element stiffness matrix into the global frame and add it to a global stiffness matrix
+\item Transform the local element stiffness matrix into the global frame and add it to the global stiffness matrix
 \end{enumerate}
 
 
@@ -270,7 +272,7 @@ During the initialisation phase, each vertex from the high resolution mesh is pr
 The deflection may therefore be computed for each vertex and added to the in-plane position previously calculated. 
 \end{itemize}
 
-It is worth noting that a high resolution mesh may be obtained by recursively subdividing each triangle. However, the vertices are closely related to the structure of the mechanical mesh and rendering artifacts may appear. As we can notice on \fig{chap9:fig-rendering}, the quality of the visualisation may be improved by using a totally different mesh.
+It is worth noting that a high resolution mesh may be obtained by recursively subdividing each triangle. However, in this case the vertices are closely related to the structure of the mechanical mesh and rendering artifacts may appear. As we can notice on \fig{chap9:fig-rendering}, the quality of the visualisation may be improved by using a totally different mesh.
 %
 %\begin{figure}
 %	\begin{center}
@@ -316,13 +318,13 @@ The moments at each vertex are then obtained with
 
 
 \subsection{Allowing a curved rest configuration}
-In \cite{Przemieniecki68}, the rest and initial configurations are both assumed to be the flat one. The only way to have an initial deformed shape is to apply a torque on the vertices of the shells. However, in this configuration we would compute a displacement vector $ \mathbf{u} $ that is not null, which leads to a bending energy. In order to define a curved rest configuration for our shells, we propose to compute the bending energy between the initial and rest configuration during the initialisation phase, and add the energy between the current and initial configurations at runtime. Consequently, by separating initial and rest configurations, it is possible to have an initial deformed shape without any initial bending energy. In other words, we shifted the zero energy configuration.
+In \cite{Przemieniecki85}, the rest and initial configurations are both assumed to be the flat one. The only way to have an initial deformed shape is to apply a torque on the vertices of the shells. However, in this configuration we would compute a displacement vector $ \mathbf{u} $ that is not null, which leads to a bending energy. In order to define a curved rest configuration for our shells, we propose to compute the bending energy between the initial and rest configuration during the initialisation phase, and add the energy between the current and initial configurations at runtime. Consequently, by separating initial and rest configurations, it is possible to have an initial deformed shape without any initial bending energy. In other words, we shifted the zero energy configuration.
 
 
 \subsection{Possible extension: parallel implementation on GPU}
-If we look closely all the steps required to compute the local stiffness matrix for each element (see section \ref{chap9:summary} for a summary), one may notice that the operations carried out for a given shell element are independent of the other elements. This feature makes our co-rotational shell FEM implementation highly parallelisable. One potential problem however, is the assembly of the global stiffness matrix. Indeed, in a parallel implementation, many elements are processed concurrently. Inevitably, two elements sharing a node may be processed in the same time and may therefore try to both write their element contribution into the exact same location in the global stiffness matrix, and therefore the same location in GPU's memory. As with the TLED implementation described in chapter \ref{chap6}, there is two solutions. The first one would be to re-order the elements organisation so that no concurrent writes will occur. Unfortunately, this re-organisation of the element reduces the number of elements that can be processed in parallel. The second solution would be to take advantage of a new GPU NVIDIA architecture called Fermi, which added the capability atomic writes for floats. We recall that the write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, the concurrent writes are simply serialised in hardware. Obviously, an additional overhead is to be expected. 
+If we look closely at all the steps required to compute the local stiffness matrix for each element (see section \ref{chap9:summary} for a summary), we can notice that the operations carried out for a given shell element are independent of the other elements. This feature makes our co-rotational shell FEM implementation highly parallelisable. One potential problem however, is the assembly of the global stiffness matrix. Indeed, in a parallel implementation, many elements are processed concurrently. Inevitably, two elements sharing a node may be processed in the same time and may therefore try to both write their element contribution into the exact same location in the global stiffness matrix, and therefore the same location in GPU's memory. As with the TLED implementation described in chapter \ref{chap6}, there is two solutions. The first one would be to re-order the elements organisation so that no concurrent writes will occur. Unfortunately, this re-organisation of the element reduces the number of elements that can be processed in parallel. The second solution would be to take advantage of a new GPU NVIDIA architecture called Fermi, which added the capability atomic writes for floats. We recall that the write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, the concurrent writes are simply serialised in hardware. Obviously, an additional overhead is to be expected. 
 
-To conclude on a possible parallelisation of the algorithm, an optimal GPU implementation is always a challenge to achieve. One needs to choose wisely the type of memory to be used for each variable and optimise the access patterns. However, it seems that there is no major obstacle to a GPU implementation. 
+To conclude on a possible parallelisation of the algorithm, an optimal GPU implementation is always a challenge to achieve. One needs to choose wisely the type of memory to be used for each variable and optimise the access patterns. However, it seems that there is no major obstacle to a GPU implementation and our co-rotation shell FEM will eventually be ported to GPU. 
 
 \TODO{enough details?}
 
@@ -332,7 +334,7 @@ To conclude on a possible parallelisation of the algorithm, an optimal GPU imple
 
 We compared our model with some theoretical results reported by \cite{Zhongnian86} to assess its quality in modelling bending. The test that we carried out uses a square shape mesh clamped on all four edges. A uniform load is then applied on the square and the maximum deflection $z_{max}$ at the centre can be calculated. Several simulations are performed with increasing load values $q$ (ranging from $1$ to $5 N/m^2$) and the following parameters were used: 
 \begin{itemize}
- \item Young Modulus $E = 1.092 \times 10^6$
+ \item Young Modulus $E = 1.092 \times 10^6\,$Pa
  \item Poisson's ratio $\nu = 0.3$
  \item edge of the square $L = 10\,m$
  \item thickness $h = 0.1\,m$
@@ -366,7 +368,7 @@ Using these particular values it can be shown that $z_{max} = 0.126\,q$. The max
 
 \section{Application to implant deployment simulation in cataract surgery}
 
-Cataract surgery consists in three main steps: capsulorhexis, phacoemulsification, and implantation of an intra-ocular lens. Prior to starting the surgery, a viscoelastic fluid is introduced into the capsule to facilitate capsulorhexis creation and provide protection during phacoemulsification. This fluid remains in the capsule for the duration of the surgery, including the injection of the implant. Capsulorhexis is the technique used to remove a part of the anterior lens capsule. Phacoemulsification consists in using a surgical device which tip vibrates at an ultrasonic frequency to emulsify the natural lens material and then aspirate the  fragments of the cortical material. After the removal of the diseased lens, an intra-ocular lens is implanted into the eye, through a small incision (about 2 mm) using a foldable intra-ocular lens (see \fig{chap9:fig-surgery}). The foldable lens, usually made of acrylic material, is then implanted within the lens capsule through the incision used during phacoemulsification. In some cases the implant can be flipped or  the hooks (also called \emph{haptics}) can break. Therefore the simulation of the insertion and deployment of the implant is crucial for achieving a successful surgery.
+Cataract surgery consists in three main steps: capsulorhexis, phacoemulsification, and implantation of an intra-ocular lens. Prior to starting the surgery, a viscoelastic fluid is introduced into the capsule to facilitate capsulorhexis creation and provide protection during phacoemulsification. This fluid remains in the capsule for the duration of the surgery, including the injection of the implant. Capsulorhexis is the technique used to remove a part of the anterior lens capsule. Phacoemulsification consists in using a surgical device which tip vibrates at an ultrasonic frequency to emulsify the natural lens material and then aspirate the fragments of the cortical material. After the removal of the diseased lens, an intra-ocular lens is implanted into the eye, through a small incision (about $2\,$mm) using a foldable intra-ocular lens (see \fig{chap9:fig-surgery}). The foldable lens, usually made of acrylic material, is then implanted within the lens capsule through the incision used during phacoemulsification. In some cases the implant can be flipped or  the hooks (also called \emph{haptics}) can break. Therefore the simulation of the insertion and deployment of the implant is crucial for achieving a successful surgery.
 %
 \begin{figure}[h]
 \centering 
@@ -387,7 +389,7 @@ To simulate the insertion and deployment of an intra-ocular lens, we first creat
 		\hline
 		 \centering Young's modulus & \centering Poisson's ratio & \centering Mass density \tabularnewline
 		\hline
-		\centering $1 MPa$ & \centering $0.42$ & \centering $1.2 g/cm^3$ \tabularnewline
+		\centering $1\,$MPa & \centering $0.42$ & \centering $1.2\,$g/cm$^3$ \tabularnewline
 		\hline
 		\end{tabular}
 	\vspace{0.3cm}
@@ -396,7 +398,7 @@ To simulate the insertion and deployment of an intra-ocular lens, we first creat
 	\end{center}
 \end{table}
 
-The first difficulty is to obtain the folded geometry of the lens within the injection device. This step is not important for the training process and does not need to be interactive. Indeed the surgeon does not always have to prepare the implant as some injection devices are readily available with a folded implant already in place. We simulate the folding process by first folding the haptics onto the implant body. The body was then bent while keeping the haptics inside to obtain the shape described in \fig{chap9:fig-implantFolding}. The whole process was carried out by applying the necessary forces and boundary conditions on the body and haptics of the implant. The folded implant was then placed into the injection device. The simulation of the injection consists in pushing the intra-ocular implant within the injection device into the lens capsule. During these stages of the simulation, complex contacts occur and consist of self collisions of the lens as well as collisions between the lens and the injector and later with the capsule. To solve the contacts we use the contact warping method proposed by \cite{Saupin08} as it offers an efficient way to compute physically correct contact responses in the case of co-rotational models \TODO{is it still true?}. As adhesions between the haptics and the body is often observed in surgery, friction is also taken into account in the contact response process.
+The first difficulty is to obtain the folded geometry of the lens within the injection device. This step is not important for the training process and does not need to be interactive. Indeed the surgeon does not always have to prepare the implant as some injection devices are readily available with a folded implant already in place. We simulate the folding process by first folding the haptics onto the implant body. The body was then bent while keeping the haptics inside to obtain the shape described in \fig{chap9:fig-implantFolding}. The whole process was carried out by applying the necessary forces and boundary conditions on the body and haptics of the implant. The folded implant was then placed into the injection device. The simulation of the injection consists in pushing the intra-ocular implant within the injection device into the lens capsule. During these stages of the simulation, complex contacts occur and consist of self collisions of the lens as well as collisions between the lens and the injector and later with the capsule. To solve the contacts we use the contact warping method proposed by \cite{Saupin08} as it offers an efficient way to compute physically correct contact responses in the case of co-rotational models \TODO{is it still true? I'm not even sure we used this technique in the final submission to ISBMS}. As adhesions between the haptics and the body is often observed in surgery, friction is also taken into account in the contact response process.
 %
 \begin{figure}[h]
 \centering 
@@ -417,7 +419,7 @@ The first difficulty is to obtain the folded geometry of the lens within the inj
 \label{chap9:fig-implantFolding}
 \end{figure}
 
-Results of our simulation are illustrated in \fig{chap9:fig-simu-results}. We can notice the progressive deployment of the implant when it exits the injector.  The shape of the intra-ocular lens remains very close to that of a real one during all stages of the simulation: within the injector, during the ejection phase, and when in place within the capsule. Due to the high stiffness and low mass of the lens, a direct sparse solver was used at each time step (dt $= 0.01$\,s) rather than an iterative solver, resulting in a more accurate and more stable simulation, to the detriment of computation times (about 5 FPS for the complete simulation, and about 10 FPS for the deformation only, on a 2.4 GHz processor).
+Results of our simulation are illustrated in \fig{chap9:fig-simu-results}. We can notice the progressive deployment of the implant when it exits the injector.  The shape of the intra-ocular lens remains very close to that of a real one during all stages of the simulation: within the injector, during the ejection phase, and when in place within the capsule. Due to the high stiffness and low mass of the lens, a direct sparse solver was used at each time step (dt $= 0.01\,$s) rather than an iterative solver, resulting in a more accurate and more stable simulation, to the detriment of computation times (about 5 FPS for the complete simulation, and about 10 FPS for the deformation only, on a 2.4 GHz processor).
 
 % Link where images from surgery have been found: http://asianophthalmology.org/articles/?a=articles&p=6
 \begin{figure}[!h]
