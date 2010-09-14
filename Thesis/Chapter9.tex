@@ -1,8 +1,7 @@
 \chapter{A co-rotational triangular shell FEM model}
 \label{chap9}
 \begin{shortAbstract}
-A short abstract for the upcoming chapter \\
-\OC{ISBMS 2010}
+In the field of medical simulation, very few models have been proposed for simulating, in real-time, the deformation of thin anatomical structures. In fact, to our knowledge, no model based on the equations of continuum mechanics was described and applied to simulating the deformation of objects. In this chapter, we propose to rely on continuum mechanics to accurately describe the complex deformations of the implant. Our approach extends the co-rotational method used in finite element analysis of in-plane deformations to incorporate a bending energy. We will first describe the model in details before discussing its implementation in the open source framework SOFA. Lastly, this co-rotational shell FEM was applied to the simulation of the lens deployment during catarct surgery. This simulation also accounts for the complex contacts that take place during the injection phase. This work was the object of two publications \citep{Comas2010a,Comas2010b}.
 \end{shortAbstract}
 
 
@@ -321,7 +320,7 @@ The moments at each vertex are then obtained with
 In \cite{Przemieniecki85}, the rest and initial configurations are both assumed to be the flat one. The only way to have an initial deformed shape is to apply a torque on the vertices of the shells. However, in this configuration we would compute a displacement vector $ \mathbf{u} $ that is not null, which leads to a bending energy. In order to define a curved rest configuration for our shells, we propose to compute the bending energy between the initial and rest configuration during the initialisation phase, and add the energy between the current and initial configurations at runtime. Consequently, by separating initial and rest configurations, it is possible to have an initial deformed shape without any initial bending energy. In other words, we shifted the zero energy configuration.
 
 
-\subsection{Possible extension: parallel implementation on GPU}
+\subsection{Possible extension: parallel implementation on GPU}	\label{chap9:GPU}
 If we look closely at all the steps required to compute the local stiffness matrix for each element (see section \ref{chap9:summary} for a summary), we can notice that the operations carried out for a given shell element are independent of the other elements. This feature makes our co-rotational shell FEM implementation highly parallelisable. One potential problem however, is the assembly of the global stiffness matrix. Indeed, in a parallel implementation, many elements are processed concurrently. Inevitably, two elements sharing a node may be processed in the same time and may therefore try to both write their element contribution into the exact same location in the global stiffness matrix, and therefore the same location in GPU's memory. As with the TLED implementation described in chapter \ref{chap6}, there is two solutions. The first one would be to re-order the elements organisation so that no concurrent writes will occur. Unfortunately, this re-organisation of the element reduces the number of elements that can be processed in parallel. The second solution would be to take advantage of a new GPU NVIDIA architecture called Fermi, which added the capability atomic writes for floats. We recall that the write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, the concurrent writes are simply serialised in hardware. Obviously, an additional overhead is to be expected. 
 
 To conclude on a possible parallelisation of the algorithm, an optimal GPU implementation is always a challenge to achieve. One needs to choose wisely the type of memory to be used for each variable and optimise the access patterns. However, it seems that there is no major obstacle to a GPU implementation and our co-rotation shell FEM will eventually be ported to GPU. 
@@ -332,12 +331,12 @@ To conclude on a possible parallelisation of the algorithm, an optimal GPU imple
 
 \section{Validation}
 
-We compared our model with some theoretical results reported by \cite{Zhongnian86} to assess its quality in modelling bending. The test that we carried out uses a square shape mesh clamped on all four edges. A uniform load is then applied on the square and the maximum deflection $z_{max}$ at the centre can be calculated. Several simulations are performed with increasing load values $q$ (ranging from $1$ to $5 N/m^2$) and the following parameters were used: 
+We compared our model with some theoretical results reported by \cite{Zhongnian86} to assess its quality in modelling bending. The test that we carried out uses a square shape mesh clamped on all four edges. A uniform load is then applied on the square and the maximum deflection $z_{max}$ at the centre can be calculated. Several simulations are performed with increasing load values $q$ (ranging from $1$ to 5 N/m$^2$) and the following parameters were used: 
 \begin{itemize}
  \item Young Modulus $E = 1.092 \times 10^6\,$Pa
  \item Poisson's ratio $\nu = 0.3$
- \item edge of the square $L = 10\,m$
- \item thickness $h = 0.1\,m$
+ \item edge of the square $L = 10\,$m
+ \item thickness $h = 0.1\,$m
  \item pressure q is a uniformly distributed load per unit area
 \end{itemize}
 
@@ -439,7 +438,3 @@ Results of our simulation are illustrated in \fig{chap9:fig-simu-results}. We ca
 \label{chap9:fig-simu-results}
 \end{figure}
 
-		
-\section{Discussion}
-
-We proposed a co-rotational formulation for shell elements by extending a classical in-plane triangular finite element approach. This simple shell element can efficiently handle both membrane, bending and twist forces. The validity of our approach has been demonstrated though comparison with theoretical results. It was then applied it to a rather complex application: the simulation of intra-ocular lens implant deployment in a cataract surgery simulation. These preliminary results are very encouraging and show the potential of such models. Examples include the modelling of hollow anatomical structures (stomach, colon, etc.), the simulation of cardiac valve leaflets, and blood vessels. However, to model the deformation of complex anatomical structures using shell elements, the first step is to describe its surface with curved patches. In the next section, we propose to study how to approximate the surface of anatomical structures with shell elements.
