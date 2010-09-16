@@ -334,4 +334,5 @@ Another example of application is the used of the technique called moving partic
 
 \bigskip
 
-\TODO{add drawbacks of meshless methods: supposedly good for handling topological changes but other issues. Couldn't really find drawbacks in meshless' literature.}
+\ON The main advantage of meshless methods is of course in the absence of a mesh. This advantage of not having to go through the complex process of meshing was often claimed by meshless methods partisans. It also allows much easier cutting as it saves the cost of a computationally demanding remeshing around the cut. Yet, in contrast of finite element methods, meshless techniques are young and still in development. Boundary conditions are an aspect of the numerical solution of partial equations where meshless methods have many difficulties for instance. According to \cite{Horton10}, if meshless methods are accurate in terms of overall reaction forces, they are not as good with individual displacements or forces. Therefore the authors suggest to use a meshless algorithm to fill the interior sections of an organ (where a local discrepancy has minor consequences) and use the finite element method for the boundary. As a conclusion, if meshless methods are promising, the technique does not seem as mature as the finite element method for modelling soft tissues. 
+\OFF

@@ -561,8 +561,6 @@ for a $ N \times N $ matrix $ \mathbf{A} $. We then solve \eqref{chap3:eqUxy} in
 \right.
 \end{equation}
 
-\paragraph*{\TODO{Cholesky decomposition?}}
-
 
 		\subsubsection*{Iterative solvers}
 An iterative method attempts to solve the system of equations by finding successive approximations to the solution starting from an initial guess. In the case of a system of linear equations, the two main classes of iterative methods are the stationary iterative methods, and the more general Krylov subspace methods. Stationary iterative methods solve a linear system with an operator approximating the original one and based on a measurement of the error in the result (called the residual), form an equation of correction for which this process is repeated. While these methods are simple to derive, convergence is only guaranteed for a limited class of matrices. Examples of stationary iterative methods are the Jacobi method and Gauss-Seidel method. Krylov subspace methods work by forming an orthogonal basis of the sequence of successive matrix powers times the initial residual (the Krylov sequence). The approximations to the solution are then formed by minimising the residual over the subspace formed. The typical method in this class is the conjugate gradient method (CG). 
@@ -595,3 +593,11 @@ f(\mathbf{x}) = \frac{1}{2} \mathbf{x}^T \, \mathbf{A} \, \mathbf{x} - b^T \, \m
 Indeed, if the matrix $ \mathbf{A} $ is symmetric and positive-definite, $ f(\mathbf{x}) $ is minimised by the solution to $ \mathbf{A} \mathbf{x} = \mathbf{b} $ \citep{Shewchuk94}. The minimisation is carried out by generating a succession of search directions $ \mathbf{p} _k $ and improved minimisers $ \mathbf{x} _k $. At each stage a quantity $ \alpha_k $ is found that minimises $f(\mathbf{x}_k  + \alpha_k \mathbf{p}_k)$, and $\mathbf{x}_{k+1}$ is set equal to the new point $\mathbf{x}_k + \alpha_k \mathbf{p}_k$. The $ \mathbf{p}_k $  and $ \mathbf{x}_k $  are built up in such a way that $ \mathbf{x}_{k+1} $  is also the minimiser of $ f $ over the whole vector space of directions already taken, that is the space formed by the basis of vector ${\mathbf{p}_1, \mathbf{p}_2, \ldots, \mathbf{p}_k }$. After $N$ iterations, you arrive at the minimiser over the entire vector space, that is, the solution to our linear system of equations. 
 
 Later, the \emph{biconjugate gradient method} was introduced as a generalisation of the ordinary conjugate gradient to solve systems where the matrix $ \mathbf{A} $ was not necessarily symmetric and positive-definite (see \cite{Belytschko00} for details). 	
+
+\ON
+\paragraph*{Preconditioners}
+Very often, the matrix $ \mathbf{A} $ is not well conditioned and 
+
+\OFF
+
+\TODO{+preconditioners}
