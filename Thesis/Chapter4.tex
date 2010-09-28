@@ -7,11 +7,20 @@ Modelling the deformation of solid organs is a crucial problem in medical simula
 
 \section{Introduction: the problematic}
 
-At the beginning of computer simulation, users were immersed into environments that were merely a decor. If it could virtually take the user somewhere else, a static scene quickly showed its limits. Indeed, in a real-life environment many objects are in motion, interacting with each others. Therefore, in order to increase the fidelity of simulations, elements of physics were progressively added. It could be as simple as adding motion to clouds in a flight simulator for instance. But by improving the dynamism of the scene, the simulation appears more natural to users. Over time, with the increase of computers' computational power, objects stopped being all rigid and simulators started taking laws of physics into account. In other words, objects became deformable. If this took the realism a step further, the demands in computational power were multiplied. Simulators eventually faced a challenge: they had to weight the desired degree of realism against the computational power at their disposal. 
+%At the beginning of computer simulation, users were immersed into environments that were merely a decor. If it could virtually take the user somewhere else, a static scene quickly showed its limits. Indeed, in a real-life environment many objects are in motion, interacting with each others. Therefore, in order to increase the fidelity of simulations, elements of physics were progressively added. It could be as simple as adding motion to clouds in a flight simulator for instance. But by improving the dynamism of the scene, the simulation appears more natural to users. Over time, with the increase of computers' computational power, objects stopped being all rigid and simulators started taking laws of physics into account. In other words, objects became deformable. If this took the realism a step further, the demands in computational power were multiplied. Simulators eventually faced a challenge: they had to weight the desired degree of realism against the computational power at their disposal. 
 
-In the field of medical simulation, the correctness of deformation is often crucial. This is particulary true in the cases of per-operative guidance. As an example, removing a brain tumor relies heavily on knowing the spatial relation between the patient's brain and the images acquired prior to surgery. Unfortunately, drilling a hole into the patient's skull releases pressure and the brain deforms. This phenomenon is called brain shift. The overall deformation is quite complex and the displacements depend on local elasticity of the brain, the size and the location of the tumor. A large brain shift, if not corrected, will result in inaccuracies in the surgical procedure and has the potential to cause damage to normal tissue. A solution is to accurately model the mechanical response of the patient's brain to predict the actual deformation and hence keep the knowledge of the tumor's location. 
+\ON
+The challenges faced by the field of medical simulation were reviewed in details in the introductory chapter \label{chap1}. Hence, we know that at the very least, the deformation of solid organs must appear physically realist in medical simulators. In addition, this objective has to be achieved within heavy time constraints. Indeed, although each step of a simulation alone (deformation of organs, collision detection, contacts processing or visualisation) is computationally demanding, the whole simulation process must be computed in real-time or close to real-time. Of particular interest to us is the accurate modelling of the deformation of anatomical structures. The best mathematical model for predicting the deformation of a continuous structure is provided by continuum mechanics. If the finite element method is classicaly used in mechanical engineering for its ability to solve the equations of continuum mechanics fairly accurately, its development in medical simulation was more progressive. The main reason for this is that the finite element method is computationally very demanding and not easily compatible with the time constraints required in interactive simulation. Very often simplifications have to be made. Since medical simulation may find applications in various areas (such as medical training, patient-specific planning or per-operative guidance), the requirements in terms of accuracy as well as time constraints may be different. Consequently, a range of models has been developed over time to suit all usages. 
 
-Conversely, when medical simulation is applied to training, such a precision in terms of distance is not required. The physician would not even visually notice reasonable errors as soon as it looks realistic enough. However, in some medical procedures, the sense of touch and the forces that the physician can feel are a fey factor for the success of the operation. For instance, during a colonoscopy procedure, force feedback gives precious information about what type of loop is forming and the physician can then react accordingly to prevent loop formation. Consequently, a good colonoscopy simulator is required to provide accurate force feedbacks. If the contact forces were not reproduced to the operator, he would never be able to learn how to detect loop forming. Obviously, the computation of a realistic force to be returned demands an appropriate mechanical modelling of all structures. 
+For instance, the correctness of deformation is crucial for patient-specific planning and per-operative guidance. Let us give an example where simulation can lead the surgeon towards its goal during surgery: the removal of a brain tumor. Prior surgery, images of the patient's brain were acquired and the tumor was localised. To access the brain during surgery, the surgeon must first drill a hole into the patient's skull. However, drilling a hole releases intra-cranial pressure and this change in internal pressure deforms the brain. \OFF This phenomenon is called \emph{brain shift}. The overall deformation is quite complex and the displacements depend on local elasticity of the brain, the size and the location of the tumor. \ON Removing the tumor relies \OFF heavily on knowing the spatial relation between the patient's brain and the images acquired prior to surgery. \ON And because the brain deforms during surgery, the location and the shape of the tumor will no longer match those of the images acquired. \OFF Therefore, a large brain shift, if not corrected, will result in inaccuracies in the surgical procedure and has the potential to cause damage to normal tissue. A solution is to accurately model the mechanical response of the patient's brain to predict the actual deformation and hence keep the knowledge of the tumor's location. \ON If the accuracy is obviously of prime importance in this situation, computation of the deformation does not necessarily need to be carried out in real-time, a reasonable delay is acceptable (a couple of minutes).
+\OFF 
+
+%In the field of medical simulation, the correctness of deformation is often crucial. This is particulary true in the cases of per-operative guidance. As an example, removing a brain tumor relies heavily on knowing the spatial relation between the patient's brain and the images acquired prior to surgery. Unfortunately, drilling a hole into the patient's skull releases pressure and the brain deforms. This phenomenon is called brain shift. The overall deformation is quite complex and the displacements depend on local elasticity of the brain, the size and the location of the tumor. A large brain shift, if not corrected, will result in inaccuracies in the surgical procedure and has the potential to cause damage to normal tissue. A solution is to accurately model the mechanical response of the patient's brain to predict the actual deformation and hence keep the knowledge of the tumor's location. 
+
+Conversely, when medical simulation is applied to training, such a precision in terms of \ON deformation is not always \OFF required. \ON A visually realistic deformation is often sufficient for an inexperienced physician to learn the appropriate gestures required for a given medical procedure. However, in some cases, the feel of touch can be very important to master the procedure. \OFF For instance, during a colonoscopy procedure, force feedbacks give precious information about what type of loop is forming \ON during the colonoscope's insertion \OFF and the physician can then react accordingly to prevent loop formations. Consequently, a good colonoscopy simulator is required to provide accurate force feedbacks. If the contact forces were not reproduced to the operator, he would never be able to learn how to detect loop forming. Obviously, the computation of a realistic force to be returned demands an appropriate mechanical modelling of all structures. In constrast of per-operative guidance, medical training demands real-time computations of the deformations. 
+
+%However, the sense of touch and the forces that the physician can feel are a fey factor for the success of the operation. 
+%The physician would not even visually notice reasonable errors as soon as it looks realistic enough. 
 
 If the reasons differ, the need for modelling the mechanical response of organs with precision remains. However, strong time constraints often limit the complexity of the modelling and affects the overall accuracy. Because of this trade-off, various approaches were proposed over the years to fit into real-time constraints and may be grouped into three main categories: (1) geometrically based techniques, (2) approaches physically motivated (usually relying on Newton's second law) and (3) methods actually based on the equations of continuum mechanics. 
 
@@ -22,14 +31,16 @@ If the reasons differ, the need for modelling the mechanical response of organs 
 	\subsection{Free-form deformation}
 The first needs to deforming solid objects came from for the field of solid modelling. The goal was to allow the designer to shape an object into the form he wishes in a similar way that clay is manipulated by a sculptor's hands. \cite{Sederberg86} introduced a technique called \emph{free-form deformation} based on the paper of \cite{Barr84}. It involves a mapping from $ \field{R}^3 $ to $ \field{R}^3 $ through a tensor product trivariate Bernstein polynomial. The deformed shape of the object is interpolated using control points as in the case of Bézier curves and surface patches (see \fig{chap4:fig-cubeFFD}). 
 %
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=6.5cm]{chapter4/cubeFFD1.pdf}
-\includegraphics[width=6.6cm]{chapter4/cubeFFD2.pdf}
-\end{center}
-\caption[Deformation of objects by free-form deformation]{Let us imagine that the objects that we want to deform (spheres and cubes) are placed into a transparent parallelepiped \textbf{(left)}. Control points are indicated by small white diamonds. The free-form deformation technique offers to compute the deformation of the objects from the positions of the control points \textbf{(right)}.}
+\begin{figure}[ht]
+\centering 
+\subfloat[ ]{\includegraphics[width=6.5cm]{chapter4/cubeFFD1.pdf}}
+\hfill
+\subfloat[ ]{\includegraphics[width=6.6cm]{chapter4/cubeFFD2.pdf}}
+\caption[Deformation of objects by free-form deformation]{Let us imagine that the objects that we want to deform (spheres and cubes) are placed into a transparent parallelepiped (a). Control points are indicated by small white diamonds. The free-form deformation technique offers to compute the deformation of the objects from the positions of the control points (b). Image courtesy of \cite{Sederberg86}}
 \label{chap4:fig-cubeFFD}
 \end{figure}
+
+
 The capability of locally applying deformations makes the technique strongly analogous to sculpting with clay, which was the sought target. Although the authors do not give details on computational efficiency, their work constitutes the beginnings of deformable solid objects. 
 
 Coquillard later developed the idea of Extented free-form deformation \citeyearpar{Coquillart90} and Animated free-form technique \citeyearpar{Coquillart91}. The idea of free-form deformation with lattices of arbitrary topology was introduced by \cite{MacCracken96}. Finally, \cite{Schein04} presented a technique to facilitate the incorporation of discontinuities in a model while deforming it. 
@@ -59,7 +70,7 @@ where $ \alpha $ is a parameter between $ 0 $ and $ 1 $ which simulates stiffnes
 \begin{center}
 \includegraphics[width=13.9cm]{chapter4/shoes.pdf}
 \end{center}
-\caption[Shape matching technique]{Shape matching allows to simulate hundreds of deformable objects in real-time.}
+\caption[Shape matching technique]{Shape matching allows to simulate hundreds of deformable objects in real-time. Image courtesy of \cite{Muller05}.}
 \label{chap4:fig-shoes}
 \end{figure}
 
@@ -69,29 +80,31 @@ where $ \alpha $ is a parameter between $ 0 $ and $ 1 $ which simulates stiffnes
 \vspace{0.1cm}
 \includegraphics[width=11cm]{chapter4/duck2.pdf}
 \end{center}
-\caption[Squeezing of a duck using shape matching]{A duck model is squeezed to demonstrate the stability of the shape matching technique. Although the flat shape of the duck is not physically plausible, this example exposes the impressive ability of the approach to recover from highly deformed or inverted configurations.}
+\caption[Squeezing of a duck using shape matching]{A duck model is squeezed to demonstrate the stability of the shape matching technique. Although the flat shape of the duck is not physically plausible, this example exposes the impressive ability of the approach to recover from highly deformed or inverted configurations. Image courtesy of \cite{Muller05}}
 \label{chap4:fig-duck}
 \end{figure}
 	
 Later, \cite{Rivers07} extented the technique to regular lattices with embedded geometry. From a surface mesh to be deformed, they start by voxelising the model to construct a lattice of cubic cells containing the mesh. The embedded mesh is then deformed using trilinear interpolation of lattice vertex positions. A particule is placed at each vertex of the lattice and associated with a shape matching region. Their technique of \emph{fast lattice shape matching} allows them to compute per-region transformations in an efficient manner (see \fig{chap4:fig-penguins}).	
 %
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=13.9cm]{chapter4/penguins.pdf}
-\end{center}
-\caption[Penguins animation with fast lattice shape matching]{\textbf{(Left)} $150$ cartoon penguins deforming dynamically using fast lattice shape matching\textbf{(Right)}. Deformed lattices consisting of $150$ particles per penguin ($22\,500$ particles). The penguins can be deformed at $25$ frames per second on a Pentium4 $3.4 \,$GHz.}
+\begin{figure}[ht]
+\centering 
+\subfloat[ ]{\includegraphics[width=6cm]{chapter4/penguins1.pdf}}
+\hfill
+\subfloat[ ]{\includegraphics[width=6cm]{chapter4/penguins2.pdf}}
+\caption[Penguins animation with fast lattice shape matching]{(a) $150$ cartoon penguins deforming dynamically using fast lattice shape matching (b). Deformed lattices consisting of $150$ particles per penguin ($22\,500$ particles). The penguins can be deformed at $25$ frames per second on a Pentium4 $3.4 \,$GHz. Image courtesy of \cite{Rivers07}. }
 \label{chap4:fig-penguins}
 \end{figure}
 
-One limitation of fast lattice shape matching is that small features of a geometry yield an explosion of the runtime cost. Indeed, a small surface feature may require fine sampling in order to be deformed independently from non-adjacent material, but this fine sampling must be applied to the whole object. Therefore, \cite{Steinemann08} further improved the technique by allowing dynamic adaptive selection of levels of detail through the use of an octree-based hierarchical sampling. This adaptative sampling is illustrate with \fig{chap4:fig-flowers}. Their technique also handles efficient topological changes.
-%
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=13.9cm]{chapter4/flowers.pdf}
-\end{center}
-\caption[Flowers in the wind]{Complex scene with $40$ deforming flowers. A coarse sampling is employed when the flowers are moved by the wind, for a total of $5\,680$ nodes in the scene. However, the models are dynamically refined when touched by the user, as shown in the right image.}
-\label{chap4:fig-flowers}
-\end{figure}	
+
+One limitation of fast lattice shape matching is that small features of a geometry yield an explosion of the runtime cost. Indeed, a small surface feature may require fine sampling in order to be deformed independently from non-adjacent material, but this fine sampling must be applied to the whole object. Therefore, \cite{Steinemann08} further improved the technique by allowing dynamic adaptive selection of levels of detail through the use of an octree-based hierarchical sampling. Their technique also handles efficient topological changes.
+% This adaptative sampling is illustrate with \fig{chap4:fig-flowers}
+%\begin{figure}[h]
+%\begin{center}
+%\includegraphics[width=13.9cm]{chapter4/flowers.pdf}
+%\end{center}
+%\caption[Flowers in the wind]{Complex scene with $40$ deforming flowers. A coarse sampling is employed when the flowers are moved by the wind, for a total of $5\,680$ nodes in the scene. However, the models are dynamically refined when touched by the user, as shown in the right image.}
+%\label{chap4:fig-flowers}
+%\end{figure}	
 
 Although realism is not a crucial feature for game-like environments, other models based on laws of physics were created for other applications.
 
@@ -103,9 +116,9 @@ The \emph{3D Chainmail} was introduced by \cite{Gibson97} as a fast algorithm fo
 %
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=12cm]{chapter4/chainmail.pdf}
+\includegraphics[width=10cm]{chapter4/chainmail.pdf}
 \end{center}
-\caption[Deformation of a 2D chain]{Deformation of a 2D chain mail when the link indicated by an arrow is moved.}
+\caption[Deformation of a 2D chain]{Deformation of a 2D chain mail when the link indicated by an arrow is moved. Image courtesy of \cite{Gibson97}.}
 \label{chap4:fig-chainmail}
 \end{figure}	
 %
@@ -145,32 +158,34 @@ The main advantage of modal analysis is the possibility to model only the necess
 
 \cite{James02} went even further by using graphics hardware to reduce CPU costs to a minimum. In particular, they use modal analysis to model human skin and secondary tissues in a laparascopic surgical simulation to allow the CPU to focus on more complex tissue models and user contact interactions (see \fig{chap4:fig-modalAnalysisLaparo}). The technique is fairly efficient as it allows precomputations of the vibration modes. 
 %
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=13cm]{chapter4/modalAnalysisLaparo.pdf}
-\end{center}
-\caption[Applications of modal analysis]{(\textbf{Left}) A jumping motion that leads to significant thigh and belly vibrations of human skin when rendered with modal analysis. (\textbf{Right}) The same hardware accelerated technique is applied to secondary tissues in a laparoscopic simulation to ease the CPU of computations. } 
+\begin{figure}[ht]
+\centering 
+\subfloat[ ]{\includegraphics[height=6cm]{chapter4/modalAnalysisLaparo1.pdf}}
+\hspace{0.2cm}
+\subfloat[ ]{\includegraphics[height=6cm]{chapter4/modalAnalysisLaparo2.pdf}}
+\caption[Applications of modal analysis]{(a) A jumping motion that leads to significant thigh and belly vibrations of human skin when rendered with modal analysis. (b) The same hardware accelerated technique is applied to secondary tissues in a laparoscopic simulation to ease the CPU of computations. Image courtesy of \cite{James02}.} 
 \label{chap4:fig-modalAnalysisLaparo}
-\end{figure}	
+\end{figure}
+
 
 Although modal analysis significantly accelerates the simulation, it generates noticeable artifacts when applied to large deformations due to the step of linearisation. It can produce unnatural results with deformations of large amplitude. \cite{Choi05} proposed to overcome this limitation by taking the rotational component of the deformation into account at each node. \cite{Barbic05} make use of modal analysis to build a deformation basis from modal derivatives. It allows them to simulate large deformations of solid objects with non-linear material. 
 
 
 	\subsection{Mass-spring model}	\label{chap4:massSprings}
-A classic technique for modelling a deformable object is the mass-spring system. In this method, the geometry is described by a network of masses connected together by springs. The force $ F $ exerted onto each mass by the spring may be computed with:
+A classic technique for modelling a deformable object is the mass-spring system. In this method, the geometry is described by a network of masses connected together by springs. The force $ \mathbf{F} $ exerted onto each mass by the spring may be computed with:
 \begin{equation}
 \label{chap4:massSpring1}
-F_{\text{spring}} = - k x,
+\mathbf{F}_{\text{spring}} = - k \mathbf{x},
 \end{equation}
-where $ k $ is the spring stiffness constant, $ x $ represents the stretch of the spring from its rest position. From our experience, we know that a mass attached to a single spring has a tendency to oscillate. If no appropriate measure is taken, a network of springs will a forciori oscillate as well. To prevent the system from oscillating, a damper is also added between each couple of masses. The force created by the damper acts to reduce the velocity and may be expressed as:
+where $ k $ is the spring stiffness constant, $ \mathbf{x} $ represents the stretch of the spring from its rest position. From our experience, we know that a mass attached to a single spring has a tendency to oscillate. If no appropriate measure is taken, a network of springs will a forciori oscillate as well. To prevent the system from oscillating, a damper is also added between each couple of masses. The force created by the damper acts to reduce the velocity and may be expressed as:
 \begin{equation}
 \label{chap4:massSpring2}
-F_{\text{damper}} = - d v
+\mathbf{F}_{\text{damper}} = - d \mathbf{\dot x}
 \end{equation}
-where $ d $ is the damping constant and $ v $ the derivative of $ x $ with respect to time. The damper added between each couple of masses allows to model friction and reduce the amplitude of the oscillations. Applying Newton's second law $ \sum \mathbf{F} = m \mathbf{a} $ yields the standard differential equation for a mass-spring system:
+where $ d $ is the damping constant and $ \mathbf{\dot x} $ the derivative of $ x $ with respect to time. The damper added between each couple of masses allows to model friction and reduce the amplitude of the oscillations. Applying Newton's second law $ \sum \mathbf{F} = m \mathbf{\ddot x} $ yields the standard differential equation for a mass-spring system:
 \begin{equation}
 \label{chap4:massSpring3}
-m \ddot x = - d \dot x - k x.
+m \mathbf{\ddot x} = - d \mathbf{\dot x} - k \mathbf{x}.
 \end{equation}
 For complex systems with more than one spring attached to each mass, the right-hand side of the equation \eqref{chap4:massSpring3} becomes more complex as it needs to be repeated and adjusted for each spring. The easiest way to solve a complex mass-spring system iteratively, is to first calculate the total force currently acting on each mass by summing all forces currently exerted by all springs attached to this mass (using \eqref{chap4:massSpring1} and \eqref{chap4:massSpring2}). Dividing the total force by the mass gives the current acceleration of each mass (by \eqref{chap4:massSpring3}). This equation must be numerically solved for each mass, either by explicit or implicit methods. A discussion of integration methods for mass-spring models can be found in \cite{Shinya05}. 
 
@@ -178,13 +193,15 @@ Mass-spring systems have been extensively used and are still very popular. And t
 
 Because they do not derive from the equations of continuum mechanics, mass-spring models have a limited capacity to model the various aspects of a material like anisotropy, viscoelasticity etc. Even worse, according to \cite{Bourguignon00}, if all springs are set to the same stiffness, the mesh geometry may generate undesired anisotropy as shown in \fig{chap4:fig-undesiredAnisotropy}. However, some works tried to take advantage of this feature by giving directions of interest to their model by specifically designing the mesh to align springs on specific directions. For instance, it was used by \cite{Miller88} to animate the motion of snakes and worms. It was also used by \cite{Ng-Thow-Hing97} in their muscle model where some of the springs were aligned with the muscle fibers and more recently by \cite{Magjarevic09} for modelling the mechanical behavior of the myocardial tissue. More details on controlling anisotropy in mass-spring systems may be found in \cite{Bourguignon00}. 
 %
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=8cm]{chapter4/undesiredAnisotropy.pdf}
-\end{center}
-\caption[Undesired anisotropy with mass-spring models]{The two meshes are undergoing a downward pull at their bottom. While the tetrahedral mass-spring system \textbf{(left)} shows signs of anisotropy, the hexahedral mesh \textbf{(right)} with springs aligned along the gravity does not.} 
+\begin{figure}[ht]
+\centering 
+\subfloat[ ]{\includegraphics[width=4cm]{chapter4/undesiredAnisotropy1.pdf}}
+\hspace{0.2cm}
+\subfloat[ ]{\includegraphics[width=4cm]{chapter4/undesiredAnisotropy2.pdf}}
+\caption[Undesired anisotropy with mass-spring models]{The two meshes are undergoing a downward pull at their bottom. While the tetrahedral mass-spring system (a) shows signs of anisotropy, the hexahedral mesh (b) with springs aligned along the gravity does not. Image courtesy of \cite{Bourguignon00}. } 
 \label{chap4:fig-undesiredAnisotropy}
-\end{figure}	
+\end{figure}
+
 
 A mass-spring model may also be enhanced to feature viscoelasticity. Indeed, \cite{Stiles72} proposed a viscoelastic mass-spring system to test hypotheses on the mechanical response of muscles. Much more recently, \cite{Tamura05} introduced a method to simulate viscoelastic material using a mass-spring system. They use a large number of particules to create a randomly connected mesh to mimic the structure of polymeric materials and hence their viscoelascity characteristics. \cite{Basafa10} went even further and extended a mass-spring system to simulate non-linear viscoelastic deformations of soft tissue for laparoscopic surgery. They tune their parameters by a simple optimisation procedure to fit the mechanical response obtained on a set of experimental data. 
 
@@ -218,7 +235,7 @@ The use of the finite element method in computer graphics was pioneered by \cite
 \begin{center}
 \includegraphics[width=7cm]{chapter4/ball.pdf}
 \end{center}
-\caption[Ball on a deformable model]{A ball resting on a supporting elastic solid as computed by \citeauthor{Terzopoulos87}.} 
+\caption[Ball on a deformable model]{A ball resting on a supporting elastic solid as computed by \citeauthor{Terzopoulos87}. \TODO{to be deleted?}} 
 \label{chap4:fig-ball}
 \end{figure}	
 In order to speed up the computations, linear strain measures started to be used (see section~\ref{chap2:infinitesimalStrainTensor}). For instance, \cite{Gourret89} make use of a linear finite element method to model the deformation of grasped objects. The equations are however solved in static for simplicity. An approach to solve the system of equations in dynamic in a reasonable amount of time is to decrease the number of elements. This reduction must be compensated by the use of high-order elements, that is the degree of the shape functions used in the interpolation of the solution is higher to maintain the overall accuracy. This approach was applied to an elaborate model of a muscle by \cite{Chen92} and to modelling skin in a simulator of plastic surgery by \cite{Pieper92} where they both use 20-node brick elements. Yet, finite element modelling remained very computationally expensive and the interactivity required for medical simulators was still to be reached. 
@@ -235,25 +252,25 @@ Besides real-time computation of soft tissue, another major concern for medical 
 
 \cite{Cotin00} proposed a hybrid model allowing real-time cutting. They combined a quasi-static precomputed model, which is very efficient but does not allow topology changes, with a tensor-mass model which requires more computation but authorises cutting. The key idea is to separate a same structure into two parts: one susceptible to be cut during the surgery procedure and one that will not be submitted to any topological change. While the former will be simulated with the tensor-mass model, the deformation of the latter will be computed using the precomputed model. Since both linearly elastic models follow the same physical law, the combination of these two models should behave exactly as a global, linearly elastic model. To achieve this goal, \citeauthor{Cotin00} describe how to impose the additional boundary conditions at the connection nodes for the global model to be consistent in terms of forces and displacements. The efficiency of this hybrid model was demonstrated by simulating an hepatectomy (removing of one of the eight anatomical segments of the liver). They reported the simulation (allowing deformation and cutting) of a mesh with more than $ 8\,000 $ tetrahedra in real-time (see \fig{chap4:fig-hybridModel}).
 %
-\begin{figure}[h]
-\begin{center}
-\includegraphics[height=4.5cm]{chapter4/hybrid1.pdf}
+\begin{figure}[ht]
+\centering 
+\subfloat[ ]{\includegraphics[height=4.5cm]{chapter4/hybrid1.pdf}}
 \hspace{0.2cm}
-\includegraphics[height=4.5cm]{chapter4/hybrid2.pdf}
-\end{center}
-\caption[Simulation of a hepatectomy using a hybrid model]{Simulation of a hepatectomy using a hybrid model. $ 18 $\% of the mesh was modelled with the tensor-mass model (green) and therefore could be cut out. The rest of the mesh was simulated with the precomputed finite element model. } 
+\subfloat[ ]{\includegraphics[height=4.5cm]{chapter4/hybrid2.pdf}}
+\caption[Simulation of a hepatectomy using a hybrid model]{Simulation of a hepatectomy using a hybrid model. $ 18 $\% of the mesh was modelled with the tensor-mass model (green) and therefore could be cut out. The rest of the mesh was simulated with the precomputed finite element model. Image courtesy of \cite{Cotin00}. \TODO{Stéphane> c'est ptet moche comme image, mais c'est pourtant bien ça dans le papier... Et même dans ton HDR tu utilises cette image... regarde page 46 et 50... Donc ben c'est pas de ma faute si c'est moche ;-) }} 
 \label{chap4:fig-hybridModel}
 \end{figure}
 
+
 \cite{Serby01} described a new approach to cutting with finite element models. The central idea is not to introduce new nodes/elements but to displace the existing ones to account for the topological changes introduced by a cut. They also added a step of homogenisation of the mesh to avoid tiny elements. Thus, the problem of decreasing element size is minimised and consequently the stability of the solution of the equations of motion is increased. 
 
-Cutting is a problem for all techniques precomputing the inverse of the stiffness matrix. Indeed, topological changes require updates of this matrix, which is too computationally heavy to be done in real-time. \cite{Nienhuys01} avoid the precomputations by approximating the inverse at runtime with an iterative algorithm (Conjugate Gradient). Moreover, instead of subdividing each tetrahedron to make the cut appear where the user performed it, they adapt the mesh locally so that there are always triangles on the scalpel path, and perform the cut along those triangles. If the approach is interesting, the authors reported a lag between the scalpel and the realised cut. In addition, repositioning the nodes within the mesh can easily generate degeneracies, which have to be eliminated. 
+Cutting is a problem for all techniques precomputing the inverse of the stiffness matrix. Indeed, topological changes require updates of this matrix, which is too computationally heavy to be done in real-time. \cite{Nienhuys01} avoid the precomputations by approximating the inverse at runtime with an iterative algorithm (Conjugate Gradient). Moreover, instead of subdividing each tetrahedron to make the cut appear where the user performed it, they adapt the mesh locally so that there are always triangles on the scalpel path, and perform the cut along those triangles (see \fig{chap4:fig-cutUnderScalpel}). If the approach is interesting, the authors reported a lag between the scalpel and the realised cut. In addition, repositioning the nodes within the mesh can easily generate degeneracies, which have to be eliminated. \TODO{add PhD of Brian Lee... But I don't have it, and is it published yet?}
 %
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=13cm]{chapter4/cutUnderScalpel.pdf}
 \end{center}
-\caption[The three steps in performing a cut]{The three steps in performing a cut (represented here in 2D).} 
+\caption[The three steps in performing a cut]{The three steps in performing a cut (represented here in 2D). Image courtesy of \cite{Nienhuys01}.} 
 \label{chap4:fig-cutUnderScalpel}
 \end{figure}
 
@@ -271,15 +288,15 @@ In constrast of \cite{Muller02} who discretised the rotation field at each verte
 
 If co-rotational approaches increase accuracy in the strain measure, all the examples we have seen so far make use of a linear constitutive law. Yet, the mechanical behaviour of soft tissue is known to be non-linear, viscoelastic and often anisotropic \citep{Fung93}. Moreover, \cite{Misra07} demonstrated a noticeable difference between the force feedbacks provided by linear and non-linear tissue models. One of the first materially non-linear finite element formulation used in medical simulation was probably the work of \cite{Sagar94}. While developing a teleoperated micro-surgical robot for eye surgery, they wanted to provide a virtual environment has part of the system for training. Since the cornea is anisotropic and non-linearly elastic and undergoes large deformations, they have used large deformation elasticity theory with orthotropic and non-linear material properties in the finite element model. Coupled with a detailed visual model of the eye, the simulation produces a fair level of realism with a performance greater than $ 10 \,$Hz (see \fig{chap4:fig-eyeSurgery}). 
 %
-\begin{figure}[h]
-\begin{center}
-\includegraphics[height=5.5cm]{chapter4/eyeSurgery1.pdf}
+\begin{figure}[ht]
+\centering 
+\subfloat[ ]{\includegraphics[height=5.5cm]{chapter4/eyeSurgery1.pdf}}
 \hspace{0.2cm}
-\includegraphics[height=5.5cm]{chapter4/eyeSurgery2.pdf}
-\end{center}
-\caption[Simulation of eye surgery]{(\textbf{Left}) Exterior view of the model showing the eye and the eyelashes. (\textbf{Right}) Surgical virtual environment including micro-tools and guidance information.} 
+\subfloat[ ]{\includegraphics[height=5.5cm]{chapter4/eyeSurgery2.pdf}}
+\caption[Simulation of eye surgery]{(a) Exterior view of the model showing the eye and the eyelashes. (b) Surgical virtual environment including micro-tools and guidance information. Image courtesy of \cite{Sagar94}.} 
 \label{chap4:fig-eyeSurgery}
 \end{figure}
+
 
 \cite{Keeve98} compared a fully (geometrically and materially) non-linear finite element model with a mass-spring model to compute the deformation of skin after bone realignment in a craniofacial surgery simulator. The efficiency of the mass-spring model gives the ability to the surgeon to realise interactive simulation of the resulting tissue changes and to improve his planning process. The best precision was given by the finite element model which could be used off-line to verify the chosen surgical procedure. 
 
@@ -311,7 +328,7 @@ Early 2000s, the rapid increase in the performance of graphics hardware, coupled
 
 To the best of our knowledge, \cite{Rumpf01} were the firsts to leverage the power of GPUs to solve partial differential equations. They established a correspondence between common mathematical operations and OpenGL operations and structures. Thus, as an example, a vector is represented as a RGBA color vector in a color image on the graphics card. They decided to implement an iterative solver for a linear system of equations, which we find at the core of most finite element codes. Using this hardware accelerated solver, they solved the linear heat equations and presented an anisotropic diffusion model for image processing. They obtained promising results but noted the hardware restrictions that forced them to approximate all non-linear functions by linear ones in the implementation of the anisotropic diffusion. Although a complete hardware accelerated finite element method implementation was yet to be done, \citeauthor{Rumpf01} definitely stepped towards the right direction. 
 
-\cite{Wu04} proposed the first application of GPU in medical simulation \label{chap4:GPUMedicalSimulation}. They were able to achieve an interactive frame rate with topology changes in surgical simulation. Not only they used the condensation technique for merely calculating the surface nodes in the non-operation parts, but they implemented the conjugate gradient solver onto GPU. Indeed, entering 2003, the full IEEE floating point precision data type supported in shaders and texture stages allows the GPU to be applied into more general applications. The conjugate gradient solver includes three primary operations: multiplication of the sparse matrix and the vector, addition of two vectors and the sum-reduction operation. The core component is the multiplication of the sparse matrix and the vector. Therefore, they migrated this part of calculation from the CPU into the fragment processor of the GPU, to take advantage of the fragment processor in its efficient manipulation of the local texture memory on the mathematical calculation. The performance of their method on the GPU is up to $ 2.15 $ times faster than the CPU implementation. 
+\cite{Wu04} proposed the first application of GPU in medical simulation\label{chap4:GPUMedicalSimulation}. They were able to achieve an interactive frame rate with topology changes in surgical simulation. Not only they used the condensation technique for merely calculating the surface nodes in the non-operation parts, but they implemented the conjugate gradient solver onto GPU. Indeed, entering 2003, the full IEEE floating point precision data type supported in shaders and texture stages allows the GPU to be applied into more general applications. The conjugate gradient solver includes three primary operations: multiplication of the sparse matrix and the vector, addition of two vectors and the sum-reduction operation. The core component is the multiplication of the sparse matrix and the vector. Therefore, they migrated this part of calculation from the CPU into the fragment processor of the GPU, to take advantage of the fragment processor in its efficient manipulation of the local texture memory on the mathematical calculation. The performance of their method on the GPU is up to $ 2.15 $ times faster than the CPU implementation. 
 
 In 2007, \citeauthor{Taylor07b} introduced the first GPU implementation of a fully non-linear finite element method (more details in \cite{Taylor08}). They reformulated the TLED algorithm presented by \cite{Miller07} to accomodate with the limited hardware possibilities of GPUs. In particular, the main restriction when using graphics-based GPU execution is the inability to scatter, which necessitated reformulation of force summation as a gather in their implementation. It is worth noting that the entire finite element method implementation was ported to GPU. They reported significant solution speed gains up to $ 16.8 \times$ over the CPU implementation. Thus, they were able to compute a simple cube model with up to $ 16\,000 $ tetrahedral elements in real-time. 
 
@@ -331,6 +348,13 @@ Meshless methods were then introduced to computer graphics by \cite{Muller04}. I
 \cite{Horton06} tested meshless methods for surgical simulation. They proposed a total Lagrangian explicit dynamics algorithm using a non-linear material formulation. They applied the method on an example of brain shift and compared their results with a commercial finite element code. The shape functions are created from a cloud of unconnected nodes using the element free Galerkin method. They were interested in the displacement of the centre of mass for the brain and found the absolute displacement differences between the two algorithm are less than $ 0.85\,$mm which is the resolution of the MRIs in their study. The same team kept investigating and testing the technique. However, they used moving least squares procedure for creating the shape functions instead of the element free Galerkin method. They also realised experimental indentations \citep{Horton07} and provided more extensive comparisons with a finite element method \citep{Horton10}.
 
 Another example of application is the used of the technique called moving particule semi-implicit method (MPS) by \cite{Chhatkuli09}. They applied this method to simulate the deformation of lung and a tumor inside the left lung during inspiration. The lung tissues were considered to be homogeneous, isotropic and viscoelastic. They compared their results with the experimental CT taken at the end of inspiration and found out that the deformation predicted by numerical simulation matches reasonably well with the experimental results. 
+
+\TODO{+add paper ISBMS 2010?}
+
+\ON
+Recently, \cite{Zhu10} proposed a framework based on point-based simulation techniques to model organ deformations realistically. They combined a new strain-stress tensor computation scheme with smoothed particule hydrodynamics (SPH) method. The parameters of the tensor relating strain and stress are determined through mechanical experiments. 
+
+\OFF
 
 \bigskip
 

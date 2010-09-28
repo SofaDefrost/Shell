@@ -25,28 +25,22 @@ This approach may be compared to trying to find the area under a curve. We know 
 
 It is crucial to keep in mind that approximations occur at different stages during finite element analysis. The division of the whole domain into finite elements may not be exact (see \fig{chap3:fig-errorWithSubdivision}), introducing error in the domain being modelled. The second stage is when element equations are derived. As mentionned earlier, the unknowns of the problem are approximated using the idea that any continuous function can be representated by a linear combination of known functions and undetermined coefficients. Algebraic relations between the undetermined coefficients are then obtained by satisfying the governing equations over each element. There are a few types of approach for establishing these equations but, without going into details, the mathematical foundations of all these approaches are energy principles or the \emph{weighted residual methods} (see Appendix~\ref{appendix2}), which both lead to integrals during the process. Therefore, the second stage creates two sources of error: the representation of the solution by a linear combination of functions and the evaluation of the integrals. Finally, errors are introduced when solving the assembled system of algebraic equations. 
 %
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=8cm]{chapter3/errorWithSubdivision.pdf}
-\end{center}
-\caption[Error introduced by the division into elements]{The division of the domain into elements is not always perfect.}
+\begin{figure}[ht]
+\centering 
+\subfloat[ ]{\includegraphics[width=4.5cm]{chapter3/errorWithSubdivision1.pdf}}
+\hfill 
+\subfloat[ ]{\includegraphics[width=4.5cm]{chapter3/errorWithSubdivision2.pdf}}
+\hfill 
+\subfloat[ ]{\includegraphics[width=4.5cm]{chapter3/errorWithSubdivision3.pdf}}
+\caption[Error introduced by the division into elements]{The division of the domain (a) into elements is not always perfect (b). The discretisation error may be reduced by using smaller elements (c). However, this improvement is obtained to the detriment of computational efficiency as the number of algebraic equations to solve will increase.}
 \label{chap3:fig-errorWithSubdivision}
 \end{figure}
+
 
 \section{Discretisation}
 
 	\subsection{Meshing process}
-The first step in the finite element method is to create a mesh of the domain to study. Mesh generation is a very important task and can be very time consuming. The domain has to be meshed properly into elements of specific shapes. All the elements together form the entire domain of the problem without any gap or overlapping. For example, triangles or quadrilaterals can be used in two dimensions, and tetrahedra and hexahedra in three dimensions. Information, such as \emph{element connectivity}, must be created during the meshing process for later use in the formulation of the FEM equations. The number of elements into which the domain is divided in a problem depends mainly on the geometry of the domain and on the desired accuracy of the solution. Usually, the number of elements increases with the complexity of the geometry. For instance, if one part of the domain is thiner (see \fig{chap3:fig-sizeOfElementMeshing}), the size of the elements must be reduced in order to tile this particular part, which increases the total number of elements, and hence  the number of algebraic equations to solve. However, adding elements is sometimes desirable. Indeed, increasing the number of elements tends to get an approximate solution closer to the exact analytical solution (as reducing the width of the rectangles allows for a better approximation of the area under the curve). Elements are classically added in the particular regions of interest for a given problem, if this information is known a priori. A trade-off between accuracy and computational time must be found. This is why the meshing process on the problem domain must be carried out carefully. One needs to create a mesh which gives an accurate enough solution for the desired application while restraining the computational time according to the time constraints of the problem. As an example, finding the maximum load that can sustain a bridge in structural mechanics demands a high degree of accuracy, no matter how much time it is needed to compute the solution. Conversely, organ deformation in medical training simulators must be computed at an interactive rate so that no apparent delay can be observed between the manipulation of a given organ and its deformation. It does not mean that precision is not required, simply that the time constraints will necessarily limit the accuracy of the solution. 
-%
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=13cm]{chapter3/sizeOfElementMeshing.pdf}
-\end{center}
-\caption[Finer mesh required for complex geometry]{By adding details on the tree's geometry \textbf{(right)}, the surface delimited by the tree becomes more difficult to mesh and would require smaller elements to tile all additional small branches.}
-\label{chap3:fig-sizeOfElementMeshing}
-\end{figure}
-
-
+The first step in the finite element method is to create a mesh of the domain to study. Mesh generation is a very important task and can be very time consuming. The domain has to be meshed properly into elements of specific shapes. All the elements together form the entire domain of the problem without any gap or overlapping. For example, triangles or quadrilaterals can be used in two dimensions, and tetrahedra and hexahedra in three dimensions. Information, such as \emph{element connectivity}, must be created during the meshing process for later use in the formulation of the FEM equations. The number of elements into which the domain is divided in a problem depends mainly on the geometry of the domain and on the desired accuracy of the solution. Usually, the number of elements increases with the complexity of the geometry. For instance, if one part of the domain is thiner (see \fig{chap3:fig-errorWithSubdivision} (c)), the size of the elements must be reduced in order to tile this particular part, which increases the total number of elements, and hence the number of algebraic equations to solve. However, adding elements is sometimes desirable. Indeed, increasing the number of elements tends to get an approximate solution closer to the exact analytical solution (as reducing the width of the rectangles allows for a better approximation of the area under the curve). Elements are classically added in the particular regions of interest for a given problem, if this information is known a priori. A trade-off between accuracy and computational time must be found. This is why the meshing process on the problem domain must be carried out carefully. One needs to create a mesh which gives an accurate enough solution for the desired application while restraining the computational time according to the time constraints of the problem. As an example, finding the maximum load that can sustain a bridge in structural mechanics demands a high degree of accuracy, no matter how much time it is needed to compute the solution. Conversely, organ deformation in medical training simulators must be computed at an interactive rate so that no apparent delay can be observed between the manipulation of a given organ and its deformation. It does not mean that precision is not required, simply that the time constraints will necessarily limit the accuracy of the solution. 
 	
 	\subsection{Solution interpolation}	\label{chap3:solutionInterpolation}
 As we have seen, the finite element method is based on finding an approximate solution over each simple element rather than the whole domain. Any continuous function $ f $ may be approximated by a linear combination of known functions $ \phi_i $ and undetermined coefficients $ c_i $:
@@ -498,9 +492,8 @@ Because of the peculiar structure of the matrix involved in finite element compu
 	
 		\subsubsection*{Direct solvers}
 As their name is suggesting, direct solvers make an attempt into finding a solution directly by inverting the matrix $ \mathbf{A} $. They execute in a predictable number of operations. We will now introduce a few direct methods in the context of finite element methods. 
-% Methods such as Gauss-Jordan elimination or LU decomposition will not be discussed in this section for instance for their lack of efficiency with sparse matrices.
 
-\paragraph*{LU decomposition.}
+\paragraph*{LU decomposition.}	\label{chap3:LUdecompo}
 The LU decomposition is a matrix decomposition which writes a matrix as the product of a lower triangular matrix and an upper triangular matrix. In other words, $ \mathbf{A} $ may be written as:
 \begin{equation}
 \label{chap3:LU}
@@ -561,6 +554,15 @@ for a $ N \times N $ matrix $ \mathbf{A} $. We then solve \eqref{chap3:eqUxy} in
 \right.
 \end{equation}
 
+\ON
+\paragraph*{Cholesky decomposition.}	\label{chap3:CholeskyDecompo}
+Cholesky decomposition allows to write a symmetric and definite positive matrix as the product of a lower triangular matrix with strictly positive diagonal entries by the transpose: 
+\begin{equation}
+\label{chap3:Cholesky}
+\mathbf{A} = \mathbf{L} \mathbf{L}^T,
+\end{equation}
+where $ \mathbf{L} $ is lower triangular with strictly positive diagonal entries. In general, Cholesky decompositions are not unique. Similarly to LU decomposition, a Cholesky decomposition may be used to break one set of equations into two successive but simpler systems. 
+\OFF
 
 		\subsubsection*{Iterative solvers}
 An iterative method attempts to solve the system of equations by finding successive approximations to the solution starting from an initial guess. In the case of a system of linear equations, the two main classes of iterative methods are the stationary iterative methods, and the more general Krylov subspace methods. Stationary iterative methods solve a linear system with an operator approximating the original one and based on a measurement of the error in the result (called the residual), form an equation of correction for which this process is repeated. While these methods are simple to derive, convergence is only guaranteed for a limited class of matrices. Examples of stationary iterative methods are the Jacobi method and Gauss-Seidel method. Krylov subspace methods work by forming an orthogonal basis of the sequence of successive matrix powers times the initial residual (the Krylov sequence). The approximations to the solution are then formed by minimising the residual over the subspace formed. The typical method in this class is the conjugate gradient method (CG). 
@@ -596,8 +598,12 @@ Later, the \emph{biconjugate gradient method} was introduced as a generalisation
 
 \ON
 \paragraph*{Preconditioners}
-Very often, the matrix $ \mathbf{A} $ is not well conditioned and 
+Unfortunately, it is common for the matrix $ \mathbf{A} $ not to be well conditioned. Consequently, the convergence of the chosen iterative method is often slow. In order to achieve an accelerated convergence, we may use a \emph{preconditioner}. Although the formation and the study of preconditioners are out of the scope of this PhD thesis, preconditioners are a key element for solving systems of equations. To be effective, a preconditioner $ \mathbf{P} $ should be a good approximation of  $ \mathbf{A} $ and the following preconditioned system must be easier to solve than the original system \eqref{chap3:linearEquation}:
+\begin{equation}
+\label{chap3:preconditionedSystem}
+\mathbf{P}^{-1} \mathbf{A} \mathbf{x} = \mathbf{P}^{-1} \mathbf{b}.
+\end{equation}
+Two criteria should also be considered when forming a preconditioner: (1) the ease with which it may be evaluated and (2) its memory requirements. The easiest preconditioner would be the identity since $ \mathbf{P}^{-1} = \mathbf{I} $ in this case. Of course, such a conditioner leads to the resolution of the original system and is therefore totally useless. In constrast, the choice of $ \mathbf{P} = \mathbf{A} $ leads to the solution of the system \eqref{chap3:linearEquation} in one single iteration. In practice, an optimal preconditioner is to be found between these two extremes to minimise the number of iterations required by the solver while keeping the evaluation of the preconditioner simple. Finding a good preconditioner for all types of problems is difficult. A preconditioner is only useful if the overall time spent on both the formation of  $ \mathbf{P} $ and the resolution of \eqref{chap3:preconditionedSystem} is less than the time spent at solving \eqref{chap3:linearEquation} alone. 
 
+One of the simplest preconditioner is the \emph{Jacobi preconditioner} where the preconditioner is chosen to be the diagonal of the matrix $ \mathbf{A} $. This choice is efficient in cases where $ \mathbf{A} $ is diagonally dominant. Sparse approximations of a LU or Cholesky decompositions may also be used as preconditioners (see sections \ref{chap3:LUdecompo} and \ref{chap3:CholeskyDecompo} for more details). 
 \OFF
-
-\TODO{+preconditioners}
