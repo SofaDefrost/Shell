@@ -14,7 +14,7 @@ Modelling anatomical structures requires an understanding of the deformation and
 
 
 \section{Description of motion} 	\label{chap2:descriptionMotion}
-Let us consider a body $\textbf{\textit{B}}$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\textbf{\textit{B}}$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. Deformation implies the change in shape and\slash or size of the body from an initial configuration noted $\kappa_{0}$ to a new configuration $\kappa$ called the \emph{current} or \emph{deformed configuration}. 
+Let us consider a body $\textbf{\textit{B}}$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\textbf{\textit{B}}$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. \ON In constrast, a change in shape and\slash or size of the body from an initial configuration $\kappa_{0}$ to a new configuration $\kappa$ is called a deformation. This new configuration $\kappa$ may be designated by the \emph{current} or \emph{deformed configuration}. \OFF
 
 Let us now consider a given particle of the body that we call $X$. What we will call particle in the following is in fact an infinitesimal volume of material. We denote the position it occupies in the initial configuration $\mathbf{X}$ and note its position in the deformed configuration $\mathbf{x}$, both expressed in the chosen frame of reference. The mapping $\chi$ defined as the following:
 \begin{equation}
@@ -24,18 +24,19 @@ Let us now consider a given particle of the body that we call $X$. What we will 
 is called the \emph{deforming mapping} of the body $\textbf{\textit{B}}$ from $\kappa_{0}$ to $\kappa$. When analysing the deformation of a continuous body, it is necessary to describe the evolution of configurations through time. Its mathematical description follows one of the two approaches: the material description or the spatial description. The material description is known as \emph{Lagrangian description} whereas the spatial description is called \emph{Eulerian description}. These two approaches are detailed next. 
 
 	\subsection{Lagrangian description}	
-In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. Thus, the current coordinates ($\mathbf{x} \in \kappa$) are expressed in terms of the reference coordinates ($\mathbf{X} \in \kappa_{0}$): 
+In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. \ON Consequently, the current coordinates ($\mathbf{x} \in \kappa$) depend on the reference coordinates ($\mathbf{X} \in \kappa_{0}$): \OFF
 \begin{equation}
 \textbf{x} = \chi(\textbf{X}, t), \quad \chi(\textbf{X}, 0) = \textbf{X},
 \end{equation}
-and the variation of a typical variable $\phi$ over the body is described with respect to the coordinates $\mathbf{X}$ and time $t$:
+\ON and a typical variable $\phi$ defined over the body is expressed in terms of the coordinates $\mathbf{X}$ and time $t$: \OFF
 \begin{equation}
+\label{chap2:phi}
 \phi = \phi(\textbf{X}, t).
 \end{equation}
-For a fixed value of $\mathbf{X} \in \kappa_{0}$, $\phi(\mathbf{X},t)$ gives the value of $\phi$ at time $t$ associated with the fixed particle $X$ whose position in the reference configuration is $\mathbf{X}$. We note that a change in time $t$ implies that the same particle $X$ has a different value $\phi$. Thus, the Lagrangian description focuses its attention on the particles of the continuous body and it is usually used in solid mechanics.
+\ON Let us consider a particule $X$ whose position in the reference configuration is $\mathbf{X}$. From \eqref{chap2:phi}, we note that the value of $\phi$ associated with this fixed particle $X$ changes over time. Hence, \OFF the Lagrangian description focuses its attention on the particles of the continuous body and it is usually used in solid mechanics.
 	
 	\subsection{Eulerian description}
-Rather than following the particles, the Eulerian description observes the changes at fixed locations. 	In the Eulerian description, the motion is this time referred to the current configuration $\kappa$ and $\phi$ is described with respect to the current position ($\mathbf{x} \in \kappa$):
+\ON In constrast, the Eulerian description is interested in changes at fixed locations. This time, the motion and $\phi$ are described with respect to the current position ($\mathbf{x} \in \kappa$): \OFF
 \begin{equation}
 \phi = \phi(\textbf{x}, t), \quad \textbf{X} = \textbf{X}(\textbf{x}, t).
 \end{equation}
@@ -46,12 +47,12 @@ The displacement $ \mathbf{u} $ of a particle $X$ is called \emph{displacement v
 \begin{equation}
 \mathbf{u}(\textbf{X}, t) = \mathbf{x}(\mathbf{X}, t) - \mathbf{X}.
 \end{equation}
-A \emph{displacement field} is a vector field of all displacement vectors for all particles in the body, which relates the deformed configuration $\kappa$ with the undeformed configuration $\kappa_{0}$. Indeed if the displacement field is known, we can construct the current configuration $\kappa$ from the undeformed configuration $\kappa_{0}$: $\chi(\mathbf{X}, t) = \mathbf{X} + \mathbf{u}(\mathbf{X})$. 	
+A \emph{displacement field} is a vector field of all displacement vectors for all particles in the body. \ON Thus, the deformed configuration $\kappa$ may be obtained from the undeformed configuration $\kappa_{0}$ by merely adding the displacement field: \OFF $\kappa_{0}$: $\chi(\mathbf{X}, t) = \mathbf{X} + \mathbf{u}(\mathbf{X})$. 
 	
 \section{Analysis of deformation}
 
 	\subsection{Deformation gradient tensor}
-The displacement field tells us how a point displaces from the reference to the deformed configuration. However, we would also like to know how a piece of material is stretched and rotated as the body moves from the reference to the deformed configuration. Since the length of a material line $d\mathbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\mathbf{X}$ deforms into $d\mathbf{x}$. The question then becomes how to relate $d\mathbf{x}$ in the deformed configuration with $d\mathbf{X}$ of the reference configuration. 
+The displacement field tells us how a \ON particule \OFF displaces from the reference to the deformed configuration. \ON More interestingly, we would like to know how a material line would deform (stretch and rotation) within this displacement field. \OFF Since the length of a material line $d\mathbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\mathbf{X}$ deforms into $d\mathbf{x}$. \ON We now seek the relation existing between $d\mathbf{x}$ in the deformed configuration and $d\mathbf{X}$ of the reference configuration. \OFF
 
 Consider two particles $P_{1}$ and $P_{2}$ in a continuous body separated by an infinitesimal distance $d\mathbf{X}$:
 \begin{equation}
@@ -95,7 +96,7 @@ where $\nabla_{0}$ is the gradient operator with respect to $\mathbf{X}$ and $\m
 
 
 	\subsection{Change of volume}
-At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. We can define volume elements in the reference and deformed configurations. Consider three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ forming a parallelepiped in the reference configuration as can be seen on \fig{chap2:fig-changeVolume}. 
+At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. \ON Let us consider a volume in the reference configuration formed by \OFF three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ as can be seen on \fig{chap2:fig-changeVolume}.
 % 
 \begin{figure}[h]
 \begin{center}
@@ -116,22 +117,22 @@ The volume of the parallelepiped that we will note $dV$  can be calculated using
 dV &= d\mathbf{X}^{(1)} \cdot d\mathbf{X}^{(2)} \times d\mathbf{X}^{(3)} = (\mathbf{\hat{N}}_{1} \cdot \mathbf{\hat{N}}_{2} \times \mathbf{\hat{N}}_{3}) \, dX^{(1)} dX^{(2)} dX^{(3)} \notag \\
 &= dX^{(1)} dX^{(2)} dX^{(3)}, \label{chap2:dV}
 \end{align}
-where $\mathbf{\hat{N}}_{i}$ denote the unit vector along $d\mathbf{X}^{i}$. The corresponding volume in the deformed configuration is given by:
+where $\mathbf{\hat{N}}_{i}$ \ON is \OFF the unit vector along $d\mathbf{X}^{i}$. \ON Similarly, we can compute the \OFF corresponding volume in the deformed configuration by:
 \begin{align}
 dv &= d\mathbf{x}^{(1)} \cdot d\mathbf{x}^{(2)} \times d\mathbf{x}^{(3)} \notag \\
 &=  (\mathbf{F} \cdot \mathbf{\hat{N}}_{1}) \cdot (\mathbf{F} \cdot \mathbf{\hat{N}}_{2}) \times (\mathbf{F} \cdot \mathbf{\hat{N}}_{3}) \,  dX^{(1)} dX^{(2)} dX^{(3)} \quad \text{by \eqref{chap2:dxdX}} \notag \\
 &= \det \mathbf{F} \, dX^{(1)} dX^{(2)} dX^{(3)}. \label{chap2:dv}
 \end{align}
-The determinant of $\mathbf{F}$ is called the \emph{Jacobian} and it is denoted by $J = \det \mathbf{F}$. And we have:
+The determinant of $\mathbf{F}$ is called the \emph{Jacobian} and it is denoted by $J = \det \mathbf{F}$. \ON Therefore, the relation between the deformed volume $ dv $ and the undeformed volume $ dV $ may be written as: \OFF
 \begin{equation}
 \label{chap2:dvdV}
 dv = J dV.
 \end{equation}
-Thus, J has the physical meaning of being the local ratio of current to reference volume of a material volume element.
+\ON It is worth noting that the Jacobian \OFF  J has the physical meaning of being the local ratio of current to reference volume of a material volume element.
 
 
 	\subsection{Change of surface}
-For similar reasons, let us find the relation between an element of area in the reference configuration $d\mathbf{A}$ which becomes $d\mathbf{a}$ in the deformed configuration. Considering an arbitrary material line $d\mathbf{L}$ in the reference configuration and noting $d\mathbf{l}$ the same line after deformation (see \fig{chap2:fig-changeSurface}), the corresponding reference and current volumes are given respectively by:
+For similar reasons, let us find the relation between an element of area in the reference configuration $d\mathbf{A}$ which becomes $d\mathbf{a}$ in the deformed configuration. Considering an arbitrary material line $d\mathbf{L}$ in the reference configuration and noting $d\mathbf{l}$ the same line after deformation (see \fig{chap2:fig-changeSurface}), the reference and current volumes are given respectively by:
 \begin{align}
 d\mathbf{V} &= d\mathbf{L} \cdot d\mathbf{A} \\
 \mbox{and } \quad d\mathbf{v} &= d\mathbf{l} \cdot d\mathbf{a}.
@@ -140,7 +141,7 @@ Using \eqref{chap2:dvdV} which relates the reference and deformed volumes and re
 \begin{equation}
 J \, d\mathbf{L} \cdot d\mathbf{A} = (\mathbf{F} \, d\mathbf{L}) \cdot d\mathbf{a}.
 \end{equation}
-The fact that this expression is valid for any vector $d\mathbf{L}$ and using the property $\mathbf{a} \cdot \mathbf{b} = \mathbf{a} ^{T} \mathbf{b}$ yields:
+\ON Since \OFF this expression is valid for any vector $d\mathbf{L}$ and by using the property $\mathbf{a} \cdot \mathbf{b} = \mathbf{a} ^{T} \mathbf{b}$, \ON the sought relation between an element of area in the reference configuration $d\mathbf{A}$ and its corresponding area $d\mathbf{a}$ in the deformed configuration may be expressed as: \OFF
 \begin{equation}
 \label{chap2:dadA}
 d\mathbf{a} = J \, \mathbf{F}^{-T} \, d\mathbf{A}.
@@ -175,7 +176,7 @@ The deformation gradient $\mathbf{F}$ can now be expressed in terms of the volum
 			
 			
 \section{Strain measures}	\label{chap2:strainMeasures}
-The length of a material curve from the reference configuration can change when displaced to a curve in the deformed configuration. If all the curves do not change length, it is said that a rigid body displacement occurred. The concept of strain is used to evaluate how much a given displacement differs locally from a rigid body displacement. Therefore, although we know how to transform vectors from the reference configuration into vectors in the current configuration using the deformation gradient, it is more useful to find a measure of the change in length of $d\mathbf{X}$. Many measures of strains can be defined and the most common ones will now be introduced. 
+The length of a material curve from the reference configuration can change when displaced to a curve in the deformed configuration. If all the curves do not change length, it is said that a rigid body displacement occurred. The concept of strain is used to evaluate how much a given displacement differs locally from a rigid body displacement \citep{Lubliner06}. Therefore, although we know how to transform vectors from the reference configuration into vectors in the current configuration using the deformation gradient, it is more useful to find a measure of the change in length of $d\mathbf{X}$. Many measures of strains can be defined and the most common ones will now be introduced. 
 
 	\subsection{Cauchy-Green deformation tensors}
 Let us consider two particles $P_{1}$ and $P_{2}$ in the neighbourhood of each other, separated by $d\mathbf{X}$ in the reference configuration. In the deformed configuration $P_{1}$ and $P_{2}$ occupy the positions $\tilde{P}_{1}$ and $\tilde{P}_{2}$ and they are separated by $d\mathbf{x}$. We are interested in the change of distance between the two points $P_{1}$ and $P_{2}$ as the body deforms. 
@@ -203,7 +204,7 @@ By definition, $\mathbf{C}$ is a symmetric second-order tensor. The transpose of
 
 	
 	\subsection{Green-Lagrange strain tensor}
-Using \eqref{chap2:dS} and \eqref{chap2:ds}, the change in the squared lengths due to the body deformation between the reference and the current configuration can be expressed as:
+Using \eqref{chap2:dS} and \eqref{chap2:ds}, \ON the difference in the squared lengths between the reference and the current configuration may be evaluated as: \OFF 
 \begin{align}
 (ds)^2 - (dS)^2 &= d\mathbf{X} \cdot (\mathbf{C} \, d\mathbf{X}) - d\mathbf{X} \cdot d\mathbf{X} \notag \\
 &= d\mathbf{X} \cdot  (\mathbf{C} - \mathbf{I}) \, d\mathbf{X}.
@@ -216,7 +217,7 @@ so we can write:
 \begin{equation}
 (ds)^2 - (dS)^2 = 2 \, d\mathbf{X} \cdot \mathbf{E} \, d\mathbf{X}.
 \end{equation}
-By definition, the Green-Lagrange strain tensor is a symmetric second-order tensor. Also, the change in squared lengths is zero if and only if $\mathbf{E} = \mathbf{0}$. Using \eqref{chap2:gradient}, the Green strain tensor may be expanded as the following:
+By definition, the Green-Lagrange strain tensor is a symmetric second-order tensor. \ON Moreover, we observe that \OFF the change in squared lengths is zero if and only if \ON the Green-Lagrange strain tensor \OFF $\mathbf{E} = \mathbf{0}$. Using \eqref{chap2:gradient}, the Green strain tensor may be expanded as the following:
 \begin{align}
 \mathbf{E} &= \frac{1}{2} (\mathbf{F}^T \mathbf{F} - \mathbf{I}) \notag \\
 &= \frac{1}{2} \left[ (\nabla_{0} \mathbf{u} + \mathbf{I})^T (\nabla_{0} \mathbf{u} + \mathbf{I}) - \mathbf{I} \right] \notag \\
@@ -277,10 +278,10 @@ Its Cartesian components $\varepsilon_{ij}$ are the following:
 The strain quantities defined in the previous sections are non-linear expressions in terms of the mapping $\chi$ and will lead to non-linear governing equations. In solid mechanics, whenever the hypothesis is acceptable, it is common practice to assume that the displacements are small and the infinitesimal strain tensor is then used as a measure of the deformation. 
 
 \section{Stress}
-Stress is a measure of the intensity of the internal forces acting between particles of a deformable body across imaginary internal surfaces. These internal forces are produced between the particles in the body as a reaction to external forces applied on the body. The $SI$ unit for stress is pascal (symbol $Pa$), which is equivalent to one newton (force) per square metre (unit area). As with strain, different measures of stress can be defined. For instance, stress can be measured per unit of deformed area (section \ref{chap2:CauchyStress}) or undeformed area (sections \ref{chap2:PiolaStress1} and \ref{chap2:PiolaStress2}). In general, the stress is not uniformly distributed over the cross section of a material body, and consequently the stress at a point on a given area is different from the average stress over this entire area. Therefore, it is necessary to define the stress not over a given area but at a specific point in the body. Stress at a point in a three-dimensional continuum can be measured in terms of nine quantities, three per plane, on three mutually perpendicular planes at the point. These nine quantities may be viewed as the components of a second-order tensor that we call \emph{stress tensor}. 
+Stress is a measure of the intensity of the internal forces acting between particles of a deformable body across imaginary internal surfaces. These internal forces are produced between the particles in the body as a reaction to external forces applied on the body. The SI unit for stress is pascal (symbol $Pa$), which is equivalent to one newton (force) per square metre (unit area). As with strain, stress can be measured per unit of deformed area (section \ref{chap2:CauchyStress}) or undeformed area (sections \ref{chap2:PiolaStress1} and \ref{chap2:PiolaStress2}). In general, the stress is not uniformly distributed over the cross section of a material body, and consequently the stress at a point on a given area is different from the average stress over this entire area. Therefore, it is necessary to define the stress not over a given area but at a specific point in the body. \ON The stress at a point in a three-dimensional continuum is fully defined by \OFF nine quantities, three per plane, on three mutually perpendicular planes at the point. \ON The \emph{stress tensor} is defined as the second-order tensor which components are these nine quantities. \OFF 
 
 	\subsection{Cauchy stress}\label{chap2:CauchyStress}
-The Euler-Cauchy's stress principle states that on any surface (real or imaginary) that divides the body, the action of one part of the body on the other is equivalent to the system of distributed forces and couples on the surface dividing the body. With that consideration in mind, let us consider a plane $S$ that passes through an arbitrary internal point $P$ which has a unit normal vector $\mathbf{n}$. This plane separates the body into two regions and we are interested in the forces applied by one region onto the other. First we will introduce the true stress, defined as the stress in the deformed configuration $\chi$ measured per unit area of the deformed configuration. The force $\Delta\mathbf{f}(\mathbf{n})$ acting on a small element of area $\Delta a$ in a continuous medium depends not only on the size of the area but also depends on the orientation of this area $\mathbf{n}$. The \emph{Cauchy stress vector} at $P$ on $S$ can be defined as:
+The Euler-Cauchy's stress principle states that on any surface (real or imaginary) that divides the body, the action of one part of the body on the other is equivalent to the system of distributed forces and couples on the surface dividing the body \citep{Truesdell60}. With that consideration in mind, let us consider a plane $S$ that passes through an arbitrary internal point $P$ which has a unit normal vector $\mathbf{n}$. This plane separates the body into two regions and we are interested in the forces applied by one region onto the other. First we will introduce the true stress, defined as the stress in the deformed configuration $\chi$ measured per unit area of the deformed configuration. The force $\Delta\mathbf{f}(\mathbf{n})$ acting on a small element of area $\Delta a$ in a continuous medium depends not only on the size of the area but also depends on the orientation of this area $\mathbf{n}$. The \emph{Cauchy stress vector} at $P$ on $S$ can be defined as:
 \begin{equation}
 \mathbf{t}(\mathbf{n}) = \lim_{\Delta a \to 0} \frac{\Delta \mathbf{f}(\mathbf{n})}{\Delta a}.
 \end{equation}

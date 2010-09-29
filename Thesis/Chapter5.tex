@@ -213,7 +213,7 @@ Some important observations arise from \eqref{chap5:criticalTimestep} and \eqref
 \section{Anisotropic and viscoelastic constitutive equations}
 
 	\subsection{An extension to the TLED algorithm}	
-An attractive feature of explicit analyses is the relative ease with which arbitrarily complicated constitutive models may be incorporated. This arises from the fact that element stresses are computed directly from strains in the course of the procedure. Additionally, there is no requirement for computation of tangent matrices as in implicit or quasi-static procedures, since there is no involvement of Newtonian iterations. While the developments above incorporated a hyperelastic constitutive formulation (neo-Hookean), thus accommodating nonlinearity of the strain-related tissue stress response, the formulation was intentionally simple nonetheless since the focus was on validation of the computational framework. Two further key features of the response of most biological tissues are time- (and rate-)dependence and anisotropy \citep{Fung93}. 
+An attractive feature of explicit analyses is the relative ease with which arbitrarily complicated constitutive models may be incorporated. This arises from the fact that element stresses are computed directly from strains in the course of the procedure. Additionally, there is no requirement for computation of tangent matrices as in implicit or quasi-static procedures, since there is no involvement of Newtonian iterations. While the developments above incorporated a hyperelastic constitutive formulation (neo-Hookean), thus accommodating non-linearity of the strain-related tissue stress response, the formulation was intentionally simple nonetheless since the focus was on validation of the computational framework. Two further key features of the response of most biological tissues are time- (and rate-)dependence and anisotropy \citep{Fung93}. 
 
 Time-dependence manifests itself in many aspects of the mechanical response. Soft tissues under constant load generally exhibit creep, while those under constant deformation exhibit stress relaxation. Additionally, most tissues appear stiffer at higher loading velocities. In particular, so-called visco-hyperelastic models based on strain energy functions with time-dependent parameters have been shown to reproduce both the time-dependent and large strain aspects of the response \citep{Miller97,Miller00,Nava08}. 
 
@@ -233,7 +233,7 @@ where $ t $ is time and $ \Psi $ is the underlying hyperelastic strain energy fu
 \label{chap5:PronySeries}
 \alpha (t) = \alpha_{\infty} + \sum_{i=1}^N \alpha_i e^{-t/\tau_i},
 \end{equation}
-where $ \alpha_{\infty} $, $ \alpha_i $ and $ \tau_i $are positive real constants. Such forms for the relaxation functions have a physical interpretation, namely that of a generalised Maxwell model \citep{Holzapfel96}. If we impose the condition
+where $ \alpha_{\infty} $, $ \alpha_i $ and $ \tau_i $ are positive real constants. Such forms for the relaxation functions have a physical interpretation, namely that of a generalised Maxwell model \citep{Holzapfel96}. If we impose the condition
 \begin{equation}
 \left( \alpha_{\infty} + \sum_{i=1}^N \alpha_i \right) = 1
 \end{equation}
@@ -357,7 +357,7 @@ are rate-dependent terms associated with each term in the Prony series.
 \label{chap5:updateStress}
 \mathbf{S}^n = \boldsymbol \Phi^n - \sum_{i=1}^N \boldsymbol \Upsilon_i^n. 
 \end{equation}
-The instantaneous terms $ \boldsymbol \Phi^n $ may be computed directly from the (known) current deformation $ \mathbf{C}^n $. The main difficulty is then computation of the in- cremental rate-dependent terms $ \boldsymbol \Upsilon_i^n $ . Following \cite{Poon98}, our strategy is to maintain each $ \boldsymbol \Upsilon_i^n $ as a separate state variable to be updated at each increment also.
+The instantaneous terms $ \boldsymbol \Phi^n $ may be computed directly from the (known) current deformation $ \mathbf{C}^n $. The main difficulty is then computation of the incremental rate-dependent terms $ \boldsymbol \Upsilon_i^n $. Following \cite{Poon98}, our strategy is to maintain each $ \boldsymbol \Upsilon_i^n $ as a separate state variable to be updated at each increment also.
 
 	\subsection{State variable update equations}	
 Our approach is to convert the integral equation \eqref{chap5:Upsilon} into a rate form which may then be numerically integrated to produce an incremental update formula for $ \boldsymbol \Upsilon_i^n $. We note that \eqref{chap5:Upsilon} is of the form
