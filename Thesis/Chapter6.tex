@@ -122,7 +122,7 @@ These different functionalities and levels of abstraction allow the user to swit
 GPUs achieve a high floating point capacity by distributing computation across a high number of parallel execution threads. They perform optimally as single instruction, multiple data devices. CUDA is a relatively new C API for compatible NVIDIA GPUs. CUDA organises threads in two hierarchical levels: blocks, which are groups of threads executed on one of the GPU's multiprocessors, and grids, which are groups of blocks launched concurrently on the device, and which all execute the same kernel. Figure~\ref{chap6:fig-cuda} represents this thread organisation. 
 % As an example, the NVIDIA 8800 GTX used for the results presented in section \ref{results_section} has 16 multiprocessors, each containing eight processors.
 
-\begin{figure}
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=10cm]{chapter6/cuda_architecture.pdf} 
 \caption[CUDA architecture] {Each kernel is executed by CUDA as a group of threads within a grid. Image courtesy of NVIDIA. }
@@ -186,7 +186,8 @@ We present a series of examples based on pure shear and compression of cube mode
 &= \dfrac{\mu}{2} (\bar{I}_1 - 3) + \dfrac{\eta}{2} (\bar{I}_4 - 1)^2, \\
 \Psi^{vol} &= \dfrac{\kappa}{2} (J - 1)^2,
 \end{align}
-where $ \Psi^{I} $ and $ \Psi^{TI} $ are isotropic and transversely isotropic components, respectively, $ \mu $ is the small strain shear modulus, $ \kappa $ is the bulk modulus, and $ \eta $ is a material parameter with units of Pa. The isotropic component $ \Psi^{I} $ represents the well known neo-Hookean model, while the anisotropic component $ \Psi^{TI} $ is the same form used by \cite{Picinbono01}. Here the dependence of $ \Psi^{TI} $ on $ \bar{I}_5 $ is omitted and we include only $ \bar{I}_4 $ terms. This was done foremost for simplicity, but is also a common practical feature of anisotropic models for soft tissues. The main reason is the clear physical interpretation of $ \bar{I}_4 $ as the square of the stretch $ \lambda $ \footnote{Strictly, $ \bar{I}_4 = J^{-2/3} \lambda^2 $} along the preferred direction $ \mathbf{a}_0 $ \cite{Holzapfel00}, whereas $ \bar{I}_5 $ has a less clear physical meaning. $ \bar{I}_4 $ terms are therefore more amenable to experimental investigation, and of more use in modelling structural elements (e.g. fibres) responsible for the anisotropy. It must be emphasised that this model is used as an example only, and we make no claim concerning its appropriateness for any particular tissue.
+where $ \Psi^{I} $ and $ \Psi^{TI} $ are isotropic and transversely isotropic components, respectively, $ \mu $ is the small strain shear modulus, $ \kappa $ is the bulk modulus, and $ \eta $ is a material parameter with units of Pa. The isotropic component $ \Psi^{I} $ represents the well known neo-Hookean model, while the anisotropic component $ \Psi^{TI} $ is the same form used by \cite{Picinbono01}. Here the dependence of $ \Psi^{TI} $ on $ \bar{I}_5 $ is omitted and we include only $ \bar{I}_4 $ terms. This was done foremost for simplicity, but is also a common practical feature of anisotropic models for soft tissues. The main reason is the clear physical interpretation of $ \bar{I}_4 $ as the square of the stretch $ \lambda $ \footnote{Strictly, $ \bar{I}_4 = J^{-2/3} \lambda^2 $} along the preferred direction $ \mathbf{a}_0 $ \citep{Holzapfel00}, whereas $ \bar{I}_5 $ has a less clear physical meaning. It must be emphasised that this model is used as an example only, and we make no claim concerning its appropriateness for any particular tissue.
+% $ \bar{I}_4 $ terms are therefore more amenable to experimental investigation, and of more use in modelling structural elements (e.g. fibres) responsible for the anisotropy. 
 
 \bigskip
 
@@ -202,9 +203,9 @@ We used viscoelastic isochoric terms only, with a single Prony series term for s
 \end{align}
 Note that in this case the developed constitutive update procedure need only to be employed for isochoric terms. 
 
-\bigskip
+%\bigskip
 
-Material parameters were chosen based on recent results for the viscoelastic response of human liver in vivo. \cite{Nava08} used an aspiration device to obtain an estimate of $\mu = 19\,700\,$Pa for the combined liver/liver capsule. However, they noted that an earlier study suggested the presence of the liver capsule meant this value could overestimate liver parenchyma stiffness by up to $3 \times$. Since it is the parenchyma we are concerned with, we employed a value of $\mu = 19\,700/3 = 6\,567\,$Pa. Assuming near incompressibility we specified $\kappa = 326\,210\,$Pa (corresponding to a Poisson ratio of 0.49). \citeauthor{Nava08} employed two Prony terms, and we use parameters from the first of these: $\alpha_1 = 0.5, \tau_1 = 0.58$. The short time constant $ \tau_1 $ means this Prony term most affects faster loadings, which are of interest in surgical simulations. Finally, since \citeauthor{Nava08} assumed an isotropic response their data provide no basis for estimating $ \eta $. Therefore we chose a conservative value of $\eta = 2\mu$, conservative since \cite{Picinbono01} used a value closer to $\eta = 16\mu$. 
+%Material parameters were chosen based on recent results for the viscoelastic response of human liver in vivo. \cite{Nava08} used an aspiration device to obtain an estimate of $\mu = 19\,700\,$Pa for the combined liver/liver capsule. However, they noted that an earlier study suggested the presence of the liver capsule meant this value could overestimate liver parenchyma stiffness by up to $3 \times$. Since it is the parenchyma we are concerned with, we employed a value of $\mu = 19\,700/3 = 6\,567\,$Pa. Assuming near incompressibility we specified $\kappa = 326\,210\,$Pa (corresponding to a Poisson ratio of 0.49). \citeauthor{Nava08} employed two Prony terms, and we use parameters from the first of these: $\alpha_1 = 0.5, \tau_1 = 0.58$. The short time constant $ \tau_1 $ means this Prony term most affects faster loadings, which are of interest in surgical simulations. Finally, since \citeauthor{Nava08} assumed an isotropic response their data provide no basis for estimating $ \eta $. Therefore we chose a conservative value of $\eta = 2\mu$, conservative since \cite{Picinbono01} used a value closer to $\eta = 16\mu$. 
 
 
 	\subsection{Pure shear of a cube}
@@ -283,19 +284,16 @@ In \fig{chap6:fig-timingsGPU}(a) and \fig{chap6:fig-timingsGPU}(b) it can be see
 \bigskip
 
 \ON
-This GPU implementation of the TLED algorithm was demonstrated publically at MICCAI 2007 during the talk given by Zeike Taylor \citep{Taylor07b}. A non-linear finite element analysis of a cube featuring brain-like properties was solved in real-time at $1\,430\,$ Hz using $55\,566$ tetrahedral elements (see \fig{chap6:fig-demoMICCAI}).
+This GPU implementation of the TLED algorithm was demonstrated publically at MICCAI 2007 during the talk given by Zeike Taylor \citep{Taylor07b}. A non-linear finite element analysis of a cube featuring brain-like properties was solved in real-time at $1\,430\,$Hz using $55\,566$ tetrahedral elements (see \fig{chap6:fig-demoMICCAI}).
 %
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=11cm]{chapter6/demoMICCAI.pdf}
 \end{center}
-\caption[Real-time demo at MICCAI 2007]{Non-linear finite element algorithm solved in real-time at $1\,430\,$ Hz with $55\,566$ elements. A strain between 0 and $40\, \%$ is periodically applied to one face whilst the opposite face is fixed. The material properties were the following: cube's edge = 10cm, Young modulus = $3\,000\,$ Pa, Poisson's ratio = 0.45, density = $1\,000\, kg.m^{-3}$ and the timestep was $0.7\,$ms. The normal for each vertex was computed in real-time for a proper lightning and a skin texture was applied.} 
+\caption[Real-time demo at MICCAI 2007]{Non-linear finite element algorithm solved in real-time at $1\,430\,$ Hz with $55\,566$ elements. A strain between 0 and $40\, \%$ is periodically applied to one face whilst the opposite face is fixed. The material properties were the following: cube's edge = $10\,$cm, Young modulus = $3\,000\,$ Pa, Poisson's ratio = 0.45, density = $1\,000\, kg.m^{-3}$ and the time step was $0.7\,$ms. The normal for each vertex was computed in real-time for a proper lightning and a skin texture was applied.} 
 \label{chap6:fig-demoMICCAI}
 \end{figure}
 \OFF
-
-\TODO{If time, add comparison of different implementations}
-	
 
 		\subsubsection*{Performance within SOFA}
 The efficiency and the side-effects of porting the algorithm into the flexible SOFA framework need to be measured. Therefore the performance has been assessed by comparing the computational time of the algorithm running within and outside SOFA. NVIDIA provides a tool to check the GPU implementation by evaluating many variables during the execution like for instance timings, counts of inconsistent reads and writes or GPU occupancy. We used this tool to carry out two measures:
@@ -303,10 +301,13 @@ The efficiency and the side-effects of porting the algorithm into the flexible S
 \item GPU time only estimates the GPU computational time.
 \item CPU time allows the evaluation of the execution time with the additional overhead due to the framework.
 \end{enumerate}
-
+%
 \begin{figure}[ht]
-\includegraphics[width=13.5cm]{chapter6/cube_and_curves.pdf}
-\caption [Computational timings within SOFA] {\textbf{Left:} FEM mesh of cube with $29\,791$ nodes deformed under a uniformed load. \textbf{Right:} Comparison of GPU computational timings and CPU overheads between the SOFA and standalone implementations for different mesh sizes. \TODO{change the graph + nicer visual model?}}
+\centering 
+\subfloat[ ]{\includegraphics[width=5cm]{chapter6/cube_and_curves1.pdf}}
+\hspace{0.5cm}
+\subfloat[ ]{\includegraphics[width=8cm]{chapter6/cube_and_curves2.pdf}}
+\caption [Computational timings within SOFA] {(a) FEM mesh of cube with $29\,791$ nodes deformed under a uniformed load. (b) Comparison of GPU computational timings and CPU overheads between the SOFA and standalone implementations for different mesh sizes. \TODO{change the cube if I can get a decent visual model in SOFA}}
 \label{chap6:fig-cube_and_curves}
 \end{figure}
 
@@ -321,13 +322,16 @@ Finally, we performed simulations of manipulation of a liver model in order to d
 The Von Mises equivalent stress distributions resulting from stretching the model with and without inclusion of viscoelasticity are compared in \fig{chap6:fig-liver}. For the viscoelastic case (\fig{chap6:fig-liver}, right image) the model is depicted several seconds after the completion of the stretch, so that stresses had reached an approximately steady state. The stress dissipation introduced by the viscoelastic model is clearly evident, and for example would result in significantly altered virtual tool reaction forces.	
 %
 \begin{figure}[ht]
-\begin{center}
-\includegraphics[width=13.5cm]{chapter6/liver.pdf}
-\end{center}
-\caption[GPU solution times]{Deformation of a liver model using the TI model \textbf{(middle)} and the TIV model \textbf{(right)}. The undeformed mesh is shown on the left. Colour maps indicate the relative Von Mises equivalent stress magnitude.} 
+\centering 
+\subfloat[ ]{\includegraphics[width=4cm]{chapter6/liver1.pdf}}
+\hfill
+\subfloat[ ]{\includegraphics[width=4cm]{chapter6/liver2.pdf}}
+\hfill
+\subfloat[ ]{\includegraphics[width=4cm]{chapter6/liver3.pdf}}
+\caption[GPU solution times]{Deformation of a liver model using the TI model (b) and the TIV model (c). The undeformed mesh is shown in (a). Colour maps indicate the relative Von Mises equivalent stress magnitude.} 
 \label{chap6:fig-liver}
 \end{figure}
-	
+
 \TODO{Add movies online? If possible...}	
 	
 \section{Discussion}
@@ -346,12 +350,15 @@ In a nutshell, additional care must be taken to produce quality meshes and the r
 The present work was entirely concerned with numerical solution of constitutive models in explicit FE analyses, however an equally important issue from the point of view of interactive simulation is the modelling of interaction between organs and virtual tools, and its possible impact on $ \Delta t_{cr} $ and the stability of the simulation. Explicit time integration schemes are known to be more sensitive to contacts than implicit schemes. While this is beyond the scope of the present work, we note that a range of contact formulations are available, with two main types in common use: penalty methods and kinematic constraint methods. Penalty methods involve use of fictitious contact springs at interfaces, effectively to penalise interpenetration of opposing surfaces. If excessively stiff springs are used, $ \Delta t_{cr} $ may indeed be reduced. \ON According to LS-Dyna documentation \citep{Hallquist06},  \OFF except in extreme conditions (that is from explosive or high speed impacts, or imposition of very large forces on highly constrained objects), spring stiffnesses of the same order of magnitude as the material stiffness are suitable and the effect on $ \Delta t_{cr} $ is therefore minimal. \ON However, in practice, we observed that spring stiffnesses greater than the material stiffness are often required to prevent any penetration of the two objects, which results in an unstable system. \OFF Kinematic constraint methods involve (loosely) direct relocation of penetrating nodes back to the outside surface of the penetrated body, and have no effect on $ \Delta t_{cr} $. \ON In theory, \OFF these may be especially useful for modelling interaction between soft tissues and stiff (effectively rigid) surgical tools. \ON It is worth nothing that \OFF the computational cost of either variety has not been investigated here. 
 
 \ON
-Even if a stable contact modelling could be achieved, one element of crucial importance has been omitted so far: the collision detection process. Indeed, before even handling the interaction between two objects, their interaction needs to be detected. Because the time step must be very small when using an explicit time integration scheme (often around one millisecond or less), the collision detection algorithm must also be run at the same frequency. The problem is that no collision detection algorithm is fast enough to execute at $ 1\,000\,$Hz or more with objects of reasonable sizes. Of course, one could choose to detect the collisions at a lesser frequency but the risks of penetration would substantially increases. One notable exception is the interaction between a soft deformable object and a fixed rigid surface where the collision detection is rapid. 
-\OFF
-	
-\TODO{timestep monitoring}
+Even if a stable contact modelling could be achieved, one element of crucial importance has been omitted so far: the collision detection process. Indeed, before even handling the interaction between two objects, their interaction needs to be detected. Because the time step must be very small when using an explicit time integration scheme (often around one millisecond or less), the collision detection algorithm must also be run at the same frequency. The problem is that no collision detection algorithm is fast enough to execute at $ 1\,000\,$Hz or more with objects of reasonable sizes. Of course, one could choose to detect the collisions at a lesser frequency but the risks of penetration would substantially increase. One notable exception is the interaction between a soft deformable object and a fixed rigid surface where the collision detection is rapid. 
 
-\ON
+One possible extension to enhance the stability is to monitor the critical time step of the simulation. Indeed, we know an approximation of this critical time step and we recall its expression here for convenience:
+\begin{equation}
+\Delta t_{cr} = \dfrac{L_e}{c},
+\end{equation}
+where $ L_e $ is the smallest characteristic element length (roughly interpreted as the smallest edge length) in the assembly, and $c$ is the dilatational wave speed of the material which depends on material properties (such as Young's modulus and Poisson's ratio). More details on the critical time step were given page \pageref{chap5:criticalTimestep}. If $c$ is constant for a given material, $ L_e $ varies over time during the simulation, in particular when contacts occur. Maintaining the time step of the simulation below the monitored critical time step would insure the stability of the simulation. However, by possibly reducing the time step of the simulation, real-time computations can no longer be guaranteed. 
+
+
 	\subsubsection{Conclusion}
 As we showed in the last two chapters, the TLED algorithm is a very efficient fully non-linear finite element formulation. We also added viscoelasticity and anisotropy features with minimal impact on its performance. In particular, its GPU implementation allows non-linear analyses of structures in real-time using a high number of elements as never before. 
 

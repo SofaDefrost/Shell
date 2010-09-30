@@ -53,7 +53,6 @@ Moreover, the approximation solution $ u^e $within the element $\Omega_e $ must 
 u^e(x) = \sum_{i=1}^n u^e_i \psi^e_i(x) 
 \end{equation}
 where $ \Omega_e $ is a one-dimensional element\footnote{For the sake of simplicity, all derivations are carried out in 1D but remain valid for each component in higher dimensions.}, $ x $ a position within this element, $ u^e_i $ are the values of the solution $ u $ at the nodes and $ \psi^e_i(x) $ the approximation functions over the element. This particular form will be assumed for brevity but the interested reader may refer to \cite{Reddy93} for demonstration. Note that $ u^e_i  $ plays the role of the undetermined coefficients and $ \psi^e_i $ the role of approximation functions. Writing the approximation in terms of the nodal values of the solution is necessitated by the fact that we require the solution to be the same at points common to the elements in order to connect the approximate solution from each element and form a continuous solution over the whole domain. The approximation $ \psi^e_i $ can be linear or higher-order polynomial expressions and are called interpolation functions. 
-%They are also commonly named \emph{shape functions} because they define the `shape' that a variable can take within an element (linear, quadratic etc.). 
 Depending on the degree of polynomial approximation used to represent the solution, additional nodes may be identified inside the element. It is worth noting that the type of interpolation directly affects the accuracy of the solution. In other words, finding the solution to the problem consists of merely figuring out the values of the sought variable at every node of the mesh. Its value at any other point of the domain may then be deducted by interpolation within elements. 
 
 \bigskip
@@ -85,21 +84,24 @@ Since elements over the whole domain are generally not identical (different shap
 	\subsection{Natural coordinates}
 The natural coordinate system allows us to map every element into a typical and simpler element. As an example, an 8-node hexahedron element is shown in \fig{chap3:fig-naturalCoordinatesHexa} as it appears in the global $(x_1, x_2, x_3)$ and natural $(\xi_1,\xi_2,\xi_3)$ coordinate systems. While in its natural coordinate system the element is a regular aligned cube, in the global coordinate system the element may assume any admissible arbitrary form. Essentially, admissible means that the element must not be too distorted, and must certainly not fold back on itself. Another example is given \fig{chap3:fig-naturalCoordinatesTetra} with a tetrahedral element. The components of each node has a simple expression in natural coordinates, usually $0, 1$ or $-1$ and the centre of the coordinate system is taken at one of the nodes or at the centre of the element. 
 %
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=13cm]{chapter3/naturalCoordinatesHexa.pdf}
-\end{center}
+\begin{figure}[ht]
+\centering 
+\subfloat[ ]{\includegraphics[width=6cm]{chapter3/naturalCoordinatesHexa1.pdf}}
+\hspace{1cm}
+\subfloat[ ]{\includegraphics[width=6cm]{chapter3/naturalCoordinatesHexa2.pdf}}
 \caption[Natural coordinates of a hexaedron]{Hexahedral element as it appears in the global coordinate system (a) and its natural coordinate system (b).}
 \label{chap3:fig-naturalCoordinatesHexa}
 \end{figure}
 %
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=13cm]{chapter3/naturalCoordinatesTetra.pdf}
-\end{center}
+\begin{figure}[ht]
+\centering 
+\subfloat[ ]{\includegraphics[width=6cm]{chapter3/naturalCoordinatesTetra1.pdf}}
+\hspace{1cm}
+\subfloat[ ]{\includegraphics[width=6cm]{chapter3/naturalCoordinatesTetra2.pdf}}
 \caption[Natural coordinates of a tetrahedron]{Tetrahedral element as it appears in the global coordinate system (a) and its natural coordinate system (b).}
 \label{chap3:fig-naturalCoordinatesTetra}
 \end{figure}
+
 
 The use of the natural coordinate system has several advantages \citep{Biswas76}. Not only the interpolation functions can be derivated only once per type of element in the mesh, but their expression is also much simpler, regardless of the actual element shape. Consequently, the element equations and the derived element matrices get to be simplified too. However, we now need to switch between the natural and global coordinate systems before solving the equations on the whole domain. Indeed, it is necessary to account for the diversity of element shapes within the mesh. Solving the element equations expressed into the natural coordinate system would not yield the expected result for the whole domain. 
 	
@@ -155,14 +157,14 @@ Let us sum up where we are into the finite element analysis process so far. The 
 
 	\subsection{Strong and weak forms}
 	
-The next step is therefore to derive the element equations themselves. Obviously these equations depend on the type of problem that we seek to solve. From now on, we will only consider the context of continuum mechanics since our overall goal is the modelling of organ deformation. However, a similar approach can be used in the other fields of physics. In continuum mechanics, applying Newton's second law yields a partial differential system of equations. Such equations are called \emph{strong forms}. The strong form, in contrast to a \emph{weak form}, requires strong continuity on the dependent field variables, such as displacements \citep{Liu03}. The functions defining these field variables have to be differentiable up to the order of the partial differential equations that exist in the strong from. Obtaining the exact solution for a strong form is usually very difficult for practical engineering problems. We know that the finite element method can be used to find an approximated solution but the method usually works well only with regular geometry and boundary conditions.
+The next step is therefore to derive the element equations themselves. Obviously these equations depend on the type of problem that we seek to solve. From now on, we will only consider the context of continuum mechanics since our overall goal is the modelling of organ deformation. However, a similar approach can be used in the other fields of physics. In continuum mechanics, applying Newton's second law yields a partial differential system of equations. Such equations are called \emph{strong forms}. The strong form, in contrast to a \emph{weak form}, requires strong continuity on the dependent field variables, such as displacements \citep{Liu03}. \ON Indeed, \OFF the functions defining these field variables have to be differentiable up to the order of the partial differential equations that exist in the strong from. \ON While the finite element method can be used to find an approximated solution for a strong form,  the method usually works well only with regular geometry and boundary conditions. 
 
-A weak form is often created using energy principles or weighted residual methods. The weak form is often an integral form and requires a weaker continuity on the field variables. Due to the weaker requirement on the field variables, and the integral operation, a formulation based on a weak form usually produces a set of discretised system equations that give much more accurate results, especially for problems of complex geometry. Hence, the weak form is usually preferred for obtaining an approximate solution. Using the weak form usually leads to a set of well-behaved algebraic system equations, if the problem domain is discretised properly into elements.
+Consequently, \OFF a weak form is often created using energy principles or weighted residual methods. The weak form is frequently an integral form and requires a weaker continuity on the field variables. \ON Hence, \OFF a formulation based on a weak form usually produces a set of discretised system equations that give much more accurate results, especially for problems of complex geometry. \ON For this reason, \OFF the weak form is usually preferred \ON over the strong form for obtaining an approximate solution of a practical engineering problem \OFF.
 
 	\subsection{Time dependence}
 In all the equations of the finite element method that we derived so far, we have not taken time into account. For some problem, this is not an issue, the motion is sufficiently slow to assume that the dynamic effects (such as damping effect) are neglectable. However, this assumption is not always valid, particulary in our case where we want to model organ deformation. The deformation obviously depends on time. Finite element models of time-dependent problems can be developed in two alternatives ways \citep{Reddy93}:
 \begin{description}
-\item[(a)] coupled formulation in which the time $ t $ is treated as an additional coordinate along with the spatial coordinate $ x $
+\item[(a)] coupled formulation in which the time $ t $ is an additional coordinate along with the spatial coordinate $ x $
 \item[(b)] decoupled formulation where time and spatial variations are assumed to be separable.
 \end{description}
 Thus, the approximation of the solution $ u $ takes one of these two forms:
@@ -170,7 +172,7 @@ Thus, the approximation of the solution $ u $ takes one of these two forms:
 u(x, t) \approx u^e(x, t) &= \sum_{i=1}^n \hat{u}^e_i \hat{\psi}^e_i(x, t)  \quad \text{ (coupled formulation)} \label{chap3:approxTime1}\\
 u(x, t) \approx u^e(x, t) &= \sum_{i=1}^n u^e_i(t) \psi^e_i(x) \quad \text{(decoupled formulation)} \label{chap3:approxTime2}
 \end{align}
-where $ \hat{\psi}^e_i(x, t) $ are time-space interpolation functions, $ \hat{u}^e_i $ are the nodal values that are independent of $ x $ and $ t $, $ \psi^e_i(x) $ are the usual interpolation functions in spatial coordinate $ x $ only and the nodal values $ u^e_i(t) $ are functions of time $ t $ only. Space-time coupled finite element formulations are not common and they have not been adequately studied. Hence, we consider the decoupled formulation only. Of course, the assumption that the time and spatial variations are separable is not valid in general. However, with sufficiently small time steps, it is possible to obtain accurate solutions nevertheless. 
+where $ \hat{\psi}^e_i(x, t) $ are time-space interpolation functions, $ \hat{u}^e_i $ are the nodal values that are independent of $ x $ and $ t $, $ \psi^e_i(x) $ are the usual interpolation functions in spatial coordinate $ x $ only and the nodal values $ u^e_i(t) $ are functions of time $ t $ only. Coupled finite element formulations are not common and they have not been adequately studied. Hence, we consider the decoupled formulation only. Of course, the assumption that the time and spatial variations are separable is not valid in general. However, with sufficiently small time steps, it is possible to obtain accurate solutions nevertheless. 
 
 	
 	\subsection{Dynamic system of equations}	 \label{chap3:dynamic}
@@ -479,17 +481,15 @@ The system may already be linear by nature, or been linearised using techniques 
 \end{equation}
 
 However, only solvers relevant to the context of finite element methods will be discussed. Indeed the matrix $ \mathbf{A} $ takes a specific form in problems solved by finite element methods. The matrix $ \mathbf{A} $ is \emph{sparse}. A sparse matrix is merely a matrix populated mainly with zeros. An example is given by \fig{chap3:fig-sparse} for a finite element problem in two dimensions.
-\begin{figure}
+\begin{figure}[ht]
 \begin{center}
-\includegraphics[width=13cm]{chapter3/sparse_matrix.pdf}
+\includegraphics[width=10cm]{chapter3/sparse_matrix.pdf}
 \end{center}
 \caption[Illustration of a sparse matrix for a 2D finite element problem]{Illustration of a sparse matrix for a two-dimensional finite element problem. Each non-zero elements of the matrix is represented in black. Image courtesy of Oleg Alexandrov.}
 \label{chap3:fig-sparse}
 \end{figure}
 Because of the peculiar structure of the matrix involved in finite element computations, methods have been specifically designed to take advantage of this structure. Indeed, it is wasteful to use general methods of linear algebra on such problems, because most of the arithmetic operations devoted to solving the set of equations or inverting the matrix involve zero operands. Furthermore, it is wasteful to reserve storage for zero elements. 
 
-%The choice of a resolution method depends on the problem (linear or non-linear) and the properties of the stiffness matrix.
-	
 		\subsubsection*{Direct solvers}
 As their name is suggesting, direct solvers make an attempt into finding a solution directly by inverting the matrix $ \mathbf{A} $. They execute in a predictable number of operations. We will now introduce a few direct methods in the context of finite element methods. 
 
@@ -605,5 +605,5 @@ Unfortunately, it is common for the matrix $ \mathbf{A} $ not to be well conditi
 \end{equation}
 Two criteria should also be considered when forming a preconditioner: (1) the ease with which it may be evaluated and (2) its memory requirements. The easiest preconditioner would be the identity since $ \mathbf{P}^{-1} = \mathbf{I} $ in this case. Of course, such a conditioner leads to the resolution of the original system and is therefore totally useless. In constrast, the choice of $ \mathbf{P} = \mathbf{A} $ leads to the solution of the system \eqref{chap3:linearEquation} in one single iteration. In practice, an optimal preconditioner is to be found between these two extremes to minimise the number of iterations required by the solver while keeping the evaluation of the preconditioner simple. Finding a good preconditioner for all types of problems is difficult. A preconditioner is only useful if the overall time spent on both the formation of  $ \mathbf{P} $ and the resolution of \eqref{chap3:preconditionedSystem} is less than the time spent at solving \eqref{chap3:linearEquation} alone. 
 
-One of the simplest preconditioner is the \emph{Jacobi preconditioner} where the preconditioner is chosen to be the diagonal of the matrix $ \mathbf{A} $. This choice is efficient in cases where $ \mathbf{A} $ is diagonally dominant. Sparse approximations of a LU or Cholesky decompositions may also be used as preconditioners (see sections \ref{chap3:LUdecompo} and \ref{chap3:CholeskyDecompo} for more details). 
+One of the simplest preconditioner is the \emph{Jacobi preconditioner} where the preconditioner is chosen to be the diagonal of the matrix $ \mathbf{A} $. This choice is efficient in cases where $ \mathbf{A} $ is diagonally dominant. Sparse approximations of LU or Cholesky decompositions may also be used as preconditioners (see sections \ref{chap3:LUdecompo} and \ref{chap3:CholeskyDecompo} for more details). 
 \OFF

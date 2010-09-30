@@ -100,9 +100,9 @@ At this point, we have seen how a deformation can affect a vector. We will now l
 % 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=13cm]{chapter2/changeVolume.pdf}
+\includegraphics[width=12cm]{chapter2/changeVolume.pdf}
 \end{center}
-\caption{Transformation of a volume element under a deformation mapping. \TODO{CHANGE TO A BETTER FIGURE.}}
+\caption{Transformation of a volume element under a deformation mapping.}
 \label{chap2:fig-changeVolume}
 \end{figure}
 %
@@ -132,7 +132,7 @@ dv = J dV.
 
 
 	\subsection{Change of surface}
-For similar reasons, let us find the relation between an element of area in the reference configuration $d\mathbf{A}$ which becomes $d\mathbf{a}$ in the deformed configuration. Considering an arbitrary material line $d\mathbf{L}$ in the reference configuration and noting $d\mathbf{l}$ the same line after deformation (see \fig{chap2:fig-changeSurface}), the reference and current volumes are given respectively by:
+For similar reasons, let us find the relation between an element of area in the reference configuration $d\mathbf{A}$ which becomes $d\mathbf{a}$ in the deformed configuration. Considering an arbitrary material line $d\mathbf{L}$ in the reference configuration and noting $d\mathbf{l}$ the same line after deformation, the reference and current volumes are given respectively by:
 \begin{align}
 d\mathbf{V} &= d\mathbf{L} \cdot d\mathbf{A} \\
 \mbox{and } \quad d\mathbf{v} &= d\mathbf{l} \cdot d\mathbf{a}.
@@ -147,13 +147,13 @@ J \, d\mathbf{L} \cdot d\mathbf{A} = (\mathbf{F} \, d\mathbf{L}) \cdot d\mathbf{
 d\mathbf{a} = J \, \mathbf{F}^{-T} \, d\mathbf{A}.
 \end{equation}
 % 
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=13cm]{chapter2/changeSurface.pdf}
-\end{center}
-\caption{Transformation of a surface element under a deformation mapping. \TODO{CHANGE TO A BETTER FIGURE.}}
-\label{chap2:fig-changeSurface}
-\end{figure}
+%\begin{figure}[h]
+%\begin{center}
+%\includegraphics[width=13cm]{chapter2/changeSurface.pdf}
+%\end{center}
+%\caption{Transformation of a surface element under a deformation mapping. \TODO{CHANGE TO A BETTER FIGURE.}}
+%\label{chap2:fig-changeSurface}
+%\end{figure}
 			
 	\subsection{Volumetric and isochoric components}
 We recall that the Jacobian $J$ has the physical meaning of being the local ratio of current to reference volume of a material volume element. Therefore, if $J = 1$ the volume does not change locally during the deformation and the latter is qualified as \emph{isochoric} at this given particle $P$. If $J = 1$ everywhere in the body, the deformation of the body is isochoric. 
@@ -287,13 +287,13 @@ The Euler-Cauchy's stress principle states that on any surface (real or imaginar
 \end{equation}
 This equation means that the stress vector depends on its location in the body and the orientation of the plane on which it is acting. In general, the stress vector is not perpendicular to that plane and it can be separated into two components: one component normal to the plane called \emph{normal stress} and one component tangent to the plane named \emph{shear stress}. Since $\mathbf{t}$ depends on $\mathbf{n}$ but is not in the direction of $\mathbf{n}$, it may be interesting to look into the relationship between $\mathbf{t}$ and $\mathbf{n}$. 
 
-To establish this relationship, let us consider an infinitesimal tetrahedron in a Cartesian coordinate system as represented \fig{chap2:fig-CauchyStress}. 
+\ON In the following we make use of a Cartesian coordinate system and we consider an infinitesimal tetrahedron as shown on \fig{chap2:fig-CauchyStress}. \OFF
 %
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=13cm]{chapter2/CauchyStress.pdf}
+\includegraphics[width=6cm]{chapter2/CauchyStress.pdf}
 \end{center}
-\caption{Tetrahedral element in Cartesian coordinates. \TODO{CHANGE TO A BETTER FIGURE.}}
+\caption{Tetrahedral element in Cartesian coordinates.}
 \label{chap2:fig-CauchyStress}
 \end{figure}
 %
@@ -342,17 +342,17 @@ The matrix form of \eqref{chap2:CauchyFormula} in a Cartesian coordinate system 
 	.
 \end{equation}
 
-The Cauchy stress tensor is used for stress analysis of material bodies experiencing small deformations. This stress is basically defined as force/(unit deformed area). The strain measure that is appropriate to use with the Cauchy stress tensor is the infinitesimal strain tensor (see section~\ref{chap2:infinitesimalStrainTensor}).  The problem with using the Cauchy stress tensor for analysing materials undergoing large deformation is that we generally do not know the area in the deformed configuration. Therefore, we need to develop alternative stress tensors that we can use in the reference configuration. We will introduce two new stress measures: the first Piola-Kirchhoff stress tensor and the second Piola-Kirchhoff stress tensor.
+The Cauchy stress tensor is used for stress analysis of material bodies experiencing small deformations. This stress is basically defined as force/(unit deformed area). The strain measure that is appropriate to use with the Cauchy stress tensor is \ON therefore \OFF the infinitesimal strain tensor (see section~\ref{chap2:infinitesimalStrainTensor}).  \ON Indeed, because the Cauchy stress tensor is defined by unit of deformed area, it is not appropriate for analysing materials undergoing large deformation where the area in the deformed configuration is often unknown. Consequently, we require alternative stress tensors based on the reference configuration. \OFF We will introduce two new stress measures: the first Piola-Kirchhoff stress tensor and the second Piola-Kirchhoff stress tensor.
 
 	\subsection{First Piola-Kirchhoff stress tensor}\label{chap2:PiolaStress1}
-We know that the Cauchy stress tensor represents the current force per unit of deformed area: $d\mathbf{f} = \mathbf{t}(\mathbf{n}) da = \sigma \cdot d\mathbf{a}$. We define a stress vector $\mathbf{T}$ over the area element $dA$ with normal $\mathbf{N}$ in the underformed configuration such that it results in the same total force
+We know that the Cauchy stress tensor represents the current force per unit of deformed area: $d\mathbf{f} = \mathbf{t}(\mathbf{n}) da = \sigma \cdot d\mathbf{a}$. \ON We state that we can find a stress vector $\mathbf{T}$ over the area element $d\mathbf{A}$ in the underformed configuration which \OFF results in the same total force.
 \begin{equation}
 \label{chap2:df}
 d\mathbf{f} = \mathbf{t}(\mathbf{n}) da = \mathbf{T}(\mathbf{N}) dA.
 \end{equation} 
 The two stress vectors have the obviously the same direction but different magnitudes since they are not applied to the same area.
 
-In a similar way we defined the Cauchy stress $\sigma$ with $\mathbf{t}(\mathbf{n}) = \sigma \cdot \mathbf{n}$, we introduce a stress tensor $\mathbf{P}$ called the \emph{first Piola-Kirchhoff stress tensor} such that $\mathbf{T}(\mathbf{n}) = \mathbf{P} \cdot \mathbf{N}$. The first Piola-Kirchhoff stress tensor gives the current force per unit undeformed area.
+In a similar way we defined the Cauchy stress $\sigma$ with $\mathbf{t}(\mathbf{n}) = \sigma \cdot \mathbf{n}$, we introduce a stress tensor $\mathbf{P}$ such that $\mathbf{T}(\mathbf{n}) = \mathbf{P} \cdot \mathbf{N}$. \ON We call $ \mathbf{P} $ the \emph{first Piola-Kirchhoff stress tensor} and \OFF gives the current force per unit undeformed area.
 
 The relation between the first Piola-Kirchhoff stress tensor and the Cauchy stress tensor can be obtained as follows. From \eqref{chap2:df} we have:
 \begin{equation}
@@ -369,11 +369,11 @@ Finally we can express the first Piola-Kirchhoff stress tensor $\mathbf{P}$ as
 	
 	
 	\subsection{Second Piola-Kirchhoff stress tensor}\label{chap2:PiolaStress2}
-The \emph{second Piola-Kirchhoff stress tensor} $\mathbf{S}$ is introduced as the stress tensor associated with the force $d\mathbf{F}$ in the undeformed area $d\mathbf{A}$ that corresponds to the force $d\mathbf{f}$ in the deformed area $d\mathbf{a}$:
+\ON Let us consider the stress tensor $\mathbf{S}$ resulting in the force $d\mathbf{F}$ in the undeformed area $d\mathbf{A}$ which \OFF corresponds to the force $d\mathbf{f}$ in the deformed area $d\mathbf{a}$. \ON We define this stress tensor $\mathbf{S}$ as the \emph{second Piola-Kirchhoff stress tensor}. \OFF
 \begin{equation}
 d\mathbf{F} = \mathbf{S} \, d\mathbf{A}.
 \end{equation}
-Thus, the second Piola-Kirchhoff stress tensor gives the transformed current force per unit undeformed area. Similar to the relationship \eqref{chap2:dxdX} between $d\mathbf{x}$ and $d\mathbf{X}$, the force $d\mathbf{f}$ is related to the force $d\mathbf{F}$ by:
+\ON In other words, \OFF the second Piola-Kirchhoff stress tensor gives the transformed current force per unit undeformed area. Similar to the relationship \eqref{chap2:dxdX} between $d\mathbf{x}$ and $d\mathbf{X}$, the force $d\mathbf{f}$ is related to the force $d\mathbf{F}$ via the deformation gradient tensor:
 \begin{align}
 d\mathbf{F} &= \mathbf{F}^{-1} \, d\mathbf{f} \notag \\
 &= \mathbf{F}^{-1} \, (\mathbf{P} \, d\mathbf{A}) \notag \\
@@ -400,25 +400,20 @@ This result means that at every point in a stressed body there are at least thre
 
 
 \section{Constitutive equations}
-So far, all the relations that we have established are valid for every continuum. Indeed, no mention was made of any material in the derivations. Therefore, these relations are not sufficient to describe the response of a material to a given loading. We know that the stresses result from the deformation of the material and it is now necessary to express them in terms of some measure of this deformation such as, for instance, the strain. These relationships, known as \emph{constitutive equations}, obviously depend on the type of material under consideration and may be dependent on time or not. Constitutive equations are not derived from any physical principles, although they are subject to obeying certain rules and the entropy inequality. In essence, constitutive equations are mathematical models of the behaviour of materials that are validated against experimental results. 
+So far, all the relations that we have established are valid for every continuum. Indeed, \ON the derivations carried out so far made no mention of any material. \OFF Therefore, \ON we know that \OFF these relations are not sufficient to describe the response of a material to a given loading. \ON Moreover, because the stresses result from the deformation of the material, they may be expressed \OFF in terms of some measure of this deformation such as the strain. This relationship, which obviously depends on the type of material under consideration, is what we call a \emph{constitutive equation}. \ON Constitutives equations are an attempt to mathematically characterise the behaviour of materials observed from experimentals results. \OFF
 
-The relationship between stress and strain depends on the nature, or constitution of the particular material that we are studying. Of course, any material mechanics, and especially tissue mechanics, can be quite complex, and many assumptions must be made when deriving a constitutive equation. It is basically impossible to derive a particular constitutive equation that would accurately model all aspects of tissue behaviour under any type of loading. This is because tissues may behave very differently under small loads as compared to large loads. For instance, we may expect damage under large loads. Also, under different loading rates different tissues may behave differently. Therefore, whenever we develop a constitutive equation to model a tissue, we need to balance the need to accurately model tissue behaviour under the range of loadings with the need to have a constitutive equation that is simple enough to:
-\begin{enumerate}
-\item be computed in a numerical model 
-\item experimentally measure all the material constants used in the constitutive equation
-\end{enumerate}
-This section will now introduce the most common constitutive models relevant to soft-tissue modelling. 
+\ON Naturally, the relationship between strain and stress is conditioned by the constitution of the material of interest. Because the mechanics involved in materials can be quite complex (tissue mechanics in particular), many simplifying assumptions are required to derive a constitutive equation. In practice, a given constitutive equation can only cover a subset of the actual mechanical behaviour and could not possibly model all aspects of tissue behaviour under any type of loading accurately. For instance, some tissues behave very differently under small loads as compared to large loads. The behaviour may also depends on loading rates and damage may even occur under large loads. Moreover, not only constitutive equations need to deal with the complexity of material mechanics but they must remain simple enough to measure all the included material constants experimentally. \OFF This section will now introduce the most common constitutive models relevant to soft-tissue modelling. 
     
     
 	\subsection{Elasticity}	\label{chap2:elasticity}
 If under applied loads a material stores but does not dissipate energy, and it returns to its orginal shape when the loads are removed, we call that material \emph{elastic}. The work done by the stress is generally dependent on the deformation path. However, for elastic materials the stress does not depend on the path of deformation and therefore the state of stress in the deformed configuration is determined only by the state of deformation. It means that the stress does not depend on the time taken to achieve the deformation or the rate at which the state of deformation is reached. 
 
-One special case of elastic materials are \emph{hyperelastic} materials. A material is said to be hyperelastic if there exists a \emph{strain energy density} function $U_0(\varepsilon)$ such that
+\ON In addition, \OFF if there exists a \emph{strain energy density} function $U_0(\varepsilon)$ such that 
 \begin{equation}
 \label{chap2:energy}
-\boldsymbol \sigma = \pd{U_0}{\varepsilon}.
+\boldsymbol \sigma = \pd{U_0}{\varepsilon},
 \end{equation}
-However, for \emph{imcompressible} materials the stress tensor is not completely determined by the deformation. The hydrostatic pressure\footnote{pressure exerted by a fluid at equilibrium due to the force of gravity} affects the stress and the above equation is then written as:
+\ON the material is said to be hyperelastic. \OFF However, for \emph{imcompressible} materials the stress tensor is not completely determined by the deformation. The hydrostatic pressure\footnote{pressure exerted by a fluid at equilibrium due to the force of gravity} affects the stress and the above equation is then written as:
 \begin{equation}
 \label{chap2:energy2}
 \boldsymbol \sigma = -p \mathbf{I} + \pd{U_0}{\varepsilon},
@@ -504,7 +499,7 @@ Further reduction in the number of independent stiffness parameters can be achie
 
 Most often, the material properties are determined in a laboratory in terms of the engineering constants such as Young's modulus, shear modulus, and so on. These constants are measured using simple tests like uniaxial tension test or pure shear test. Because of their direct and obvious physical meaning, engineering constants are used in place of the more abstract stiffness coefficients $C_{ijkl}$. Therefore, we will now reformulate \eqref{chap2:orthotropic} with respect to those engineering constants. Noting $E_i$ the Young's modulus in the direction $x_i$ and $G_{ij}$ the shear moduli in the $x_i-x_j$ plane, it can be shown that:
 	
-%Since we consider infinitesimal deformations and we also linearised the constitutive material law between stress and strain, the principle of superpositions applies. It means that the sum of the displacements (and hence strains) produced by two sets of loads is equal to the displacements (and strains) produced by the sum of the two sets of loads. For example, the extensional strain $\varepsilon_{11}^{(1)}$ in the  coordinate direction $x_1$ due to the stress $\sigma_{11}$ in the same direction is $\sigma_{11}/E_1$, where $E_1$ denotes Young?s modulus of the material in the $x_1$ direction. The extensional strain $\varepsilon_{11}^{(2)}$ due to the stress $\sigma_{22}$ applied in the direction $x_2$ (as a result of the Poisson's effect) is $-\nu_{21} (\sigma_{22}/E_2)$, where $\nu_{21}$ is the Poisson's ratio:
+%Since we consider infinitesimal deformations and we also linearised the constitutive material law between stress and strain, the principle of superpositions applies. It means that the sum of the displacements (and hence strains) produced by two sets of loads is equal to the displacements (and strains) produced by the sum of the two sets of loads. For example, the extensional strain $\varepsilon_{11}^{(1)}$ in the  coordinate direction $x_1$ due to the stress $\sigma_{11}$ in the same direction is $\sigma_{11}/E_1$, where $E_1$ denotes Young's modulus of the material in the $x_1$ direction. The extensional strain $\varepsilon_{11}^{(2)}$ due to the stress $\sigma_{22}$ applied in the direction $x_2$ (as a result of the Poisson's effect) is $-\nu_{21} (\sigma_{22}/E_2)$, where $\nu_{21}$ is the Poisson's ratio:
 %\begin{equation}
 %\nu_{21} = - \frac{\varepsilon_{11}}{\varepsilon_{22}}
 %\end{equation} 
@@ -591,7 +586,7 @@ The neo-Hookean model provides a reasonable approximation of rubber-like materia
 			
 			
 	\subsection{Viscoelastic materials}
-Viscoelasticity is the property of materials that exhibit both viscous and elastic characteristics when undergoing deformation. Viscous materials, like honey, resist shear flow and strain linearly with time when a stress is applied. Elastic materials strain instantaneously when stretched and just as quickly return to their original state once the stress is removed. Viscoelastic materials have elements of both of these properties and, as such, exhibit time dependent strain. Depending on the change of strain rate versus stress inside a material the viscosity can be categorised as having a linear or non-linear response. When a material exhibits a linear response it is categorised as a Newtonian material. In this case the stress is linearly proportional to the strain rate. If the material exhibits a non-linear response to the strain rate, it is categorised as a Non-Newtonian material. 
+\ON We know that materials for which the mechanical behaviour depends solely on the state of deformation are called elastic. In contrast, the mechanical behaviour of \emph{viscous} materials is only a function of the current rate of deformation (like honey for instance). \OFF Viscoelastic materials have elements of both of these properties and, as such, exhibit time dependent strain. Depending on the change of strain rate versus stress inside a material the viscosity can be categorised as having a linear or non-linear response. When a material exhibits a linear response it is categorised as a Newtonian material. In this case the stress is linearly proportional to the strain rate. If the material exhibits a non-linear response to the strain rate, it is categorised as a Non-Newtonian material. 
 
 Viscoelastic materials present a few characteristics: 
 \begin{enumerate}
