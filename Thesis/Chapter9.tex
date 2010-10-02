@@ -31,7 +31,7 @@ The stiffness matrix in the global frame is eventually obtained using the rotati
 
 \subsection{Triangular plate bending}
 
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[height=4cm]{chapter9/bending.pdf}
 \caption {The different degrees of freedom $u$ of a triangular thin plate in bending.}
@@ -128,7 +128,7 @@ Once a collision has been detected, it must be processed by distributing the lin
 
 The main difficulty is to convert the normal component of the force applied to the bent surface into a torque at each of the three nodes (\fig{chap9:fig-shell} (c)). Our approach is the following: during force computation, we use the change in orientation measured at each node to compute the local deflection of each subvertex within the triangle. Differentiating the formulation twice yields a relation between the torque applied at each node and the generated force in bending. We therefore need to invert the latter formulation to convert a bending force into torques at each vertex. Thus, we are able to transmit any force coming from interactions with the curved surface of shells to the mechanical vertices used in our FEM formulation. 
 %
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[width=12cm]{chapter9/shell_curvature.pdf}
 \caption {(a)  The triangle formed by the three vertices of the shell has been recursively subdivided 3 times and the deflection of each new vertex was computed according to the same deflection function used in our shell FEM. (b) Sampling the actual surface of the shell allows more accurate rendering and collision detection. (c) The shape function is used to distribute an external force $F$ onto the triangle nodes.}
@@ -234,7 +234,7 @@ When the vertices and the DOF are the same, the mapping is the identity. Matrix 
 
 When shapes collide, additional geometry can be necessary to model the contact. For instance, when an edge intersects another one, a contact force is applied to the intersection points. These points are defined by their barycentric coordinates with respect to their edge vertices. Other relations can be used, depending on the kind of geometrical primitives in contact. This additional geometry requires another geometrical layer connected to the shape by a mapping, as illustrated in \fig{chap9:fig-mappings}.
 
-\begin{figure}
+\begin{figure}[ht]
 	\begin{center}
  		\includegraphics[width=13cm]{chapter9/mappings}
  	\end{center}
@@ -287,12 +287,12 @@ It is worth noting that a high resolution mesh may be obtained by recursively su
 %
 \begin{figure}[ht]
 \centering 
-\subfloat[Subdivided triangles]{\includegraphics[width=6.5cm]{chapter9/sub_grid_red.png}}
-\hfill 
-\subfloat[Irregular grid]{\includegraphics[width=6.5cm]{chapter9/irregular_grid_red.png}} \\
-\subfloat[Subdivided triangles]{\includegraphics[width=6.5cm]{chapter9/sub_grid_mesh.png}}
-\hfill
-\subfloat[Irregular grid]{\includegraphics[width=6.5cm]{chapter9/irregular_grid_mesh.png}}
+\subfloat[Subdivided triangles]{\includegraphics[width=5cm]{chapter9/sub_grid_red.png}}
+\hspace{1cm}
+\subfloat[Irregular grid]{\includegraphics[width=5cm]{chapter9/irregular_grid_red.png}} \\
+\subfloat[Subdivided triangles]{\includegraphics[width=5cm]{chapter9/sub_grid_mesh.png}}
+\hspace{1cm}
+\subfloat[Irregular grid]{\includegraphics[width=5cm]{chapter9/irregular_grid_mesh.png}}
 \caption[Visual artifacts using triangle subdivisions]{In some situations, some rendering artifacts may appear when we use subdivided triangles to render the shells (a,c). Using an irregular mesh which is not closely related to the structure of the mechanical mesh reduces the impact (b,d).}
 \label{chap9:fig-rendering}
 \end{figure}
@@ -369,7 +369,7 @@ Using these particular values it can be shown that $z_{max} = 0.126\,q$. The max
 
 Cataract surgery consists in three main steps: capsulorhexis, phacoemulsification, and implantation of an intra-ocular lens. Prior to starting the surgery, a viscoelastic fluid is introduced into the capsule to facilitate capsulorhexis creation and provide protection during phacoemulsification. This fluid remains in the capsule for the duration of the surgery, including the injection of the implant. Capsulorhexis is the technique used to remove a part of the anterior lens capsule. Phacoemulsification consists in using a surgical device which tip vibrates at an ultrasonic frequency to emulsify the natural lens material and then aspirate the fragments of the cortical material. After the removal of the diseased lens, an intra-ocular lens is implanted into the eye, through a small incision (about $2\,$mm) using a foldable intra-ocular lens (see \fig{chap9:fig-surgery}). The foldable lens, usually made of acrylic material, is then implanted within the lens capsule through the incision used during phacoemulsification. In some cases the implant can be flipped or  the hooks (also called \emph{haptics}) can break. Therefore the simulation of the insertion and deployment of the implant is crucial for achieving a successful surgery.
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering 
 \subfloat[ ]{\includegraphics[height=3.2cm]{chapter9/suction.pdf}}
 \hspace{1cm} 
@@ -382,7 +382,7 @@ Cataract surgery consists in three main steps: capsulorhexis, phacoemulsificatio
 
 To simulate the insertion and deployment of an intra-ocular lens, we first created a triangulation of the lens surface. Particular care was given to the mesh, to ensure that areas where large stresses occur contain a higher density of elements (see \fig{chap9:fig-mesh}). This was done by noting the constraints applied by the surgeon to the haptics while inserting the implant within the injection device. During this stage, the haptics are folded onto the implant body, leading to high stresses at the junctions. The lens mesh contains $743$ triangles and $473$ nodes. Models of the injection device and the entire eye anatomy were also created. Physical parameters of the lens implant have been provided by the manufacturer Alcon and they are presented in Table~\ref{chap9:tab-parameters}.
 %
-\begin{table}[h!]
+\begin{table}[ht]
 	\begin{center}
 		\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|}
 		\hline
@@ -399,7 +399,7 @@ To simulate the insertion and deployment of an intra-ocular lens, we first creat
 
 The first difficulty is to obtain the folded geometry of the lens within the injection device. This step is not important for the training process and does not need to be interactive. Indeed the surgeon does not always have to prepare the implant as some injection devices are readily available with a folded implant already in place. We simulate the folding process by first folding the haptics onto the implant body. The body was then bent while keeping the haptics inside to obtain the shape described in \fig{chap9:fig-implantFolding}. The whole process was carried out by applying the necessary forces and boundary conditions on the body and haptics of the implant. The folded implant was then placed into the injection device. The simulation of the injection consists in pushing the intra-ocular implant within the injection device into the lens capsule. During these stages of the simulation, complex contacts occur and consist of self collisions of the lens as well as collisions between the lens and the injector and later with the capsule. To solve the contacts we use the contact warping method proposed by \cite{Saupin08} as it offers an efficient way to compute physically correct contact responses in the case of co-rotational models \TODO{is it still true? I'm not even sure we used this technique in the final submission to ISBMS}. As adhesions between the haptics and the body is often observed in surgery, friction is also taken into account in the contact response process.
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering 
 \subfloat[Real implant]{\includegraphics[height=5cm]{chapter9/IOL.pdf}}
 \hspace{1cm} 
@@ -408,11 +408,11 @@ The first difficulty is to obtain the folded geometry of the lens within the inj
 \label{chap9:fig-mesh}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[ht]
 \centering
-\includegraphics[width=6cm]{chapter9/implant_folding1.pdf}
-\includegraphics[width=5cm]{chapter9/implant_folding2.pdf} \\
-\includegraphics[width=4.5cm]{chapter9/implant_folding3.pdf}
+\includegraphics[width=5cm]{chapter9/implant_folding1.pdf}
+\includegraphics[width=4.5cm]{chapter9/implant_folding2.pdf} \\
+\includegraphics[width=4cm]{chapter9/implant_folding3.pdf}
 \includegraphics[width=7cm]{chapter9/implant_folding4.pdf}
 \caption [Folding of intra-ocular implant] {Top: intermediary steps of the intra-ocular implant folding. Bottom: fully folded implant ready to be placed into the injection device.}
 \label{chap9:fig-implantFolding}
@@ -421,7 +421,7 @@ The first difficulty is to obtain the folded geometry of the lens within the inj
 Results of our simulation are illustrated in \fig{chap9:fig-simu-results}. We can notice the progressive deployment of the implant when it exits the injector.  The shape of the intra-ocular lens remains very close to that of a real one during all stages of the simulation: within the injector, during the ejection phase, and when in place within the capsule. Due to the high stiffness and low mass of the lens, a direct sparse solver was used at each time step (dt $= 0.01\,$s) rather than an iterative solver, resulting in a more accurate and more stable simulation, to the detriment of computation times (about 5 FPS for the complete simulation, and about 10 FPS for the deformation only, on a 2.4 GHz processor).
 
 % Link where images from surgery have been found: http://asianophthalmology.org/articles/?a=articles&p=6
-\begin{figure}[!h]
+\begin{figure}[ht]
 \centering
 \includegraphics[width=4.5cm]{chapter9/surgery1.pdf}
 \hfill
