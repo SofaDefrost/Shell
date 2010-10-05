@@ -19,7 +19,7 @@
 
 
 % Natbib adds different possibilities for citations. \cite{ref} => Name et al. (xxxx) ; \citepref} => (Name et al., xxxx) ; \citep[prefix][suffix]{ref} => (prefix Name et al., xxxx, suffix) ; 
-\usepackage{natbib}					
+\usepackage{natbib}	
 \defcitealias{Board05}{OpenGL}
 \defcitealias{DirectX10}{DirectX}
 \defcitealias{Meshlab}{Meshlab}
@@ -100,12 +100,12 @@ urlcolor=linkcol % Color for linked URLs
 \usepackage{leftidx}
 
 \usepackage{rotating}                    				% Sideways of figures & tables
-%\usepackage{bibunits}
-%\usepackage[sectionbib]{chapterbib}          	% Cross-reference package (Natural BiB)
-%\usepackage{natbib}                  					% Put References at the end of each chapter. Do not put 'sectionbib' option here. Sectionbib option in 'natbib' will do.
+\usepackage{bibentry}									% Allows the insertion of bibliography entries
+\nobibliography*
+\usepackage{enumitem}								% Custom enumerate environments
                                          
-\usepackage{multirow}		% Multirows in tables
-%\usepackage{slashbox}		% Diagonal separation in corner cells of tables
+\usepackage{multirow}									% Multirows in tables
+%\usepackage{slashbox}								% Diagonal separation in corner cells of tables
 
 % For maths
 \usepackage{amsmath}             						% Provides miscellaneous enhancements for mathematical formulas
@@ -160,9 +160,9 @@ emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
 
 
 % Centered page environment used for abstracts at the end of the manuscript
-\newenvironment{vcenterpage}
-{\newpage\vspace*{\fill}\thispagestyle{empty}\renewcommand{\headrulewidth}{0pt}}
-{\vspace*{\fill}}
+%\newenvironment{vcenterpage}
+%{\newpage\vspace*{\fill}\thispagestyle{empty}\renewcommand{\headrulewidth}{0pt}}
+%{\vspace*{\fill}}
 
 
 % ------------------------------------------------------------------------------------------------------------------

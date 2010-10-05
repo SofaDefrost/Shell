@@ -1,11 +1,17 @@
 \chapter*{Résumé}
 
-\large\textbf{Simulation de tissus mous en temps réel sur GPU pour la simulation médicale} \\
+\begin{center}
+\large\textbf{Simulation en temps réel de tissus mous sur GPU pour la simulation médicale\\}
+\end{center}
 
-Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla. Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.
-\\
-Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla. \\
+\noindent \large\textbf{Résumé:}
+Modéliser la déformation de structures anatomiques en temps réel est un problème crucial en simulation médicale. En raison des grandes différences existantes dans leur forme et leur constitution, un modèle unique est insuffisant face à la variété des comportements mécaniques. Par conséquent, nous avons identifié deux principaux types de structures: les organes pleins (cerveau, foie, prostate etc.) et les organes creux (colon, vaisseaux sanguins, estomac etc.). 
 
-Blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla. \\
+Notre réponse à cette problématique est double. Notre première contribution est une implémentation GPU d'un modèle éléments finis qui est non-linéaire, anisotropique et viscoélastique pour les structures pleines. Notre seconde contribution est un environnement pour modéliser en temps réel les structures fines via un modèle parallèlisable et co-rotationnel utilisant des éléments coques et une approche pour mailler une surface complexe avec des éléments coques courbes. 
 
-Blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla, blablablablabla bla blabla bla blablablabla bla.Blablabla bla blabla blablablabla.
+Bien que les deux modèles de tissus sont basés sur la mécanique continue pour une meilleure précision, ils sont tous les deux capables de simulation la déformation d'organes en temps réel. Enfin, leur implémentation dans l'environnement open source SOFA rendra publique ces deux modèles afin de participer à l'amélioration du réalisme des simulateurs médicaux. 
+
+\bigskip
+
+\large\textbf{Mots-clés:}
+Simulation médicale, modélisation de tissus mous, méthode des éléments finis, GPU, TLED, coques, méthode co-rotationnelle
