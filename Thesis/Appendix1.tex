@@ -1,2 +1,27 @@
-\chapter{Tensors \TODO{appendix on tensors necessary?}}
-\label{chap:appendix1}
+\chapter{The weighted residual method}
+\label{appendix1}
+
+The \emph{method of weighted residuals} is an approximation technique for solving differential equations. A subclass of this method, the \emph{Galerkin method of weighted residuals}, is often used to derive the element equations for the finite element method. 
+
+Let us suppose that we have a linear differential operator $ D $ acting on a function $ u $ to produce a function $ p $:
+\begin{equation}
+D(u(x)) = p(x).
+\end{equation}
+We wish to approximate $ u $ by a function $ \tilde{u} $, which is a linear combination of basis functions chosen from a linearly independent set, that is: 
+\begin{equation}
+u \approx \tilde{u} = \sum_{i=1}^n a_i \phi_i .
+\end{equation}
+Now, when substituted into the differential operator $ D $, the result of the operation is not, in general, $ p(x) $. Hence, an error or \emph{residual} will exist:
+\begin{equation}
+R(x) = D(\tilde{u}(x)-p(x)) \neq 0.
+\end{equation}
+The idea behind the weighted residual method is to force the residual to zero in some average sense over the domain:
+\begin{equation}
+\int_X R(x) W_i(x) dx = 0, \quad i = 1, 2, \ldots, n
+\end{equation}
+where the number of \emph{weight functions} $ W_i $ is exactly equal to the number of unknown constants $ a_i $ in $ \tilde{u} $. The result is a set of $ n $ algebraic equations for the unknown constants $ a_i $. Depending on the choice for $ W_i $, several sub-methods can be derived: collocation, sub-domain, least squares, Ritz, Galerkin etc. 
+
+%For instance, the weight function used by the Galerkin method \TODO{need to check this: Wi are the shape functions?} is:
+%\begin{equation}
+%W_i = \pd{\tilde{u}}{a_i}.
+%\end{equation}

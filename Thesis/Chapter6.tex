@@ -55,7 +55,7 @@ Before introducing our own GPU implementation of the TLED formulation, we will d
 
 	\subsection{Programming languages for GPUs}
 
-Interface with a GPU has traditionally been via a graphic application programming interface (API) such as \citetalias{Board05} or \citetalias{DirectX10}. OpenGL is an open standard API that provides a number of functions for the rendering of 2D and 3D graphics and is available on most modern operating systems including but not limited to Windows, Mac OS X and Linux. It was initially designed by Silicon Graphics Inc. and now managed by the technology consortium Khronos group. DirectX is a proprietary API that provides functions to render three dimensional graphics, and uses hardware acceleration if it is available on the graphics card. It was designed by Microsoft for use on the Windows platform. 
+Interface with a GPU has traditionally been via a graphic application programming interface (API) such as \citetalias{OpenGL} or \citeauthor{DirectX}. OpenGL is an open standard API that provides a number of functions for the rendering of 2D and 3D graphics and is available on most modern operating systems including but not limited to Windows, Mac OS X and Linux. It was initially designed by Silicon Graphics Inc. and now managed by the technology consortium Khronos group. DirectX is a proprietary API that provides functions to render three dimensional graphics, and uses hardware acceleration if it is available on the graphics card. It was designed by Microsoft for use on the Windows platform. 
 
 Because OpenGL and DirectX are both low-level APIs and include many irrelevant functionality from a GPGPU perspective, higher level languages were designed to give developers more direct control of the graphics pipeline without having to use assembly language or hardware-specific languages. 
 	
@@ -170,12 +170,12 @@ The main bottleneck of the previous implementation was adding up the forces on e
 In the precomputation phase, nodes and elements are sorted by block to leave enough space for storage in shared memory of the element force contributions initially calculated at the end of the first kernel. We add nodes to a block along with their unique elements until the shared memory is saturated. Of course, in this approach some elements will be computed several times (because being into different blocks). \ON Yet, \OFF storing the force contributions in shared memory instead of global memory to read them later on via texture fetches \ON may \OFF outperform the need of computing several elements several times. \ON However, the efficiency of this single kernel approach depends on the nature of the mesh. Because the force contributions of all elements attached to a node must be eventually added up, this approach allows to avoid the numerous (slow) accesses to global memory when the valency of the nodes is high (that is, nodes are attached to many elements). This type of mesh is often encountered when dealing with the complex shapes of anatomical structures. Therefore, where the first implementation showed its limits with complex meshes, this single kernel approach has proven to be more computationally effective. 
 \OFF 
 
-\TODO{If time, try this implementation on Geforce GTX 480 as it features 3 times the amount of shared memory.}
+% \TODO{If time, try this implementation on Geforce GTX 480 as it features 3 times the amount of shared memory.}
 
 	\subsection{Third implementation: atomic writes}
 In April 2010, NVIDIA released a family of graphics cards based on a new GPU architecture called Fermi. Among many new features and improvements over previous generation, these cards added the capability of so-called \emph{atomic writes} for floats. The write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, no other thread can access this address until the operation is complete. The concurrent writes are simply serialised in hardware. This feature allows us to implement the TLED algorithm as we would on a CPU, using a single kernel for all computations, and without the need to re-order the nodes and elements organisation as with the second implementation. 
 
-\TODO{If time, try simple implementation using atomic writes with floats on Geforce GTX 480}
+% \TODO{If time, try simple implementation using atomic writes with floats on Geforce GTX 480}
 
 	
 \section{Results}	

@@ -10,9 +10,9 @@
 % ------------------------------------------------------------------------------------------------------------------
 
 % Glossary / list of abbreviations
-\usepackage[intoc]{nomencl}
-\renewcommand{\nomname}{List of Abbreviations}
-\makenomenclature
+%\usepackage[intoc]{nomencl}
+%\renewcommand{\nomname}{List of Abbreviations}
+%\makenomenclature
 % Help
 % Issue the \nomenclature command for each symbol you want to have included in the nomenclature list. The best place for this command is immediately after you introduce the symbol for the first  time. Put \printnomenclature at the place you want to have your nomenclature list. Option "refpage" to add page numbers.
 % Example: PhD\nomenclature{PhD}{Doctor of Philosophy} 
@@ -20,9 +20,7 @@
 
 % Natbib adds different possibilities for citations. \cite{ref} => Name et al. (xxxx) ; \citepref} => (Name et al., xxxx) ; \citep[prefix][suffix]{ref} => (prefix Name et al., xxxx, suffix) ; 
 \usepackage{natbib}	
-\defcitealias{Board05}{OpenGL}
-\defcitealias{DirectX10}{DirectX}
-\defcitealias{Meshlab}{Meshlab}
+\defcitealias{OpenGL}{OpenGL}
 
 % Creates a label in front of each item of the bibliography based on Author-year.
 \makeatletter
