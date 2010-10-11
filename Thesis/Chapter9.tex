@@ -152,23 +152,27 @@ q = w + (x, y, z) = \cos (\frac{\alpha}{2}) + \mathbf{u} \sin (\frac{\alpha}{2})
 where $ \mathbf{u} $ is a unit vector and $ \alpha $ a scalar. If we denote by $ \mathbf{v} $ a vector in $\field{R}^3$, it can be shown that the quaternion product $ q \mathbf{v} q^{-1} $ yields a vector which is the rotation of $ \mathbf{v} $ by an angle $ \alpha $ around the axis $ \mathbf{u} $. Quaternions require less storage than rotation matrices and are known to be more numerically stable. 
 
 From there, our approach to measure the rotations around local x and y axes is simple. At runtime and for each vertex, we compute the rotation that we need to transform the z axis of the triangle's frame into the z axis of the vertex's frame (see listing \ref{chap9:qDiffZ}). The differences with the same quantities computed for the rest position during the initialisation lead to the desired displacements. 
-
-\begin{lstlisting}[caption={Method used to compute the rotation of the z axis between the frames embodied by two quaternions},label=chap9:qDiffZ]
+%
+\begin{lstlisting}[caption={[Method to compute the rotation between two quaternions]Method used to compute the rotation of the z axis between the frames embodied by two quaternions},label={chap9:qDiffZ},frame=shadowbox,rulesepcolor=\color{black}]
 inline Quat qDiffZ(const Quat& Qvertex, const Quat& Qtriangle)
 {
-    // dQ is the quaternion that embodies the rotation between the z axis of the vertex and the z axis of the local triangle's frame (in local space)
+    // dQ is the quaternion that embodies the rotation between 
+    // the z axis of the vertex and the z axis of the local 
+    // triangle's frame (in local space)
     Quat dQ;
 
     // u = z axis of the triangle's frame (in local space)
     Vec3d u(0,0,1);
 
-    // v = z axis of the vertex's frame is expressed into world space
+    // v = z axis of the vertex's frame is expressed into 
+    // world space
     Vec3d v = Qvertex.rotate(Vec3d(0.0, 0.0, 1.0));
     
     // v0 = v expressed into local triangle's frame
     Vec3d v0 = Qtriangle.rotate(v);
 
-    // Axis of rotation between the 2 vectors u and v lies into the plan of the 2 vectors
+    // Axis of rotation between the 2 vectors u and v lies 
+    // into the plan of the 2 vectors
     Vec3d axis = cross(u, v0);
     
     // Shortest angle between the 2 vectors
@@ -273,26 +277,14 @@ The deflection may therefore be computed for each vertex and added to the in-pla
 
 It is worth noting that a high resolution mesh may be obtained by recursively subdividing each triangle. However, in this case the vertices are closely related to the structure of the mechanical mesh and rendering artifacts may appear. As we can notice on \fig{chap9:fig-rendering}, the quality of the visualisation may be improved by using a totally different mesh.
 %
-%\begin{figure}
-%	\begin{center}
-%		\begin{tabular}{cc}
-%			\includegraphics[width=6cm]{chapter9/sub_grid_red.png} & \includegraphics[width=6cm]{chapter9/irregular_grid_red.png} \\
-%			\includegraphics[width=6cm]{chapter9/sub_grid_mesh.png} & \includegraphics[width=6cm]{chapter9/irregular_grid_mesh.png} \\
-%			Subdivided triangles & Irregular grid			
-%		\end{tabular}
-%	\end{center}
-%	\label{chap9:fig-rendering}
-%	\caption{We can notice some rendering artifacts when we use subdivided triangles. Using an irregular mesh instead reduces the impact.}
-%\end{figure}
-%
 \begin{figure}[ht]
 \centering 
-\subfloat[Subdivided triangles]{\includegraphics[width=5cm]{chapter9/sub_grid_red.png}}
+\subfloat[Subdivided triangles]{\includegraphics[width=5.5cm]{chapter9/sub_grid_red.png}}
 \hspace{1cm}
-\subfloat[Irregular grid]{\includegraphics[width=5cm]{chapter9/irregular_grid_red.png}} \\
-\subfloat[Subdivided triangles]{\includegraphics[width=5cm]{chapter9/sub_grid_mesh.png}}
+\subfloat[Irregular grid]{\includegraphics[width=5.5cm]{chapter9/irregular_grid_red.png}} \\
+\subfloat[Subdivided triangles]{\includegraphics[width=5.5cm]{chapter9/sub_grid_mesh.png}}
 \hspace{1cm}
-\subfloat[Irregular grid]{\includegraphics[width=5cm]{chapter9/irregular_grid_mesh.png}}
+\subfloat[Irregular grid]{\includegraphics[width=5.5cm]{chapter9/irregular_grid_mesh.png}}
 \caption[Visual artifacts using triangle subdivisions]{In some situations, some rendering artifacts may appear when we use subdivided triangles to render the shells (a,c). Using an irregular mesh which is not closely related to the structure of the mechanical mesh reduces the impact (b,d).}
 \label{chap9:fig-rendering}
 \end{figure}

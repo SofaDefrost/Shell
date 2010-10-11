@@ -15,9 +15,9 @@ The finite element method begins by dividing the structure into small pieces, ma
 
 This approach may be compared to trying to find the area under a curve. We know that we can find the exact solution for the area under the curve by integration. However, sometimes the function describing the curve is not known, or is difficult to integrate. One method to obtain an approximate solution is to break up the area into a series of rectangles and add the areas of all rectangles (see \fig{chap3:fig-areaUnderCurve}). It is worth nothing that the solution accuracy can be increased by reducing the width of the rectangles to better follow the curve. 
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
-\includegraphics[width=8cm]{chapter3/areaUnderCurve.pdf}
+\includegraphics[width=10cm]{chapter3/areaUnderCurve.pdf}
 \end{center}
 \caption[Approximation of the area under a curve]{Approximation of the area under a curve by adding the areas of all rectangles (left Rieman sum for this example).}
 \label{chap3:fig-areaUnderCurve}
@@ -159,7 +159,7 @@ Let us sum up where we are into the finite element analysis process so far. The 
 	
 The next step is therefore to derive the element equations themselves. Obviously these equations depend on the type of problem that we seek to solve. From now on, we will only consider the context of continuum mechanics since our overall goal is the modelling of organ deformation. However, a similar approach can be used in the other fields of physics. In continuum mechanics, applying Newton's second law yields a partial differential system of equations. Such equations are called \emph{strong forms}. The strong form, in contrast to a \emph{weak form}, requires strong continuity on the dependent field variables, such as displacements \citep{Liu03}. \ON Indeed, \OFF the functions defining these field variables have to be differentiable up to the order of the partial differential equations that exist in the strong from. \ON While the finite element method can be used to find an approximated solution for a strong form,  the method usually works well only with regular geometry and boundary conditions. 
 
-Consequently, \OFF a weak form is often created using energy principles or weighted residual methods. The weak form is frequently an integral form and requires a weaker continuity on the field variables. \ON Hence, \OFF a formulation based on a weak form usually produces a set of discretised system equations that give much more accurate results, especially for problems of complex geometry. \ON For this reason, \OFF the weak form is usually preferred \ON over the strong form for obtaining an approximate solution of a practical engineering problem \OFF.
+Consequently, \OFF a weak form is often created using energy principles or weighted residual methods. The weak form is frequently an integral form and requires a weaker continuity on the field variables. \ON Hence, \OFF a formulation based on a weak form usually produces a set of discretised system equations that give much more accurate results, especially for problems of complex geometry. \ON For this reason, \OFF the weak form is usually preferred \ON over the strong form for obtaining an approximate solution of a practical engineering problem. \OFF
 
 	\subsection{Time dependence}
 In all the equations of the finite element method that we derived so far, we have not taken time into account. For some problem, this is not an issue, the motion is sufficiently slow to assume that the dynamic effects (such as damping effect) are neglectable. However, this assumption is not always valid, particulary in our case where we want to model organ deformation. The deformation obviously depends on time. Finite element models of time-dependent problems can be developed in two alternatives ways \citep{Reddy93}:
@@ -252,7 +252,8 @@ where $ \mathbf{E} $ is a material matrix, which only depends on the constitutiv
 We have now derived the equations for each element. However, since the element is physically connected to its neighbours, the resulting algebraic equations will contain more unknowns than the number of algebraic equations. In other words, elements share vertices. The deformation of an element induces the deformation of its neighbours. Thus, it becomes necessary to put the elements together to eliminate the extra unknowns, to model this interaction between elements. The assembly of the global stiffness matrix should be carried out as soon as the element matrices are computed, rather than waiting until the element coefficients of all elements are computed. This would require storage of the coefficients for each element. Instead, we can perform the assembly while we calculate the element matrices.  
 
 The assembly operation is actually quite simple. Let us consider an example with stiffness matrices for an one-dimensional problem. We assume that we have three two-node elements. And we suppose the element connectivity information given by Table \ref{chap3:connectivity}, which provides the global node number for each local node number within an element. 
-\begin{table}
+%
+\begin{table}[ht]
 	\begin{center}
 	\begin{tabular}{|c|c|c|}
 		\hline Elements & 1 & 2 \\ 
@@ -264,6 +265,7 @@ The assembly operation is actually quite simple. Let us consider an example with
 		\label{chap3:connectivity}
 	\end{center}
 \end{table}
+%
 We also assume the following stiffness matrices for the three elements:
 \begin{equation}
 \mathbf{K}^1 = 

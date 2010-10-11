@@ -101,7 +101,7 @@ The multi-disciplinary aspect of medical simulation requires the integration wit
 \paragraph{High-level modularity.}
 The SOFA architecture relies on the innovative notion of multi-model representation where an object is explicitly decomposed into various representations: Behaviour Model, Collision Model, Collision Response Model, Visual Model and Haptic Model. Each representation can then be optimised for a particular task (biomechanics,  collision detection, visualisation, haptics) while at the same time improving interoperability by creating a clear separation between the functional aspects of the simulation components. These representations are then connected together via a mechanism called \emph{mapping}. Various mapping functions can be defined, and each mapping associates a set of primitives of a representation to a set of primitives in the other representation (\fig{chap6:fig-SOFA}). For instance, a mapping can connect degrees of freedom in a Behaviour Model to vertices in a Visual Model.
 
-\begin{figure}
+\begin{figure}[ht]
 \includegraphics[width=13.9cm]{chapter6/sofa.pdf}
 \caption [Multi-model representation in SOFA] {Multi-model representation in SOFA. \textbf{Left:} a Behaviour Model controls the other representations via a series of mappings. \textbf{Right:} examples of representations with a liver model.}
 \label{chap6:fig-SOFA}
@@ -170,7 +170,7 @@ The main bottleneck of the previous implementation was adding up the forces on e
 In the precomputation phase, nodes and elements are sorted by block to leave enough space for storage in shared memory of the element force contributions initially calculated at the end of the first kernel. We add nodes to a block along with their unique elements until the shared memory is saturated. Of course, in this approach some elements will be computed several times (because being into different blocks). \ON Yet, \OFF storing the force contributions in shared memory instead of global memory to read them later on via texture fetches \ON may \OFF outperform the need of computing several elements several times. \ON However, the efficiency of this single kernel approach depends on the nature of the mesh. Because the force contributions of all elements attached to a node must be eventually added up, this approach allows to avoid the numerous (slow) accesses to global memory when the valency of the nodes is high (that is, nodes are attached to many elements). This type of mesh is often encountered when dealing with the complex shapes of anatomical structures. Therefore, where the first implementation showed its limits with complex meshes, this single kernel approach has proven to be more computationally effective. 
 \OFF 
 
-% \TODO{If time, try this implementation on Geforce GTX 480 as it features 3 times the amount of shared memory.}
+% \{If time, try this implementation on Geforce GTX 480 as it features 3 times the amount of shared memory.}
 
 	\subsection{Third implementation: atomic writes}
 In April 2010, NVIDIA released a family of graphics cards based on a new GPU architecture called Fermi. Among many new features and improvements over previous generation, these cards added the capability of so-called \emph{atomic writes} for floats. The write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, no other thread can access this address until the operation is complete. The concurrent writes are simply serialised in hardware. This feature allows us to implement the TLED algorithm as we would on a CPU, using a single kernel for all computations, and without the need to re-order the nodes and elements organisation as with the second implementation. 
@@ -213,7 +213,7 @@ The first example involved shearing of a unit cube model. We imposed a ramped lo
 	
 In \fig{chap6:fig-stressCurvesCube1} we demonstrate the effects of material anisotropy independent of viscoelastic effects by plotting the limiting instantaneous (hyperelastic) stress curves, produced by setting the relaxation parameter $\alpha_1 = 0$. \fig{chap6:fig-stressCurvesCube1}(a) shows curves for the anisotropic model, while \fig{chap6:fig-stressCurvesCube1}(b) shows curves for an equivalent isotropic model (i.e. with $\eta = 0$). Firstly we confirm that the FE solutions (data marks) match the analytical solutions (solid curves) very accurately. Secondly we observe that the anisotropic term significantly affects both the magnitude and shape of the stress curves. In particular the $S_{11}$ curve which is coincident with the $S_{33}$ curve in the isotropic model actually changes sign when anisotropy is introduced. The other curves exhibit a more pronounced stiffening for the anisotropic case. 
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=13.9cm]{chapter6/stressCurvesCube1.pdf}
 \end{center}
@@ -223,7 +223,7 @@ In \fig{chap6:fig-stressCurvesCube1} we demonstrate the effects of material anis
 
 In \fig{chap6:fig-stressCurvesCube2} we demonstrate the effect of loading rate on the complete viscoelastic model by plotting the $S_{11}$ component for strain rates of $2.5\,s^{-1}, 0.25\,s^{-1}$, and $0.025\,s^{-1}$, plus the bounding instantaneous and equilibrium responses. The strain rate-dependence introduced by the model (and commonly observed in biological tissues) is clearly shown. Additionally the close match between the analytic and numerical solutions demonstrates the validity of the developed constitutive update scheme.
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=8cm]{chapter6/stressCurvesCube2.pdf}
 \end{center}
@@ -239,7 +239,7 @@ The second example involved compression of a cube of edge length $0.1\,$m (compa
 
 Figure \ref{chap6:fig-cubeAnisotropic}(a) shows the undeformed cube, while \fig{chap6:fig-cubeAnisotropic}(b) shows the deformed isotropic model. With no preferred direction the lateral expansion was uniform. In \fig{chap6:fig-cubeAnisotropic}(c) the increased $y$-direction stiffness of the first anisotropic model lead to a much reduced expansion in this direction (vertical in the image), and an accompanying increase in the orthogonal $z$-direction. For the second anisotropic model the direction defined by $y = z$ was stiffened, and \fig{chap6:fig-cubeAnisotropic}(d) shows the resulting reduced expansion along this axis and the increased orthogonal expansion. 
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering 
 \subfloat[ ]{\includegraphics[width=5cm]{chapter6/cubeAnisotropic1.pdf}}
 \hspace{1cm}
@@ -256,7 +256,7 @@ Figure \ref{chap6:fig-cubeAnisotropic}(a) shows the undeformed cube, while \fig{
 
 The end face reaction force history for each model is shown in \fig{chap6:fig-stressDecay}. A distinct decay curve resulting from stress relaxation, and similar to that commonly noted in biological tissues \citep{Fung93}, was observed. The increased stiffness afforded by the anisotropic models (albeit in an orthogonal direction to the loading) result in greater reaction forces than the isotropic model.
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=8cm]{chapter6/stressDecay.pdf}
 \end{center}
@@ -304,10 +304,10 @@ The efficiency and the side-effects of porting the algorithm into the flexible S
 %
 \begin{figure}[ht]
 \centering 
-\subfloat[ ]{\includegraphics[width=5cm]{chapter6/cube_and_curves1.pdf}}
-\hspace{0.5cm}
+\subfloat[ ]{\includegraphics[width=5.5cm]{chapter6/cube_and_curves1.pdf}}
+\hspace{0.2cm}
 \subfloat[ ]{\includegraphics[width=8cm]{chapter6/cube_and_curves2.pdf}}
-\caption [Computational timings within SOFA] {(a) FEM mesh of cube with $29\,791$ nodes deformed under a uniformed load. (b) Comparison of GPU computational timings and CPU overheads between the SOFA and standalone implementations for different mesh sizes. \TODO{change the cube if I can get a decent visual model in SOFA}}
+\caption [Computational timings within SOFA] {(a) FEM mesh of cube with $29\,791$ nodes deformed under a uniformed load. (b) Comparison of GPU computational timings and CPU overheads between the SOFA and standalone implementations for different mesh sizes.}
 \label{chap6:fig-cube_and_curves}
 \end{figure}
 

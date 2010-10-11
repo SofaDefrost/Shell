@@ -66,7 +66,7 @@ Once the goal positions are known, they are used to integrate the positions of t
 \end{equation}
 where $ \alpha $ is a parameter between $ 0 $ and $ 1 $ which simulates stiffness. Because the method in this basic form is not suitable for objects undergoing large deformations, it is then extended to linear and quadratic deformations by replacing $ \mathbf{R} $ in \eqref{chap4:gi} with combinations of the form $ \beta \mathbf{A} + (1-\beta) \mathbf{R}$ where $ \beta $ is an additional parameter. Linear transformation can represent shear and stretch while quadratic transformation add twist and bending. Of course, this technique is not physically realistic. But this is beyond the point. This method allows the authors to simulate hundreds of deformable objects at an interactive rate with an unconditional stability (see \fig{chap4:fig-shoes}). Another illustration of this stability is shown \fig{chap4:fig-duck}. 
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=13.9cm]{chapter4/shoes.pdf}
 \end{center}
@@ -74,7 +74,7 @@ where $ \alpha $ is a parameter between $ 0 $ and $ 1 $ which simulates stiffnes
 \label{chap4:fig-shoes}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=11cm]{chapter4/duck1.pdf} \\
 \vspace{0.1cm}
@@ -114,7 +114,7 @@ Although realism is not a crucial feature for game-like environments, other mode
 	\subsection{3D Chainmail algorithm}
 The \emph{3D Chainmail} was introduced by \cite{Gibson97} as a fast algorithm for deforming solid objects. Rather than carrying out complex computations on a low resolution geometry (as opposed to FEM techniques), the main idea is to take advantage of the original data resolution (of a CT scan for instance) but perform simple deformation calculation for each element. In this algorithm, each volume element is linked to its six nearest neighbours. If a link between two nodes is stretched to its limit, displacements are transferred to its neighbouring links. It works in a very similar way to a chain and is illustrated by \fig{chap4:fig-chainmail}. 
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=10cm]{chapter4/chainmail.pdf}
 \end{center}
@@ -265,7 +265,7 @@ Besides real-time computation of soft tissue, another major concern for medical 
 
 Cutting is a problem for all techniques precomputing the inverse of the stiffness matrix. Indeed, topological changes require updates of this matrix, which is too computationally heavy to be done in real-time. \cite{Nienhuys01} avoid the precomputations by approximating the inverse at runtime with an iterative algorithm (Conjugate Gradient). Moreover, instead of subdividing each tetrahedron to make the cut appear where the user performed it, they adapt the mesh locally so that there are always triangles on the scalpel path, and perform the cut along those triangles (see \fig{chap4:fig-cutUnderScalpel}). If the approach is interesting, the authors reported a lag between the scalpel and the realised cut. In addition, repositioning the nodes within the mesh can easily generate degeneracies, which have to be eliminated. \TODO{add PhD of Brian Lee... Mais je l'ai pas sa thèse... et tu m'as pas dit que tu étais en train de la reviewer ? Du coup c'est pas encore publique, c'est difficile de la citer, non ?}
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=13cm]{chapter4/cutUnderScalpel.pdf}
 \end{center}
@@ -275,7 +275,16 @@ Cutting is a problem for all techniques precomputing the inverse of the stiffnes
 
 \bigskip
 
-As we know, the assumption of linearity is usually only valid for very small deformations and strains. If this is often an acceptable trade-off between the visual deformation result and the speed of the system, research was carried out to handle large deformations. However, since geometrically non-linear analyses are highly computationally demanding, another approach was found which allows large deformation while still relying on a linear strain measure: the \emph{co-rotational} methods \label{chap4:corotationalMethods}. A very complete description of the co-rotational approach is given by \cite{Felippa00}. As explained in section~\ref{chap2:strainMeasures}, an appropriate strain measure is a tensor which only measures the deformation applied to the object. This is the case of the Cauchy-Green or Green tensors for instance. Those strain metrics only measures deformation, they are invariant with respect to rigid-body transformations applied. However, geometrically linear analyses make use of the infinitesimal strain tensor, which is only an approximation of the Green tensor. Consequently, this linearised strain measure is not invariant with respect to rigid-body transformations. In particular, the error brought by the approximated (linear) strain measure increases with the rotation of the element. This error in the measure creates ghost forces which overdeforms the simulated object. The idea behind co-rotational methods is the decomposition of the motion into a rigid-body and deformational components. In other words, the deformation of each element may be seen as measured in a coordinate system which follows the rigid-body motion of the element, hence cancelling the part of the error due to the rotation in the strain measure. Consequently, co-rotational formulations allow large displacements and rotations (since the rigid-body motion is not considered) as long as the strain remains small (the strain measure is still linear). 
+As we know, the assumption of linearity is usually only valid for very small deformations and strains. If this is often an acceptable trade-off between the visual deformation result and the speed of the system, research was carried out to handle large deformations. However, since geometrically non-linear analyses are highly computationally demanding, another approach was found which allows large deformation while still relying on a linear strain measure: the \emph{co-rotational} methods \label{chap4:corotationalMethods}. A very complete description of the co-rotational approach is given by \cite{Felippa00}. As explained in section~\ref{chap2:strainMeasures}, an appropriate strain measure is a tensor which only measures the deformation applied to the object. This is the case of the Cauchy-Green or Green tensors for instance. Those strain metrics only measures deformation, they are invariant with respect to rigid-body transformations applied. However, geometrically linear analyses make use of the infinitesimal strain tensor, which is only an approximation of the Green tensor. Consequently, this linearised strain measure is not invariant with respect to rigid-body transformations. In particular, the error brought by the approximated (linear) strain measure increases with the rotation of the element. This error in the measure creates ghost forces which overdeforms the simulated object (see \fig{chap4:fig-cylinder}). The idea behind co-rotational methods is the decomposition of the motion into a rigid-body and deformational components. In other words, the deformation of each element may be seen as measured in a coordinate system which follows the rigid-body motion of the element, hence cancelling the part of the error due to the rotation in the strain measure. Consequently, co-rotational formulations allow large displacements and rotations (since the rigid-body motion is not considered) as long as the strain remains small (the strain measure is still linear). 
+%
+\begin{figure}[ht]
+\centering 
+\includegraphics[height=6cm]{chapter4/cylinder1.pdf}
+\hspace{0.5cm}
+\includegraphics[height=6cm]{chapter4/cylinder2.pdf}
+\caption[Deformation of cylinders]{A geometrically linear finite element model (green) is compared to a co-rotational finite element model (yellow). While still using a simple linear strain measure, the co-rotational formulation is not sensitive to rotations and thus does not overdeform.}
+\label{chap4:fig-cylinder}
+\end{figure}
 
 Among the firsts to apply this technique to static analyses are \cite{Argyris64} and \cite{Wempner69}. Although the birth of co-rotational methods is not very clear \citep{Felippa05}, \cite{Belytschko73} had a similar thinking and introduced the so-called \emph{convected coordinates} for solving dynamic equations. However, while the spirit is the same than co-rotational methods, convected coordinates forms a curvilinear system that fits the change of metric as the body deforms, therefore the convected metric necessarily emcompasses deformations. In other words, the decomposition in rigid-body and deformational components is not exact. During the last decade, the co-rotational approach has regained interest in the computer graphics community. 
 
@@ -301,7 +310,7 @@ If co-rotational approaches increase accuracy in the strain measure, all the exa
 
 The first geometrically non-linear finite element model running in real-time was reported by \cite{Debunne01}. They provided an adaptative method for animating viscoelastic deformable objects in a guaranteed frame rate. As the object moves and deforms, the sampling is refined to concentrate the computational load into the regions that deform the most (see \fig{chap4:fig-gummyBear}). They reported animating a few hundred points in real-time at a frequency higher than $ 300\,$Hz.
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=13cm]{chapter4/gummyBear.pdf}
 \end{center}

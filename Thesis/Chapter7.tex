@@ -81,7 +81,7 @@ Among the different models introduced recently we can also mention the work of \
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=10cm]{chapter7/dress.pdf}
-\caption[Simulation of complete garments that have large bending stiffness]{The model of \citeauthor{Volino06} allows the simulation of complete garments with material that may have fairly large bending stiffness. Image courtesy of \cite{Volino06}.}
+\caption[Simulation of complete garments that have large bending stiffness]{The model of Volino and Magnenat-Thalmann allows the simulation of complete garments with material that may have fairly large bending stiffness. Image courtesy of \cite{Volino06}.}
 \label{chap7:fig-dress}
 \end{center}
 \end{figure}
@@ -97,7 +97,7 @@ In 1991, \citeauthor{Black91} presented a materially non-linear shell finite ele
 
 Shell models are fairly common in the field of cloth modelling. For instance, \cite{Eischen96} applied fully non-linear shell theory for modelling fabrics. The interested reader may also refer to their fairly complete review on the use of shell finite element methods in cloth modelling. However, their attention was towards the accuracy provided by shell theory and were not really interested in fast solution times. 
 
-Shell finite element modelling followed the same trend than solid objects and co-rotational formulations were introduced to simplify strain expressions while allowing large rotations (but small strain) (see page \pageref{chap4:corotationalMethods} for more details). For instance, \cite{Etzmuss03} used the linear Cauchy strain tensor but applied a polar decomposition on the deformation gradient to allow large deformations. The bending energy is separated from the membrane formulation and most of material parameters were measured from experiments on actual pieces of clothing. As an example, the computation of a shirt consisting of $ 8\,300 $ triangles took an average of less than $ 3\,$s per animation frame with a time step of $ 0.02\,$s (see an illustration \fig{chap7:fig-shirt}). While still being far from achieving real-time, the intention of the authors was clearly to propose an efficiency model for cloth simulation. 
+Shell finite element modelling followed the same trend than solid objects and co-rotational formulations were introduced to simplify strain expressions while allowing large rotations (but small strain, see page \pageref{chap4:corotationalMethods} for more details). For instance, \cite{Etzmuss03} used the linear Cauchy strain tensor but applied a polar decomposition on the deformation gradient to allow large deformations. The bending energy is separated from the membrane formulation and most of material parameters were measured from experiments on actual pieces of clothing. As an example, the computation of a shirt consisting of $ 8\,300 $ triangles took an average of less than $ 3\,$s per animation frame with a time step of $ 0.02\,$s (see an illustration \fig{chap7:fig-shirt}). While still being far from achieving real-time, the intention of the authors was clearly to propose an efficiency model for cloth simulation. 
 %
 \begin{figure}[ht]
 \begin{center}

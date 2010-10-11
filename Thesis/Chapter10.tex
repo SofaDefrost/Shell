@@ -112,7 +112,7 @@ d_{\mathrm{H}}(X,Y) = \max \left\{ \sup_{x \in X} \inf_{y \in Y} d(x,y), \sup_{y
 where $d()$ is the Euclidian distance between two points. The same technique of subdivision used for rendering allows us to sample the actual surface described by the shells to compute the Hausdorff distance with the targeted high resolution mesh. 
 
 By using the Hausdorff distance between two iterations, the process may be stopped when the required precision has been reached. A simple example is shown \fig{chap10:fig-cylinder} to illustrate the method. 
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[width=13.5cm]{chapter10/exampleCylinder.pdf}
 \caption {The target (a) is a high resolution cylinder mesh of 16,384 triangles and we start from a very coarse mesh (12 triangles), rendered with flat triangles here (b). In (c) the coarse mesh is rendered with shells and a one-sided Hausdorff distance colour map is applied to show the initial error with the high resolution mesh. (d) One-sided Hausdorff distance colour map after one iteration of our algorithm (48 shells).}
@@ -124,7 +124,7 @@ By using the Hausdorff distance between two iterations, the process may be stopp
 \subsubsection*{Meshing of anatomical structures.}
 This approach has been applied to approximate more complex anatomical geometries with curved shell elements. Two examples are given with the Glisson's capsule, which is the membrane surrounding the liver (\fig{chap10:fig-liver}) and an aneurysm (\fig{chap10:fig-aneurysm}). In each case, the error is computed through a Hausdorff distance and expressed as a percentage of the diagonal of the object's bounding box. 
 %
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[width=13.5cm]{chapter10/resultsLiver.pdf}
 \caption {(a) the targeteted high resolution Glisson's capsule mesh ($8\,000$ triangles). (b) the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh ($1\,200$ shells).} 

@@ -98,7 +98,7 @@ where $\nabla_{0}$ is the gradient operator with respect to $\mathbf{X}$ and $\m
 	\subsection{Change of volume}
 At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. \ON Let us consider a volume in the reference configuration formed by \OFF three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ as can be seen on \fig{chap2:fig-changeVolume}.
 % 
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=12cm]{chapter2/changeVolume.pdf}
 \end{center}
@@ -289,7 +289,7 @@ This equation means that the stress vector depends on its location in the body a
 
 \ON In the following we make use of a Cartesian coordinate system and we consider an infinitesimal tetrahedron as shown on \fig{chap2:fig-CauchyStress}. \OFF
 %
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=6cm]{chapter2/CauchyStress.pdf}
 \end{center}
@@ -422,7 +422,15 @@ where $p$ is the hydrostatic pressure. In order to develop a mathematical model 
 \begin{equation}
 U_0 = C_0 + C_{ij}\varepsilon_{ij} + \frac{1}{2!}\hat{C}_{ijkl}\varepsilon{ij}\varepsilon_{kl} + \frac{1}{3!}\hat{C}_{ijklmn}\varepsilon_{ij}\varepsilon_{kl}\varepsilon_{mn} + \ldots , 
 \end{equation}
-where $C_0$, $C_{ij}$ and $\hat{C}$ are material stiffnesses. The form of $U_0$ may varied for different materials. A material is said to be \emph{linear} if the relationship between strain and stress is also linear. Based on this definition, $U_0$ is a cubic or higher-order function of the strains for non-linear materials whereas $U_0$ is a quadratic function of strain for linear materials. We will start by discussing linear materials for the case of infinitesimal deformations (sections \ref{chap2:Hooke} to \ref{chap2:isotropic}). Consequently, we will not make any distinction between the various measures of stress and strain and use $\boldsymbol \sigma$ and $\boldsymbol \varepsilon$ for stress and strain tensors respectively. 
+where $C_0$, $C_{ij}$ and $\hat{C}$ are material stiffnesses. The form of $U_0$ may varied for different materials. A material is said to be \emph{linear} if the relationship between strain and stress is also linear (see \fig{chap2:fig-linear}). Based on this definition, $U_0$ is a cubic or higher-order function of the strains for non-linear materials whereas $U_0$ is a quadratic function of strain for linear materials. We will start by discussing linear materials for the case of infinitesimal deformations (sections \ref{chap2:Hooke} to \ref{chap2:isotropic}). Consequently, we will not make any distinction between the various measures of stress and strain and use $\boldsymbol \sigma$ and $\boldsymbol \varepsilon$ for stress and strain tensors respectively. 
+%
+\begin{figure}[ht]
+\centering
+\includegraphics[width=7cm]{chapter2/linear.pdf}
+\caption {The relationship between strain and stress is often non-linear (blue). However, it may be approximated as a linear relationship for small deformations (red). }
+\label{chap2:fig-linear}
+\end{figure}
+
 	
 	\subsection{Linear materials: generalised Hooke's law} \label{chap2:Hooke}
 The linear constitutive model for infinitesimal deformations is called the generalised Hooke's law. To derive the relation between stress and strain for a linear material, we assume the quadratic form of $U_0$:
@@ -589,13 +597,25 @@ The neo-Hookean model provides a reasonable approximation of rubber-like materia
 	\subsection{Viscoelastic materials}
 \ON We know that materials for which the mechanical behaviour depends solely on the state of deformation are called elastic. In contrast, the mechanical behaviour of \emph{viscous} materials is only a function of the current rate of deformation (like honey for instance). \OFF Viscoelastic materials have elements of both of these properties and, as such, exhibit time dependent strain. Depending on the change of strain rate versus stress inside a material the viscosity can be categorised as having a linear or non-linear response. When a material exhibits a linear response it is categorised as a Newtonian material. In this case the stress is linearly proportional to the strain rate. If the material exhibits a non-linear response to the strain rate, it is categorised as a Non-Newtonian material. 
 
-Viscoelastic materials present a few characteristics: 
+Viscoelastic materials present a few characteristics (see \fig{chap2:fig-visco}): 
 \begin{enumerate}
 \item if the stress is held constant, the strain increases with time (creep)
 \item if the strain is held constant, the stress decreases with time (relaxation)
 \item the effective stiffness depends on the rate of application of the load
 \item if cyclic loading is applied, hysteresis occurs, leading to a dissipation of mechanical energy
 \end{enumerate}
+%
+\begin{figure}[ht]
+\centering 
+\subfloat[Creep]{\includegraphics[width=6.5cm]{chapter2/visco1.pdf}}
+\hspace{0.5cm}
+\subfloat[Relaxation]{\includegraphics[width=6.5cm]{chapter2/visco2.pdf}} \\
+\subfloat[Rate-dependent]{\includegraphics[width=6.5cm]{chapter2/visco3.pdf}}
+\hspace{0.5cm}
+\subfloat[Hysteresis]{\includegraphics[width=6.5cm]{chapter2/visco4.pdf}}
+\caption[Characteristics of viscoelastic materials]{Characteristics of viscoelastic materials}
+\label{chap2:fig-visco}
+\end{figure}
 
 In other words, the resistance of a viscoelastic material to a given force depends on the velocity to which this force is applied. 
 
@@ -610,9 +630,9 @@ These various mechanical aspects of materials make realistic modelling of anatom
 
 \OFF One of the main obstacles in developing realistic organ models is the lack of data on the material properties of live organ tissues. Measuring and characterising in vivo organ properties is a highly challenging task, but is a requirement for realistic organ modelling. Indeed, as we have seen in sections \ref{chap2:orthotropic} and \ref{chap2:non-linear}, constitutive equations require the experimental determination of material constants. Organ models with incorrect material properties will affect training in surgical simulator systems \citep{Sedef06}. \ON Some devices exist for inert materials which allow the measure of Young's modulus, shear modulus and Poisson's ratio. However, the same measures are much more difficult to obtain for living tissues. In particular, experiments confirmed the important differences between in vitro and in vivo measures, as demonstrated by \cite{Kerdok06} with the viscoelastic properties of the liver for instance. Absence of blood perfusion and difference in temperature are two of most important factors to explain these differences. Obviously, in vivo constraints are very heavy and developing experiments and devices for in vivo measures of soft tissue is a very complex task. The preparation of samples and their testings (tensile, compression, thermal effects, rate of loading etc.) are not straightforward procedures.
 
-A non-invasive technique called \emph{elastography} was introduced recently to measure Young's modulus. The first device based on this technique was commercialised by Echosens in 2003 \cite{Bastard09}. The techniques of elastography may be classified in two categories: static and dynamic elastography. In static elastography, a quasi-static constraint is applied onto the surface of the tissue and its deformation is measured. If the constraint is known, the Young's modulus may be obtained via Hooke's law. Dynamic elastography relies on shear waves propagation in the tissue. Shear waves are generated by an acoustic driver and the displacement caused by the waves is determined by ultrasounds, magnetic resonance imaging (MRI) or optical tomography. As an example, magnetic resonance elastography is a quantitative technique which allow the generation of maps describing the shear modulus within the tissues (see \fig{chap2:fig-elastography_liver}). However, elastography is still in development and only a few techniques of elastography are actually used clinically. In the future, elastography might be able to provide a map of the material properties of tissues which may be used as input data for any computational model. This technique would be a step towards patient-specific simulation. As diseased organs are often much stiffer than healthy structures, the integration of these data would greatly increase the fidelity of the simulation.
+A non-invasive technique called \emph{elastography} was introduced recently to measure Young's modulus. The first device based on this technique was commercialised by Echosens in 2003 \citep{Bastard09}. The techniques of elastography may be classified in two categories: static and dynamic elastography. In static elastography, a quasi-static constraint is applied onto the surface of the tissue and its deformation is measured. If the constraint is known, the Young's modulus may be obtained via Hooke's law. Dynamic elastography relies on shear waves propagation in the tissue. Shear waves are generated by an acoustic driver and the displacement caused by the waves is determined by ultrasounds, magnetic resonance imaging (MRI) or optical tomography. As an example, magnetic resonance elastography is a quantitative technique which allow the generation of maps describing the shear modulus within the tissues (see \fig{chap2:fig-elastography_liver}). However, elastography is still in development and only a few techniques of elastography are actually used clinically. In the future, elastography might be able to provide a map of the material properties of tissues which may be used as input data for any computational model. This technique would be a step towards patient-specific simulation. As diseased organs are often much stiffer than healthy structures, the integration of these data would greatly increase the fidelity of the simulation.
 %
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[width=12cm]{chapter2/elastography_liver.pdf}
 \caption {\ON Magnetic resonance elastography of the liver in a healthy volunteer and a patient with cirrhosis. Image courtesy of \cite{Talwalkar07}.}
