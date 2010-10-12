@@ -233,7 +233,7 @@ In \fig{chap6:fig-stressCurvesCube2} we demonstrate the effect of loading rate o
 
 
 	\subsection{Compression of a cube}
-The second example involved compression of a cube of edge length $0.1\,$m (comparable to some human organs). The cube was imagined to be fixed to opposing load platens and free on the remaining four faces. Compression was applied along the $x$-axis. A stress-relaxation type test protocol was simulated, in which the cube was compressed by $30\, \%$ in 0.5 seconds and the compression was held for a further 4.5 seconds. We demonstrate the effects of anisotropy on the deformation response by comparing the deformed shapes of anisotropic models with $\mathbf{a}_0 = [0\, 1\, 0] \, {\buildrel\rm	def\over=} \, \mathbf{a}_0^y $ and $\mathbf{a}_0 = [0\, \frac{1}{\sqrt{2}} \, \frac{1}{\sqrt{2}}] \, {\buildrel\rm	def\over=} \, \mathbf{a}_0^{yz} $  with that of an isotropic model (with $\eta = 0$).
+The second example involved compression of a cube of edge length $0.1\,$m (comparable to some human organs). The cube was imagined to be fixed to opposing load platens and free on the remaining four faces. Compression was applied along the $x$-axis. A stress-relaxation type test protocol was simulated, in which the cube was compressed by $30\, \%$ in 0.5 seconds and the compression was held for a further 4.5 seconds. We demonstrate the effects of anisotropy on the deformation response by comparing the deformed shapes of anisotropic models with $\mathbf{a}_0 = [0\, 1\, 0] \, {\buildrel\mathrm	def\over=} \, \mathbf{a}_0^y $ and $\mathbf{a}_0 = [0\, \frac{1}{\sqrt{2}} \, \frac{1}{\sqrt{2}}] \, {\buildrel\mathrm	def\over=} \, \mathbf{a}_0^{yz} $  with that of an isotropic model (with $\eta = 0$).
 
 \bigskip
 
@@ -267,16 +267,20 @@ The end face reaction force history for each model is shown in \fig{chap6:fig-st
 	\subsection{GPU performance}
 	
 		\subsubsection*{General GPU performance}
-Next, we assessed the computational performance of the GPU implementation and efficiency of the constitutive update scheme by measuring computation times for a range of mesh densities. Using the cube geometry as above we generated models with mesh sizes ranging from $3\,993$ DOF ($1\,331$ nodes, $1\,000$ hexahedral elements) to $177\,957$ DOF ($59\,319$ nodes, $54\,872$ hexahedral elements). We compared the GPU solution times for a single time step with those of a CPU-based implementation developed using C++. The test machine included an Intel Core2Duo 2.4GHz CPU, 2GB RAM, and an NVIDIA GeForce 8800GTX GPU. Three constitutive models were considered: the transversely isotropic viscoelastic model (TIV), TIV minus the viscoelastic terms (TIE), and TIE minus the anisotropy terms (NHE). Comparison of times for TIV and TIE indicates the computational load introduced by the developed viscoelastic constitutive update scheme. Comparison of times for TIE and NHE indicates the computational load introduced by material anisotropy. Figure~\ref{chap6:fig-timingsGPU} shows the results of the experiments. 
+Next, we assessed the computational performance of the GPU implementation and efficiency of the constitutive update scheme by measuring computation times for a range of mesh densities. Using the cube geometry as above we generated models with mesh sizes ranging from $3\,993$ DOF ($1\,331$ nodes, $1\,000$ hexahedral elements) to $177\,957$ DOF ($59\,319$ nodes, $54\,872$ hexahedral elements). We compared the GPU solution times for a single time step with those of a CPU-based implementation developed using C++. The test machine included an Intel Core2Duo 2.4GHz CPU, 2GB RAM, and an NVIDIA GeForce 8800GTX GPU. Three constitutive models were considered: the transversely isotropic viscoelastic model (TIV), TIV minus the viscoelastic terms (TIE), and TIE minus the anisotropy terms (NHE). Comparison of times for TIV and TIE indicates the computational load introduced by the developed viscoelastic constitutive update scheme. Comparison of times for TIE and NHE indicates the computational load introduced by material anisotropy. Figure~\ref{chap6:fig-timingsGPU} shows the results of the experiments. 	
 %
 \begin{figure}[ht]
-\begin{center}
-\includegraphics[width=13.5cm]{chapter6/timingsGPU.pdf}
-\end{center}
+\centering 
+\subfloat[ ]{\includegraphics[width=6.5cm]{chapter6/timingsGPU1.pdf}}
+\hspace{0.5cm}
+\subfloat[ ]{\includegraphics[width=6.5cm]{chapter6/timingsGPU2.pdf}} \\
+\subfloat[ ]{\includegraphics[width=6.5cm]{chapter6/timingsGPU3.pdf}}
+\hspace{0.5cm}
+\subfloat[ ]{\includegraphics[width=6.5cm]{chapter6/timingsGPU4.pdf}} \\
 \caption[GPU solution times]{(a), (b) show CPU and GPU solution times, respectively, for a single time step for each constitutive model as a function of model size, (c) shows the ratio of CPU to GPU solution times for model TIV, and (d) shows ratios of GPU solution times for the constitutive models: TIV to TIE, TIE to NHE, and TIV to NHE. (b) also shows the critical time steps $ \Delta t_{cr} $ for each model size using liver-like and brain-like properties.} 
 \label{chap6:fig-timingsGPU}
 \end{figure}
-	
+
 In \fig{chap6:fig-timingsGPU}(a) and \fig{chap6:fig-timingsGPU}(b) it can be seen that GPU solution affords significant speed improvements over CPU solution for all constitutive models. Additionally it appears that solution times are little affected by the introduction of the more complex constitutive models, and importantly by the use of the developed constitutive update scheme. This is borne out in \fig{chap6:fig-timingsGPU}(d), where we observe that the maximum solution time ratio for model TIE to model NHE (anisotropy vs isotropy) was $1.013$, and that of model TIV to model TIE (viscoelastic vs elastic) was $1.043$. The largest total solution time increase for an anisotropic viscoelastic model compared with an isotropic hyperelastic one was $5.1\, \%$ We conclude that the key features of anisotropy and viscoelasticity may be included in simulations at very little additional computational cost. Referring to \fig{chap6:fig-timingsGPU}(c) we observe a maximum speed improvement for GPU solution over CPU solution of $56.3 \times$. 
 	
 \fig{chap6:fig-timingsGPU}(b) also shows the decreasing critical time steps $ \Delta t_{cr} $ with increasing model sizes (which results from the decreasing element sizes), using liver-like and brain-like materials. We define liver-like materials to be those described by model TIV with material parameters quoted at the beginning of the section, whereas brain-like materials are those described by model NHE with material parameters $\mu = 1006.71\, $Pa and Poisson's ratio $\nu = 0.45$. The intersections of these curves with the solution time curves provide an estimate of the real-time capacity of the implementation. This is discussed further in section~\ref{chap6:criticalTimestep}. 

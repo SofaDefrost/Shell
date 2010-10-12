@@ -53,8 +53,8 @@
 
 % Links in pdf
 \usepackage{color}
-\definecolor{linkcol}{rgb}{0.65, 0.07, 0.07}		%  {0.65, 0.07, 0.07}
-\definecolor{citecol}{rgb}{0.65, 0.07, 0.07} 	%  {0.65, 0.07, 0.07}
+\definecolor{linkcol}{rgb}{.647,.129,.149}	%  {0.65, 0.07, 0.07}
+\definecolor{citecol}{rgb}{.647,.129,.149} 	%  {0.65, 0.07, 0.07}
 
 
 % Change this to change the informations included in the pdf file (see hyperref documentation for information on those parameters)
@@ -72,12 +72,12 @@ urlcolor=linkcol % Color for linked URLs
 }
 
 % To get the link in the table of figures point to the top of the image (instead of the caption by default)
-\usepackage[all]{hypcap}
+%\usepackage[all]{hypcap}
 
 % The tocbibind package enables the titles of the Table of Contents, the List of Figures, the List of Tables, the Bibliography and the Index all to be correctly added to the Table of Contents.
-\usepackage[notlot,notlof]{tocbibind}
+%\usepackage[notlot,notlof]{tocbibind}
 % The tocvsec2 package provides means of controlling the sectional numbering and/or the entries in the Table of Contents on a section by section basis.
-\usepackage{tocvsec2}
+%\usepackage{tocvsec2}
 
 % Implements a new bookmark (outline) organisation for package hyperref. Only one LaTeX pass is sufficient (instead of 2 by hyperref)
 %\usepackage{bookmark}
@@ -85,8 +85,8 @@ urlcolor=linkcol % Color for linked URLs
 % ------------------------------------------------------------------------------------------------------------------
 %   Definitions
 % ------------------------------------------------------------------------------------------------------------------
-\setcounter{secnumdepth}{3}				% Change the depth to which section numbering occurs
-\setcounter{tocdepth}{2} 					% Specifies what depth to take the Table of Contents to
+\setsecnumdepth{subsection}				% Change the depth to which section numbering occurs
+\settocdepth{section} 							% Specifies what depth to take the Table of Contents to
 
 % Some useful commands and shortcut for maths:  partial derivative and stuff
 \newcommand{\pd}[2]{\dfrac{\partial #1}{\partial #2}}
@@ -147,13 +147,13 @@ emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
 
 
 % For sub-captions in figures
-\usepackage{caption}
+\usepackage[bf,small]{caption}
 \usepackage{subfig}
 
 
  % Short text in italic put between two lines for a short abstract before each chapter
 \newenvironment{shortAbstract}
-{\vspace{\stretch{1}} \noindent\rule[2pt]{\textwidth}{0.5pt} \it}									% Before environment
+{\vspace{\stretch{1}} \noindent\rule[2pt]{\textwidth}{0.5pt} \itshape}									% Before environment
 {\newline \noindent\rule[2pt]{\textwidth}{0.5pt} \vspace{\stretch{3}} \newpage}		% After environment
 
 
@@ -166,29 +166,61 @@ emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
 % ------------------------------------------------------------------------------------------------------------------
 %   Headers configuration
 % ------------------------------------------------------------------------------------------------------------------
-\usepackage{fancyhdr}				% Fancy Header Style Options
-\pagestyle{fancy}                       % Sets fancy header and footer
+%\usepackage{fancyhdr}				% Fancy Header Style Options
+%\pagestyle{fancy}                       % Sets fancy header and footer
+%
+%\fancyhead{}														 % Clear all head fields
+%\fancyhead[RE]{\nouppercase{\leftmark}} 		     % Chapter at the right on even pages
+%\fancyhead[LE]{\thepage}									 % Page number at the left on even pages
+%\fancyhead[LO]{\nouppercase{\rightmark}}    	 % Section at the left on odd pages
+%\fancyhead[RO]{\thepage}									 % Page number at the right on odd pages
+%\fancyfoot{}														 % Clear all footer fields
+%
+%\let\headruleORIG\headrule
+%\renewcommand{\headrule}{\color{black} \headruleORIG}
+%\renewcommand{\headrulewidth}{1.0pt}
+%\usepackage{colortbl}
+%\arrayrulecolor{black}
+%
+%% Redefine style "plain" used by chapter pages
+%\fancypagestyle{plain}
+%{
+%  \fancyhead{}
+%  \fancyfoot{}
+%  \renewcommand{\headrulewidth}{0pt}
+%}
 
-\fancyhead{}														 % Clear all head fields
-\fancyhead[RE]{\nouppercase{\leftmark}} 		     % Chapter at the right on even pages
-\fancyhead[LE]{\thepage}									 % Page number at the left on even pages
-\fancyhead[LO]{\nouppercase{\rightmark}}    	 % Section at the left on odd pages
-\fancyhead[RO]{\thepage}									 % Page number at the right on odd pages
-\fancyfoot{}														 % Clear all footer fields
+%\makepagestyle{myheadings} 
+%\makeevenhead{myheadings}{\thepage}{}{\small Chap.~\thechapter}
+%\makeoddhead{myheadings}{\small\rightmark}{}{\thepage} 
+%\makeheadrule{myheadings}{13.9cm}{0.4pt}
+%\pagestyle{myheadings}
 
-\let\headruleORIG\headrule
-\renewcommand{\headrule}{\color{black} \headruleORIG}
-\renewcommand{\headrulewidth}{1.0pt}
-\usepackage{colortbl}
-\arrayrulecolor{black}
-
-% Redefine style "plain" used by chapter pages
-\fancypagestyle{plain}
-{
-  \fancyhead{}
-  \fancyfoot{}
-  \renewcommand{\headrulewidth}{0pt}
-}
+\makepagestyle{headings} 
+\makeevenhead{headings}{\thepage}{}{\slshape\leftmark} 
+\makeoddhead{headings}{\slshape\rightmark}{}{\thepage} 
+\makeheadrule{headings}{\textwidth}{0.4pt}
+\makepsmarks{headings}{%
+%	\def\chaptermark##1{%
+%		\markboth{\MakeUppercase{%
+%			\ifnum\c@secnumdepth > \m@ne 
+%				\if@mainmatter
+%					\@chapapp\ \thechapter. \ % 
+%				\fi
+%			\fi
+%			##1}}{}}% 
+%	\def\sectionmark##1{%
+%		\markright{\MakeUppercase{% 
+%			\ifnum\c@secnumdepth > \z@
+%				\thesection. \ % 
+%			\fi
+%			##1}}} 
+	\def\tocmark{\markboth{\MakeUppercase{\contentsname}}{}} 
+	\def\lofmark{\markboth{\MakeUppercase{\listfigurename}}{}} 
+	\def\lotmark{\markboth{\MakeUppercase{\listtablename}}{}} 
+	\def\bibmark{\markboth{\MakeUppercase{\bibname}}{}} 
+	\def\indexmark{\markboth{\MakeUppercase{\indexname}}{}} 
+	\def\glossarymark{\markboth{\MakeUppercase{\glossaryname}}{}}}
 
 
 % ------------------------------------------------------------------------------------------------------------------
@@ -207,49 +239,72 @@ emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
 
 
 % ------------------------------------------------------------------------------------------------------------------
-%   Fancy chapter titles
+%   Chapter style
 % ------------------------------------------------------------------------------------------------------------------
-%\usepackage[Bjornstrup]{fncychap}			% Lenny, Bjornstrup
-% WARNING: screwed the table of contents up (problem with \appendix)
-% Using \chapter*{Appendix Example}\label{chap:appendix1} \phantomsection \addcontentsline{toc}{chapter}{Appendix Example} instead of chapter{Appendix Example} fixes the problem as well
 
-%\usepackage{calc,graphicx,soul,fourier}
-
+\usepackage{color,calc,graphicx,soul,fourier}
+\definecolor{nicered}{rgb}{.647,.129,.149}
 \makeatletter
-
-%\definecolor{nicered}{rgb}{.647,.129,.149} \makeatletter \newlength\dlf@normtxtw \setlength\dlf@normtxtw{\textwidth} \def\myhelvetfont{\def\sfdefault{mdput}} \newsavebox{\feline@chapter} \newcommand\feline@chapter@marker[1][4cm]{%
-%\sbox\feline@chapter{% \resizebox{!}{#1}{\fboxsep=1pt%
-%\colorbox{nicered}{\color{white}\bfseries\sffamily\thechapter}% }}%
-%\rotatebox{90}{% \resizebox{%
-%\heightof{\usebox{\feline@chapter}}+\depthof{\usebox{\feline@chapter}}}% {!}{\scshape\so\@chapapp}}\quad%
-%\raisebox{\depthof{\usebox{\feline@chapter}}}{\usebox{\feline@chapter}}%
-%} \newcommand\feline@chm[1][4cm]{%
-%\sbox\feline@chapter{\feline@chapter@marker[#1]}% \makebox[0pt][l]{% aka \rlap
-%\makebox[1cm][r]{\usebox\feline@chapter}%
-%}}
-%\renewcommand\chapnamefont{\normalfont\Large\scshape\raggedleft\so} \renewcommand\chaptitlefont{\normalfont\huge\bfseries\scshape\color{nicered}} \renewcommand\chapternamenum{} \renewcommand\printchaptername{} \renewcommand\printchapternum{\null\hfill\feline@chm[2.5cm]\par} \renewcommand\afterchapternum{\par\vskip\midchapskip} \renewcommand\printchaptertitle[1]{\chaptitlefont\raggedleft ##1\par}
-%\makeatother 
-  
-\def\thickhrulefill{\leavevmode \leaders \hrule height 1ex \hfill \kern \z@}
-\def\@makechapterhead#1{%
-  {\parindent \z@ \raggedright
-    \reset@font
-    \hrule
-    \vspace*{10\p@}%
-    \par
-    \Large \scshape \@chapapp{} \Huge\bfseries \thechapter
-    \par\nobreak
-    \vspace*{10\p@}%
-    \hrule
-    \par
-    \vspace*{1\p@}%
-    \hrule
-    \vspace*{20\p@}
-    \Huge \bfseries #1\par\nobreak
-    \vskip 70\p@
+\newlength\dlf@normtxtw
+\setlength\dlf@normtxtw{\textwidth}
+\def\myhelvetfont{\def\sfdefault{mdput}}
+\newsavebox{\feline@chapter}
+\newcommand\feline@chapter@marker[1][4cm]{%
+  \sbox\feline@chapter{%
+    \resizebox{!}{#1}{\fboxsep=1pt%
+      \colorbox{nicered}{\color{white}\bfseries\sffamily\thechapter}%
+    }}%
+  \rotatebox{90}{%
+    \resizebox{%
+      \heightof{\usebox{\feline@chapter}}+\depthof{\usebox{\feline@chapter}}}%
+    {!}{\scshape\so\@chapapp}}\quad%
+  \raisebox{\depthof{\usebox{\feline@chapter}}}{\usebox{\feline@chapter}}%
+}
+\newcommand\feline@chm[1][4cm]{%
+  \sbox\feline@chapter{\feline@chapter@marker[#1]}%
+  \makebox[0pt][l]{% aka \rlap
+    \makebox[1cm][r]{\usebox\feline@chapter}%
   }}
-  
+\makechapterstyle{daleif1}{
+  \renewcommand\chapnamefont{\normalfont\Large\scshape\raggedleft\so}
+  \renewcommand\chaptitlefont{\normalfont\huge\bfseries\scshape\color{nicered}}
+  \renewcommand\chapternamenum{}
+  \renewcommand\printchaptername{}
+  \renewcommand\printchapternum{\null\hfill\feline@chm[2.5cm]\par}
+  \renewcommand\afterchapternum{\par\vskip\midchapskip}
+  \renewcommand\printchaptertitle[1]{\chaptitlefont\raggedleft ##1\par}
+}
 \makeatother
+\chapterstyle{daleif1}
+
+\setlength\afterchapskip {\onelineskip }
+\setlength\beforechapskip {\onelineskip }
+\usepackage{lipsum}
+
+
+
+%\makeatletter
+  
+%\def\thickhrulefill{\leavevmode \leaders \hrule height 1ex \hfill \kern \z@}
+%\def\@makechapterhead#1{%
+%  {\parindent \z@ \raggedright
+%    \reset@font
+%    \hrule
+%    \vspace*{10\p@}%
+%    \par
+%    \Large \scshape \@chapapp{} \Huge\bfseries \thechapter
+%    \par\nobreak
+%    \vspace*{10\p@}%
+%    \hrule
+%    \par
+%    \vspace*{1\p@}%
+%    \hrule
+%    \vspace*{20\p@}
+%    \Huge \bfseries #1\par\nobreak
+%    \vskip 70\p@
+%  }}
+%  
+%\makeatother
 
 % ------------------------------------------------------------------------------------------------------------------
 %   Draft stuff during redaction
