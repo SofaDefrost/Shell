@@ -14,7 +14,7 @@ Modelling anatomical structures requires an understanding of the deformation and
 
 
 \section{Description of motion} 	\label{chap2:descriptionMotion}
-Let us consider a body $\textbf{\textit{B}}$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\textbf{\textit{B}}$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. \ON In constrast, a change in shape and\slash or size of the body from an initial configuration $\kappa_{0}$ to a new configuration $\kappa$ is called a deformation. This new configuration $\kappa$ may be designated by the \emph{current} or \emph{deformed configuration}. \OFF
+Let us consider a body $\textbf{\textit{B}}$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\textbf{\textit{B}}$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. In constrast, a change in shape and\slash or size of the body from an initial configuration $\kappa_{0}$ to a new configuration $\kappa$ is called a deformation. This new configuration $\kappa$ may be designated by the \emph{current} or \emph{deformed configuration}. \OFF
 
 Let us now consider a given particle of the body that we call $X$. What we will call particle in the following is in fact an infinitesimal volume of material. We denote the position it occupies in the initial configuration $\mathbf{X}$ and note its position in the deformed configuration $\mathbf{x}$, both expressed in the chosen frame of reference. The mapping $\chi$ defined as the following:
 \begin{equation}
@@ -24,19 +24,19 @@ Let us now consider a given particle of the body that we call $X$. What we will 
 is called the \emph{deforming mapping} of the body $\textbf{\textit{B}}$ from $\kappa_{0}$ to $\kappa$. When analysing the deformation of a continuous body, it is necessary to describe the evolution of configurations through time. Its mathematical description follows one of the two approaches: the material description or the spatial description. The material description is known as \emph{Lagrangian description} whereas the spatial description is called \emph{Eulerian description}. These two approaches are detailed next. 
 
 	\subsection{Lagrangian description}	
-In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. \ON Consequently, the current coordinates ($\mathbf{x} \in \kappa$) depend on the reference coordinates ($\mathbf{X} \in \kappa_{0}$): \OFF
+In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. Consequently, the current coordinates ($\mathbf{x} \in \kappa$) depend on the reference coordinates ($\mathbf{X} \in \kappa_{0}$): \OFF
 \begin{equation}
 \textbf{x} = \chi(\textbf{X}, t), \quad \chi(\textbf{X}, 0) = \textbf{X},
 \end{equation}
-\ON and a typical variable $\phi$ defined over the body is expressed in terms of the coordinates $\mathbf{X}$ and time $t$: \OFF
+and a typical variable $\phi$ defined over the body is expressed in terms of the coordinates $\mathbf{X}$ and time $t$: \OFF
 \begin{equation}
 \label{chap2:phi}
 \phi = \phi(\textbf{X}, t).
 \end{equation}
-\ON Let us consider a particule $X$ whose position in the reference configuration is $\mathbf{X}$. From \eqref{chap2:phi}, we note that the value of $\phi$ associated with this fixed particle $X$ changes over time. Hence, \OFF the Lagrangian description focuses its attention on the particles of the continuous body and it is usually used in solid mechanics.
+Let us consider a particule $X$ whose position in the reference configuration is $\mathbf{X}$. From \eqref{chap2:phi}, we note that the value of $\phi$ associated with this fixed particle $X$ changes over time. Hence, the Lagrangian description focuses its attention on the particles of the continuous body and it is usually used in solid mechanics.
 	
 	\subsection{Eulerian description}
-\ON In constrast, the Eulerian description is interested in changes at fixed locations. This time, the motion and $\phi$ are described with respect to the current position ($\mathbf{x} \in \kappa$): \OFF
+In constrast, the Eulerian description is interested in changes at fixed locations. This time, the motion and $\phi$ are described with respect to the current position ($\mathbf{x} \in \kappa$): \OFF
 \begin{equation}
 \phi = \phi(\textbf{x}, t), \quad \textbf{X} = \textbf{X}(\textbf{x}, t).
 \end{equation}
@@ -47,12 +47,12 @@ The displacement $ \mathbf{u} $ of a particle $X$ is called \emph{displacement v
 \begin{equation}
 \mathbf{u}(\textbf{X}, t) = \mathbf{x}(\mathbf{X}, t) - \mathbf{X}.
 \end{equation}
-A \emph{displacement field} is a vector field of all displacement vectors for all particles in the body. \ON Thus, the deformed configuration $\kappa$ may be obtained from the undeformed configuration $\kappa_{0}$ by merely adding the displacement field: \OFF $\kappa_{0}$: $\chi(\mathbf{X}, t) = \mathbf{X} + \mathbf{u}(\mathbf{X})$. 
+A \emph{displacement field} is a vector field of all displacement vectors for all particles in the body. Thus, the deformed configuration $\kappa$ may be obtained from the undeformed configuration $\kappa_{0}$ by merely adding the displacement field: $\kappa_{0}$: $\chi(\mathbf{X}, t) = \mathbf{X} + \mathbf{u}(\mathbf{X})$. 
 	
 \section{Analysis of deformation}
 
 	\subsection{Deformation gradient tensor}
-The displacement field tells us how a \ON particule \OFF displaces from the reference to the deformed configuration. \ON More interestingly, we would like to know how a material line would deform (stretch and rotation) within this displacement field. \OFF Since the length of a material line $d\mathbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\mathbf{X}$ deforms into $d\mathbf{x}$. \ON We now seek the relation existing between $d\mathbf{x}$ in the deformed configuration and $d\mathbf{X}$ of the reference configuration. \OFF
+The displacement field tells us how a particule displaces from the reference to the deformed configuration. More interestingly, we would like to know how a material line would deform (stretch and rotation) within this displacement field. Since the length of a material line $d\mathbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\mathbf{X}$ deforms into $d\mathbf{x}$. We now seek the relation existing between $d\mathbf{x}$ in the deformed configuration and $d\mathbf{X}$ of the reference configuration. \OFF
 
 Consider two particles $P_{1}$ and $P_{2}$ in a continuous body separated by an infinitesimal distance $d\mathbf{X}$:
 \begin{equation}
@@ -96,7 +96,7 @@ where $\nabla_{0}$ is the gradient operator with respect to $\mathbf{X}$ and $\m
 
 
 	\subsection{Change of volume}
-At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. \ON Let us consider a volume in the reference configuration formed by \OFF three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ as can be seen on \fig{chap2:fig-changeVolume}.
+At this point, we have seen how a deformation can affect a vector. We will now look into its effect on volumes. Our motivation comes from the need to write global equilibrium statements that involve integrals over volumes. Let us consider a volume in the reference configuration formed by three non-coplanar line elements $d\mathbf{X}^{(1)}$, $d\mathbf{X}^{(2)}$ and $d\mathbf{X}^{(3)}$ as can be seen on \fig{chap2:fig-changeVolume}.
 % 
 \begin{figure}[ht]
 \begin{center}
@@ -117,18 +117,18 @@ The volume of the parallelepiped that we will note $dV$  can be calculated using
 dV &= d\mathbf{X}^{(1)} \cdot d\mathbf{X}^{(2)} \times d\mathbf{X}^{(3)} = (\mathbf{\hat{N}}_{1} \cdot \mathbf{\hat{N}}_{2} \times \mathbf{\hat{N}}_{3}) \, dX^{(1)} dX^{(2)} dX^{(3)} \notag \\
 &= dX^{(1)} dX^{(2)} dX^{(3)}, \label{chap2:dV}
 \end{align}
-where $\mathbf{\hat{N}}_{i}$ \ON is \OFF the unit vector along $d\mathbf{X}^{i}$. \ON Similarly, we can compute the \OFF corresponding volume in the deformed configuration by:
+where $\mathbf{\hat{N}}_{i}$ is the unit vector along $d\mathbf{X}^{i}$. Similarly, we can compute the corresponding volume in the deformed configuration by:
 \begin{align}
 dv &= d\mathbf{x}^{(1)} \cdot d\mathbf{x}^{(2)} \times d\mathbf{x}^{(3)} \notag \\
 &=  (\mathbf{F} \cdot \mathbf{\hat{N}}_{1}) \cdot (\mathbf{F} \cdot \mathbf{\hat{N}}_{2}) \times (\mathbf{F} \cdot \mathbf{\hat{N}}_{3}) \,  dX^{(1)} dX^{(2)} dX^{(3)} \quad \text{by \eqref{chap2:dxdX}} \notag \\
 &= \det \mathbf{F} \, dX^{(1)} dX^{(2)} dX^{(3)}. \label{chap2:dv}
 \end{align}
-The determinant of $\mathbf{F}$ is called the \emph{Jacobian} and it is denoted by $J = \det \mathbf{F}$. \ON Therefore, the relation between the deformed volume $ dv $ and the undeformed volume $ dV $ may be written as: \OFF
+The determinant of $\mathbf{F}$ is called the \emph{Jacobian} and it is denoted by $J = \det \mathbf{F}$. Therefore, the relation between the deformed volume $ dv $ and the undeformed volume $ dV $ may be written as: \OFF
 \begin{equation}
 \label{chap2:dvdV}
 dv = J dV.
 \end{equation}
-\ON It is worth noting that the Jacobian \OFF  J has the physical meaning of being the local ratio of current to reference volume of a material volume element.
+It is worth noting that the Jacobian  J has the physical meaning of being the local ratio of current to reference volume of a material volume element.
 
 
 	\subsection{Change of surface}
@@ -141,7 +141,7 @@ Using \eqref{chap2:dvdV} which relates the reference and deformed volumes and re
 \begin{equation}
 J \, d\mathbf{L} \cdot d\mathbf{A} = (\mathbf{F} \, d\mathbf{L}) \cdot d\mathbf{a}.
 \end{equation}
-\ON Since \OFF this expression is valid for any vector $d\mathbf{L}$ and by using the property $\mathbf{a} \cdot \mathbf{b} = \mathbf{a} ^{T} \mathbf{b}$, \ON the sought relation between an element of area in the reference configuration $d\mathbf{A}$ and its corresponding area $d\mathbf{a}$ in the deformed configuration may be expressed as: \OFF
+Since this expression is valid for any vector $d\mathbf{L}$ and by using the property $\mathbf{a} \cdot \mathbf{b} = \mathbf{a} ^{T} \mathbf{b}$, the sought relation between an element of area in the reference configuration $d\mathbf{A}$ and its corresponding area $d\mathbf{a}$ in the deformed configuration may be expressed as: \OFF
 \begin{equation}
 \label{chap2:dadA}
 d\mathbf{a} = J \, \mathbf{F}^{-T} \, d\mathbf{A}.
@@ -204,7 +204,7 @@ By definition, $\mathbf{C}$ is a symmetric second-order tensor. The transpose of
 
 	
 	\subsection{Green-Lagrange strain tensor}
-Using \eqref{chap2:dS} and \eqref{chap2:ds}, \ON the difference in the squared lengths between the reference and the current configuration may be evaluated as: \OFF 
+Using \eqref{chap2:dS} and \eqref{chap2:ds}, the difference in the squared lengths between the reference and the current configuration may be evaluated as: 
 \begin{align}
 (ds)^2 - (dS)^2 &= d\mathbf{X} \cdot (\mathbf{C} \, d\mathbf{X}) - d\mathbf{X} \cdot d\mathbf{X} \notag \\
 &= d\mathbf{X} \cdot  (\mathbf{C} - \mathbf{I}) \, d\mathbf{X}.
@@ -217,7 +217,7 @@ so we can write:
 \begin{equation}
 (ds)^2 - (dS)^2 = 2 \, d\mathbf{X} \cdot \mathbf{E} \, d\mathbf{X}.
 \end{equation}
-By definition, the Green-Lagrange strain tensor is a symmetric second-order tensor. \ON Moreover, we observe that \OFF the change in squared lengths is zero if and only if \ON the Green-Lagrange strain tensor \OFF $\mathbf{E} = \mathbf{0}$. Using \eqref{chap2:gradient}, the Green strain tensor may be expanded as the following:
+By definition, the Green-Lagrange strain tensor is a symmetric second-order tensor. Moreover, we observe that the change in squared lengths is zero if and only if the Green-Lagrange strain tensor $\mathbf{E} = \mathbf{0}$. Using \eqref{chap2:gradient}, the Green strain tensor may be expanded as the following:
 \begin{align}
 \mathbf{E} &= \frac{1}{2} (\mathbf{F}^T \mathbf{F} - \mathbf{I}) \notag \\
 &= \frac{1}{2} \left[ (\nabla_{0} \mathbf{u} + \mathbf{I})^T (\nabla_{0} \mathbf{u} + \mathbf{I}) - \mathbf{I} \right] \notag \\
@@ -278,7 +278,7 @@ Its Cartesian components $\varepsilon_{ij}$ are the following:
 The strain quantities defined in the previous sections are non-linear expressions in terms of the mapping $\chi$ and will lead to non-linear governing equations. In solid mechanics, whenever the hypothesis is acceptable, it is common practice to assume that the displacements are small and the infinitesimal strain tensor is then used as a measure of the deformation. 
 
 \section{Stress}
-Stress is a measure of the intensity of the internal forces acting between particles of a deformable body across imaginary internal surfaces. These internal forces are produced between the particles in the body as a reaction to external forces applied on the body. The SI unit for stress is pascal (symbol $Pa$), which is equivalent to one newton (force) per square metre (unit area). As with strain, stress can be measured per unit of deformed area (section \ref{chap2:CauchyStress}) or undeformed area (sections \ref{chap2:PiolaStress1} and \ref{chap2:PiolaStress2}). In general, the stress is not uniformly distributed over the cross section of a material body, and consequently the stress at a point on a given area is different from the average stress over this entire area. Therefore, it is necessary to define the stress not over a given area but at a specific point in the body. \ON The stress at a point in a three-dimensional continuum is fully defined by \OFF nine quantities, three per plane, on three mutually perpendicular planes at the point. \ON The \emph{stress tensor} is defined as the second-order tensor which components are these nine quantities. \OFF 
+Stress is a measure of the intensity of the internal forces acting between particles of a deformable body across imaginary internal surfaces. These internal forces are produced between the particles in the body as a reaction to external forces applied on the body. The SI unit for stress is pascal (symbol $Pa$), which is equivalent to one newton (force) per square metre (unit area). As with strain, stress can be measured per unit of deformed area (section \ref{chap2:CauchyStress}) or undeformed area (sections \ref{chap2:PiolaStress1} and \ref{chap2:PiolaStress2}). In general, the stress is not uniformly distributed over the cross section of a material body, and consequently the stress at a point on a given area is different from the average stress over this entire area. Therefore, it is necessary to define the stress not over a given area but at a specific point in the body. The stress at a point in a three-dimensional continuum is fully defined by nine quantities, three per plane, on three mutually perpendicular planes at the point. The \emph{stress tensor} is defined as the second-order tensor which components are these nine quantities. 
 
 	\subsection{Cauchy stress}\label{chap2:CauchyStress}
 The Euler-Cauchy's stress principle states that on any surface (real or imaginary) that divides the body, the action of one part of the body on the other is equivalent to the system of distributed forces and couples on the surface dividing the body \citep{Truesdell60}. With that consideration in mind, let us consider a plane $S$ that passes through an arbitrary internal point $P$ which has a unit normal vector $\mathbf{n}$. This plane separates the body into two regions and we are interested in the forces applied by one region onto the other. First we will introduce the true stress, defined as the stress in the deformed configuration $\chi$ measured per unit area of the deformed configuration. The force $\Delta\mathbf{f}(\mathbf{n})$ acting on a small element of area $\Delta a$ in a continuous medium depends not only on the size of the area but also depends on the orientation of this area $\mathbf{n}$. The \emph{Cauchy stress vector} at $P$ on $S$ can be defined as:
@@ -287,7 +287,7 @@ The Euler-Cauchy's stress principle states that on any surface (real or imaginar
 \end{equation}
 This equation means that the stress vector depends on its location in the body and the orientation of the plane on which it is acting. In general, the stress vector is not perpendicular to that plane and it can be separated into two components: one component normal to the plane called \emph{normal stress} and one component tangent to the plane named \emph{shear stress}. Since $\mathbf{t}$ depends on $\mathbf{n}$ but is not in the direction of $\mathbf{n}$, it may be interesting to look into the relationship between $\mathbf{t}$ and $\mathbf{n}$. 
 
-\ON In the following we make use of a Cartesian coordinate system and we consider an infinitesimal tetrahedron as shown on \fig{chap2:fig-CauchyStress}. \OFF
+In the following we make use of a Cartesian coordinate system and we consider an infinitesimal tetrahedron as shown on \fig{chap2:fig-CauchyStress}. \OFF
 %
 \begin{figure}[ht]
 \begin{center}
@@ -342,17 +342,17 @@ The matrix form of \eqref{chap2:CauchyFormula} in a Cartesian coordinate system 
 	.
 \end{equation}
 
-The Cauchy stress tensor is used for stress analysis of material bodies experiencing small deformations. This stress is basically defined as force/(unit deformed area). The strain measure that is appropriate to use with the Cauchy stress tensor is \ON therefore \OFF the infinitesimal strain tensor (see section~\ref{chap2:infinitesimalStrainTensor}).  \ON Indeed, because the Cauchy stress tensor is defined by unit of deformed area, it is not appropriate for analysing materials undergoing large deformation where the area in the deformed configuration is often unknown. Consequently, we require alternative stress tensors based on the reference configuration. \OFF We will introduce two new stress measures: the first Piola-Kirchhoff stress tensor and the second Piola-Kirchhoff stress tensor.
+The Cauchy stress tensor is used for stress analysis of material bodies experiencing small deformations. This stress is basically defined as force/(unit deformed area). The strain measure that is appropriate to use with the Cauchy stress tensor is therefore the infinitesimal strain tensor (see section~\ref{chap2:infinitesimalStrainTensor}).  Indeed, because the Cauchy stress tensor is defined by unit of deformed area, it is not appropriate for analysing materials undergoing large deformation where the area in the deformed configuration is often unknown. Consequently, we require alternative stress tensors based on the reference configuration. We will introduce two new stress measures: the first Piola-Kirchhoff stress tensor and the second Piola-Kirchhoff stress tensor.
 
 	\subsection{First Piola-Kirchhoff stress tensor}\label{chap2:PiolaStress1}
-We know that the Cauchy stress tensor represents the current force per unit of deformed area: $d\mathbf{f} = \mathbf{t}(\mathbf{n}) da = \sigma \cdot d\mathbf{a}$. \ON We state that we can find a stress vector $\mathbf{T}$ over the area element $d\mathbf{A}$ in the underformed configuration which \OFF results in the same total force.
+We know that the Cauchy stress tensor represents the current force per unit of deformed area: $d\mathbf{f} = \mathbf{t}(\mathbf{n}) da = \sigma \cdot d\mathbf{a}$. We state that we can find a stress vector $\mathbf{T}$ over the area element $d\mathbf{A}$ in the underformed configuration which results in the same total force.
 \begin{equation}
 \label{chap2:df}
 d\mathbf{f} = \mathbf{t}(\mathbf{n}) da = \mathbf{T}(\mathbf{N}) dA.
 \end{equation} 
 The two stress vectors have the obviously the same direction but different magnitudes since they are not applied to the same area.
 
-In a similar way we defined the Cauchy stress $\sigma$ with $\mathbf{t}(\mathbf{n}) = \sigma \cdot \mathbf{n}$, we introduce a stress tensor $\mathbf{P}$ such that $\mathbf{T}(\mathbf{n}) = \mathbf{P} \cdot \mathbf{N}$. \ON We call $ \mathbf{P} $ the \emph{first Piola-Kirchhoff stress tensor} and \OFF gives the current force per unit undeformed area.
+In a similar way we defined the Cauchy stress $\sigma$ with $\mathbf{t}(\mathbf{n}) = \sigma \cdot \mathbf{n}$, we introduce a stress tensor $\mathbf{P}$ such that $\mathbf{T}(\mathbf{n}) = \mathbf{P} \cdot \mathbf{N}$. We call $ \mathbf{P} $ the \emph{first Piola-Kirchhoff stress tensor} and gives the current force per unit undeformed area.
 
 The relation between the first Piola-Kirchhoff stress tensor and the Cauchy stress tensor can be obtained as follows. From \eqref{chap2:df} we have:
 \begin{equation}
@@ -369,11 +369,11 @@ Finally we can express the first Piola-Kirchhoff stress tensor $\mathbf{P}$ as
 	
 	
 	\subsection{Second Piola-Kirchhoff stress tensor}\label{chap2:PiolaStress2}
-\ON Let us consider the stress tensor $\mathbf{S}$ resulting in the force $d\mathbf{F}$ in the undeformed area $d\mathbf{A}$ which \OFF corresponds to the force $d\mathbf{f}$ in the deformed area $d\mathbf{a}$. \ON We define this stress tensor $\mathbf{S}$ as the \emph{second Piola-Kirchhoff stress tensor}. \OFF
+Let us consider the stress tensor $\mathbf{S}$ resulting in the force $d\mathbf{F}$ in the undeformed area $d\mathbf{A}$ which corresponds to the force $d\mathbf{f}$ in the deformed area $d\mathbf{a}$. We define this stress tensor $\mathbf{S}$ as the \emph{second Piola-Kirchhoff stress tensor}. \OFF
 \begin{equation}
 d\mathbf{F} = \mathbf{S} \, d\mathbf{A}.
 \end{equation}
-\ON In other words, \OFF the second Piola-Kirchhoff stress tensor gives the transformed current force per unit undeformed area. Similar to the relationship \eqref{chap2:dxdX} between $d\mathbf{x}$ and $d\mathbf{X}$, the force $d\mathbf{f}$ is related to the force $d\mathbf{F}$ via the deformation gradient tensor:
+In other words, the second Piola-Kirchhoff stress tensor gives the transformed current force per unit undeformed area. Similar to the relationship \eqref{chap2:dxdX} between $d\mathbf{x}$ and $d\mathbf{X}$, the force $d\mathbf{f}$ is related to the force $d\mathbf{F}$ via the deformation gradient tensor:
 \begin{align}
 d\mathbf{F} &= \mathbf{F}^{-1} \, d\mathbf{f} \notag \\
 &= \mathbf{F}^{-1} \, (\mathbf{P} \, d\mathbf{A}) \notag \\
@@ -400,20 +400,20 @@ This result means that at every point in a stressed body there are at least thre
 
 
 \section{Constitutive equations}
-So far, all the relations that we have established are valid for every continuum. Indeed, \ON the derivations carried out so far made no mention of any material. \OFF Therefore, \ON we know that \OFF these relations are not sufficient to describe the response of a material to a given loading. \ON Moreover, because the stresses result from the deformation of the material, they may be expressed \OFF in terms of some measure of this deformation such as the strain. This relationship, which obviously depends on the type of material under consideration, is what we call a \emph{constitutive equation}. \ON Constitutives equations are an attempt to mathematically characterise the behaviour of materials observed from experimentals results. \OFF
+So far, all the relations that we have established are valid for every continuum. Indeed, the derivations carried out so far made no mention of any material. Therefore, we know that these relations are not sufficient to describe the response of a material to a given loading. Moreover, because the stresses result from the deformation of the material, they may be expressed in terms of some measure of this deformation such as the strain. This relationship, which obviously depends on the type of material under consideration, is what we call a \emph{constitutive equation}. Constitutives equations are an attempt to mathematically characterise the behaviour of materials observed from experimentals results. \OFF
 
-\ON Naturally, the relationship between strain and stress is conditioned by the constitution of the material of interest. Because the mechanics involved in materials can be quite complex (tissue mechanics in particular), many simplifying assumptions are required to derive a constitutive equation. In practice, a given constitutive equation can only cover a subset of the actual mechanical behaviour and could not possibly model all aspects of tissue behaviour under any type of loading accurately. For instance, some tissues behave very differently under small loads as compared to large loads. The behaviour may also depends on loading rates and damage may even occur under large loads. Moreover, not only constitutive equations need to deal with the complexity of material mechanics but they must remain simple enough to measure all the included material constants experimentally. \OFF This section will now introduce the most common constitutive models relevant to soft-tissue modelling. 
+Naturally, the relationship between strain and stress is conditioned by the constitution of the material of interest. Because the mechanics involved in materials can be quite complex (tissue mechanics in particular), many simplifying assumptions are required to derive a constitutive equation. In practice, a given constitutive equation can only cover a subset of the actual mechanical behaviour and could not possibly model all aspects of tissue behaviour under any type of loading accurately. For instance, some tissues behave very differently under small loads as compared to large loads. The behaviour may also depends on loading rates and damage may even occur under large loads. Moreover, not only constitutive equations need to deal with the complexity of material mechanics but they must remain simple enough to measure all the included material constants experimentally. This section will now introduce the most common constitutive models relevant to soft-tissue modelling. 
     
     
 	\subsection{Elasticity}	\label{chap2:elasticity}
 If under applied loads a material stores but does not dissipate energy, and it returns to its orginal shape when the loads are removed, we call that material \emph{elastic}. The work done by the stress is generally dependent on the deformation path. However, for elastic materials the stress does not depend on the path of deformation and therefore the state of stress in the deformed configuration is determined only by the state of deformation. It means that the stress does not depend on the time taken to achieve the deformation or the rate at which the state of deformation is reached. 
 
-\ON In addition, \OFF if there exists a \emph{strain energy density} function $U_0(\varepsilon)$ such that 
+In addition, if there exists a \emph{strain energy density} function $U_0(\varepsilon)$ such that 
 \begin{equation}
 \label{chap2:energy}
 \boldsymbol \sigma = \pd{U_0}{\varepsilon},
 \end{equation}
-\ON the material is said to be hyperelastic. \OFF However, for \emph{imcompressible} materials the stress tensor is not completely determined by the deformation. The hydrostatic pressure\footnote{pressure exerted by a fluid at equilibrium due to the force of gravity} affects the stress and the above equation is then written as:
+the material is said to be hyperelastic. However, for \emph{imcompressible} materials the stress tensor is not completely determined by the deformation. The hydrostatic pressure\footnote{pressure exerted by a fluid at equilibrium due to the force of gravity} affects the stress and the above equation is then written as:
 \begin{equation}
 \label{chap2:energy2}
 \boldsymbol \sigma = -p \mathbf{I} + \pd{U_0}{\varepsilon},
@@ -595,7 +595,7 @@ The neo-Hookean model provides a reasonable approximation of rubber-like materia
 			
 			
 	\subsection{Viscoelastic materials}
-\ON We know that materials for which the mechanical behaviour depends solely on the state of deformation are called elastic. In contrast, the mechanical behaviour of \emph{viscous} materials is only a function of the current rate of deformation (like honey for instance). \OFF Viscoelastic materials have elements of both of these properties and, as such, exhibit time dependent strain. Depending on the change of strain rate versus stress inside a material the viscosity can be categorised as having a linear or non-linear response. When a material exhibits a linear response it is categorised as a Newtonian material. In this case the stress is linearly proportional to the strain rate. If the material exhibits a non-linear response to the strain rate, it is categorised as a Non-Newtonian material. 
+We know that materials for which the mechanical behaviour depends solely on the state of deformation are called elastic. In contrast, the mechanical behaviour of \emph{viscous} materials is only a function of the current rate of deformation (like honey for instance). Viscoelastic materials have elements of both of these properties and, as such, exhibit time dependent strain. Depending on the change of strain rate versus stress inside a material the viscosity can be categorised as having a linear or non-linear response. When a material exhibits a linear response it is categorised as a Newtonian material. In this case the stress is linearly proportional to the strain rate. If the material exhibits a non-linear response to the strain rate, it is categorised as a Non-Newtonian material. 
 
 Viscoelastic materials present a few characteristics (see \fig{chap2:fig-visco}): 
 \begin{enumerate}
@@ -622,21 +622,21 @@ In other words, the resistance of a viscoelastic material to a given force depen
 			
 \section{Tissue characterisation}
 
-\ON If continuum mechanics does teach us how to model idealised continuous structures, modelling soft tissues remains very complex. Indeed, in practice soft tissues are complex structures: they do not consist of a simple continuous piece of material, they are made of various constituents. Mechanical properties of soft tissues not only depends on the properties of these constituents, but how they are arranged relative to each other. This elaborate arrangement often leads to material properties for the global structure that are non-homogenous, non-linear, anisotropic and even viscoelastic.
+If continuum mechanics does teach us how to model idealised continuous structures, modelling soft tissues remains very complex. Indeed, in practice soft tissues are complex structures: they do not consist of a simple continuous piece of material, they are made of various constituents. Mechanical properties of soft tissues not only depends on the properties of these constituents, but how they are arranged relative to each other. This elaborate arrangement often leads to material properties for the global structure that are non-homogenous, non-linear, anisotropic and even viscoelastic.
 
-As we know, \OFF the constitutive equations are used to define idealised materials, which represent different aspects of the mechanical behaviour of natural materials. \ON However, in practice, \OFF no real material is known to behave exactly as one of these mathematical models. In particular, few biological tissues obey Hooke's law. If because of their high stiffness (and therefore small deformations) cortical bones are accurately described by a linear model, Hooke's law becomes insufficient to describe the mechanical behaviour of the liver with precision for instance. In fact, in vivo experiments conducted by \cite{Melvin73} suggest that mechanical behaviour of liver is non-linear and viscoelastic. The brain also appears to be non-linear and viscoelastic \citep{Miller97}. The liver has the additional property of anisotropy, more precisely, it is transversely isotropic according to \cite{Chui07}. 
+As we know, the constitutive equations are used to define idealised materials, which represent different aspects of the mechanical behaviour of natural materials. However, in practice, no real material is known to behave exactly as one of these mathematical models. In particular, few biological tissues obey Hooke's law. If because of their high stiffness (and therefore small deformations) cortical bones are accurately described by a linear model, Hooke's law becomes insufficient to describe the mechanical behaviour of the liver with precision for instance. In fact, in vivo experiments conducted by \cite{Melvin73} suggest that mechanical behaviour of liver is non-linear and viscoelastic. The brain also appears to be non-linear and viscoelastic \citep{Miller97}. The liver has the additional property of anisotropy, more precisely, it is transversely isotropic according to \cite{Chui07}. 
 
-These various mechanical aspects of materials make realistic modelling of anatomical structures fairly challenging. \ON The development of algorithms that allow the interactive computation of the deformation of soft tissues is very difficult. Therefore, \OFF in medical simulation, where modelling must occur in real-time or close to real-time, very often simplifications have to be made \ON and only the key characteristics of the material that are relevant for the objective of the simulation are considered and simulated. Experiments have to be performed to check the relevancy of the chosen constitutive model and to determine its parameters. At last, an optimised implementation of the model is required to perform in real-time.
+These various mechanical aspects of materials make realistic modelling of anatomical structures fairly challenging. The development of algorithms that allow the interactive computation of the deformation of soft tissues is very difficult. Therefore, in medical simulation, where modelling must occur in real-time or close to real-time, very often simplifications have to be made and only the key characteristics of the material that are relevant for the objective of the simulation are considered and simulated. Experiments have to be performed to check the relevancy of the chosen constitutive model and to determine its parameters. At last, an optimised implementation of the model is required to perform in real-time.
 
-\OFF One of the main obstacles in developing realistic organ models is the lack of data on the material properties of live organ tissues. Measuring and characterising in vivo organ properties is a highly challenging task, but is a requirement for realistic organ modelling. Indeed, as we have seen in sections \ref{chap2:orthotropic} and \ref{chap2:non-linear}, constitutive equations require the experimental determination of material constants. Organ models with incorrect material properties will affect training in surgical simulator systems \citep{Sedef06}. \ON Some devices exist for inert materials which allow the measure of Young's modulus, shear modulus and Poisson's ratio. However, the same measures are much more difficult to obtain for living tissues. In particular, experiments confirmed the important differences between in vitro and in vivo measures, as demonstrated by \cite{Kerdok06} with the viscoelastic properties of the liver for instance. Absence of blood perfusion and difference in temperature are two of most important factors to explain these differences. Obviously, in vivo constraints are very heavy and developing experiments and devices for in vivo measures of soft tissue is a very complex task. The preparation of samples and their testings (tensile, compression, thermal effects, rate of loading etc.) are not straightforward procedures.
+One of the main obstacles in developing realistic organ models is the lack of data on the material properties of live organ tissues. Measuring and characterising in vivo organ properties is a highly challenging task, but is a requirement for realistic organ modelling. Indeed, as we have seen in sections \ref{chap2:orthotropic} and \ref{chap2:non-linear}, constitutive equations require the experimental determination of material constants. Organ models with incorrect material properties will affect training in surgical simulator systems \citep{Sedef06}. Some devices exist for inert materials which allow the measure of Young's modulus, shear modulus and Poisson's ratio. However, the same measures are much more difficult to obtain for living tissues. In particular, experiments confirmed the important differences between in vitro and in vivo measures, as demonstrated by \cite{Kerdok06} with the viscoelastic properties of the liver for instance. Absence of blood perfusion and difference in temperature are two of most important factors to explain these differences. Obviously, in vivo constraints are very heavy and developing experiments and devices for in vivo measures of soft tissue is a very complex task. The preparation of samples and their testings (tensile, compression, thermal effects, rate of loading etc.) are not straightforward procedures.
 
 A non-invasive technique called \emph{elastography} was introduced recently to measure Young's modulus. The first device based on this technique was commercialised by Echosens in 2003 \citep{Bastard09}. The techniques of elastography may be classified in two categories: static and dynamic elastography. In static elastography, a quasi-static constraint is applied onto the surface of the tissue and its deformation is measured. If the constraint is known, the Young's modulus may be obtained via Hooke's law. Dynamic elastography relies on shear waves propagation in the tissue. Shear waves are generated by an acoustic driver and the displacement caused by the waves is determined by ultrasounds, magnetic resonance imaging (MRI) or optical tomography. As an example, magnetic resonance elastography is a quantitative technique which allow the generation of maps describing the shear modulus within the tissues (see \fig{chap2:fig-elastography_liver}). However, elastography is still in development and only a few techniques of elastography are actually used clinically. In the future, elastography might be able to provide a map of the material properties of tissues which may be used as input data for any computational model. This technique would be a step towards patient-specific simulation. As diseased organs are often much stiffer than healthy structures, the integration of these data would greatly increase the fidelity of the simulation.
 %
 \begin{figure}[ht]
 \centering
 \includegraphics[width=12cm]{chapter2/elastography_liver.pdf}
-\caption {\ON Magnetic resonance elastography of the liver in a healthy volunteer and a patient with cirrhosis. Image courtesy of \cite{Talwalkar07}.}
+\caption {Magnetic resonance elastography of the liver in a healthy volunteer and a patient with cirrhosis. Image courtesy of \cite{Talwalkar07}.}
 \label{chap2:fig-elastography_liver}
 \end{figure}
 
-Yet, precised characterisation of soft tissue is not sufficient to achieve a good simulation. The development of a simplified or optimised version of the model suitable for real-time computation is also mandatory. \OFF As we will see in chapter \ref{chap4} and \ref{chap7}, numerous models are available in the literature to describe physics of objects, from fairly simple and naive approaches to more complex and thorough representations. However, the most common technique to solve equations of continuum mechanics is the finite element method. Moreover, since the two main contributions of this thesis deal with finite element methods formulations, the general principles of this method will be detailed in the next section. 
+Yet, precised characterisation of soft tissue is not sufficient to achieve a good simulation. The development of a simplified or optimised version of the model suitable for real-time computation is also mandatory. As we will see in chapter \ref{chap4} and \ref{chap7}, numerous models are available in the literature to describe physics of objects, from fairly simple and naive approaches to more complex and thorough representations. However, the most common technique to solve equations of continuum mechanics is the finite element method. Moreover, since the two main contributions of this thesis deal with finite element methods formulations, the general principles of this method will be detailed in the next section. 

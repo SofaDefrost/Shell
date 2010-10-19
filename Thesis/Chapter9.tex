@@ -115,7 +115,7 @@ where $\boldsymbol\chi$ is the material matrix, the substitution of $\textbf{b}$
 \textbf{K}_e = (\textbf{C}^{-1})^T \int_v \textbf{D}^{T} \boldsymbol\chi \textbf{D} dV \, \textbf{C}^{-1}.
 \end{equation} 
 
-Similarly to the membrane stiffness matrix, the bending stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element: $\textbf{K} = \textbf{R} \textbf{K}_e \textbf{R}^{T}$.
+Similarly to the membrane stiffness matrix, the bending stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element: $\textbf{K} = \textbf{R} \textbf{K}_e \textbf{R}^{T}$. While the method to numerically compute the integral will be reviewed section \ref{chap9:numericalIntegration}, we first carry on with the theory by introducing how the contacts are handled.  
 
 
 \section{Mechanical interactions with the curved surface of shells}	\label{chap9:interactions}
@@ -138,7 +138,7 @@ The main difficulty is to convert the normal component of the force applied to t
 
 \section{Implementation}
 
-The co-rotational shell formulation has been successfully implemented as a Force Field into the open-source framework SOFA \citep{Allard07}. A description of SOFA's architecture was given in section \ref{chap6:SOFA}. We will now review the key points of the implementation.
+The co-rotational shell formulation has been successfully implemented as a Force Field component into the open-source framework SOFA \citep{Allard07}. A description of SOFA's architecture was given in section \ref{chap6:SOFA}. We will now review the key points of the implementation.
 
 	\subsection{Evaluation of displacements}
 The computation of the stiffness matrix, and subsequently the internal forces, starts with the measure of the displacements $\left\{u_1 u_2 \ldots u_9 \right\} $ for every element. As defined by \eqref{chap9:ui}, we need to measure the displacement along the z axis and the rotations around local x and y axes for each vertex. For \cite{Przemieniecki85}, the deflection z is measured in the global frame. But in a co-rotational formulation, a local frame is attached to each triangle and used to compute displacements and forces. In this local frame (formed from the 3 vertices) the deflection is therefore always null (hence, $ u_1, u_4, u_7 $ are null). To evaluate the remaining rotations, we first associate a quaternion at each vertex which embodies its frame (or its orientation). In mathematics, quaternions are an extension of complex numbers and may be written as follows:
@@ -151,46 +151,46 @@ q = w + (x, y, z) = \cos (\frac{\alpha}{2}) + \mathbf{u} \sin (\frac{\alpha}{2})
 \end{equation}
 where $ \mathbf{u} $ is a unit vector and $ \alpha $ a scalar. If we denote by $ \mathbf{v} $ a vector in $\field{R}^3$, it can be shown that the quaternion product $ q \mathbf{v} q^{-1} $ yields a vector which is the rotation of $ \mathbf{v} $ by an angle $ \alpha $ around the axis $ \mathbf{u} $. Quaternions require less storage than rotation matrices and are known to be more numerically stable. 
 
-From there, our approach to measure the rotations around local x and y axes is simple. At runtime and for each vertex, we compute the rotation that we need to transform the z axis of the triangle's frame into the z axis of the vertex's frame (see listing \ref{chap9:qDiffZ}). The differences with the same quantities computed for the rest position during the initialisation lead to the desired displacements. 
+From there, our approach to measure the rotations around local x and y axes is simple. At runtime and for each vertex, we compute the rotation that we need to transform the z axis of the triangle's frame into the z axis of the vertex's frame. The differences with the same quantities computed for the rest position during the initialisation lead to the desired displacements. 
+% (see listing \ref{chap9:qDiffZ})
+%\begin{lstlisting}[caption={[Method to compute the rotation between two quaternions]Method used to compute the rotation of the z axis between the frames embodied by two quaternions},label={chap9:qDiffZ},frame=shadowbox,rulesepcolor=\color{black}]
+%inline Quat qDiffZ(const Quat& Qvertex, const Quat& Qtriangle)
+%{
+%    // dQ is the quaternion that embodies the rotation between 
+%    // the z axis of the vertex and the z axis of the local 
+%    // triangle's frame (in local space)
+%    Quat dQ;
 %
-\begin{lstlisting}[caption={[Method to compute the rotation between two quaternions]Method used to compute the rotation of the z axis between the frames embodied by two quaternions},label={chap9:qDiffZ},frame=shadowbox,rulesepcolor=\color{black}]
-inline Quat qDiffZ(const Quat& Qvertex, const Quat& Qtriangle)
-{
-    // dQ is the quaternion that embodies the rotation between 
-    // the z axis of the vertex and the z axis of the local 
-    // triangle's frame (in local space)
-    Quat dQ;
-
-    // u = z axis of the triangle's frame (in local space)
-    Vec3d u(0,0,1);
-
-    // v = z axis of the vertex's frame is expressed into 
-    // world space
-    Vec3d v = Qvertex.rotate(Vec3d(0.0, 0.0, 1.0));
-    
-    // v0 = v expressed into local triangle's frame
-    Vec3d v0 = Qtriangle.rotate(v);
-
-    // Axis of rotation between the 2 vectors u and v lies 
-    // into the plan of the 2 vectors
-    Vec3d axis = cross(u, v0);
-    
-    // Shortest angle between the 2 vectors
-    double angle = acos(dot(u, v0));
-
-    // Quaternion associated to this axis and this angle
-    if (fabs(angle)>1e-6)
-    {
-        dQ.axisToQuat(axis,angle);
-    }
-    else
-    {
-        dQ = Quat(0,0,0,1);
-    }
-
-    return dQ;
-}
-\end{lstlisting}
+%    // u = z axis of the triangle's frame (in local space)
+%    Vec3d u(0,0,1);
+%
+%    // v = z axis of the vertex's frame is expressed into 
+%    // world space
+%    Vec3d v = Qvertex.rotate(Vec3d(0.0, 0.0, 1.0));
+%    
+%    // v0 = v expressed into local triangle's frame
+%    Vec3d v0 = Qtriangle.rotate(v);
+%
+%    // Axis of rotation between the 2 vectors u and v lies 
+%    // into the plan of the 2 vectors
+%    Vec3d axis = cross(u, v0);
+%    
+%    // Shortest angle between the 2 vectors
+%    double angle = acos(dot(u, v0));
+%
+%    // Quaternion associated to this axis and this angle
+%    if (fabs(angle)>1e-6)
+%    {
+%        dQ.axisToQuat(axis,angle);
+%    }
+%    else
+%    {
+%        dQ = Quat(0,0,0,1);
+%    }
+%
+%    return dQ;
+%}
+%\end{lstlisting}
 
 
 %	\subsection{Inversion of matrix $ \mathbf{C} $}
@@ -202,7 +202,7 @@ inline Quat qDiffZ(const Quat& Qvertex, const Quat& Qtriangle)
 %\TODO{add figure with the two different coordinate system}
 
 
-	\subsection{Numerical integration}
+	\subsection{Numerical integration} \label{chap9:numericalIntegration}
 In practice, the integration of the integral in \eqref{chap9:Ke} must be carried out numerically using Gaussian quadrature, a numerical technique which allows to calculate the value of an integral. The Gaussian quadrature states that the integral of a function $ f $ over the area $ A $ of a triangular surface may be evaluated as a weighted sum of function values at specific points within the area of integration \citep{Cowper73}. In other words, we have
 \begin{equation}
 \int_{A} f dA = A \sum_{i=1}^n w_i f_i,
@@ -234,7 +234,7 @@ Let us explain the concept of \emph{mappings} and \emph{mechanical mappings} in 
 x_1 &=&\JNL_1(x_0)\\ 
 v_1 &=& J_1 v_0
 \end{eqnarray*}
-When the vertices and the DOF are the same, the mapping is the identity. Matrix $J_1 = \frac{\partial x_1}{\partial x_0}$ encodes the linear relation between the DOF velocities and the shape velocities. Due to linearity, the same relation holds on elementary displacements $dx$. It also holds on accelerations, with an additional offset due to velocities when the position mapping \JNL is nonlinear. In most cases, operators \JNL~ and \J~ are the same, but in the case of rigid bodies, \JNL~ is nonlinear with respect to $x$ and it can not be written as a matrix.
+When the vertices and the DOF are the same, the mapping is the identity. Matrix $J_1 = \frac{\partial x_1}{\partial x_0}$ encodes the linear relation between the DOF velocities and the shape velocities. Due to linearity, the same relation holds on elementary displacements $dx$. It also holds on accelerations, with an additional offset due to velocities when the position mapping \JNL is non-linear. In most cases, operators \JNL~ and \J~ are the same, but in the case of rigid bodies, \JNL~ is nonlinear with respect to $x$ and it can not be written as a matrix.
 
 When shapes collide, additional geometry can be necessary to model the contact. For instance, when an edge intersects another one, a contact force is applied to the intersection points. These points are defined by their barycentric coordinates with respect to their edge vertices. Other relations can be used, depending on the kind of geometrical primitives in contact. This additional geometry requires another geometrical layer connected to the shape by a mapping, as illustrated in \fig{chap9:fig-mappings}.
 
@@ -294,7 +294,7 @@ It is worth noting that a high resolution mesh may be obtained by recursively su
 If a specific rendering technique was developed to visualise the curved shape of the shells, it is also essential to interact with it. Indeed, as explained section \ref{chap9:interactions}, the force applied onto the curved surface of the shell must be processed by distributing the linear force received on the bent surface between the three vertices of the triangle. Consequently, the mapping previously described is extented to a mechanical mapping and two additional methods need to be implemented: applyJ and applyJT. 
 %
 \begin{itemize}
-\item \textbf{applyJ()} encodes the linear relation between the DOF velocities and the shape velocities as described in section \ref{chap9:mappings}. applyJ() basically embodies the same computations than apply() except that the vector of displacement $\mathbf{u}$ is different. Whereas the local displacement in rotation is measured from the positions to create the vector $\mathbf{u}$, this time the vector is directly obtained from the angular velocities we had at each vertex (once converted into the local frame). We therefore have a relation between the angular velocities at each vertex and the velocity of the deflection in the direction normal to each triangle. 
+\item \textbf{applyJ()} encodes the linear relation between the DOF velocities and the shape velocities as described in section \ref{chap9:mappings}. applyJ() basically embodies the same computations than apply() except that the vector of displacement $\mathbf{u}$ is different. Whereas the local displacement in rotation is measured from the quaternions to create the vector $\mathbf{u}$, this time the vector is directly obtained from the angular velocities we had at each vertex (once converted into the local frame). We therefore have a relation between the angular velocities at each vertex and the velocity of the deflection in the direction normal to each triangle. 
 \item \textbf{applyJT()} must convert the contact forces applied to the contact points to forces applied to the DOF. If the linear forces are easily distributed between DOFs using barycentric coordinates, it also encodes the relation between the vertical force $ \mathbf{F} $ applied onto the bent surface of the plate and the torque at each DOF. We start by retrieving the normal component of the applied force vector $F_{\mathrm{z}}$. We project the application point of the force into the triangle's plane and compute its local coordinates $(x,y)$. We create the polynom $P$ such as 
 %
 \begin{equation}
@@ -313,7 +313,7 @@ In \cite{Przemieniecki85}, the rest and initial configurations are both assumed 
 
 
 \subsection{Possible extension: parallel implementation on GPU}	\label{chap9:GPU}
-If we look closely at all the steps required to compute the local stiffness matrix for each element (see section \ref{chap9:summary} for a summary), we can notice that the operations carried out for a given shell element are independent of the other elements. This feature makes our co-rotational shell FEM implementation highly parallelisable. One potential problem however, is the assembly of the global stiffness matrix. Indeed, in a parallel implementation, many elements are processed concurrently. Inevitably, two elements sharing a node may be processed in the same time and may therefore try to both write their element contribution into the exact same location in the global stiffness matrix, and therefore the same location in GPU's memory. As with the TLED implementation described in chapter \ref{chap6}, there is two solutions. The first one would be to re-order the elements organisation so that no concurrent writes will occur. Unfortunately, this re-organisation of the element reduces the number of elements that can be processed in parallel. The second solution would be to take advantage of a new GPU NVIDIA architecture called Fermi, which added the capability atomic writes for floats. We recall that the write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, the concurrent writes are simply serialised in hardware. Obviously, an additional overhead is to be expected. 
+If we look closely at all the steps required to compute the local stiffness matrix for each element (see section \ref{chap9:summary} for a summary), we can notice that the operations carried out for a given shell element are independent of the other elements. This feature makes our co-rotational shell FEM implementation highly parallelisable. One potential problem however, is the assembly of the global stiffness matrix. Indeed, in a parallel implementation, many elements are processed concurrently (that is, at the same time). Inevitably, two elements sharing a node may be processed in the same time. Therefore, they may try to both write their element contribution into the exact same location in the global stiffness matrix, and therefore the same location in GPU's memory. As with the TLED implementation described in chapter \ref{chap6}, there is two solutions. The first one would be to re-order the elements organisation so that no concurrent writes will occur. Unfortunately, this re-organisation of the element reduces the number of elements that can be processed in parallel. The second solution would be to take advantage of a new GPU NVIDIA architecture called Fermi, which added the capability atomic writes for floats. We recall that the write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, the concurrent writes are simply serialised in hardware. Obviously, an additional overhead is to be expected. 
 
 To conclude on a possible parallelisation of the algorithm, an optimal GPU implementation is always a challenge to achieve. One needs to choose wisely the type of memory to be used for each variable and optimise the access patterns. However, it seems that there is no major obstacle to a GPU implementation and our co-rotation shell FEM will eventually be ported to GPU. 
 
@@ -321,7 +321,7 @@ To conclude on a possible parallelisation of the algorithm, an optimal GPU imple
 
 
 
-\section{Validation}
+\section{Comparison with analytical results}
 
 We compared our model with some theoretical results reported by \cite{Zhongnian86} to assess its quality in modelling bending. The test that we carried out uses a square shape mesh clamped on all four edges. A uniform load is then applied on the square and the maximum deflection $z_{max}$ at the centre can be calculated. Several simulations are performed with increasing load values $q$ (ranging from $1$ to 5 N/m$^2$) and the following parameters were used: 
 \begin{itemize}
@@ -351,10 +351,6 @@ Using these particular values it can be shown that $z_{max} = 0.126\,q$. The max
 	\caption{Comparison of our shell model with theoretical results on the bending of a square plate. An error of less than $1\,\%$ was found between our simulation and theoretical results.}
 	\label{chap9:tab-results}
 \end{table}
-
-\bigskip
-
-\TODO{maybe a bit short for a so-called validation...}
 
 
 \section{Application to implant deployment simulation in cataract surgery}

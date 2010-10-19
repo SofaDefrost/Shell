@@ -1,11 +1,11 @@
-\chapter{Modelling the deformation of solid objects in real-time}
+\chapter[Modelling the deformation of solid objects in real-time][Modelling solid objects in real-time]{Modelling the deformation of solid objects in real-time}
 \label{chap4}
 \begin{shortAbstract}
 Modelling the deformation of solid organs is a crucial problem in medical simulation. If the finite element method is classicaly used in mechanical engineering for its ability to solve the equations of continuum mechanics fairly accurately, its development in medical simulation was more progressive. The main reason for this is that the finite element method is computationally demanding and not easily compatible with time constraints required in interactive simulation. Therefore, other methods were developed to allow faster computations, at the cost of larger approximations of course. Over time, along with the increase in computational power, methods became more elaborate and less approximative. These different approaches may be grouped into three main categories: (1) geometrically based techniques, (2) approaches physically motivated and (3) methods actually based on the equations of continuum mechanics. In this chapter, we will review the most classic methods applied to modelling of solid objects with a particular emphasis on medical simulation. 
 \end{shortAbstract}
 
 
-\section{Introduction: the problematic}
+\section{Introduction: the problem}
 
 %At the beginning of computer simulation, users were immersed into environments that were merely a decor. If it could virtually take the user somewhere else, a static scene quickly showed its limits. Indeed, in a real-life environment many objects are in motion, interacting with each others. Therefore, in order to increase the fidelity of simulations, elements of physics were progressively added. It could be as simple as adding motion to clouds in a flight simulator for instance. But by improving the dynamism of the scene, the simulation appears more natural to users. Over time, with the increase of computers' computational power, objects stopped being all rigid and simulators started taking laws of physics into account. In other words, objects became deformable. If this took the realism a step further, the demands in computational power were multiplied. Simulators eventually faced a challenge: they had to weight the desired degree of realism against the computational power at their disposal. 
 
