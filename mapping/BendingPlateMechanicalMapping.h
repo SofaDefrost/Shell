@@ -96,6 +96,8 @@ public:
     void reinit();
     virtual void draw();
 //    virtual void drawVisual();
+
+//    Vec3 direction;
     
     virtual ~BendingPlateMechanicalMapping();
     

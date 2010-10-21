@@ -62,6 +62,14 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
 {
 //    std::cout << "BendingPlateMechanicalMapping::init()" << std::endl;
 
+//    direction = Vec3(-0.00155518, -0.00075966, -0.00023758);
+//    direction /= 2;
+//    std::cout << "incremental direction: " << direction << std::endl;
+//    direction.normalize();
+//    std::cout << "normalised direction: " << direction << std::endl;
+
+
+
     // Retrieves topology
     inputTopo = this->fromModel->getContext()->getMeshTopology();
     outputTopo = this->toModel->getContext()->getMeshTopology();
@@ -621,7 +629,7 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
 
 
 // --------------------------------------------------------------------------------------
-// Barycentric coefficients of point p in triangle whose vertices are indexed by (a, b, c)
+// Barycentric coefficients of point p in triangle whose vertices are a, b and c
 // --------------------------------------------------------------------------------------
 template <class BaseMapping>
 void BendingPlateMechanicalMapping<BaseMapping>::computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c)
@@ -986,7 +994,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv&
 
 
 template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::MatrixDeriv& /*out*/, const typename Out::MatrixDeriv& /*in*/ )
+void BendingPlateMechanicalMapping<BaseMapping>::applyJT(  typename In::MatrixDeriv& /*out*/, const typename Out::MatrixDeriv& /*in*/ )
 {
 
 }
