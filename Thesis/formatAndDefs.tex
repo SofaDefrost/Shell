@@ -111,35 +111,35 @@ urlcolor=linkcol % Color for linked URLs
 \newcommand{\field}[1]{\mathbb{#1}}			% For sets of reals, complex etc. 
   
 % For snipsets of code
-\usepackage{listings}
-\usepackage{textcomp}
-\definecolor{listinggray}{gray}{0.9}
-\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
-\lstset{
-	language=C++,
-	keywordstyle=\bfseries\ttfamily\color[rgb]{0,0,1},
-	identifierstyle=\ttfamily,
-	commentstyle=\color[rgb]{0.133,0.545,0.133},
-	stringstyle=\ttfamily\color[rgb]{0.627,0.126,0.941},
-	showstringspaces=false,
-	basicstyle=\small,
-	numberstyle=\footnotesize,
-	numbers=left,
-	stepnumber=1,
-	numbersep=10pt,
-	tabsize=2,
-	breaklines=true,
-	prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
-	breakatwhitespace=false,
-	aboveskip={1.5\baselineskip},
-  columns=fixed,
-  upquote=true,
-  extendedchars=true,
- frame=single,
-emph={Vec3d,Quat},
-emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
-% backgroundcolor=\color{lbcolor},
-}
+%\usepackage{listings}
+%\usepackage{textcomp}
+%\definecolor{listinggray}{gray}{0.9}
+%\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+%\lstset{
+%	language=C++,
+%	keywordstyle=\bfseries\ttfamily\color[rgb]{0,0,1},
+%	identifierstyle=\ttfamily,
+%	commentstyle=\color[rgb]{0.133,0.545,0.133},
+%	stringstyle=\ttfamily\color[rgb]{0.627,0.126,0.941},
+%	showstringspaces=false,
+%	basicstyle=\small,
+%	numberstyle=\footnotesize,
+%	numbers=left,
+%	stepnumber=1,
+%	numbersep=10pt,
+%	tabsize=2,
+%	breaklines=true,
+%	prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+%	breakatwhitespace=false,
+%	aboveskip={1.5\baselineskip},
+%  columns=fixed,
+%  upquote=true,
+%  extendedchars=true,
+% frame=single,
+%emph={Vec3d,Quat},
+%emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
+%% backgroundcolor=\color{lbcolor},
+%}
 
 % Two definitions for chapter 9
 \newcommand{\JNL}{\ensuremath{\mathcal{J}}}     % positions
@@ -200,7 +200,19 @@ emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
 \makeevenhead{headings}{\thepage}{}{\slshape\leftmark} 
 \makeoddhead{headings}{\slshape\rightmark}{}{\thepage} 
 \makeheadrule{headings}{\textwidth}{0.4pt}
-\makepsmarks{headings}{%
+
+\addtopsmarks{headings}{% 
+\nouppercaseheads % added at the beginning
+}{%
+ \createmark{subsection}	{right}{shownumber}{}{. \space} 
+ \createmark{subsubsection}{right}{shownumber}{}{. \space}
+}
+ % use the new settings 
+ \pagestyle{headings} 
+
+
+
+%\makepsmarks{headings}{%
 %	\def\chaptermark##1{%
 %		\markboth{\MakeUppercase{%
 %			\ifnum\c@secnumdepth > \m@ne 
@@ -215,12 +227,12 @@ emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
 %				\thesection. \ % 
 %			\fi
 %			##1}}} 
-	\def\tocmark{\markboth{\MakeUppercase{\contentsname}}{}} 
-	\def\lofmark{\markboth{\MakeUppercase{\listfigurename}}{}} 
-	\def\lotmark{\markboth{\MakeUppercase{\listtablename}}{}} 
-	\def\bibmark{\markboth{\MakeUppercase{\bibname}}{}} 
-	\def\indexmark{\markboth{\MakeUppercase{\indexname}}{}} 
-	\def\glossarymark{\markboth{\MakeUppercase{\glossaryname}}{}}}
+%	\def\tocmark{\markboth{\MakeUppercase{\contentsname}}{}} 
+%	\def\lofmark{\markboth{\MakeUppercase{\listfigurename}}{}} 
+%	\def\lotmark{\markboth{\MakeUppercase{\listtablename}}{}} 
+%	\def\bibmark{\markboth{\MakeUppercase{\bibname}}{}} 
+%	\def\indexmark{\markboth{\MakeUppercase{\indexname}}{}} 
+%	\def\glossarymark{\markboth{\MakeUppercase{\glossaryname}}{}}}
 
 
 % ------------------------------------------------------------------------------------------------------------------
@@ -311,10 +323,10 @@ emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
 % ------------------------------------------------------------------------------------------------------------------
 
 % For comments and TODO (merely writes in colour)
-\newcommand{\OC}[1]{\color{blue}{\textnormal{(#1)}} \color{black}}
-\newcommand{\TODO}[1]{\color{red}{TODO: #1} \color{black}}
-\newcommand{\ON}{\color{blue}}
-\newcommand{\OFF}{\color{black}}
+%\newcommand{\OC}[1]{\color{blue}{\textnormal{(#1)}} \color{black}}
+%\newcommand{\TODO}[1]{\color{red}{TODO: #1} \color{black}}
+%\newcommand{\ON}{\color{blue}}
+%\newcommand{\OFF}{\color{black}}
 
 % To display current time (\currenttime) and change format of date
 \usepackage[dayofweek]{datetime}
@@ -325,17 +337,17 @@ emphstyle=\bfseries\ttfamily\color[rgb]{0,0,1}
 \mydateformat
 
 % Watermarks the document
-\usepackage{type1cm,eso-pic}
-\makeatletter
-\AddToShipoutPicture{%
-\setlength{\@tempdimb}{.5\paperwidth}%
-\setlength{\@tempdimc}{.5\paperheight}%
-\setlength{\unitlength}{1pt}%
-\put(\strip@pt\@tempdimb,\strip@pt\@tempdimc){%
-\makebox(0,0){\rotatebox{45}{\textcolor[gray]{0.9}%
-{\fontsize{3cm}{3cm}\selectfont{Draft Version}}}}%
-\makebox(-500,-0){\rotatebox{90}{\textcolor[gray]{0.9}%
-{\fontsize{0.7cm}{0.7cm}\selectfont{Olivier Comas - \today ~at \currenttime}}}}
-}%
-}
-\makeatother
+%\usepackage{type1cm,eso-pic}
+%\makeatletter
+%\AddToShipoutPicture{%
+%\setlength{\@tempdimb}{.5\paperwidth}%
+%\setlength{\@tempdimc}{.5\paperheight}%
+%\setlength{\unitlength}{1pt}%
+%\put(\strip@pt\@tempdimb,\strip@pt\@tempdimc){%
+%\makebox(0,0){\rotatebox{45}{\textcolor[gray]{0.9}%
+%{\fontsize{3cm}{3cm}\selectfont{Draft Version}}}}%
+%\makebox(-500,-0){\rotatebox{90}{\textcolor[gray]{0.9}%
+%{\fontsize{0.7cm}{0.7cm}\selectfont{Olivier Comas - \today ~at \currenttime}}}}
+%}%
+%}
+%\makeatother

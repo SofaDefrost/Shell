@@ -1,4 +1,4 @@
-\chapter[Background in continuum mechanics for soft-tissue modelling][Background in continuum mechanics]{Background in continuum mechanics for soft-tissue modelling}
+\chapter{Background in continuum mechanics for soft-tissue modelling}
 \label{chap2}
 \begin{shortAbstract}
 As seen in the previous chapter, realistic modelling of organ deformation is a challenging research field that opens the door to new clinical applications including: medical training and rehearsal systems, patient-specific planning of surgical procedures and per-operative guidance based on simulation. In all these cases the clinician needs fast updates of the deformation model to obtain a real-time display of the computed deformations. If for medical training devices the haptic feedback from touching organs merely needs to feel real, the accuracy of the information provided to the clinician in the cases of planning or per-operative guidance is crucial. Therefore, a substantial comprehension of the mechanics involved and a knowledge of the physical properties of anatomical structures are both mandatory in our quest to realistically model the deformation of organs. This chapter will start by introducing the main concepts of continuum mechanics that are fundamental to study the mechanical response of organs. It will then present mathematical models able to describe the different mechanical aspects of materials and briefly discuss the mechanical characterisation of tissues.
@@ -14,7 +14,7 @@ Modelling anatomical structures requires an understanding of the deformation and
 
 
 \section{Description of motion} 	\label{chap2:descriptionMotion}
-Let us consider a body $\textbf{\textit{B}}$ of known geometry in a three-dimensional Euclidian space $\field{R}^3$. For a given geometry and loading, $\textbf{\textit{B}}$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. In contrast, a change in shape and\slash or size of the body from an initial configuration $\kappa_{0}$ to a new configuration $\kappa$ is called a deformation. This new configuration $\kappa$ may be designated by the \emph{current} or \emph{deformed configuration}. \OFF
+Let us consider a body $\textbf{\textit{B}}$ of known geometry in a three-dimensional Euclidean space $\field{R}^3$. For a given geometry and loading, $\textbf{\textit{B}}$ will undergo a set of macroscopic changes which is called \emph{deformation}. The region of space occupied by the body at a given time $t$ is termed a \emph{configuration}. A change in the configuration of a continuum body results in a displacement. The displacement of a body has two components: a rigid-body displacement and a deformation. A rigid-body displacement consists of a simultaneous translation and rotation of the body without changing its shape or size. In contrast, a change in shape and\slash or size of the body from an initial configuration $\kappa_{0}$ to a new configuration $\kappa$ is called a deformation. This new configuration $\kappa$ may be designated by the \emph{current} or \emph{deformed configuration}. 
 
 Let us now consider a given particle of the body that we call $X$. What we will call particle in the following is in fact an infinitesimal volume of material. We denote the position it occupies in the initial configuration $\mathbf{X}$ and note its position in the deformed configuration $\mathbf{x}$, both expressed in the chosen frame of reference. The mapping $\chi$ defined as the following:
 \begin{equation}
@@ -24,19 +24,19 @@ Let us now consider a given particle of the body that we call $X$. What we will 
 is called the \emph{deforming mapping} of the body $\textbf{\textit{B}}$ from $\kappa_{0}$ to $\kappa$. When analysing the deformation of a continuous body, it is necessary to describe the evolution of configurations through time. Its mathematical description follows one of the two approaches: the material description or the spatial description. The material description is known as \emph{Lagrangian description} whereas the spatial description is called \emph{Eulerian description}. These two approaches are detailed next. 
 
 	\subsection{Lagrangian description}	
-In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. Consequently, the current coordinates ($\mathbf{x} \in \kappa$) depend on the reference coordinates ($\mathbf{X} \in \kappa_{0}$): \OFF
+In the Lagrangian description, the position and physical properties of the particles are referred to a reference configuration $\kappa_{R}$, often chosen to be the undeformed configuration $\kappa_{0}$. Consequently, the current coordinates ($\mathbf{x} \in \kappa$) depend on the reference coordinates ($\mathbf{X} \in \kappa_{0}$): 
 \begin{equation}
 \textbf{x} = \chi(\textbf{X}, t), \quad \chi(\textbf{X}, 0) = \textbf{X},
 \end{equation}
-and a typical variable $\phi$ defined over the body is expressed in terms of the coordinates $\mathbf{X}$ and time $t$: \OFF
+and a typical variable $\phi$ defined over the body is expressed in terms of the coordinates $\mathbf{X}$ and time $t$: 
 \begin{equation}
 \label{chap2:phi}
 \phi = \phi(\textbf{X}, t).
 \end{equation}
-Let us consider a particule $X$ whose position in the reference configuration is $\mathbf{X}$. From \eqref{chap2:phi}, we note that the value of $\phi$ associated with this fixed particle $X$ changes over time. Hence, the Lagrangian description focuses its attention on the particles of the continuous body and it is usually used in solid mechanics.
+Let us consider a particle $X$ whose position in the reference configuration is $\mathbf{X}$. From \eqref{chap2:phi}, we note that the value of $\phi$ associated with this fixed particle $X$ changes over time. Hence, the Lagrangian description focuses its attention on the particles of the continuous body and it is usually used in solid mechanics.
 	
 	\subsection{Eulerian description}
-In constrast, the Eulerian description is interested in changes at fixed locations. This time, the motion and $\phi$ are described with respect to the current position ($\mathbf{x} \in \kappa$): \OFF
+In contrast, the Eulerian description is interested in changes at fixed locations. This time, the motion and $\phi$ are described with respect to the current position ($\mathbf{x} \in \kappa$): 
 \begin{equation}
 \phi = \phi(\textbf{x}, t), \quad \textbf{X} = \textbf{X}(\textbf{x}, t).
 \end{equation}
@@ -52,7 +52,7 @@ A \emph{displacement field} is a vector field of all displacement vectors for al
 \section{Analysis of deformation}
 
 	\subsection{Deformation gradient tensor}
-The displacement field tells us how a particle displaces from the reference to the deformed configuration. More interestingly, we would like to know how a material line would deform (stretch and rotation) within this displacement field. Since the length of a material line $d\mathbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\mathbf{X}$ deforms into $d\mathbf{x}$. We now seek the relation existing between $d\mathbf{x}$ in the deformed configuration and $d\mathbf{X}$ of the reference configuration. \OFF
+The displacement field tells us how a particle displaces from the reference to the deformed configuration. More interestingly, we would like to know how a material line would deform (stretch and rotation) within this displacement field. Since the length of a material line $d\mathbf{X}$ can change when going to the deformed configuration as well as its orientation, we can say that $d\mathbf{X}$ deforms into $d\mathbf{x}$. We now seek the relation existing between $d\mathbf{x}$ in the deformed configuration and $d\mathbf{X}$ of the reference configuration.
 
 Consider two particles $P_{1}$ and $P_{2}$ in a continuous body separated by an infinitesimal distance $d\mathbf{X}$:
 \begin{equation}
@@ -123,7 +123,7 @@ dv &= d\mathbf{x}^{(1)} \cdot d\mathbf{x}^{(2)} \times d\mathbf{x}^{(3)} \notag 
 &=  (\mathbf{F} \cdot \mathbf{\hat{N}}_{1}) \cdot (\mathbf{F} \cdot \mathbf{\hat{N}}_{2}) \times (\mathbf{F} \cdot \mathbf{\hat{N}}_{3}) \,  dX^{(1)} dX^{(2)} dX^{(3)} \quad \text{by \eqref{chap2:dxdX}} \notag \\
 &= \det \mathbf{F} \, dX^{(1)} dX^{(2)} dX^{(3)}. \label{chap2:dv}
 \end{align}
-The determinant of $\mathbf{F}$ is called the \emph{Jacobian} and it is denoted by $J = \det \mathbf{F}$. Therefore, the relation between the deformed volume $ dv $ and the undeformed volume $ dV $ may be written as: \OFF
+The determinant of $\mathbf{F}$ is called the \emph{Jacobian} and it is denoted by $J = \det \mathbf{F}$. Therefore, the relation between the deformed volume $ dv $ and the undeformed volume $ dV $ may be written as: 
 \begin{equation}
 \label{chap2:dvdV}
 dv = J dV.
@@ -141,7 +141,7 @@ Using \eqref{chap2:dvdV} which relates the reference and deformed volumes and re
 \begin{equation}
 J \, d\mathbf{L} \cdot d\mathbf{A} = (\mathbf{F} \, d\mathbf{L}) \cdot d\mathbf{a}.
 \end{equation}
-Since this expression is valid for any vector $d\mathbf{L}$ and by using the property $\mathbf{a} \cdot \mathbf{b} = \mathbf{a} ^{T} \mathbf{b}$, the sought relation between an element of area in the reference configuration $d\mathbf{A}$ and its corresponding area $d\mathbf{a}$ in the deformed configuration may be expressed as: \OFF
+Since this expression is valid for any vector $d\mathbf{L}$ and by using the property $\mathbf{a} \cdot \mathbf{b} = \mathbf{a} ^{T} \mathbf{b}$, the sought relation between an element of area in the reference configuration $d\mathbf{A}$ and its corresponding area $d\mathbf{a}$ in the deformed configuration may be expressed as:
 \begin{equation}
 \label{chap2:dadA}
 d\mathbf{a} = J \, \mathbf{F}^{-T} \, d\mathbf{A}.
@@ -287,7 +287,7 @@ The Euler-Cauchy's stress principle states that on any surface (real or imaginar
 \end{equation}
 This equation means that the stress vector depends on its location in the body and the orientation of the plane on which it is acting. In general, the stress vector is not perpendicular to that plane and it can be separated into two components: one component normal to the plane called \emph{normal stress} and one component tangent to the plane named \emph{shear stress}. Since $\mathbf{t}$ depends on $\mathbf{n}$ but is not in the direction of $\mathbf{n}$, it may be interesting to look into the relationship between $\mathbf{t}$ and $\mathbf{n}$. 
 
-In the following we make use of a Cartesian coordinate system and we consider an infinitesimal tetrahedron as shown on \fig{chap2:fig-CauchyStress}. \OFF
+In the following we make use of a Cartesian coordinate system and we consider an infinitesimal tetrahedron as shown on \fig{chap2:fig-CauchyStress}. 
 %
 \begin{figure}[ht]
 \begin{center}
@@ -369,7 +369,7 @@ Finally we can express the first Piola-Kirchhoff stress tensor $\mathbf{P}$ as
 	
 	
 	\subsection{Second Piola-Kirchhoff stress tensor}\label{chap2:PiolaStress2}
-Let us consider the stress tensor $\mathbf{S}$ resulting in the force $d\mathbf{F}$ in the undeformed area $d\mathbf{A}$ which corresponds to the force $d\mathbf{f}$ in the deformed area $d\mathbf{a}$. We define this stress tensor $\mathbf{S}$ as the \emph{second Piola-Kirchhoff stress tensor}. \OFF
+Let us consider the stress tensor $\mathbf{S}$ resulting in the force $d\mathbf{F}$ in the undeformed area $d\mathbf{A}$ which corresponds to the force $d\mathbf{f}$ in the deformed area $d\mathbf{a}$. We define this stress tensor $\mathbf{S}$ as the \emph{second Piola-Kirchhoff stress tensor}. 
 \begin{equation}
 d\mathbf{F} = \mathbf{S} \, d\mathbf{A}.
 \end{equation}
@@ -400,13 +400,13 @@ This result means that at every point in a stressed body there are at least thre
 
 
 \section{Constitutive equations}
-So far, all the relations that we have established are valid for every continuum. Indeed, the derivations carried out so far made no mention of any material. Therefore, we know that these relations are not sufficient to describe the response of a material to a given loading. Moreover, because the stresses result from the deformation of the material, they may be expressed in terms of some measure of this deformation such as the strain. This relationship, which obviously depends on the type of material under consideration, is what we call a \emph{constitutive equation}. Constitutives equations are an attempt to mathematically characterise the behaviour of materials observed from experimental results. \OFF
+So far, all the relations that we have established are valid for every continuum. Indeed, the derivations carried out so far made no mention of any material. Therefore, we know that these relations are not sufficient to describe the response of a material to a given loading. Moreover, because the stresses result from the deformation of the material, they may be expressed in terms of some measure of this deformation such as the strain. This relationship, which obviously depends on the type of material under consideration, is what we call a \emph{constitutive equation}. Constitutive equations are an attempt to mathematically characterise the behaviour of materials observed from experimental results. 
 
 Naturally, the relationship between strain and stress is conditioned by the constitution of the material of interest. Because the mechanics involved in materials can be quite complex (tissue mechanics in particular), many simplifying assumptions are required to derive a constitutive equation. In practice, a given constitutive equation can only cover a subset of the actual mechanical behaviour and could not possibly model all aspects of tissue behaviour under any type of loading accurately. For instance, some tissues behave very differently under small loads as compared to large loads. The behaviour may also depends on loading rates and damage may even occur under large loads. Moreover, not only constitutive equations need to deal with the complexity of material mechanics but they must remain simple enough to measure all the included material constants experimentally. This section will now introduce the most common constitutive models relevant to soft-tissue modelling. 
     
     
 	\subsection{Elasticity}	\label{chap2:elasticity}
-If under applied loads a material stores but does not dissipate energy, and it returns to its orginal shape when the loads are removed, we call that material \emph{elastic}. The work done by the stress is generally dependent on the deformation path. However, for elastic materials the stress does not depend on the path of deformation and therefore the state of stress in the deformed configuration is determined only by the state of deformation. It means that the stress does not depend on the time taken to achieve the deformation or the rate at which the state of deformation is reached. 
+If under applied loads a material stores but does not dissipate energy, and it returns to its original shape when the loads are removed, we call that material \emph{elastic}. The work done by the stress is generally dependent on the deformation path. However, for elastic materials the stress does not depend on the path of deformation and therefore the state of stress in the deformed configuration is determined only by the state of deformation. It means that the stress does not depend on the time taken to achieve the deformation or the rate at which the state of deformation is reached. 
 
 In addition, if there exists a \emph{strain energy density} function $U_0(\varepsilon)$ such that 
 \begin{equation}
@@ -427,7 +427,7 @@ where $C_0$, $C_{ij}$ and $\hat{C}$ are material stiffnesses. The form of $U_0$ 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=7cm]{chapter2/linear.pdf}
-\caption {The relationship between strain and stress is often non-linear (blue). However, it may be approximated as a linear relationship for small deformations (red). }
+\caption[Relationship between strain and stress]{The relationship between strain and stress is often non-linear (blue). However, it may be approximated as a linear relationship for small deformations (red). }
 \label{chap2:fig-linear}
 \end{figure}
 
@@ -562,7 +562,7 @@ where the summation of repeated indices is implied (Einstein's notation) and $\d
 recalling that $G = E/[2(1+\nu)]$.
 	
 	\subsection{Non-linear materials} \label{chap2:non-linear}
-For most materials, the linear relation between stress and strain is only valid for small deformation. Beyond a certain threshold, Hooke's law is no longer valid. Note that it does mean that the material is not elastic, it may well recover all its deformation after removal of the loads. However, materials often exibit an elastic threshold in the non-linear range after which permanent deformation occurs. This range of deformation is qualified of \emph{plastic}. 
+For most materials, the linear relation between stress and strain is only valid for small deformation. Beyond a certain threshold, Hooke's law is no longer valid. Note that it does mean that the material is not elastic, it may well recover all its deformation after removal of the loads. However, materials often exhibit an elastic threshold in the non-linear range after which permanent deformation occurs. This range of deformation is qualified of \emph{plastic}. 
 
 The strain energy density function takes different forms for different materials. It is often expressed as a linear combination of unknown coefficients (determined experimentally) and principal invariants of Green strain tensor $\mathbf{E}$, left Cauchy-Green strain tensor $\mathbf{B}$ and deformation gradient tensor $\mathbf{F}$ (see section \ref{chap2:strainInvariants} for more information on invariants). The constitutive equations of  two well-known non-linear elastic materials (Mooney-Rivlin and neo-Hookean) will now be introduced.
 
@@ -635,8 +635,8 @@ A non-invasive technique called \emph{elastography} was introduced recently to m
 \begin{figure}[ht]
 \centering
 \includegraphics[width=12cm]{chapter2/elastography_liver.pdf}
-\caption {Magnetic resonance elastography of the liver in a healthy volunteer and a patient with cirrhosis. Image courtesy of \cite{Talwalkar07}.}
+\caption[Magnetic resonance elastography of a liver]{Magnetic resonance elastography of the liver in a healthy volunteer and a patient with cirrhosis. Image courtesy of \cite{Talwalkar07}.}
 \label{chap2:fig-elastography_liver}
 \end{figure}
 
-Yet, precised characterisation of soft tissue is not sufficient to achieve a good simulation. The development of a simplified or optimised version of the model suitable for real-time computation is also mandatory. As we will see in chapter \ref{chap4} and \ref{chap7}, numerous models are available in the literature to describe physics of objects, from fairly simple and naive approaches to more complex and thorough representations. However, the most common technique to solve equations of continuum mechanics is the finite element method. Moreover, since the two main contributions of this thesis deal with finite element methods formulations, the general principles of this method will be detailed in the next section. 
+Yet, precise characterisation of soft tissue is not sufficient to achieve a good simulation. The development of a simplified or optimised version of the model suitable for real-time computation is also mandatory. As we will see in chapter \ref{chap4} and \ref{chap7}, numerous models are available in the literature to describe physics of objects, from fairly simple and naive approaches to more complex and thorough representations. However, the most common technique to solve equations of continuum mechanics is the finite element method. Moreover, since the two main contributions of this thesis deal with finite element methods formulations, the general principles of this method will be detailed in the next section. 

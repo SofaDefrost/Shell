@@ -1,439 +1,177 @@
-\chapter{A co-rotational triangular shell FEM model}
+\chapter{Physics-based reconstruction using shell elements}
 \label{chap9}
 \begin{shortAbstract}
-In the field of medical simulation, very few models have been proposed for simulating, in real-time, the deformation of thin anatomical structures. In fact, to our knowledge, no model based on the equations of continuum mechanics was described and applied to simulating the deformation of objects. In this chapter, we propose to rely on continuum mechanics to accurately describe the complex deformations of the implant. Our approach extends the co-rotational method used in finite element analysis of in-plane deformations to incorporate a bending energy. We will first describe the model in details before discussing its implementation in the open source framework SOFA. Lastly, this co-rotational shell FEM was applied to the simulation of the lens deployment during cataract surgery. This simulation also accounts for the complex contacts that take place during the injection phase.
+In the previous chapter, we proposed a co-rotational formulation for shell elements by extending a classical in-plane triangular finite element approach. This simple shell element can efficiently handle both membrane and off-plane forces (bending and twist). The validity of our approach has been demonstrated though comparison with theoretical results. It was then applied it to a rather complex application: the simulation of intra-ocular lens implant deployment in a cataract surgery simulation. These results are very encouraging and show the potential of such models. Examples include the modelling of hollow anatomical structures (stomach, colon, etc.), the simulation of cardiac valve leaflets, and blood vessels. However, to model the deformation of complex anatomical structures using shell elements, the first step is to describe its surface with curved patches. In the next section, we propose to study how to approximate the surface of anatomical structures with (curved) shell elements.
 \end{shortAbstract}
 
 
-\section{Model description}
+\section{Techniques of mesh simplification}
 
-We propose to define a triangular shell element by combining a two-dimensional in-plane membrane energy, with an off-plane energy for describing bending and twist. To allow for real-time simulation, a computationally efficient formulation is needed. We therefore propose to extend the co-rotational idea introduced by \cite{Felippa00}. Indeed, as we have seen in the previous chapters, co-rotational approaches have been successfully applied to real-time simulation over the last few years. They offer a good trade-off between computational efficiency and accuracy by allowing small deformations but large displacements. We propose to improve and extend a plate model first introduced by \cite{Przemieniecki85} to a co-rotational formulation. Once combined with an in-plane membrane formulation we obtain an accurate, yet computationally efficient, shell finite element method featuring both membrane and bending energies. 
+\subsection{Introduction: our motivation}
 
-\subsection{Triangular elastic membrane}
+Our idea is the following: while many flat triangles are required to describe highly curved surfaces, fewer triangular shell elements are needed to describe a given geometry with the same precision since they can be curved. Our goal is to create a mesh featuring the optimal number of shell elements while staying as close as possible to our targeted geometry. Literature about volumetric mesh generation algorithms is fairly dense. However, there are only a few that are concerned about the generation of meshes over curved surfaces. One of the most widely used techniques for the creation of surface meshes is the plane to surface transformation method \citep{Zienkiewicz71}, mesh is first generated on a two-dimensional domain and then mapped onto the surface. If this method gives reasonably good meshes on smooth surfaces, the results are usually quite poor with more complex curved surfaces. The finite elements may be generated directly on the curved surfaces based on the advancing front technique \citep{Lo85,Lau96}. The main issue with this approach is that an analytical description of the geometry is needed, which is not the case in medical simulation. Another method consists of using an a priori error estimator to build an adaptive mesh generation \citep{Baumann97}. However, the tolerance of this indicator should be chosen depending on the desired accuracy of the finite element solution. Therefore it requires some knowledge about the problem in order to choose an effective tolerance. \cite{Bechet02} start from an existing triangular mesh created with a CAD (computer-aided design) software and refine and smooth the mesh based on element quality and surface curvature. While all those methods allow their authors to get satisfactory meshes over curved surfaces according to their needs, they all make use of flat elements to mesh geometries and do not generate actual shells. 
 
-The computation of the triangular elastic membrane stiffness matrix can be derived from previous works dealing with tetrahedral co-rotational elements \citep[like][for instance]{Muller04b}. The element stiffness matrix $\textbf{K}_e$ can be computed as follows:
+In fact, it is interesting to note that this process of meshing a curved surface is similar to the reconstruction of the surface of objects in computer vision. Indeed, calculating curvature maps of 3D surfaces represented as digitised data (point clouds or triangulated meshes) has been extensively studied. One of the most common approach is to use continuous surface patches \citep{Kolb95,Douros02}. The surface is locally approximated by an analytic representation called surface patch, usually chosen to be an implicit surface. \cite{Tang99} presented an elegant and non noise-sensitive approach that infers sign and direction of principal curvatures directly from the input and the authors used this information for coherent surface and curve extraction from 3D data. 
+
+However, we need to realise that our situation is substantially different than all previously mentioned geometrical approaches as we want to model the deformation of the structure. In that regard, the curvature of the surface has a physical meaning: it represents the mid-surface of the shell. By keeping this in mind, we propose an approach to mesh a curved surface based on the same polynomial shape function \eqref{chap8:eq-deflection} used in our co-rotational shell FEM. 
+
+%Simplification strategies may be grouped into two categories: local strategies that iteratively simplify the mesh by the repeated application of some local operator, and global strategies that are applied to the input mesh as a whole \citep{Cignoni97,Talton04}.
 %
-\begin{equation}
-\textbf{K}_e = \int_v \textbf{J} \boldsymbol\chi \textbf{J}^{T} dV,
-\end{equation}
-where $\textbf{J}$ is the strain-displacement matrix and $\boldsymbol\chi$ embodies the material's behaviour. The implant is very stiff and we therefore assume that the local deformations remain limited during the deployment and a linear constitutive law is sufficient. Thus in the simple case of Hooke's law we have:
+%\subsection{Local simplification strategies}
 %
+%Typically, they define some mesh operation $S$ that, when applied to a mesh $M$, acts on a small collection of its elements and produces a new mesh $\overline{M}$  with fewer elements. By repeated application of $S$, a mesh may be simplified arbitrarily. In order to determine the mesh elements to which $S$ should be applied on a given iteration, $S$ may be associated with an error function (or cost function) that measures the amount of error the operation will introduce into the approximation. By computing the error associated with every possible application of $S$ at a particular iteration, the algorithm can apply the one with minimal cost. This type of heuristic is quite reasonable for simplification problems, and in practice these methods work well.
+%
+%One nice property of local iterative algorithms is that they allow the user to specify the desired attributes of the target approximating mesh with a high degree of precision. For example, the user may allow the algorithm to run until the mesh contains $k$ faces, or until the error at a given vertex exceeds some threshold $\varepsilon$. 
+%
+%\subsubsection*{Vertex decimation.}
+%The decimation algorithm, first proposed by \cite{Schroeder92}, is simple. Multiple passes are made over all vertices in the mesh. During a pass, each vertex is a candidate for removal and, if it meets the specified decimation criteria, the vertex and all triangles that use the vertex are deleted. The resulting hole in the mesh is patched by forming a local triangulation. The vertex removal process repeats, with possible adjustment of the decimation criteria, until some termination condition is met. 
+%
+%The error associated with a particular decimation typically depends on the classification of the vertex being decimated. For the general case of a manifold vertex $\lbrace i \rbrace$ not near a boundary, \citeauthor{Schroeder92} consider the set of planes formed by the adjacent triangles and compute a single approximating plane based on the area-weighted average of the triangle normals $\textbf{n}_k$, centers $x_k$, and areas $A_k$:
+%%
+%\begin{equation}
+%\textbf{n} = \frac{\sum_k A_k\textbf{n}_k}{\sum_k A_k},  \hspace*{1cm} \widehat{\textbf{n}} = \frac{\textbf{n}}{\vert \textbf{n} \vert}, \hspace*{1cm}  x = \frac{\sum_k A_k\textbf{x}_k}{\sum_k A_k}
+%\end{equation}
+%
+%Then they calculate the distance from vertex $\lbrace i \rbrace$ to this plane by  $\vert \widehat{\textbf{n}} \cdot (v_i - x) \vert$ and define this quantity to be the cost associated with the decimation. This metric ensures that vertices in smooth regions will be decimated before vertices that define sharp features. 
+%
+%In practice, simplification schemes based on vertex decimation excel at eliminating un-necessary geometry, such as is typically found in meshes generated by the marching cubes algorithm where large planar regions may be subdivided into many redundant triangles. 
+%
+%\subsubsection*{Edge contraction.}
+%Edge contraction, originally proposed by \cite{Hoppe93}, is the most common simplification operation. An edge contraction operates on a single edge $\lbrace v_1,v_2 \rbrace$ and contracts that edge to a single vertex $\lbrace w \rbrace$, updating all edges previously incident on $\lbrace v_1 \rbrace$ and $\lbrace v_2 \rbrace$ to reference $\lbrace w \rbrace$. On a manifold mesh without boundary, each edge contraction will collapse precisely two faces (see \fig{chap9:fig-edgeCollapse}). Edge contractions can alter the topology of a mesh, since repeatedly contracting all the edges around a hole will eventually close it.
+%%
+%\begin{figure}
+%\centering
+%\includegraphics[height=3cm]{chapter9/edgeCollapse.pdf}
+%\caption[The edge contraction operation]{The edge contraction operation. Image courtesy of \cite{Hoppe93}.}
+%\label{chap9:fig-edgeCollapse}
+%\end{figure}
+%
+%For a given contraction $\lbrace v_1,v_2 \rbrace \rightarrow \lbrace w \rbrace$, it is not immediately clear what value should be assigned to $v_h$, i.e. where the resulting vertex should be placed. Obvious choices such as $v_h = v_i$, $v_h = v_j$, or $v_h = (v_i + v_j)/2$ are convenient, but can easily be shown to be non-optimal. Rather than placing $v_h$ arbitrarily, it is better to consider the error function associated with the contraction operation and attempt to minimise its value over the space of possible vertex placements. Once the optimal target position has been computed for every possible contraction, the contraction with the smallest associated error can be selected and applied.
+%
+%\subsubsection*{Adaptative subdivision.}
+%Coplanar or nearly coplanar faces are searched for in the mesh, merged into larger polygons, and then retriangulated into fewer faces than those originally required \citep{Dehaemer91,Hinker93}. Face merging is driven by a co-planarity test. 
+%
+%The basic adaptive subdivision method as presented by \cite{Schmitt86} is sketched in \fig{chap9:fig-adaptativeSubdivision}. (a) shows several data points produced by the sampling process and sketch (b) adds a trial polygon that approximates the surface represented by the sample points. A bilinear interpolation is performed over the surface of the approximating polygon to locate the point on the surface 'directly below' a sample data point. The distance (or error) between the surface and the data point is then calculated, as shown in (c), and is compared to the user specified tolerance. If any of the errors exceeds the tolerance value then the polygon is divided into four smaller polygons, as shown in (d), and the process is repeated recursively. 
+%%
+%\begin{figure}
+%\centering
+%\includegraphics[width=13.5cm]{chapter9/adaptativeSubdivision.pdf}
+%\caption[Surface-fitting polygons with adaptive subdivision]{Surface-fitting polygons with adaptive subdivision. Image courtesy of \cite{Schmitt86}.}
+%\label{chap9:fig-adaptativeSubdivision}
+%\end{figure}
+%
+%When the approximation to the data is within the specified tolerance, the recursion is terminated and the polygon is saved in a linked list. Upon completion of the subdivision algorithm, the resulting polygons are displayed for the user to judge the results. Generally, the user runs the program repeatedly while varying the maximum tolerance until the results are suitable.
+%
+%\subsubsection*{Polygon growth.}
+%Another method proposed by \cite{Dehaemer91} to systematically generate surface-fitting polygons is to use a polygon growth technique (see \fig{chap9:fig-polygonGrowth}). First a seed polygon is selected from the original set of data, as in (a). Then a neighbouring polygon is selected and the two are combined into a larger trial polygon ((b) and (c)). If the trial polygon passes the accuracy metric, 10 additional neighbors are selected in an attempt at further growth, as in (d) through (g). When all attempts at further growth fail, the polygon is added to the list of polygons describing the reduced object, as shown in (h). A new seed polygon is selected and the process repeated. When there are no more polygons from which to choose a new seed, the process is terminated.
+%%
+%\begin{figure}
+%\centering
+%\includegraphics[width=12cm]{chapter9/polygonGrowth.pdf}
+%\caption[Polygon growth]{Polygon growth. Image courtesy of \cite{Dehaemer91}.}
+%\label{chap9:fig-polygonGrowth}
+%\end{figure}
+%
+%This method of fitting polygons to the sampled data is not as useful as the adaptive subdivision methods, for several reasons. First, it is an essentially brute force method of surface fitting and very repetitive in nature. Many trial polygons are created, only to be 'thrown out' because they exceed the error tolerance. This causes the procedure to execute quite slowly (orders of magnitude more slowly) than the adaptive subdivision method. Second, the data is not significantly reduced. Many of the generated polygons are of complicated shapes and use a large number of vertices. Thus many of the original sample data points are retained.
+%
+%
+%\subsubsection*{Appearence preserving simplification.}
+%A completely different approach to determining the error associated with a given simplification operation was described by \cite{Cohen98}. Their metric, which is appearance-based, measures the amount of deviation caused by the operation in the screen-space (pixelised) representation of the mesh. Their algorithm functions by decoupling surface position from color and curvature information and storing the latter two quantities in texture and normal maps. A traditional geometric simplification algorithm can then be employed to filter the surface position, while a hardware-based approach is used to filter the color and normal information, resulting in simplified representations that are nearly visually indistinguishable from the original. However, the algorithm requires a parameterisation of the mesh in order to function.
+%
+%
+%\subsection{Global simplification strategies}
+%
+%\subsubsection*{Vertex clustering.}
+%The method of vertex clustering was originally proposed by \cite{Rossignac93} to handle meshes of arbitrary topological structure. In their algorithm, each vertex in the input mesh is assigned a weight based on its perceptual importance: vertices adjacent to triangles with large faces and those in areas of high curvature are weighted more heavily than vertices in smooth regions adjacent to smaller triangles. Next, a bounding box is placed around the mesh and subdivided into a three-dimensional grid. Finally, all the vertices in a given grid cell are clustered to the position of the vertex with maximum weight. Degenerate geometry may then be removed, although the authors proposed a novel visualisation of certain degenerate faces and edges in an effort to enhance the recognizability of their simplified meshes. The algorithm is extremely efficient and simple to implement, and the level of simplification may be controlled (although with some difficulty) by choosing the resolution of the overlaid grid. However, vertex clustering can drastically alter the topology of the input mesh in an unpredictable manner, and in practice does not produce very faithful geometric approximations at low levels of detail.
+%
+%\subsubsection*{Re-tiling.}
+%The re-tiling method described by \cite{Turk92} begins with a polygonal surface and creates a triangulation of this surface with a user-specified number of vertices. The points are placed uniformly over a given polygonal surface by distributing points at random over the surface and then having each point repel all of its neighbors. An alternative to placing the points randomly is using the variation in surface curvature. The features of the surface would be more accurately reflected in a re-tiling by increasing the density of vertices in regions of high curvature.
+%
+%The key notion in the re-tiling procedure is the creation of an intermediate model called the mutual tessellation of a surface that contains both the vertices from the original model and the new points that are to become vertices in the re-tiled surface. The new model is then created by removing each original vertex and locally re-triangulating the surface in a way that matches the local connectedness of the initial surface (see \fig{chap9:fig-retiling}).
+%
+%If this method produces nice meshes, an issue is finding measures of how closely matched a given re-tiling is to the original model. 
+%%
+%\begin{figure}
+%\centering
+%\includegraphics[width=12cm]{chapter9/retiling.pdf}
+%\caption[Retiling technique]{Upper left: original surface. Upper right: candidate vertices after point-repulsion. Lower left: mutual tesselation. Lower right: final tesselation. Image courtesy of \cite{Turk92}.}
+%\label{chap9:fig-retiling}
+%\end{figure}
+
+
+\section{Our method}
+
+	\subsection{A simple algorithm}
+	
+In the following, we assume that we have a high resolution triangular mesh obtained from a binary segmented image of the object we want to simulate (via a Marching Cube algorithm for instance, \cite{Lorensen87}). We propose a technique that can simplify the high resolution mesh of the object to be simulated and approximate the surface of anatomical structures with shell elements whose each surface is described by the shape function used in our shell formulation. Thus, the first step in the process of generating a shell-based mesh is an important decimation of the high resolution mesh, using quadric edge collapse technique implemented in \citeauthor{Meshlab}. MeshLab is an open source program for the processing and editing of unstructured 3D triangular meshes. The algorithm tries as much as possible to preserve mesh boundaries and generates high quality triangular elements. We then apply a heuristic method derived from the work of \cite{Saupin07} with tetrahedral meshes based on simple geometrical rules. For each node of the coarse mesh, we find the three closest triangles on the high resolution mesh and we move the node to the barycentre of the three centres of mass of those triangles. This technique locally smooths the surface of the mesh while converging towards the desired high resolution mesh. 
+
+At each iteration of this algorithm, we want to measure the error between the curved surface of shells and the target. Indeed, we need to ensure that the distance between the surface of our shell-based mesh and the targeted high resolution mesh will be minimal. An efficient technique for measuring the error between two surfaces is the Hausdorff distance \citep{Klein96}. As a reminder the Hausdorff distance between two meshes is the maximum between the two so-called one-sided Hausdorff distances:
 \begin{equation}
-\boldsymbol\chi = \frac{E}{12(1-\nu^2)}
-\begin{bmatrix}
-1 & \nu & 0 \\
-\nu & 1 & 0 \\
-0 & 0 & \frac{1}{2} (1-\nu)
-\end{bmatrix}
+d_{\mathrm{H}}(X,Y) = \max \left\{ \sup_{x \in X} \inf_{y \in Y} d(x,y), \sup_{y \in Y} \inf_{x \in X} d(x,y) \right\},
 \end{equation}
+where $d()$ is the Euclidian distance between two points. The same technique of subdivision used for rendering allows us to sample the actual surface described by the shells to compute the Hausdorff distance with the targeted high resolution mesh. 
 
-The stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element: $\textbf{K} = \textbf{R} \textbf{K}_e \textbf{R}^{T}$ where $\textbf{R}$ describes the rotation of the (triangular) element with respect to its initial configuration.
-
-\subsection{Triangular plate bending}
-
+By using the Hausdorff distance between two iterations, the process may be stopped when the required precision has been reached. A simple example is shown \fig{chap9:fig-cylinder} to illustrate the method. 
 \begin{figure}[ht]
 \centering
-\includegraphics[height=4cm]{chapter9/bending.pdf}
-\caption {The different degrees of freedom $u$ of a triangular thin plate in bending.}
-\label{chap9:fig-triangle}
+\includegraphics[width=13.5cm]{chapter9/exampleCylinder.pdf}
+\caption[Meshing of a cylinder with shell elements]{The target (a) is a high resolution cylinder mesh of 16,384 triangles and we start from a very coarse mesh (12 triangles), rendered with flat triangles here (b). In (c) the coarse mesh is rendered with shells and a one-sided Hausdorff distance colour map is applied to show the initial error with the high resolution mesh. (d) One-sided Hausdorff distance colour map after one iteration of our algorithm (48 shells).}
+\label{chap9:fig-cylinder}
 \end{figure}
-%
-To calculate the stiffness matrix for the transverse deflections and rotations shown on \fig{chap9:fig-triangle}, we start with the assumed deflection $u_z$ of the form
-\begin{equation}
- u_z = c_1 + c_2x + c_3y + c_4x^2 + c_5xy + c_6y^2 + c_7x^3 + c_8xy^2 + c_9y^3,
-\label{chap9:eq-deflection}
-\end{equation} 
-where $c_1$, \ldots , $c_9$ are constants. Equation~\ref{chap9:eq-deflection} solves an issue of symmetry which was observed with the deflection function proposed by \cite{Przemieniecki85}. These constants can be evaluated in terms of the displacements and slopes at the three corners of the triangular plate using 
-\begin{equation}
-\textbf{u} = \textbf{Cc}
-\label{chap9:eq-U}
-\end{equation} 
-where $\textbf{u} = \left\{u_1 u_2 \ldots u_9 \right\} $ and $\textbf{c} = \left\{c_1 c_2 \ldots c_9 \right\} $. Matrix $\textbf{C}$ derives from \eqref{chap9:eq-U}:
-\begin{equation}
-C = 
-	\begin{bmatrix}
-	1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
- 	0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	0 & -1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	1 & x_2 & 0 & x_2^2 & 0 & 0 & x_2^3 & 0 & 0 \\
-	0 & 0 & 1 & 0 & x_2 & 0 & 0 & 0 & 0 \\
-	0 & -1 & 0 & -2x_2 & 0 & 0 & -3x_2 & 0 & 0 \\
-	1 & x_3 & y_3 & x_3^2 & x_3y_3 & y_3^2 & x_3^2 & x_3y_3^2& y_3^3 \\
-	0 & 0 & 1 & 0 & x_3 & 2y_3 & 0 & 2x_3y_3 & 3y_3^2 \\
-	0 & -1 & 0 & -2x_3 & -y_3 & 0 & -3x_3^2 & -y_3^2 & 0
-	\end{bmatrix}
-\end{equation} 
 
-We used the following notations:
-\begin{align}
-u_1 &= (u_z)_{x_1,y_1}, & u_2 &= \left(\frac{\partial u_z}{\partial y}\right)_{x_1,y_1}, & u_3 &= - \left(\frac{\partial u_z}{\partial x}\right)_{x_1,y_1} \notag \\
-u_4 &= (u_z)_{x_2,y_2}, & u_5 &= \left(\frac{\partial u_z}{\partial y}\right)_{x_2,y_2}, & u_6 &= - \left(\frac{\partial u_z}{\partial x}\right)_{x_2,y_2} \label{chap9:ui} \\
-u_7 &= (u_z)_{x_3,y_3}, & u_8 &= \left(\frac{\partial u_z}{\partial y}\right)_{x_3,y_3}, & u_9 &= - \left(\frac{\partial u_z}{\partial x}\right)_{x_3,y_3} \notag \\
-\end{align} 
-
-\noindent We can calculate the strains from the flat-plate theory using:
-\begin{equation}
-e_{xx} = -z \frac{\partial^2u_z}{\partial x^2}
-\end{equation} 
-\begin{equation}
-e_{yy} = -z \frac{\partial^2u_z}{\partial y^2}
-\end{equation} 
-\begin{equation}
-e_{xy} = -2z \frac{\partial^2u_z}{\partial x \partial y}
-\end{equation} 
-
-\noindent Hence, using the above equations and \eqref{chap9:eq-deflection}, we have
-\begin{equation}
-\begin{bmatrix}
-e_{xx} \\
-e_{yy} \\
-e_{xy}
-\end{bmatrix}
-= 
--z
-\begin{bmatrix}
-0 & 0 & 0 & 2 & 0 & 0 & 6x & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 2 & 0 & 2x & 6y \\
-0 & 0 & 0 & 0 & 2 & 0 & 0 & 4y & 0 \\
-\end{bmatrix}
-\textbf{c}
-\label{chap9:eq-strains}
-\end{equation} 
-or symbolically $\textbf{e} = \textbf{Dc}$ where $\textbf{D}$ stands for the $3\times 9$ matrix in \eqref{chap9:eq-strains}, including the pre-multiplying constant $-z$. Noting from \eqref{chap9:eq-U} that $\textbf{c} = \textbf{C}^{-1}\textbf{u}$, we have:
-\begin{equation}
-\textbf{e} = \textbf{DC}^{-1}\textbf{u} = \textbf{bu},
-\end{equation} 
-where $\textbf{b} = \textbf{DC}^{-1}$. 
-
-\noindent Knowing that the stiffness matrix $\textbf{K}_e$ for an element is obtained from
-\begin{equation}
-\textbf{K}_e = \int_v \textbf{b}^{T} \boldsymbol\chi \textbf{b} dV,
-\end{equation} 
-where $\boldsymbol\chi$ is the material matrix, the substitution of $\textbf{b}$ into this expression yields
-\begin{equation}
-\label{chap9:Ke}
-\textbf{K}_e = (\textbf{C}^{-1})^T \int_v \textbf{D}^{T} \boldsymbol\chi \textbf{D} dV \, \textbf{C}^{-1}.
-\end{equation} 
-
-Similarly to the membrane stiffness matrix, the bending stiffness matrix in the global frame is eventually obtained using the rotation matrix of the element: $\textbf{K} = \textbf{R} \textbf{K}_e \textbf{R}^{T}$. While the method to numerically compute the integral will be reviewed section \ref{chap9:numericalIntegration}, we first carry on with the theory by introducing how the contacts are handled.  
-
-
-\section{Mechanical interactions with the curved surface of shells}	\label{chap9:interactions}
-
-The practical interest of modelling complex behaviours such as bending and twisting would remain fairly low for medical simulation if contacts and constraints were not handled properly. In our case the difficulty comes from different sources. First the collision detection must be carried out with the curved surface of shell elements as opposed to the classic detection on plane triangles. Then forces applied to a given triangle need to be distributed between linear forces and torques onto its three vertices. As we will see, the same polynomial interpolation function chosen to compute the bending energy in our FEM formulation is also used to capture the interactions between the curved surface and other objects. 
-
-In order to detect the collision with the bent surface, we have chosen the subdivision approach. We first sample the flat surface of each element by recursively dividing each triangle into four smaller ones and the deflection of each new vertex is computed using \eqref{chap9:eq-deflection} according to the displacements and slopes at the three vertices of the triangular element. This process of subdivision may also allow us to render each shell as a curved triangle (\fig{chap9:fig-shell} (a) and (b)) and detect any collision with the curved surface of the shell using any of the classic collision detection algorithms working on flat triangles.
-
-Once a collision has been detected, it must be processed by distributing the linear force received on the bent surface between the three vertices of the triangle. First the linear part of the force is simply transmitted on each node using the barycentric coordinates of the contact point's projection onto the triangle. 
-
-The main difficulty is to convert the normal component of the force applied to the bent surface into a torque at each of the three nodes (\fig{chap9:fig-shell} (c)). Our approach is the following: during force computation, we use the change in orientation measured at each node to compute the local deflection of each subvertex within the triangle. Differentiating the formulation twice yields a relation between the torque applied at each node and the generated force in bending. We therefore need to invert the latter formulation to convert a bending force into torques at each vertex. Thus, we are able to transmit any force coming from interactions with the curved surface of shells to the mechanical vertices used in our FEM formulation. 
+	\subsection{Results on complex anatomical structures}
+	
+\subsubsection*{Meshing of anatomical structures.}
+This approach has been applied to approximate more complex anatomical geometries with curved shell elements. Two examples are given with the Glisson's capsule, which is the membrane surrounding the liver (\fig{chap9:fig-liver}) and an aneurysm (\fig{chap9:fig-aneurysm}). In each case, the error is computed through a Hausdorff distance and expressed as a percentage of the diagonal of the object's bounding box. 
 %
 \begin{figure}[ht]
 \centering
-\includegraphics[width=12cm]{chapter9/shell_curvature.pdf}
-\caption {(a)  The triangle formed by the three vertices of the shell has been recursively subdivided 3 times and the deflection of each new vertex was computed according to the same deflection function used in our shell FEM. (b) Sampling the actual surface of the shell allows more accurate rendering and collision detection. (c) The shape function is used to distribute an external force $F$ onto the triangle nodes.}
-\label{chap9:fig-shell}
-\end{figure}
-
-
-\section{Implementation}
-
-The co-rotational shell formulation has been successfully implemented as a Force Field component into the open-source framework SOFA \citep{Allard07}. A description of SOFA's architecture was given in section \ref{chap6:SOFA}. We will now review the key points of the implementation.
-
-	\subsection{Evaluation of displacements}
-The computation of the stiffness matrix, and subsequently the internal forces, starts with the measure of the displacements $\left\{u_1 u_2 \ldots u_9 \right\} $ for every element. As defined by \eqref{chap9:ui}, we need to measure the displacement along the z axis and the rotations around local x and y axes for each vertex. For \cite{Przemieniecki85}, the deflection z is measured in the global frame. But in a co-rotational formulation, a local frame is attached to each triangle and used to compute displacements and forces. In this local frame (formed from the 3 vertices) the deflection is therefore always null (hence, $ u_1, u_4, u_7 $ are null). To evaluate the remaining rotations, we first associate a quaternion at each vertex which embodies its frame (or its orientation). In mathematics, quaternions are an extension of complex numbers and may be written as follows:
-\begin{equation}
-q = w + x i + y j + z k \quad \mbox{with } i^2 = j^2 = k^2 = -1.
-\end{equation}
-For use in geometry, quaternions are often written as a sum of a scalar and a vector:
-\begin{equation}
-q = w + (x, y, z) = \cos (\frac{\alpha}{2}) + \mathbf{u} \sin (\frac{\alpha}{2}),
-\end{equation}
-where $ \mathbf{u} $ is a unit vector and $ \alpha $ a scalar. If we denote by $ \mathbf{v} $ a vector in $\field{R}^3$, it can be shown that the quaternion product $ q \mathbf{v} q^{-1} $ yields a vector which is the rotation of $ \mathbf{v} $ by an angle $ \alpha $ around the axis $ \mathbf{u} $. Quaternions require less storage than rotation matrices and are known to be more numerically stable. 
-
-From there, our approach to measure the rotations around local x and y axes is simple. At runtime and for each vertex, we compute the rotation that we need to transform the z axis of the triangle's frame into the z axis of the vertex's frame. The differences with the same quantities computed for the rest position during the initialisation lead to the desired displacements. 
-% (see listing \ref{chap9:qDiffZ})
-%\begin{lstlisting}[caption={[Method to compute the rotation between two quaternions]Method used to compute the rotation of the z axis between the frames embodied by two quaternions},label={chap9:qDiffZ},frame=shadowbox,rulesepcolor=\color{black}]
-%inline Quat qDiffZ(const Quat& Qvertex, const Quat& Qtriangle)
-%{
-%    // dQ is the quaternion that embodies the rotation between 
-%    // the z axis of the vertex and the z axis of the local 
-%    // triangle's frame (in local space)
-%    Quat dQ;
-%
-%    // u = z axis of the triangle's frame (in local space)
-%    Vec3d u(0,0,1);
-%
-%    // v = z axis of the vertex's frame is expressed into 
-%    // world space
-%    Vec3d v = Qvertex.rotate(Vec3d(0.0, 0.0, 1.0));
-%    
-%    // v0 = v expressed into local triangle's frame
-%    Vec3d v0 = Qtriangle.rotate(v);
-%
-%    // Axis of rotation between the 2 vectors u and v lies 
-%    // into the plan of the 2 vectors
-%    Vec3d axis = cross(u, v0);
-%    
-%    // Shortest angle between the 2 vectors
-%    double angle = acos(dot(u, v0));
-%
-%    // Quaternion associated to this axis and this angle
-%    if (fabs(angle)>1e-6)
-%    {
-%        dQ.axisToQuat(axis,angle);
-%    }
-%    else
-%    {
-%        dQ = Quat(0,0,0,1);
-%    }
-%
-%    return dQ;
-%}
-%\end{lstlisting}
-
-
-%	\subsection{Inversion of matrix $ \mathbf{C} $}
-%\cite{Przemieniecki85} described the condition of non-inversion for the matrix $\mathbf{C}$ as the following:
-%\TODO{add condition of inversion... but need the book :)}
-%
-%Each triangle of a mesh obtained from a regular grid of points fits this condition of non-inversion (right triangles). We fixed this limitation by choosing a different local coordinate system that the one introduced by \citeauthor{Przemieniecki85}. 
-%
-%\TODO{add figure with the two different coordinate system}
-
-
-	\subsection{Numerical integration} \label{chap9:numericalIntegration}
-In practice, the integration of the integral in \eqref{chap9:Ke} must be carried out numerically using Gaussian quadrature, a numerical technique which allows to calculate the value of an integral. The Gaussian quadrature states that the integral of a function $ f $ over the area $ A $ of a triangular surface may be evaluated as a weighted sum of function values at specific points within the area of integration \citep{Cowper73}. In other words, we have
-\begin{equation}
-\int_{A} f dA = A \sum_{i=1}^n w_i f_i,
-\end{equation}
-where $ w_i $ is a weight factor and $ f_i $ is the evaluation of $ f $ at the integration point $ i $ (also called Gauss points). The choice of the number and the locations of the integration points depends on the order of accuracy desired. We classically choose 3 integration points located at the middle of each edge of the triangle, for which the weight factors $ w_i $ are $ 1/3 $. The required integration over the volume is achieved by multiplying the result by the thickness $ t $ of the shell. Therefore, \eqref{chap9:Ke} may be numerically evaluated as
-\begin{equation}
-\textbf{K}_e = \dfrac{A t}{3} (\textbf{C}^{-1})^T \sum_{i=1}^3 \textbf{D}_i^{T} \boldsymbol\chi \textbf{D}_i  \, \textbf{C}^{-1},
-\end{equation}
-where $ D_i $ is the evaluation of the matrix $ \mathbf{D} $ defined by \eqref{chap9:eq-strains} at each Gauss point $ i $. 
-
-\bigskip
-
-\subsection{Computation of stiffness matrix: summary}	\label{chap9:summary}
-In practical terms, the different computations associated with each triangular shell element can be described as follows:
-%
-\begin{enumerate}
-\item Compute the rotation matrix $\textbf{R}$ from global to triangle (local) frame
-\item Compute the local displacement vector $\textbf{u} = \{v_1, v_2, 0, u_2, u_3, v_3, v_4, 0, u_5, u_6,$ $v_5, v_6, 0, u_8, u_9 \} $ for each triangle, where $ (v_1, v_2), (v_3, v_4) and (v_5, v_6) $ are the in-plane displacements on x and y local axes and $ u_i $ were defined by \eqref{chap9:ui}. As we are in a co-rotational framework, we recall that the normal displacements $u_1, u_4, u_7$ at each of the three nodes are null in the local frame of the triangle. 
-\item Compute matrix $\textbf{D}_i$  at each Gauss point $i$
-\item The strain-displacement matrix at each Gauss point $i$ is computed with $\textbf{J}_i = \textbf{D}_i \textbf{C}^{-1}$
-\item Compute the local stiffness matrix $\textbf{K}_e$ of the element as $\textbf{K}_e = \displaystyle{\sum^3_{i=1}} \textbf{J}_i \boldsymbol\chi \textbf{J}_i^T$
-\item Transform the local element stiffness matrix into the global frame and add it to the global stiffness matrix
-\end{enumerate}
-
-
-	\subsection{Concept of mappings in SOFA}	\label{chap9:mappings}
-Let us explain the concept of \emph{mappings} and \emph{mechanical mappings} in SOFA. In SOFA, the state of a simulated system can be described by the values and time derivatives of its independent degrees of freedom (DOF) gathered in two vectors $x_0$ and $v_0$. Geometry can be attached to the DOF for visualisation or contact computation. We call it the \emph{shape}. It is typically defined by points, such as triangle vertices or sphere centers, and additional data such as triangle connectivity or sphere radii. We call these points the vertices. Their positions, velocities and associated forces are stored in vectors $x_1$ , $v_1$ and $f_1$, respectively. They are not independent variables, since the positions and velocities are bound to the DOF using kinematic operators which we call the \emph{mappings}:
-\begin{eqnarray*}
-x_1 &=&\JNL_1(x_0)\\ 
-v_1 &=& J_1 v_0
-\end{eqnarray*}
-When the vertices and the DOF are the same, the mapping is the identity. Matrix $J_1 = \frac{\partial x_1}{\partial x_0}$ encodes the linear relation between the DOF velocities and the shape velocities. Due to linearity, the same relation holds on elementary displacements $dx$. It also holds on accelerations, with an additional offset due to velocities when the position mapping \JNL is non-linear. In most cases, operators \JNL~ and \J~ are the same, but in the case of rigid bodies, \JNL~ is nonlinear with respect to $x$ and it can not be written as a matrix.
-
-When shapes collide, additional geometry can be necessary to model the contact. For instance, when an edge intersects another one, a contact force is applied to the intersection points. These points are defined by their barycentric coordinates with respect to their edge vertices. Other relations can be used, depending on the kind of geometrical primitives in contact. This additional geometry requires another geometrical layer connected to the shape by a mapping, as illustrated in \fig{chap9:fig-mappings}.
-
-\begin{figure}[ht]
-	\begin{center}
- 		\includegraphics[width=13cm]{chapter9/mappings}
- 	\end{center}
- \caption[Concept of mappings in SOFA]{Mappings from the DOFs to a contact point. Top: two simulated objects in contact (red point). Bottom: hierarchy of geometrical layers. Positions and velocities are propagated top-down. The contact force $f_c$ is accumulated in the contact layers. Forces are then propagated bottom-up. Image courtesy of SOFA's documentation. }
-\label{chap9:fig-mappings}
-\end{figure}
-
-Positions and velocities can be propagated top-down through our layer hierarchy using the relations presented. In order to take the contact forces into account in the dynamics equation, we have to convert the contact forces applied to the contact points to forces applied to the DOF, where our mechanical model is applied. This requires an extension to the position and velocity mappings presented: we call it \emph{mechanical mapping}. This is a general method to propagate forces bottom-up through the layers of the geometrical hierarchy. Given forces $f_n$ applied to a geometry layer $n$, we derive the equivalent force applied to its parent layer $n-1$. Equivalent forces must have the same power. Thus, we have to compute $f_{n-1}$ such that:
-$$
-v_{n-1}^T f_{n-1} = v_n^T f_n
-$$
-The relation $v_{n} = J_{n}v_{n-1}$ allows us to rewrite the previous equation as
-$$
-v_{n-1}^T f_{n-1} = v_{n-1}^T J_{n}^T f_n
-$$
-Since this relation must hold for any velocity $v_{n-1}$, we simplify it and get
-\begin{equation} \label{eq:mapF}
-f_{n-1} = J_n^T f_n
-\end{equation}
-This corresponds to the principle of virtual work.
-
-
-\subsection{Visualisation}
-Because shells have a curved surface, a specific rendering technique is required to visualise the deformation in bending. Without any consideration, the shells would appear flat (as simple triangles). Our idea is to make use of a higher resolution mesh whose deformation would be controlled by the underlying physical mesh of shells. In other words, a mapping was implemented to connect the DOFs of our mechanical model to a set of vertices useful for rendering. In SOFA, a mapping has only 2 methods: init(), which allows computations during the initialisation phase, and apply() called at runtime and in charge of updating the positions of the high resolution mesh according to the coarser mesh constituted by the shell elements. 
-
-\begin{itemize}
-\item \textbf{init()} \\
-During the initialisation phase, each vertex from the high resolution mesh is projected onto the coarse mesh. Thus, for each vertex we find the closest primitive (DOF, edge or triangle) on the coarse mesh and we take the list of triangles attached to it. Then, the barycentric coordinates of the projected point is computed within each triangle of this list.
-%
-\item \textbf{apply()} deals with the relation between the DOFs and the vertices used for rendering (shape vertices). The position of each vertex from the high resolution mesh must be updated according to the underlying mesh. After the initialisation phase, we have associated each rendering vertex to a triangle and its barycentric coordinates within this triangle are known. Therefore, we first start by computing the new position of the rendering vertex by weighting the coordinates of each triangle's vertex with the associated barycentric weight. Hence, we obtain a new position in the plane of the triangle. If we were to stop the procedure here, the shell elements would still be rendered as flat triangles since all rendering vertex are located in the plane of the triangles. Consequently, the additional step of computing the deflection is required. We know that the deflection at any point of local coordinates $(x, y)$ may be computed from $u_z = c_1 + c_2x + c_3y + c_4x^2 + c_5xy + c_6y^2 + c_7x^3 + c_8xy^2 + c_9y^3$ as described by \eqref{chap9:eq-deflection}. Hence, we calculate the local coordinates $(x, y)$ of each rendering vertex within its associated triangle. Moreover, we notice that the coefficients $ \mathbf{c} = \left\{c_1 c_2 \ldots c_9 \right\} $ may be evaluated using \eqref{chap9:eq-U} from
-\begin{equation}
-\mathbf{c} = \mathbf{C}^{-1} \mathbf{u},
-\end{equation}
-The deflection may therefore be computed for each vertex and added to the in-plane position previously calculated. 
-\end{itemize}
-
-It is worth noting that a high resolution mesh may be obtained by recursively subdividing each triangle. However, in this case the vertices are closely related to the structure of the mechanical mesh and rendering artifacts may appear. As we can notice on \fig{chap9:fig-rendering}, the quality of the visualisation may be improved by using a totally different mesh.
-%
-\begin{figure}[ht]
-\centering 
-\subfloat[Subdivided triangles]{\includegraphics[width=5.5cm]{chapter9/sub_grid_red.png}}
-\hspace{1cm}
-\subfloat[Irregular grid]{\includegraphics[width=5.5cm]{chapter9/irregular_grid_red.png}} \\
-\subfloat[Subdivided triangles]{\includegraphics[width=5.5cm]{chapter9/sub_grid_mesh.png}}
-\hspace{1cm}
-\subfloat[Irregular grid]{\includegraphics[width=5.5cm]{chapter9/irregular_grid_mesh.png}}
-\caption[Visual artifacts using triangle subdivisions]{In some situations, some rendering artifacts may appear when we use subdivided triangles to render the shells (a,c). Using an irregular mesh which is not closely related to the structure of the mechanical mesh reduces the impact (b,d).}
-\label{chap9:fig-rendering}
-\end{figure}
-
-
-	\subsection{Contacts with the curved surface of shells}
-If a specific rendering technique was developed to visualise the curved shape of the shells, it is also essential to interact with it. Indeed, as explained section \ref{chap9:interactions}, the force applied onto the curved surface of the shell must be processed by distributing the linear force received on the bent surface between the three vertices of the triangle. Consequently, the mapping previously described is extended to a mechanical mapping and two additional methods need to be implemented: applyJ and applyJT. 
-%
-\begin{itemize}
-\item \textbf{applyJ()} encodes the linear relation between the DOF velocities and the shape velocities as described in section \ref{chap9:mappings}. applyJ() basically embodies the same computations than apply() except that the vector of displacement $\mathbf{u}$ is different. Whereas the local displacement in rotation is measured from the quaternions to create the vector $\mathbf{u}$, this time the vector is directly obtained from the angular velocities we had at each vertex (once converted into the local frame). We therefore have a relation between the angular velocities at each vertex and the velocity of the deflection in the direction normal to each triangle. 
-\item \textbf{applyJT()} must convert the contact forces applied to the contact points to forces applied to the DOF. If the linear forces are easily distributed between DOFs using barycentric coordinates, it also encodes the relation between the vertical force $ \mathbf{F} $ applied onto the bent surface of the plate and the torque at each DOF. We start by retrieving the normal component of the applied force vector $F_{\mathrm{z}}$. We project the application point of the force into the triangle's plane and compute its local coordinates $(x,y)$. We create the polynom $P$ such as 
-%
-\begin{equation}
-P = F_{\mathrm{z}}(1 \hspace{0.2cm} x \hspace{0.2cm} y \hspace{0.2cm} x^2 \hspace{0.2cm} xy \hspace{0.2cm} y^2 \hspace{0.2cm} x^3 \hspace{0.2cm} xy^2 \hspace{0.2cm} y^3)^T. 
-\end{equation}
-%
-The moments at each vertex are then obtained with 
-\begin{equation}
-\Omega = (\textbf{C}^{-1})^T P.
-\end{equation}
-\end{itemize}
-
-
-\subsection{Allowing a curved rest configuration}
-In \cite{Przemieniecki85}, the rest and initial configurations are both assumed to be the flat one. The only way to have an initial deformed shape is to apply a torque on the vertices of the shells. However, in this configuration we would compute a displacement vector $ \mathbf{u} $ that is not null, which leads to a bending energy. In order to define a curved rest configuration for our shells, we propose to compute the bending energy between the initial and rest configuration during the initialisation phase, and add the energy between the current and initial configurations at runtime. Consequently, by separating initial and rest configurations, it is possible to have an initial deformed shape without any initial bending energy. In other words, we shifted the zero energy configuration.
-
-
-\subsection{Possible extension: parallel implementation on GPU}	\label{chap9:GPU}
-If we look closely at all the steps required to compute the local stiffness matrix for each element (see section \ref{chap9:summary} for a summary), we can notice that the operations carried out for a given shell element are independent of the other elements. This feature makes our co-rotational shell FEM implementation highly parallelisable. One potential problem however, is the assembly of the global stiffness matrix. Indeed, in a parallel implementation, many elements are processed concurrently (that is, at the same time). Inevitably, two elements sharing a node may be processed in the same time. Therefore, they may try to both write their element contribution into the exact same location in the global stiffness matrix, and therefore the same location in GPU's memory. As with the TLED implementation described in chapter \ref{chap6}, there is two solutions. The first one would be to re-order the elements organisation so that no concurrent writes will occur. Unfortunately, this re-organisation of the element reduces the number of elements that can be processed in parallel. The second solution would be to take advantage of a new GPU NVIDIA architecture called Fermi, which added the capability atomic writes for floats. We recall that the write operation is said to be atomic in the sense that it is guaranteed to be performed without interference from other threads. In other words, the concurrent writes are simply serialised in hardware. Obviously, an additional overhead is to be expected. 
-
-Moreover, because shells are high-order (curved) elements, fewer elements are needed to describe a given geometry with the same precision (as compared to using flat triangles). Generally speaking, this constitutes a decisive computational advantage since fewer elements are required. However, GPUs are more efficient when they tackle numerous but simple computations. Hence, a good speedup over sequential CPU implementations is usually only achieved when the number of elements involved becomes great enough. In contrast, the computations for each shell element are quite heavy and the number of elements used in the whole simulation is limited. Therefore, the conditions are not optimal to obtain maximum speedups on GPU. A straightforward GPU implementation of our shell FEM formulation where each thread deals with the calculations of one element would not make use of all the GPU capacity (the occupancy would not be maximal). If a reasonable improvement over the CPU implementation will probably be obtained nevertheless, the gain is likely to be smaller than in the case of the TLED algorithm for instance. Other approaches will need to be investigated to take full advantage of the GPU. For instance, computations within an element could be distributed between several threads to increase the occupancy of the GPU and hence the overall efficiency. 
-
-To conclude on a possible parallelisation of the algorithm, an optimal GPU implementation is always a challenge to achieve. One needs to choose wisely the type of memory to be used for each variable and optimise the access patterns. While it seems that there is no major obstacle for a simple GPU implementation, the best speedups will only be attained through more elaborate techniques of parallelisation making full usage of the GPU. Although it will take some time, our co-rotation shell FEM will eventually be ported to GPU. 
-
-
-\section{Comparison with an analytical result}
-
-We compared our model with some theoretical results reported by \cite{Zhongnian86} to assess its quality in modelling bending. The test that we carried out uses a square shape mesh clamped on all four edges. A uniform load is then applied on the square and the maximum deflection $z_{max}$ at the centre can be calculated. Several simulations are performed with increasing load values $q$ (ranging from $1$ to 5 N/m$^2$) and the following parameters were used: 
-\begin{itemize}
- \item Young Modulus $E = 1.092 \times 10^6\,$Pa
- \item Poisson's ratio $\nu = 0.3$
- \item edge of the square $L = 10\,$m
- \item thickness $h = 0.1\,$m
- \item pressure q is a uniformly distributed load per unit area
-\end{itemize}
-
-Using these particular values it can be shown that $z_{max} = 0.126\,q$. The maximum deflection obtained in our simulations are reported in Table~\ref{chap9:tab-results}. In average we found $z_{max} = 0.1248\,q $, resulting in a $0.93\,\%$ error between our model and theoretical results on that test. 
-%
-\begin{table}[ht]
-	\centering
-	\begin{tabular}{p{9cm}|c|c|}
-	\cline{2-3}
-	\multirow{5}{*}{\includegraphics[height=3.5cm]{chapter9/clamped_square.pdf}} & $q$ & $z_{max}$ \tabularnewline
-	\cline{2-3}
-	& $\,1\,$ & $\, 0.1218 \,$ \tabularnewline
-	& $\,2\,$ & $\, 0.2475 \,$ \tabularnewline		
-	& $\,3\,$ & $\, 0.3747 \,$ \tabularnewline	
-	& $\,4\,$ & $\, 0.5050 \,$ \tabularnewline		
-	& $\,5\,$ & $\, 0.6374 \,$ \tabularnewline
-	\cline{2-3}
-	\end{tabular}
-	\vspace{1cm}
-	\caption{Comparison of our shell model with theoretical results on the bending of a square plate. An error of less than $1\,\%$ was found between our simulation and theoretical results.}
-	\label{chap9:tab-results}
-\end{table}
-
-
-\section{Application to implant deployment simulation in cataract surgery}
-
-Cataract surgery consists in three main steps: capsulorhexis, phacoemulsification, and implantation of an intra-ocular lens. Prior to starting the surgery, a viscoelastic fluid is introduced into the capsule to facilitate capsulorhexis creation and provide protection during phacoemulsification. This fluid remains in the capsule for the duration of the surgery, including the injection of the implant. Capsulorhexis is the technique used to remove a part of the anterior lens capsule. Phacoemulsification consists in using a surgical device which tip vibrates at an ultrasonic frequency to emulsify the natural lens material and then aspirate the fragments of the cortical material. After the removal of the diseased lens, an intra-ocular lens is implanted into the eye, through a small incision (about $2\,$mm) using a foldable intra-ocular lens (see \fig{chap9:fig-surgery}). The foldable lens, usually made of acrylic material, is then implanted within the lens capsule through the incision used during phacoemulsification. In some cases the implant can be flipped or  the hooks (also called \emph{haptics}) can break. Therefore the simulation of the insertion and deployment of the implant is crucial for achieving a successful surgery.
-%
-\begin{figure}[ht]
-\centering 
-\subfloat[ ]{\includegraphics[height=3.2cm]{chapter9/suction.pdf}}
-\hspace{1cm} 
-\subfloat[ ]{\includegraphics[height=3.2cm]{chapter9/implant_injection_step_1.pdf}}
-\hspace{1cm} 
-\subfloat[ ]{\includegraphics[height=3.2cm]{chapter9/implant_injection_step_2.pdf}}
-\caption [Steps of cataract surgery] {(a) removal of the opacified lens by phacoemulsification. (b) insertion of the lens implant which is folded inside the injection device and then deploys within the lens capsule. (c) the lens in place in the capsule.}
-\label{chap9:fig-surgery}
-\end{figure}
-
-To simulate the insertion and deployment of an intra-ocular lens, we first created a triangulation of the lens surface. Particular care was given to the mesh, to ensure that areas where large stresses occur contain a higher density of elements (see \fig{chap9:fig-mesh}). This was done by noting the constraints applied by the surgeon to the haptics while inserting the implant within the injection device. During this stage, the haptics are folded onto the implant body, leading to high stresses at the junctions. The lens mesh contains $743$ triangles and $473$ nodes. Models of the injection device and the entire eye anatomy were also created. Physical parameters of the lens implant have been provided by the manufacturer Alcon and they are presented in Table~\ref{chap9:tab-parameters}.
-%
-\begin{table}[ht]
-	\begin{center}
-		\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|}
-		\hline
-		 \centering Young's modulus & \centering Poisson's ratio & \centering Mass density \tabularnewline
-		\hline
-		\centering $1\,$MPa & \centering $0.42$ & \centering $1.2\,$g/cm$^3$ \tabularnewline
-		\hline
-		\end{tabular}
-	\vspace{0.3cm}
-	\caption{Physical parameters of the intra-ocular implant (source: Alcon)}
-	\label{chap9:tab-parameters}
-	\end{center}
-\end{table}
-
-The first difficulty is to obtain the folded geometry of the lens within the injection device. This step is not important for the training process and does not need to be interactive. Indeed the surgeon does not always have to prepare the implant as some injection devices are readily available with a folded implant already in place. We simulate the folding process by first folding the haptics onto the implant body. The body was then bent while keeping the haptics inside to obtain the shape described in \fig{chap9:fig-implantFolding}. The whole process was carried out by applying the necessary forces and boundary conditions on the body and haptics of the implant. The folded implant was then placed into the injection device. The simulation of the injection consists in pushing the intra-ocular implant within the injection device into the lens capsule. During these stages of the simulation, complex contacts occur and consist of self collisions of the lens as well as collisions between the lens and the injector and later with the capsule. To solve the contacts we use the contact warping method proposed by \cite{Saupin08} as it offers an efficient way to compute physically correct contact responses in the case of co-rotational models \TODO{is it still true? I'm not even sure we used this technique in the final submission to ISBMS}. As adhesions between the haptics and the body is often observed in surgery, friction is also taken into account in the contact response process.
-%
-\begin{figure}[ht]
-\centering 
-\subfloat[Real implant]{\includegraphics[height=5cm]{chapter9/IOL.pdf}}
-\hspace{1cm} 
-\subfloat[Meshed model]{\includegraphics[height=5cm]{chapter9/mesh_implant.pdf}}
-\caption [Lens implant and its mesh] {An actual intra-ocular implant (a) and the triangular (b) mesh used in our simulations. Notice the higher density of elements in areas where large deformations will take place. Image of implant courtesy of Alcon.}
-\label{chap9:fig-mesh}
+\includegraphics[width=13.5cm]{chapter9/resultsLiver.pdf}
+\caption[Meshing of a liver with shell elements]{(a) the targeted high resolution Glisson's capsule mesh ($8\,000$ triangles). (b) the one-sided Hausdorff distance error map after applying only one iteration of our algorithm to the coarse mesh ($1\,200$ shells).} 
+\label{chap9:fig-liver}
 \end{figure}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=5cm]{chapter9/implant_folding1.pdf}
-\includegraphics[width=4.5cm]{chapter9/implant_folding2.pdf} \\
-\includegraphics[width=4cm]{chapter9/implant_folding3.pdf}
-\includegraphics[width=7cm]{chapter9/implant_folding4.pdf}
-\caption [Folding of intra-ocular implant] {Top: intermediary steps of the intra-ocular implant folding. Bottom: fully folded implant ready to be placed into the injection device.}
-\label{chap9:fig-implantFolding}
+\includegraphics[width=13.5cm]{chapter9/resultsAneurysm.pdf}
+\caption[Meshing of an aneurysm with shell elements]{(a) the targeteted high resolution aneurysm mesh ($28\,368$ triangles). (b): the one-sided Hausdorff distance error map on a mesh of 772 shells generated with our method.}
+\label{chap9:fig-aneurysm}
 \end{figure}
 
-Results of our simulation are illustrated in \fig{chap9:fig-simu-results}. We can notice the progressive deployment of the implant when it exits the injector.  The shape of the intra-ocular lens remains very close to that of a real one during all stages of the simulation: within the injector, during the ejection phase, and when in place within the capsule. Due to the high stiffness and low mass of the lens, a direct sparse solver was used at each time step (dt $= 0.01\,$s) rather than an iterative solver, resulting in a more accurate and more stable simulation, to the detriment of computation times (about 5 FPS for the complete simulation, and about 10 FPS for the deformation only, on a 2.4 GHz processor).
-
-% Link where images from surgery have been found: http://asianophthalmology.org/articles/?a=articles&p=6
+\subsubsection*{Computation times.}
+We perform several tests on the aneurysm model at different resolutions to measure computation times. The shells are resisting to a uniform pressure load and solved using a Conjugate Gradient (CG) iterative solver. The computation times are reported in \fig{chap9:fig-computation}. Implicit integration allows for large time steps ($40\,ms$) and the computation is real-time for 800 shell elements and a reasonable error criterion ($5\,\%$). When the computation time must be bounded (critical real-time applications), one can fix the number of CG iterations to, for instance, $100$ and remains real-time for $1\,000$ shell elements. However, in that case the accuracy of the results is not checked.
+%
 \begin{figure}[ht]
 \centering
-\includegraphics[width=4.5cm]{chapter9/surgery1.pdf}
-\hfill
-\includegraphics[width=4.5cm]{chapter9/surgery2.pdf}
-\hfill
-\includegraphics[width=4.5cm]{chapter9/surgery3.pdf} \\
-\vspace{0.1cm}
-\includegraphics[width=4.5cm]{chapter9/simu1.pdf}
-\hfill
-\includegraphics[width=4.5cm]{chapter9/simu2.pdf}
-\hfill
-\includegraphics[width=4.5cm]{chapter9/simu3.pdf}
-\caption [Lens imlant] {Three steps of the simulation of the intra-ocular lens implant injection and its deployment within the lens capsule. Top: images from a real cataract surgery, courtesy of Dr. Tarek Youssef, ophthalmologist in Canada. Below: our simulation of the implant's deployment.}
-\label{chap9:fig-simu-results}
+\includegraphics[width=13.5cm]{chapter9/computation_times.pdf}
+\caption {Computation time on meshes of 200, 400, 600, 800 and $ 1\,000 $ elements.}.
+\label{chap9:fig-computation}
 \end{figure}
 
+\subsection{Coupling between tetrahedra and shells for advanced modelling}
+Structures in human body can be either solid (brain, liver, prostate etc.) or hollow (colon, blood vessels, stomach etc.). However, knowing how to model the two kind of structures is not sufficient to reach a high degree of accuracy, real life situations are more complex. As an example, the external surface of the liver is covered by a layer of cells called Glisson's capsule. Its interaction with the liver plays an important role into the overall structure's mechanical behaviour. Therefore considering the interaction between solid and hollow objects is as crucial as modelling the two structures separately. 
+
+An example of medical procedure to illustrate this point even further is angioplasty. Angioplasty is the technique of mechanically widening a narrowed or obstructed blood vessel, typically as a result of atherosclerosis. An empty and collapsed balloon on a guide wire is passed into the narrowed locations and then inflated to a fixed size. The balloon crushes the fatty deposits, so opening up the blood vessel to improved flow. As a proof of concept, we tried to simulate an angioplasty. Our preliminary results are presented on \fig{chap9:fig-stent}. The blood vessel is modelled using the shell FEM formulation described in this paper and the fatty deposits are simulated with a tetrahedral FEM method and are fixed to the interior wall of the blood vessel. When the balloon inflates it crushes the deposits and they then apply a pressure onto the curved surfaces of shells modelling the interior wall. The forces are then distributed onto the mechanical nodes of the blood vessel mesh as detailed in section~\ref{chap8:interactions}, which widens the blood vessel as expected. 
+%
+\begin{figure}[ht]
+\centering
+\includegraphics[width=12cm]{chapter9/stenose_final.pdf}
+\caption[Simulation of an angioplasty procedure]{Simulation of an angioplasty procedure. (a, c): A collapsed stent is inserted into the blood vessel simulated with our shell FEM formulation. The fatty deposits (in yellow) are modelled with tetrahedral FEM. (b, d): The stent is crushing the fatty deposits which creates a pressure onto the interior wall and widens the blood vessel.}
+\label{chap9:fig-stent}
+\end{figure}
 
 \section{Discussion}
 
-The finite element procedure that we propose was largely developed based on physical understanding without the use of mathematical shell theories. Indeed, our shell FEM was obtained by simply superimposing a plane stress and bending energies. According to \cite{Chapelle03}, this type of approach has a limited level of accuracy. The effective study of shell structures clearly requires a deep physical understanding of shell structural behaviours. The complexity of the physical behaviours of shells requires advanced mathematical analyses from theories that are still in development. The interested reader may refer to the book of \cite{Chapelle03} for more details on shell theory. If the range of application of our shell formulation might be somewhat limited, we did not find out any inconsistencies through our tests. We also need to keep in mind that the accuracy required in medical simulation is not the same than the one demanded in structural analyses for instance. Moreover, the additional complexity of a shell finite element formulation based on true shell theory may also very well jeopardise our real-time constraints. Therefore, we do not think that the use of this simple shell formulation significantly diminishes our contribution to the field of medical simulation. Indeed, to our knowledge, our co-rotational shell FEM is the first description of a shell finite element model applied to simulating the deformation of thin anatomical structures. 
-
-Nevertheless, a few improvements are conceivable. Large strain could be allowed by using a non-linear strain tensor and more complex material laws (non-linear, viscoelasticity, etc.) could also be added to our shell formulation. However, those changes are substantial and their implementations are not straightforward. In addition, it is not clear how the benefits would be the greatest: whether from enhancing our model to a non-linear formulation or completely changing to another model based on true shell theory (where membrane and bending energies are not separated). The answer may depend on the type of constraints applied on the object. Also (as already mentioned section \ref{chap9:GPU}), the real-time capacity of our algorithm could be further improved by implementing our shell FEM on GPU. Although an optimal parallel re-implementation is always challenging, we have already reviewed why there was no major obstacle to a GPU implementation. 
+Although we were able to mesh complex anatomical structures with a fairly small number of shell elements, our approach could be further improved. In our current implementation, if the error measured with the Hausdorff distance is greater than a threshold (which is also difficult to choose), all triangular elements are subdivided into 4 new triangles and each of the new vertices is moved towards the targeted geometry based on our heuristic algorithm. Obviously, this is not optimal as the error between the two meshes may very well be local and therefore the use of a global mesh refinement is not very suitable. The second weakness is that we also do not check the quality of the elements during our mesh process. If some elements are stretched from the heavy decimation, these elements are not corrected during the process of re-meshing. Our algorithm could even worsen the situation by splitting those stretched elements into four smaller (and more stretched) elements. One solution for the latter issue would be to enhance our algorithm with a relaxation phase where a repulsion force is applied between each vertex (constrained to remain on the surface of the object). This physical approach would allow a more even distribution of the vertices across the surface and would contribute to obtain better quality elements overall. Yet, meshing a surface with curved elements is a very complex problem and still an active area of research. In contrast to all previous geometrical techniques, we suggested a more physical approach consistent with our shell FEM formulation and obtained good results in meshing complex anatomical structures. 
 
 \section{Conclusion}
 
-We proposed a co-rotational formulation for shell elements by extending a classical in-plane triangular finite element approach. This simple shell element can efficiently handle both membrane, bending and twist forces. The validity of our approach has been demonstrated though comparison with theoretical results. It was then applied it to a rather complex application: the simulation of intra-ocular lens implant deployment in a cataract surgery simulation. These results are very encouraging and show the potential of such models. Examples include the modelling of hollow anatomical structures (colon, stomach, etc.), the simulation of cardiac valve leaflets, and blood vessels. This work on this co-rotational shell FEM formulation was the object of one main publications \citep{Comas2010a}.
+Over the last two chapters, we proposed a complete framework for real-time modelling of thin anatomical structures. The novelty of our method relies on the combination of a shell finite element formulation and a geometric surface reconstruction both based on the same polynomial interpolation function used to describe the surface of shells. We also show how contacts and interactions with the curved surfaces of shells can be handled using the same function. In summary, these polynomial shape functions are used in three different ways in our computational model:
+%
+\begin{description}
+\item[(a)] to approximate complex geometrical shapes
+\item[(b)] to compute internal forces via a co-rotational shell FEM
+\item[(c)] to compute contact forces onto a curved triangle
+\end{description}
 
-So far, the mesh of the implant used in the cataract surgery simulation was created manually. However, manually creating the mesh is not suitable if we want to model the deformation of complex anatomical structures using shell elements. Therefore, the first step is to describe the surface of the structure that we want to simulate with curved patches. The goal is to create a mesh featuring the optimal number of curved shell elements while staying as close as possible to our targeted geometry. The following chapter deals with this problem. 
+We achieved our objectives to propose a versatile solution which can simulate, in real-time, thin objects with various shapes and material properties with good accuracy. The efficiency of the method was illustrated through shell-based reconstruction and real-time simulation of the deformations of various anatomical structures and other thin objects (like an intra-ocular implant). We also presented preliminary results on the coupling between solid (tetrahedra) and thin objects (shells) for the advanced modelling of anatomical structures via the simulation of an angioplasty procedure. This work on modelling thin anatomical structures was the object of two main publications \citep{Comas2010a,Comas2010b}.
