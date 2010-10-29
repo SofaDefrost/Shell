@@ -185,6 +185,10 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 //    testAddDforce();
 
 
+//    Quat q(0.706434, 0.701058, -0.0092296, 0.0308436);
+//    Vec3 v = q.toEulerVector();
+//    std::cout << "rotation is " << v*180/M_PI << std::endl;
+    
     
 //    generateCylinder();
 
@@ -1762,6 +1766,96 @@ void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
     std::cout << "df from addDforce = " << df << std::endl;
     std::cout << " " << std::endl;
 }
+
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::draw()
+{
+    if(this->getContext()->getShowInteractionForceFields())
+    {
+        glDisable(GL_LIGHTING);
+        
+        // First part of path
+
+        Vec3 A(0.00328595, 0.00211686, 0.00159519);
+        Vec3 B(-0.0061308, 0.00170378, -0.000246);
+
+        Vec3 direction = B - A;
+//        direction.normalize();
+//        std::cout << "direction injector: " << direction << std::endl;
+        direction /= 20;
+        
+        Vec3 anchor(-0.00149125, 0.00142054, 0.000518047);
+        glColor4f(1.0, 0.65, 0.0, 1.0);
+
+        glBegin(GL_LINES);
+        for (unsigned int i=0; i<10; i++)
+        {
+            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
+            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
+        }
+        glEnd();
+
+
+        helper::gl::drawSphere(anchor, 0.00005);
+        Vec3 centre;
+        for (unsigned int i=0; i<10; i++)
+        {
+            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
+//            std::cout << centre - anchor << std::endl;
+            helper::gl::drawSphere(centre, 0.00005);
+        }
+
+        // Second part
+        anchor = centre;
+        Vec3 target(-0.009175, 0.000368, -0.0022945);
+        direction = target - anchor;
+        direction /= 10;
+
+        glBegin(GL_LINES);
+        for (unsigned int i=0; i<10; i++)
+        {
+            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
+            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
+        }
+        glEnd();
+
+
+        helper::gl::drawSphere(anchor, 0.00005);
+        for (unsigned int i=0; i<10; i++)
+        {
+            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
+//            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
+            helper::gl::drawSphere(centre, 0.00005);
+        }
+
+
+        // Relaxation in the centre
+        anchor = centre;
+        target = Vec3(-0.008167, -0.000547, -0.0015375);
+        direction = target - anchor;
+        direction /= 5;
+
+        glBegin(GL_LINES);
+        for (unsigned int i=0; i<5; i++)
+        {
+            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
+            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
+        }
+        glEnd();
+
+
+        helper::gl::drawSphere(anchor, 0.00005);
+        for (unsigned int i=0; i<5; i++)
+        {
+            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
+//            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
+            helper::gl::drawSphere(centre, 0.00005);
+        }
+        
+   }
+    
+}
+
 
 } // namespace forcefield
 

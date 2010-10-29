@@ -167,6 +167,8 @@ public:
 	virtual double getPotentialEnergy(const VecCoord& x) const;
 	virtual void handleTopologyChange();
 
+        virtual void draw();
+
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
         TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}
 
@@ -180,7 +182,7 @@ public:
         Data<VecCoordHigh> targetVertices;
         Data<SeqTriangles> targetTriangles;
 
-        unsigned int indexTop;
+//        unsigned int indexTop;
 
 protected :
 
