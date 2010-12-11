@@ -16,7 +16,7 @@
             <Node name="6D_DOFs1">
                 <MechanicalObject name="6D_Dof" template="Rigid"/>
                 <UniformMass mass="0.00128 0.000001 [0.0000001 0 0 0 0.0000001 0 0 0 0.0000001]" showAxisSizeFactor="5"/>
-                <ArticulatedSystemMapping object1="ArticulatedObject" object2="6D_Dof"/>
+                <ArticulatedSystemMapping input1="@../ArticulatedObject" output="@6D_Dof"/>
             </Node>
             <ArticulatedHierarchyContainer filename="data/ImplantMotion.bvh"/>
             <ArticulatedHierarchyBVHController />
@@ -49,7 +49,7 @@
         <LinearSolverConstraintCorrection  />
         <Node>
             <MechanicalObject name="basePointsVec3" template="Vec3d"/>
-            <IdentityMapping/>
+            <IdentityMapping input="@.." output="@."/>
             <Triangle name="Triangles"  selfCollision="1" bothSide="1" />
             <Line name="Lines"  selfCollision="1"  bothSide="1"  group="2"/>
             <Point name="Points" selfCollision="1"  bothSide="1" group="2"/>
@@ -62,7 +62,7 @@
 		<OglFloatVariable id="border_alpha" value="1.0"/>
 		<OglFloatVariable id="border_gamma" value="4.0"/>
                 <OglModel premultipliedAlpha="true" name="ImplantVisual" material="texture Ambient 1 0.5 0.5 0.0 1.0 Diffuse 1 0.2 0.2 0.0 0.2 Specular 1 0.8 0.8 0.8 1.0 Emissive 0 0.25 0.05 0.05 0.0 Shininess 1 25"/>
-                <IdentityMapping object1="basePointsVec3" object2="ImplantVisual" />
+                <IdentityMapping input="@../basePointsVec3" output="@ImplantVisual" />
             </Node>
         </Node>
 
@@ -99,60 +99,60 @@
                 <Triangle group="3" moving="0" simulated="0"/>
                 <Line group="3" moving="0" simulated="0"/>
                 <Point group="3" moving="0" simulated="0"/>
-                <Node name="Visual">
-                    <OglModel name="injector_CM_visual"  color="0 0 1 0.3" />
-                    <IdentityMapping object1="injector_CM" object2="injector_CM_visual" />
-                </Node>
+<!--                <Node name="Visual">-->
+<!--                    <OglModel name="injector_CM_visual"  color="0 0 1 0.3" />-->
+<!--                    <IdentityMapping object1="injector_CM" object2="injector_CM_visual" />-->
+<!--                </Node>-->
             </Node>
         </Node>
 
 
 
-<!--	<Node name ="group">-->
-<!---->
-<!--		<Node name="articulatedObject2">-->
-<!--			-->
-<!--			<Node name="6D_DOFs1">-->
-<!---->
-<!--				<Node name="Iris_">-->
-<!--					<OglModel name="Iris"  fileMesh="data/mesh/iris.obj" texturename="data/textures/iris.bmp" />-->
-<!--				</Node>-->
-<!--				-->
-<!--				<Node name="Sclera_">-->
-<!--					<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />-->
-<!--					<OglShaderDefineMacro id="TEXTURE_UNIT_0" />-->
-<!--					<OglShaderDefineMacro id="PHONG" />-->
-<!--					<OglFloatVariable id="altitude" value="0.1"/>-->
-<!--					<OglFloatVariable id="border_gamma" value="4.0"/>-->
-<!--					<OglFloatVariable id="border_alpha" value="1.0"/>-->
-<!--					<OglIntVariable id="axis" value="2"/>-->
-<!--					<OglFloatVector4Variable id="colors" value="1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 1.0"/>-->
-<!--					<OglTexture textureFilename="textures/lights4-small-noise.bmp" textureUnit="1" id="planeTexture" />-->
-<!--					-->
-<!--					<OglModel name="Sclera" fileMesh="data/mesh/sclera.obj" texturename="data/textures/sclera.bmp" castshadow="0" premultipliedAlpha="true" />-->
-<!--				</Node>-->
-<!--	-->
-<!--				<Node name="Choroid_">-->
-<!--					<OglModel name="Choroid" fileMesh="data/mesh/choroid.obj" normals="0" texturename="data/textures/choroid.bmp" castshadow="0"/>-->
-<!--				</Node> -->
-<!--				 -->
-<!--				<Node name="Ciliary_">-->
-<!--					<OglModel name="Ciliary"  fileMesh="data/mesh/ciliary_processes.obj" texturename="data/textures/ciliary.bmp" castshadow="0"/>-->
-<!--				</Node>-->
-<!--				-->
-<!--				<Node name="Cornea_">-->
-<!--					<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />-->
+	<Node name ="group">
+
+		<Node name="articulatedObject2">
+			
+			<Node name="6D_DOFs1">
+
+				<Node name="Iris_">
+					<OglModel name="Iris"  fileMesh="data/mesh/iris.obj" texturename="data/textures/iris.bmp" />
+				</Node>
+				
+				<Node name="Sclera_">
+					<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
+					<OglShaderDefineMacro id="TEXTURE_UNIT_0" />
+					<OglShaderDefineMacro id="PHONG" />
+					<OglFloatVariable id="altitude" value="0.1"/>
+					<OglFloatVariable id="border_gamma" value="4.0"/>
+					<OglFloatVariable id="border_alpha" value="1.0"/>
+					<OglIntVariable id="axis" value="2"/>
+					<OglFloatVector4Variable id="colors" value="1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 1.0"/>
+					<OglTexture textureFilename="textures/lights4-small-noise.bmp" textureUnit="1" id="planeTexture" />
+					
+					<OglModel name="Sclera" fileMesh="data/mesh/sclera.obj" texturename="data/textures/sclera.bmp" castshadow="0" premultipliedAlpha="true" />
+				</Node>
+	
+				<Node name="Choroid_">
+					<OglModel name="Choroid" fileMesh="data/mesh/choroid.obj" normals="0" texturename="data/textures/choroid.bmp" castshadow="0"/>
+				</Node> 
+				 
+				<Node name="Ciliary_">
+					<OglModel name="Ciliary"  fileMesh="data/mesh/ciliary_processes.obj" texturename="data/textures/ciliary.bmp" castshadow="0"/>
+				</Node>
+				
+				<Node name="Cornea_">
+					<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
 <!--					<OglShaderDefineMacro id="PLANE_ENVIRONMENT_MAPPING" />-->
-<!--					<OglFloatVariable id="altitude" value="0.0000001"/>-->
-<!--					<OglTexture textureFilename="textures/lights4-small-noise.bmp" textureUnit="2" id="planeTexture"/>-->
-<!--					<OglModel name="Cornea"  fileMesh="data/mesh/cornea.obj" premultipliedAlpha="true"-->
-<!--						material="texture Ambient 1 0.2 0.2 0.2 1.0 Diffuse 1 1.0 1.0 1.0 0.8 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 500"/>-->
-<!--						/>-->
-<!--				</Node>-->
-<!--			</Node>-->
-<!--		</Node>-->
-<!---->
-<!--	</Node>-->
+					<OglFloatVariable id="altitude" value="0.0000001"/>
+					<OglTexture textureFilename="textures/lights4-small-noise.bmp" textureUnit="2" id="planeTexture"/>
+					<OglModel name="Cornea"  fileMesh="data/mesh/cornea.obj" premultipliedAlpha="true"
+						material="texture Ambient 1 0.2 0.2 0.2 1.0 Diffuse 1 1.0 1.0 1.0 0.8 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 500"/>
+						/>
+				</Node>
+			</Node>
+		</Node>
+
+	</Node>
 
 <!--        <Node name="CompleteEyeAnatomicalModel">-->
 <!--		<OglModel name="Muscle1"      fileMesh="data/mesh/inf_recus_muscle.obj" texturename="data/textures/muscle.bmp" castshadow="0" />-->
@@ -163,36 +163,36 @@
 <!--		<OglModel name="Muscle6"      fileMesh="data/mesh/super_obl_muscle.obj" texturename="data/textures/muscle.bmp" castshadow="0" />-->
 <!--	</Node>-->
 	
-<!--	<Node name="Injector">		-->
-<!--		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />-->
-<!--		<OglShaderDefineMacro id="PHONG" />-->
-<!--	-->
-<!--		<OglModel name="Inject"       fileMesh="data/mesh/injector_visual_fake.obj"-->
-<!--			material="texture Ambient 1 0.0 0.0 0.0 1.0 Diffuse 1 0.2 0.2 0.2 1.0 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 10"-->
-<!--		/>-->
-<!--	</Node>-->
-<!---->
-<!--	<Node name="Clamps">		-->
-<!--		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />-->
-<!--		<OglShaderDefineMacro id="PHONG" />-->
-<!--	-->
-<!--		<OglModel name="Clamps"       fileMesh="data/mesh/clamps.obj" -->
-<!--			material="texture Ambient 1 0.0 0.0 0.0 1.0 Diffuse 1 0.2 0.2 0.2 1.0 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 10"-->
-<!--		/>-->
-<!--	</Node>-->
-<!---->
-<!--	<Node name="CompleteEyeAnatomicalModel_Skin">-->
-<!--		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />-->
-<!--		<OglShaderDefineMacro id="PHONG" />-->
-<!--		<OglShaderDefineMacro id="BUMP_MAPPING" />-->
-<!--		<OglShaderDefineMacro id="TEXTURE_UNIT_0" />-->
-<!--		-->
-<!--		<OglFloatVariable id="bumpFactor" value="1.0" />-->
-<!--		<OglFloatVariable id="showDebug" value="1.0" />-->
-<!--		<OglTexture name="color" id="colorTexture" textureFilename="data/textures/face_color.jpg" textureUnit="1" repeat="true"/>-->
-<!--		<OglTexture name="bump" id="normalMap" textureFilename="data/textures/face_normalMap.jpg" textureUnit="2" repeat="true"/>-->
-<!--		<OglModel name="Skin" fileMesh="data/mesh/face.obj"  putOnlyTexCoords="true" /> -->
-<!--	</Node>-->
+	<Node name="Injector">		
+		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
+		<OglShaderDefineMacro id="PHONG" />
+	
+		<OglModel name="Inject"       fileMesh="data/mesh/injector_visual_fake.obj"
+			material="texture Ambient 1 0.0 0.0 0.0 1.0 Diffuse 1 0.2 0.2 0.2 1.0 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 10"
+		/>
+	</Node>
+
+	<Node name="Clamps">		
+		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
+		<OglShaderDefineMacro id="PHONG" />
+	
+		<OglModel name="Clamps"       fileMesh="data/mesh/clamps.obj" 
+			material="texture Ambient 1 0.0 0.0 0.0 1.0 Diffuse 1 0.2 0.2 0.2 1.0 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 10"
+		/>
+	</Node>
+
+	<Node name="CompleteEyeAnatomicalModel_Skin">
+		<OglShader vertFilename="shaders/generalRenderingShader.vert" fragFilename="shaders/generalRenderingShader.frag" />
+		<OglShaderDefineMacro id="PHONG" />
+		<OglShaderDefineMacro id="BUMP_MAPPING" />
+		<OglShaderDefineMacro id="TEXTURE_UNIT_0" />
+		
+		<OglFloatVariable id="bumpFactor" value="1.0" />
+		<OglFloatVariable id="showDebug" value="1.0" />
+		<OglTexture name="color" id="colorTexture" textureFilename="data/textures/face_color.jpg" textureUnit="1" repeat="true"/>
+		<OglTexture name="bump" id="normalMap" textureFilename="data/textures/face_normalMap.jpg" textureUnit="2" repeat="true"/>
+		<OglModel name="Skin" fileMesh="data/mesh/face.obj"  putOnlyTexCoords="true" /> 
+	</Node>
 
 
         <Node name="Capsule">
@@ -202,10 +202,10 @@
                 <Triangle group="3" moving="0" simulated="0"/>
                 <Line group="3" moving="0" simulated="0"/>
                 <Point group="3" moving="0" simulated="0"/>
-                <Node name="Visual">
-                    <OglModel name="Capsule_visual"  color="0 0 1 0.3" />
-                    <IdentityMapping object1="capsule" object2="Capsule_visual" />
-                </Node>
+<!--                <Node name="Visual">-->
+<!--                    <OglModel name="Capsule_visual"  color="0 0 1 0.3" />-->
+<!--                    <IdentityMapping object1="capsule" object2="Capsule_visual" />-->
+<!--                </Node>-->
             </Node>
         </Node>
 

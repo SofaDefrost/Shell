@@ -22,15 +22,12 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
+
 #include "BendingPlateMechanicalMapping.inl"
-
-#include <sofa/core/behavior/MechanicalMapping.inl>
-#include <sofa/core/behavior/MappedModel.h>
-#include <sofa/core/behavior/MechanicalState.h>
-
-#include <sofa/core/ObjectFactory.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
+#include <sofa/core/ObjectFactory.h>
+
 
 namespace sofa
 {
@@ -49,49 +46,34 @@ SOFA_DECL_CLASS(BendingPlateMechanicalMapping)
 
 int BendingPlateMechanicalMappingClass = core::RegisterObject("Mechanical mapping between triangular shell and a cloud of points")
 #ifndef SOFA_FLOAT
-.add< BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3dTypes>, MechanicalState<Vec3dTypes> > > >()
-.add< BendingPlateMechanicalMapping< Mapping< State<Rigid3dTypes>, MappedModel<Vec3dTypes> > > >()
-
+.add< BendingPlateMechanicalMapping< Rigid3dTypes, Vec3dTypes > >()
 #endif
 #ifndef SOFA_DOUBLE
-.add< BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3fTypes>, MechanicalState<Vec3fTypes> > > >()
-.add< BendingPlateMechanicalMapping< Mapping< State<Rigid3fTypes>, MappedModel<Vec3fTypes> > > >()
+.add< BendingPlateMechanicalMapping< Rigid3fTypes, Vec3fTypes > >()
 #endif
-
 #ifndef SOFA_FLOAT
 #ifndef SOFA_DOUBLE
-//.add< BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3fTypes>, MechanicalState<Vec3dTypes> > > >()
-//.add< BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3dTypes>, MechanicalState<Vec3fTypes> > > >()
-//.add< BendingPlateMechanicalMapping< Mapping< State<Rigid3fTypes>, MappedModel<Vec3dTypes> > > >()
-//.add< BendingPlateMechanicalMapping< Mapping< State<Rigid3dTypes>, MappedModel<Vec3fTypes> > > >()
+.add< BendingPlateMechanicalMapping< Rigid3dTypes, Vec3fTypes > >()
+.add< BendingPlateMechanicalMapping< Rigid3fTypes, Vec3dTypes > >()
 #endif
 #endif
 ;
 
 
 #ifndef SOFA_FLOAT
-template class BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3dTypes>, MechanicalState<Vec3dTypes> > >;
-template class BendingPlateMechanicalMapping< Mapping< State<Rigid3dTypes>, MappedModel<Vec3dTypes> > >;
+template class SOFA_COMPONENT_MAPPING_API BendingPlateMechanicalMapping< Rigid3dTypes, Vec3dTypes >;
 #endif
 #ifndef SOFA_DOUBLE
-template class BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3fTypes>, MechanicalState<Vec3fTypes> > >;
-template class BendingPlateMechanicalMapping< Mapping< State<Rigid3fTypes>, MappedModel<Vec3fTypes> > >;
+template class SOFA_COMPONENT_MAPPING_API BendingPlateMechanicalMapping< Rigid3fTypes, Vec3fTypes >;
 #endif
 
 #ifndef SOFA_FLOAT
 #ifndef SOFA_DOUBLE
-//template class BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3dTypes>, MechanicalState<Vec3fTypes> > >;
-//template class BendingPlateMechanicalMapping< MechanicalMapping< MechanicalState<Rigid3fTypes>, MechanicalState<Vec3dTypes> > >;
-//template class BendingPlateMechanicalMapping< Mapping< State<Rigid3dTypes>, MappedModel<Vec3fTypes> > >;
-//template class BendingPlateMechanicalMapping< Mapping< State<Rigid3fTypes>, MappedModel<Vec3dTypes> > >;
+template class SOFA_COMPONENT_MAPPING_API BendingPlateMechanicalMapping< Rigid3dTypes, Vec3fTypes >;
+template class SOFA_COMPONENT_MAPPING_API BendingPlateMechanicalMapping< Rigid3fTypes, Vec3dTypes >;
 #endif
 #endif
 
-// Mech -> Mech
-
-// Mech -> Mapped
-
-// Mech -> ExtMapped
 
 } // namespace mapping
 

@@ -19,6 +19,7 @@
     <Node name="one_triangle">
         <EulerImplicitSolver />
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
+<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
         <TriangleSetTopologyContainer name="trianglesTopo" filename="applications/plugins/shells/mesh/oneTriangle.obj" />
 
         <!--                No rotation - flat rest position                -->
@@ -48,14 +49,14 @@
             
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subTrianglesTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>
+            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="3"/>
             <MechanicalObject  name="subPoints" />
-            <BendingPlateMechanicalMapping/>
+            <BendingPlateMechanicalMapping input="@../tri" output="@subPoints"/>
             <Triangle contactStiffness="0.001"/>
-<!--            <Node>-->
-<!--                <OglModel name="Visual" color="red"/>-->
-<!--                <IdentityMapping object1="subPoints" object2="Visual"/>-->
-<!--            </Node>-->
+            <Node>
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping input="@../subPoints" output="@Visual"/>
+            </Node>
         </Node>
         
     </Node>

@@ -29,17 +29,18 @@
 #pragma once
 #endif
 
+
 #include <sofa/core/behavior/ForceField.h>
+#include <sofa/core/behavior/MechanicalState.h>
+#include <sofa/core/objectmodel/Data.h>
+
+#include <sofa/component/component.h>
+
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/defaulttype/VecTypes.h>
-#include <sofa/defaulttype/Mat.h>
 #include <sofa/component/topology/TriangleData.h>
-#include <newmat/newmat.h>
-#include <newmat/newmatap.h>
+#include <sofa/core/objectmodel/ObjectRef.h>
 
-#include <sofa/helper/system/thread/CTime.h>
 
-#include <sofa/helper/gl/BasicShapes.h>
 
 namespace sofa
 {
@@ -69,15 +70,19 @@ class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTyp
 public:
         SOFA_CLASS(SOFA_TEMPLATE(TriangularBendingFEMForceField,DataTypes), SOFA_TEMPLATE(core::behavior::ForceField,DataTypes));
 
-        typedef core::behavior::ForceField<DataTypes> Inherited;
-	typedef typename DataTypes::VecCoord VecCoord;
-	typedef typename DataTypes::VecDeriv VecDeriv;
-	typedef typename DataTypes::VecReal VecReal;
+        typedef core::behavior::ForceField<DataTypes>       Inherited;
+	typedef typename DataTypes::VecCoord                VecCoord;
+	typedef typename DataTypes::VecDeriv                VecDeriv;
+	typedef typename DataTypes::VecReal                 VecReal;
 	typedef VecCoord Vector;
-	typedef typename DataTypes::Coord    Coord   ;
-	typedef typename DataTypes::Deriv    Deriv   ;
-	typedef typename Coord::value_type   Real    ;
+
+	typedef typename DataTypes::Coord                   Coord;
+	typedef typename DataTypes::Deriv                   Deriv;
+	typedef typename Coord::value_type                  Real;
 	typedef Vec<3,Real> Vec3;
+
+        typedef Data<VecCoord>                              DataVecCoord;
+	typedef Data<VecDeriv>                              DataVecDeriv;
 
         typedef Vec3Types::VecCoord VecCoordHigh;
 
@@ -98,9 +103,7 @@ protected:
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
 
 	sofa::core::topology::BaseMeshTopology* _topology;
-//        sofa::core::topology::BaseMeshTopology* _topologyHigh;
-        VecCoordHigh verticesTarget;
-        SeqTriangles trianglesTarget;
+        sofa::core::topology::BaseMeshTopology* _topologyTarget;
 
 //        TriangularBendingFEMForceFieldInternalData<DataTypes> data;
 //        friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
@@ -161,9 +164,10 @@ public:
 	virtual ~TriangularBendingFEMForceField();
 	virtual void init();
 	virtual void reinit();
-	virtual void addForce (VecDeriv& f, const VecCoord& x, const VecDeriv& v);
-	virtual void addDForce (VecDeriv& df, const VecDeriv& dx);
-        virtual void addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset);
+        virtual void addForce(DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/, const sofa::core::MechanicalParams* /*mparams*/ ) ;
+        virtual void addDForce(DataVecDeriv& datadF, const DataVecDeriv& datadX, const sofa::core::MechanicalParams* /*mparams*/ ) ;
+        virtual void addKToMatrix(const sofa::core::behavior::MultiMatrixAccessor* matrix, const core::MechanicalParams* mparams);
+        virtual void addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/);
 	virtual double getPotentialEnergy(const VecCoord& x) const;
 	virtual void handleTopologyChange();
 
@@ -179,8 +183,10 @@ public:
         Data <Real> f_membraneRatio;
         Data <Real> f_bendingRatio;
         Data<bool> refineMesh;
-        Data<VecCoordHigh> targetVertices;
-        Data<SeqTriangles> targetTriangles;
+        Data<int> iterations;
+        core::objectmodel::DataObjectRef nameTargetTopology;
+        VecCoordHigh targetVertices;
+        SeqTriangles targetTriangles;
 
 //        unsigned int indexTop;
 
@@ -201,7 +207,7 @@ protected :
 	static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
 	/// f += Kx where K is the stiffness matrix and x a displacement
-	virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex);
+	virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double & kFactor);
 	virtual void computeMaterialStiffness(const int i);
 
 	void initTriangle(const int i, const Index&a, const Index&b, const Index&c);

@@ -28,6 +28,7 @@
 #include "TriangularBendingFEMForceField.h"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/helper/gl/template.h>
+#include <sofa/helper/gl/DrawManager.h>
 #include <sofa/component/topology/TriangleData.inl>
 #include <sofa/component/topology/EdgeData.inl>
 #include <sofa/component/topology/PointData.inl>
@@ -40,8 +41,9 @@
 #include <algorithm>
 #include <sofa/defaulttype/Vec3Types.h>
 #include <assert.h>
-#include <iostream>
-#include <fstream>
+#include <map>
+#include <utility>
+#include <sofa/component/topology/TriangleSetTopologyContainer.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -136,8 +138,8 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , f_membraneRatio(initData(&f_membraneRatio,(Real)1.0,"membraneRatio","In plane forces ratio"))
 , f_bendingRatio(initData(&f_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
 , refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
-, targetVertices(initData(&targetVertices, "targetVertices","Vertices of the target mesh"))
-, targetTriangles(initData(&targetTriangles, "targetTriangles","Triangles of the target mesh"))
+, iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
+, nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
 {
 }
 
@@ -206,47 +208,26 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 //            std::cout << "indice central point bottom = " << i << std::endl;
 //    }
 
-//    std::cout << "TriangularBendingFEMForceField retrieves coarse topology" << std::endl;
-//    std::cout << "number of vertices = " << x.size() << std::endl;
-//    std::cout << "number of triangles = " << _topology->getTriangles().size() << std::endl;
-
-//    std::cout << "TriangularBendingFEMForceField retrieves target topology" << std::endl;
-
-//    std::cout << "number of vertices = " << targetVertices.getValue().size() << std::endl;
-//    std::cout << "number of triangles = " << targetTriangles.getValue().size() << std::endl;
-
-    // Retrieves vertices of high resolution mesh
-    verticesTarget = targetVertices.getValue();
-    // Retrieves triangles of high resolution mesh
-    trianglesTarget = targetTriangles.getValue();
-
-
-//    _topologyHigh = NULL;
-//    getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
-//    if (_topologyHigh != NULL)
-//    {
-//        trianglesTarget = _topologyHigh->getTriangles();
-//
-//        MechanicalState<Vec3Types>* mStateHigh = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyHigh->getContext()->getMechanicalState());
-//        verticesTarget = *mStateHigh->getX();
-//
-//        std::cout << "number of vertices = " << verticesTarget.size() << std::endl;
-//        std::cout << "number of triangles = " << trianglesTarget.size() << std::endl;
-//    }
-//    else
-//    {
-//        std::cout << "WARNING(TriangularBendingFEMForceField): no target high resolution mesh found" << std::endl;
-//    }
-
-//    _topologyHigh = NULL;
-//    this->getContext()->get(_topologyHigh, "/TargetMesh/targetTopo");
-//    if (_topologyHigh != NULL)
-//    {
-//        trianglesTarget = _topologyHigh->getTriangles()
-//    }
-
     if (refineMesh.getValue())
     {
+        _topologyTarget = NULL;
+        const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
+        _topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
+
+        if (_topologyTarget)
+        {
+            targetTriangles = _topologyTarget->getTriangles();
+
+            MechanicalState<Vec3Types>* mStateTarget = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyTarget->getContext()->getMechanicalState());
+            targetVertices = *mStateTarget->getX();
+        }
+        else
+        {
+            std::cout << "WARNING(TriangularBendingFEMForceField): no target high resolution mesh found" << std::endl;
+            return;
+        }
+
+        // Run procedure for shell remeshing
         refineCoarseMeshToTarget();
     }
 }
@@ -339,7 +320,7 @@ void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
 
     
     // Writes in Gmsh format
-    ofstream myfile;
+    std::ofstream myfile;
     myfile.open ("pinchedCylinder.obj");
     for (unsigned int vertex=0; vertex<listVertices.size(); vertex++)
     {
@@ -380,13 +361,7 @@ void TriangularBendingFEMForceField<DataTypes>::generateCylinder(void)
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
 {
-//    const SeqTriangles trianglesHigh = targetTriangles.getValue();
-//    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << trianglesHigh.size() << " triangles" << std::endl;
-
-    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << targetTriangles.getValue().size() << " triangles" << std::endl;
-    
-    // Level of subdivision
-    unsigned int levelSubdivision = 1;
+    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << targetTriangles.size() << " triangles" << std::endl;
 
     // List of vertices
     const VecCoord& x = *this->mstate->getX();
@@ -397,7 +372,7 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
     sofa::helper::vector<Vec3> subVertices;
     SeqTriangles subTriangles;
 
-    // Initialises list of subvertices and triangles with those of previous iteration
+    // Initialises list of subvertices and triangles
     for (unsigned int i=0; i<x.size(); i++)
     {
         subVertices.push_back(x[i].getCenter());
@@ -407,17 +382,23 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
         subTriangles.push_back(triangles[t]);
     }
 
+    // Adjusts position of each subvertex to get closer to actual surface before iterating again
+    for (unsigned int i=0; i<subVertices.size(); i++)
+    {
+        movePoint(subVertices[i]);
+    }
+
 
     // Refines mesh
-    for (unsigned int n=0; n<levelSubdivision; n++)
+    for (unsigned int n=0; n<iterations.getValue(); n++)
     {
         // Subdivides each triangle into 4 smaller ones
         subTriangles.clear();
         for (unsigned int t=0; t<triangles.size(); t++)
         {
-            Vec3 a = x[(int)triangles[t][0]].getCenter();
-            Vec3 b = x[(int)triangles[t][1]].getCenter();
-            Vec3 c = x[(int)triangles[t][2]].getCenter();
+            Vec3 a = subVertices[(int)triangles[t][0]];
+            Vec3 b = subVertices[(int)triangles[t][1]];
+            Vec3 c = subVertices[(int)triangles[t][2]];
 
             subdivide(a, b, c, subVertices, subTriangles);
         }
@@ -430,11 +411,11 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
     }
 
 
-    std::cout << "listVertices.size() = " << subVertices.size() << std::endl;
-    std::cout << "listElements.size() = " << subTriangles.size() << std::endl;
+    std::cout << "Number of vertices of the resulting mesh = " << subVertices.size() << std::endl;
+    std::cout << "Number of shells of the resulting mesh   = " << subTriangles.size() << std::endl;
 
     // Writes in Gmsh format
-    ofstream myfile;
+    std::ofstream myfile;
     myfile.open ("mesh_refined.obj");
     for (unsigned int vertex=0; vertex<subVertices.size(); vertex++)
     {
@@ -445,7 +426,7 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
         myfile << "f " << subTriangles[element][0]+1 << " " << subTriangles[element][1]+1 << " " << subTriangles[element][2]+1 << "\n";
     }
     myfile.close();
-    std::cout << "Done" << std::endl;
+    std::cout << "Mesh written in mesh_refined.obj" << std::endl;
 }
 
 // --------------------------------------------------------------------------------------
@@ -519,21 +500,13 @@ void TriangularBendingFEMForceField<DataTypes>::movePoint(Vec3& pointToMove)
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints)
 {
-    // Retrieves vertices of high resolution mesh
-    const VecCoordHigh& x = targetVertices.getValue();
-    // Retrieves triangles of high resolution mesh
-    const SeqTriangles triangles = targetTriangles.getValue();
+    std::multimap<Real, Vec3> closestTrianglesData;
 
-//    const helper::vector<Vec3> x = verticesTarget;
-//    const SeqTriangles triangles = trianglesTarget;
-
-    multimap<Real, Vec3> closestTrianglesData;
-
-    for (unsigned int t=0; t<triangles.size(); t++)
+    for (unsigned int t=0; t<targetTriangles.size(); t++)
     {
-        Vec3 pointTriangle1 = x[ triangles[t][0] ];
-        Vec3 pointTriangle2 = x[ triangles[t][1] ];
-        Vec3 pointTriangle3 = x[ triangles[t][2] ];
+        Vec3 pointTriangle1 = targetVertices[ targetTriangles[t][0] ];
+        Vec3 pointTriangle2 = targetVertices[ targetTriangles[t][1] ];
+        Vec3 pointTriangle3 = targetVertices[ targetTriangles[t][2] ];
 
         Vec3 G = (pointTriangle1+pointTriangle2+pointTriangle3)/3;
 
@@ -541,12 +514,12 @@ void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const V
         Real distance = (G-point).norm2();
 
         // Stores distances (automatically sorted)
-        closestTrianglesData.insert( make_pair<Real,Vec3>(distance,G));
+        closestTrianglesData.insert( std::make_pair<Real,Vec3>(distance,G));
     }
 
     // Returns the 3 closest points
     int count = 0;
-    typename multimap<Real,Vec3>::iterator it;
+    typename std::multimap<Real,Vec3>::iterator it;
     for (it = closestTrianglesData.begin(); it!=closestTrianglesData.end(); it++)
     {
         if (count < 3)
@@ -976,7 +949,7 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeriv& dx, const Index elementIndex)
+void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeriv& dx, const Index elementIndex, const double & kFactor)
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
@@ -989,15 +962,15 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, cons
     // Computes displacements
     Displacement Disp;
     Vec3 x_a, x_b, x_c;
-    x_a = tinfo->Qframe.rotate(dx[a].getVCenter());
+    x_a = tinfo->Qframe.rotate(getVCenter(dx[a]));
     Disp[0] = x_a[0];
     Disp[1] = x_a[1];
 
-    x_b = tinfo->Qframe.rotate(dx[b].getVCenter());
+    x_b = tinfo->Qframe.rotate(getVCenter(dx[b]));
     Disp[2] = x_b[0];
     Disp[3] = x_b[1];
 
-    x_c = tinfo->Qframe.rotate(dx[c].getVCenter());
+    x_c = tinfo->Qframe.rotate(getVCenter(dx[c]));
     Disp[4] = x_c[0];
     Disp[5] = x_c[1];
 
@@ -1006,9 +979,9 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, cons
     dF = tinfo->stiffnessMatrix * Disp;
 
     // Transfer into global frame
-    v[a].getVCenter() += tinfo->Qframe.inverseRotate(Vec3(-dF[0], -dF[1], 0));
-    v[b].getVCenter() += tinfo->Qframe.inverseRotate(Vec3(-dF[2], -dF[3], 0));
-    v[c].getVCenter() += tinfo->Qframe.inverseRotate(Vec3(-dF[4], -dF[5], 0));
+    getVCenter(v[a]) += tinfo->Qframe.inverseRotate(Vec3(-dF[0], -dF[1], 0));
+    getVCenter(v[b]) += tinfo->Qframe.inverseRotate(Vec3(-dF[2], -dF[3], 0));
+    getVCenter(v[c]) += tinfo->Qframe.inverseRotate(Vec3(-dF[4], -dF[5], 0));
 
     // If bending is requested
     if (f_bending.getValue())
@@ -1016,17 +989,17 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, cons
         // Bending displacements
         DisplacementBending Disp_bending;
         Vec3 u;
-        u = tinfo->Qframe.rotate(dx[a].getVOrientation());
+        u = tinfo->Qframe.rotate(getVOrientation(dx[a]));
         Disp_bending[0] = x_a[2];
         Disp_bending[1] = u[0];
         Disp_bending[2] = u[1];
 
-        u = tinfo->Qframe.rotate(dx[b].getVOrientation());
+        u = tinfo->Qframe.rotate(getVOrientation(dx[b]));
         Disp_bending[3] = x_b[2];
         Disp_bending[4] = u[0];
         Disp_bending[5] = u[1];
 
-        u = tinfo->Qframe.rotate(dx[c].getVOrientation());
+        u = tinfo->Qframe.rotate(getVOrientation(dx[c]));
         Disp_bending[6] = x_c[2];
         Disp_bending[7] = u[0];
         Disp_bending[8] = u[1];
@@ -1046,9 +1019,9 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, cons
         fc1 = tinfo->Qframe.inverseRotate(Vec3(0.0, 0.0, dF_bending[6]));
         fc2 = tinfo->Qframe.inverseRotate(Vec3(dF_bending[7], dF_bending[8], 0.0));
 
-        v[a] += Deriv(-fa1, -fa2);
-        v[b] += Deriv(-fb1, -fb2);
-        v[c] += Deriv(-fc1, -fc2);
+        v[a] += Deriv(-fa1, -fa2) * kFactor;
+        v[b] += Deriv(-fb1, -fb2) * kFactor;
+        v[c] += Deriv(-fc1, -fc2) * kFactor;
     }
 
 
@@ -1435,9 +1408,9 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, con
     computeForce(F, D, elementIndex);
 
     // Transform forces back into global reference frame
-    f[a].getVCenter() -= tinfo->Qframe.inverseRotate(Vec3(F[0], F[1], 0));
-    f[b].getVCenter() -= tinfo->Qframe.inverseRotate(Vec3(F[2], F[3], 0));
-    f[c].getVCenter() -= tinfo->Qframe.inverseRotate(Vec3(F[4], F[5], 0));
+    getVCenter(f[a]) -= tinfo->Qframe.inverseRotate(Vec3(F[0], F[1], 0));
+    getVCenter(f[b]) -= tinfo->Qframe.inverseRotate(Vec3(F[2], F[3], 0));
+    getVCenter(f[c]) -= tinfo->Qframe.inverseRotate(Vec3(F[4], F[5], 0));
 
     if (f_bending.getValue())
     {
@@ -1476,20 +1449,25 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, con
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::addForce(VecDeriv& f, const VecCoord& x, const VecDeriv& /*v*/)
+void TriangularBendingFEMForceField<DataTypes>::addForce(DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/, const sofa::core::MechanicalParams* /*mparams*/ )
 {
+    VecDeriv& f        = *(dataF.beginEdit());
+    const VecCoord& p  =   dataX.getValue()  ;
+
 //    sofa::helper::system::thread::ctime_t start, stop;
 //    sofa::helper::system::thread::CTime timer;
 //
 //    start = timer.getTime();
 
     int nbTriangles=_topology->getNbTriangles();
-    f.resize(x.size());
+    f.resize(p.size());
 
     for (int i=0; i<nbTriangles; i++)
     {
-        accumulateForce(f, x, i);
+        accumulateForce(f, p, i);
     }
+
+    dataF.endEdit();
 
 //    const VecCoord& x0 = *this->mstate->getX0();
 //    std::cout << "displacement vertex " << indexTop << ": " << x[indexTop].getCenter()-x0[indexTop].getCenter() << std::endl;
@@ -1504,20 +1482,27 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(VecDeriv& f, const VecC
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::addDForce(VecDeriv& df, const VecDeriv& dx)
+void TriangularBendingFEMForceField<DataTypes>::addDForce(DataVecDeriv& datadF, const DataVecDeriv& datadX, const sofa::core::MechanicalParams* mparams )
 {
+    VecDeriv& df        = *(datadF.beginEdit());
+    const VecDeriv& dp  =   datadX.getValue()  ;
+
+    double kFactor = mparams->kFactor();
+
 //    sofa::helper::system::thread::ctime_t start, stop;
 //    sofa::helper::system::thread::CTime timer;
 //
 //    start = timer.getTime();
 
     int nbTriangles=_topology->getNbTriangles();
-    df.resize(dx.size());
+    df.resize(dp.size());
 
     for (int i=0; i<nbTriangles; i++)
     {
-        applyStiffness(df, dx, i);
+        applyStiffness(df, dp, i, kFactor);
     }
+
+    datadF.endEdit();
 
 //    stop = timer.getTime();
 //    std::cout << "time addDForce = " << stop-start << std::endl;
@@ -1625,7 +1610,7 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
 #ifdef ASSEMBLED_K
 
 template<class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset)
+void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(const sofa::core::behavior::MultiMatrixAccessor* matrix, const core::MechanicalParams* mparams)
 {
     StiffnessMatrixGlobalSpace K_gs;
 
@@ -1633,7 +1618,10 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
     unsigned int i, j ,n1, n2, row, column, ROW, COLUMN;
     Index node1, node2;
 
+    sofa::core::behavior::MultiMatrixAccessor::MatrixRef r = matrix->getMatrix(this->mstate);
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+
+    double kFactor = mparams->kFactor();
 
     for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
@@ -1649,7 +1637,7 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
 
                     for(i=0; i<6; i++)
                     {
-                            ROW = offset+6*node1+i;
+                            ROW = r.offset+6*node1+i;
                             row = 6*n1+i;
                             // find index of node 2
                             for (n2=0; n2<3; n2++)
@@ -1658,9 +1646,9 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
 
                                     for (j=0; j<6; j++)
                                     {
-                                            COLUMN = offset+6*node2+j;
+                                            COLUMN = r.offset+6*node2+j;
                                             column = 6*n2+j;
-                                            mat->add(ROW, COLUMN, K_gs[row][column]);
+                                            r.matrix->add(ROW, COLUMN, K_gs[row][column] /* * kFactor */);
                                     }
                             }
                     }
@@ -1731,40 +1719,48 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
 
 #endif
 
+
+template<class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/)
+{
+    
+}
+
+
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
 {
 //    #include <iostream>
-    VecDeriv f1, f2, df, v, dx2;
-    VecCoord x1, x2, dx1;
-
-    x1 = *this->mstate->getX();
-    x2.resize(x1.size());
-    f1.resize(x1.size());
-    f2.resize(x1.size());
-    df.resize(x1.size());
-    dx1.resize(x1.size());
-    dx2.resize(x1.size());
-    v.resize(x1.size());
-
-    dx1[x1.size()-1] = Coord(Vec3(0.0, 0.0, 0.0), Quat(0.00499998, 0, 0, 0.999988));
-
-    for (unsigned int i=0; i<x1.size(); i++)
-    x2[i] = x1[i] + dx1[i];
-
-    addForce(f1, x1, v);
-    addForce(f2, x2, v);
-
-    for (unsigned int i=0; i<f1.size(); i++)
-    df[i] = f2[i] - f1[i];
-    std::cout << "df = f2-f1 = " << df << std::endl;
-
-    df.clear();
-    dx2[x1.size()-1] = Deriv(Vec3(0.0, 0, 0.0), Vec3(0.01, 0, 0));
-    addDForce(df, dx2);
-
-    std::cout << "df from addDforce = " << df << std::endl;
-    std::cout << " " << std::endl;
+//    VecDeriv f1, f2, df, v, dx2;
+//    VecCoord x1, x2, dx1;
+//
+//    x1 = *this->mstate->getX();
+//    x2.resize(x1.size());
+//    f1.resize(x1.size());
+//    f2.resize(x1.size());
+//    df.resize(x1.size());
+//    dx1.resize(x1.size());
+//    dx2.resize(x1.size());
+//    v.resize(x1.size());
+//
+//    dx1[x1.size()-1] = Coord(Vec3(0.0, 0.0, 0.0), Quat(0.00499998, 0, 0, 0.999988));
+//
+//    for (unsigned int i=0; i<x1.size(); i++)
+//    x2[i] = x1[i] + dx1[i];
+//
+//    addForce(f1, x1, v);
+//    addForce(f2, x2, v);
+//
+//    for (unsigned int i=0; i<f1.size(); i++)
+//    df[i] = f2[i] - f1[i];
+//    std::cout << "df = f2-f1 = " << df << std::endl;
+//
+//    df.clear();
+//    dx2[x1.size()-1] = Deriv(Vec3(0.0, 0, 0.0), Vec3(0.01, 0, 0));
+//    addDForce(df, dx2);
+//
+//    std::cout << "df from addDforce = " << df << std::endl;
+//    std::cout << " " << std::endl;
 }
 
 template <class DataTypes>
@@ -1795,14 +1791,17 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
         }
         glEnd();
 
+//        const std::vector<Vec3> vecAnchors;
+//        vecAnchors.push_back(anchor);
+//        const Vec<4, float> colour(1.0, 0.65, 0.0, 1.0);
+//        helper::gl::DrawManager::drawSpheres(vecAnchors, 0.00005, colour);
 
-        helper::gl::drawSphere(anchor, 0.00005);
         Vec3 centre;
         for (unsigned int i=0; i<10; i++)
         {
             centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
 //            std::cout << centre - anchor << std::endl;
-            helper::gl::drawSphere(centre, 0.00005);
+//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
         }
 
         // Second part
@@ -1820,12 +1819,12 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
         glEnd();
 
 
-        helper::gl::drawSphere(anchor, 0.00005);
+//        helper::gl::DrawManager::drawSpheres(anchor, 0.00005, colour);
         for (unsigned int i=0; i<10; i++)
         {
             centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
 //            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
-            helper::gl::drawSphere(centre, 0.00005);
+//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
         }
 
 
@@ -1844,12 +1843,12 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
         glEnd();
 
 
-        helper::gl::drawSphere(anchor, 0.00005);
+//        helper::gl::DrawManager::drawSpheres(anchor, 0.00005, colour);
         for (unsigned int i=0; i<5; i++)
         {
             centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
 //            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
-            helper::gl::drawSphere(centre, 0.00005);
+//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
         }
         
    }

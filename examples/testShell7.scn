@@ -54,14 +54,14 @@
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subTriangles"/>
-            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="1"/>
+            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="3"/>
             <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003"/>
 <!--            <ConstantForceField points="5 9" forces="0 0 3"/>-->
-            <BendingPlateMechanicalMapping/>
+            <BendingPlateMechanicalMapping input="@.." output="@."/>
             <Triangle />
             <Node>
                 <OglModel name="Visual" color="red"/>
-                <IdentityMapping object1="subPoints" object2="Visual"/>
+                <IdentityMapping input="@../subPoints" output="@Visual"/>
             </Node>
         </Node>
 

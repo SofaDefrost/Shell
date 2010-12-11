@@ -42,48 +42,27 @@ namespace mapping
 
 using namespace	sofa::component::collision;
 
-template <class BaseMapping>
-BendingPlateMechanicalMapping<BaseMapping>::BendingPlateMechanicalMapping(In* from, Out* to)
-: Inherit(from, to)
-, inputTopo(NULL)
-, outputTopo(NULL)
-, measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
-, nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
-{
-}
 
-template <class BaseMapping>
-BendingPlateMechanicalMapping<BaseMapping>::~BendingPlateMechanicalMapping()
-{
-}
-
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::init()
+template <class TIn, class TOut>
+void BendingPlateMechanicalMapping<TIn, TOut>::init()
 {
 //    std::cout << "BendingPlateMechanicalMapping::init()" << std::endl;
-
-//    direction = Vec3(-0.00155518, -0.00075966, -0.00023758);
-//    direction /= 2;
-//    std::cout << "incremental direction: " << direction << std::endl;
-//    direction.normalize();
-//    std::cout << "normalised direction: " << direction << std::endl;
-
-
-
+    
     // Retrieves topology
     inputTopo = this->fromModel->getContext()->getMeshTopology();
     outputTopo = this->toModel->getContext()->getMeshTopology();
 
     if (inputTopo && outputTopo && inputTopo->getNbTriangles() > 0)
     {
-        OutVecCoord &outVertices = *this->toModel->getX();
+        const OutVecCoord &outVertices = *this->toModel->getX();
+
         listBaseTriangles.clear();
         barycentricCoordinates.clear();
         listBaseTriangles.resize(outVertices.size());
         barycentricCoordinates.resize(outVertices.size());
 
         // Retrieves 'in' vertices and triangles
-        InVecCoord &inVerticesRigid = *this->fromModel->getX();
+        const InVecCoord &inVerticesRigid = *this->fromModel->getX();
         // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
         OutVecCoord inVertices;
         for (unsigned int i=0; i<inVerticesRigid.size(); i++)
@@ -258,7 +237,7 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
     this->Inherit::init();
 
     // Set each colour of each vertex to default
-    OutVecCoord &outVertices = *this->toModel->getX();
+    const OutVecCoord &outVertices = *this->toModel->getX();
     for (unsigned int i=0; i<outVertices.size(); i++)
     {
         coloursPerVertex.push_back(Vec3(0.56, 0.14, 0.6));    // purple
@@ -277,39 +256,30 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
         }
 
         // Retrieves high resolution mesh topology
-        topologyTarget = NULL;
-        getContext()->get(topologyTarget, nameTargetTopology.getValue(), sofa::core::objectmodel::BaseContext::SearchRoot);
-        if (measureError.getValue() && topologyTarget == NULL)
-        {
-            std::cout << "WARNING(BendingPlateMechanicalMapping): target mesh " << nameTargetTopology.getValue() << " was not found" << std::endl;
-            return;
-        }
+        const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
+        topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
 
         // Computes two-sided Hausdorff distance
         MeasureError();
 
         // Overwrites colour for each vertex based on the error and colour map
         Real maximum = 0;
-        if (measureError.getValue())
+        // Normalises the error
+        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
         {
-            // Normalises the error
-            for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+            if (fabs(vectorErrorCoarse[i])>maximum)
             {
-                if (fabs(vectorErrorCoarse[i])>maximum)
-                {
-                    maximum = fabs(vectorErrorCoarse[i]);
-                }
-            }
-            Real correctedError;
-            for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
-            {
-                correctedError = fabs(vectorErrorCoarse[i])*5;
-                if (correctedError > maximum)
-                    correctedError = maximum;
-                coloursPerVertex[i] = colourMapping[ (int)((correctedError/maximum)*239) ];
+                maximum = fabs(vectorErrorCoarse[i]);
             }
         }
-
+        Real correctedError;
+        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+        {
+            correctedError = fabs(vectorErrorCoarse[i])*5;
+            if (correctedError > maximum)
+                correctedError = maximum;
+            coloursPerVertex[i] = colourMapping[ (int)((correctedError/maximum)*239) ];
+        }        
     }
 
     // Initialises shader
@@ -318,10 +288,10 @@ void BendingPlateMechanicalMapping<BaseMapping>::init()
 }
 
 
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::reinit()
+template <class TIn, class TOut>
+void BendingPlateMechanicalMapping<TIn, TOut>::reinit()
 {
-    std::cout << "BendingPlateMechanicalMapping<BaseMapping>::reinit()" << std::endl;
+    std::cout << "BendingPlateMechanicalMapping<TIn, TOut>::reinit()" << std::endl;
     init();
 }
 
@@ -329,8 +299,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::reinit()
 // Given H,S,L in range of 0-1
 // Returns a RGB colour in range of 0-255
 // http://www.geekymonkey.com/Programming/CSharp/RGB2HSL_HSL2RGB.htm
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l)
+template <class TIn, class TOut>
+void BendingPlateMechanicalMapping<TIn, TOut>::HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l)
 {
     Real v;
     Real r,g,b;
@@ -395,8 +365,8 @@ void BendingPlateMechanicalMapping<BaseMapping>::HSL2RGB(Vec3 &rgb, Real h, Real
 }
 
 
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::MeasureError()
+template <class TIn, class TOut>
+void BendingPlateMechanicalMapping<TIn, TOut>::MeasureError()
 {
     Real distance1;
     std::cout << "Computing Hausdorff distance high res->coarse" << std::endl;
@@ -426,15 +396,15 @@ void BendingPlateMechanicalMapping<BaseMapping>::MeasureError()
 
 }
 
-template <class BaseMapping>
-typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError)
+template <class TIn, class TOut>
+typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError)
 {
     // Mesh 1
-    MechanicalState<OutDataTypes>* mState1 = dynamic_cast<MechanicalState<OutDataTypes>*> (topo1->getContext()->getMechanicalState());
+    MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
     const OutVecCoord &vertices1 = *mState1->getX();
 
     // Mesh 2
-    MechanicalState<OutDataTypes>* mState2 = dynamic_cast<MechanicalState<OutDataTypes>*> (topo2->getContext()->getMechanicalState());
+    MechanicalState<Out>* mState2 = dynamic_cast<MechanicalState<Out>*> (topo2->getContext()->getMechanicalState());
     const OutVecCoord &vertices2 = *mState2->getX();
     const SeqEdges edges2 = topo2->getEdges();
     const SeqTriangles triangles2 = topo2->getTriangles();
@@ -475,8 +445,8 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Dist
 // --------------------------------------------------------------------------------------
 // Finds the list of the closest points to a point
 // --------------------------------------------------------------------------------------
-template <class BaseMapping>
-typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestPoints(sofa::helper::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices)
+template <class TIn, class TOut>
+typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::FindClosestPoints(sofa::helper::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices)
 {
     Real minimumDistance = 10e12;
     for (unsigned int v=0; v<inVertices.size(); v++)
@@ -507,8 +477,8 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
 // --------------------------------------------------------------------------------------
 // Finds the list of the closest edges to a point
 // --------------------------------------------------------------------------------------
-template <class BaseMapping>
-typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestEdges(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges)
+template <class TIn, class TOut>
+typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::FindClosestEdges(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges)
 {
     Real minimumDistance = 10e12;
     for (unsigned int e=0; e<inEdges.size(); e++)
@@ -561,8 +531,8 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
 // --------------------------------------------------------------------------------------
 // Finds the list of the closest triangles to a point
 // --------------------------------------------------------------------------------------
-template <class BaseMapping>
-typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::FindClosestTriangles(sofa::helper::vector<unsigned int>& listClosestTriangles, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles)
+template <class TIn, class TOut>
+typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::FindClosestTriangles(sofa::helper::vector<unsigned int>& listClosestTriangles, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles)
 {
     Real minimumDistance = 10e12;
     for (unsigned int t=0; t<inTriangles.size(); t++)
@@ -631,8 +601,8 @@ typename BaseMapping::Out::Real BendingPlateMechanicalMapping<BaseMapping>::Find
 // --------------------------------------------------------------------------------------
 // Barycentric coefficients of point p in triangle whose vertices are a, b and c
 // --------------------------------------------------------------------------------------
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c)
+template <class TIn, class TOut>
+void BendingPlateMechanicalMapping<TIn, TOut>::computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c)
 {
     const double ZERO = 1e-20;
 
@@ -664,9 +634,15 @@ void BendingPlateMechanicalMapping<BaseMapping>::computeBaryCoefs(Vec3 &baryCoef
 
 
 // Updates positions of the visual mesh from mechanical vertices
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& out, const typename In::VecCoord& in )
+template <class TIn, class TOut>
+//void BendingPlateMechanicalMapping<TIn, TOut>::apply( typename Out::VecCoord& out, const typename In::VecCoord& in )
+void BendingPlateMechanicalMapping<TIn, TOut>::apply(Data<OutVecCoord>& dOut, const Data<InVecCoord>& dIn, const core::MechanicalParams * /*mparams*/)
 {
+
+    helper::WriteAccessor< Data<OutVecCoord> > out = dOut;
+    helper::ReadAccessor< Data<InVecCoord> > in = dIn;
+
+    
 //    std::cout << "---------------- Apply ----------------------------" << std::endl;
 
 //    sofa::helper::system::thread::ctime_t start, stop;
@@ -712,8 +688,12 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
         {
 //            std::cout << "vertex " << i << std::endl;
 
+//            std::cout << "listBaseTriangles[i] " << listBaseTriangles[i] << std::endl;
+
             // Gets the first triangle that the vertex belongs to
             Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
+
+//            std::cout << "listBaseTriangles[i][0] = " << listBaseTriangles[i][0] << std::endl;
 
             // Gets its 3 vertices
             a = in[ triangle[0] ].getCenter();
@@ -757,9 +737,12 @@ void BendingPlateMechanicalMapping<BaseMapping>::apply( typename Out::VecCoord& 
 
 
 // Updates velocities of the visual mesh from mechanical vertices
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv& out, const typename In::VecDeriv& in )
+template <class TIn, class TOut>
+void BendingPlateMechanicalMapping<TIn, TOut>::applyJ(Data<OutVecDeriv>& dOut, const Data<InVecDeriv>& dIn, const core::MechanicalParams* /*mparams*/)
 {
+    helper::WriteAccessor< Data<OutVecDeriv> > out = dOut;
+    helper::ReadAccessor< Data<InVecDeriv> > in = dIn;
+
 //    std::cout << "---------------- ApplyJ ----------------------------" << std::endl;
 
 //    sofa::helper::system::thread::ctime_t start, stop;
@@ -807,9 +790,9 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv&
             tinfo = &triangleInf[t];
 
             // Gets the angular velocities of each vertex
-            va_a = in[ triangle[0] ].getVOrientation();
-            va_b = in[ triangle[1] ].getVOrientation();
-            va_c = in[ triangle[2] ].getVOrientation();
+            va_a = getVOrientation(in[ triangle[0] ]);
+            va_b = getVOrientation(in[ triangle[1] ]);
+            va_c = getVOrientation(in[ triangle[2] ]);
             // In local frame
             va_a_local = tinfo->Qframe.rotate(va_a);
             va_b_local = tinfo->Qframe.rotate(va_b);
@@ -836,9 +819,9 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv&
             Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
 
             // Gets the linear velocities of each vertex
-            v_a = in[ triangle[0] ].getVCenter();
-            v_b = in[ triangle[1] ].getVCenter();
-            v_c = in[ triangle[2] ].getVCenter();
+            v_a = getVCenter(in[ triangle[0] ]);
+            v_b = getVCenter(in[ triangle[1] ]);
+            v_c = getVCenter(in[ triangle[2] ]);
 
             baryCoord = barycentricCoordinates[i][0];
             out[i] = v_a*baryCoord[0] + v_b*baryCoord[1] + v_c*baryCoord[2];
@@ -877,9 +860,12 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJ( typename Out::VecDeriv&
 
 
 // Updates positions of the mechanical vertices from visual    f(n-1) = JT * fn
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv& out, const typename Out::VecDeriv& in )
+template <class TIn, class TOut>
+void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(Data<InVecDeriv>& dOut, const Data<OutVecDeriv>& dIn, const core::MechanicalParams * /*mparams*/)
 {
+    helper::WriteAccessor< Data<InVecDeriv> > out = dOut;
+    helper::ReadAccessor< Data<OutVecDeriv> > in = dIn;
+
 //    std::cout << "---------------- ApplyJT ----------------------------" << std::endl;
 
 //    sofa::helper::system::thread::ctime_t start, stop;
@@ -937,9 +923,9 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv&
 
             // Linear acceleration
             baryCoord = barycentricCoordinates[i][0];
-            out[ triangle[0] ].getVCenter() += in[i] * baryCoord[0];
-            out[ triangle[1] ].getVCenter() += in[i] * baryCoord[1];
-            out[ triangle[2] ].getVCenter() += in[i] * baryCoord[2];
+            getVCenter(out[ triangle[0] ]) += in[i] * baryCoord[0];
+            getVCenter(out[ triangle[1] ]) += in[i] * baryCoord[1];
+            getVCenter(out[ triangle[2] ]) += in[i] * baryCoord[2];
 
             // Iterates over triangles
             for (unsigned int t=0; t<listBaseTriangles[i].size();t++)
@@ -978,9 +964,9 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv&
                     torqueB = tinfo->Qframe.inverseRotate(Vec3(a_u[4], a_u[5], 0));
                     torqueC = tinfo->Qframe.inverseRotate(Vec3(a_u[7], a_u[8], 0));
 
-                    out[ triangle[0] ].getVOrientation() += torqueA;
-                    out[ triangle[1] ].getVOrientation() += torqueB;
-                    out[ triangle[2] ].getVOrientation() += torqueC;
+                    getVOrientation(out[ triangle[0] ]) += torqueA;
+                    getVOrientation(out[ triangle[1] ]) += torqueB;
+                    getVOrientation(out[ triangle[2] ]) += torqueC;
                 }
             }
         }
@@ -993,21 +979,21 @@ void BendingPlateMechanicalMapping<BaseMapping>::applyJT( typename In::VecDeriv&
 }
 
 
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::applyJT(  typename In::MatrixDeriv& /*out*/, const typename Out::MatrixDeriv& /*in*/ )
+template <class TIn, class TOut>
+void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/, const core::ConstraintParams * /*cparams*/)
 {
 
 }
 
 
-template <class BaseMapping>
-void BendingPlateMechanicalMapping<BaseMapping>::draw()
+template <class TIn, class TOut>
+void BendingPlateMechanicalMapping<TIn, TOut>::draw()
 {
-    OutVecCoord &outVertices = *this->toModel->getX();
+    const OutVecCoord &outVertices = *this->toModel->getX();
 
     shader.TurnOn();
 
-    if(this->getContext()->getShowForceFields())
+    if(this->getContext()->getShowVisualModels())
     {
         glDisable(GL_LIGHTING);
 

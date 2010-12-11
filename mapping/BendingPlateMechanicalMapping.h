@@ -25,9 +25,15 @@
 #ifndef SOFA_COMPONENT_MAPPING_BENDINGPLATEMAPPING_INL
 #define SOFA_COMPONENT_MAPPING_BENDINGPLATEMAPPING_INL
 
-#include <sofa/core/behavior/MechanicalMapping.h>
+
+#include <sofa/core/Mapping.h>
+
+
+
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/helper/vector.h>
+
+
 #include <sofa/helper/gl/GLSLShader.h>
 //#include <sofa/core/VisualModel.h>
 
@@ -56,55 +62,66 @@ using namespace sofa::component::topology;
 using namespace sofa::helper::system::thread;
 using namespace core::topology;
 
-template <class BasicMapping>
-class BendingPlateMechanicalMapping : public BasicMapping, public virtual core::objectmodel::BaseObject
-// public core::VisualModel,
+
+template <class TIn, class TOut>
+class BendingPlateMechanicalMapping : public core::Mapping<TIn, TOut>
 {
 public:
-    SOFA_CLASS(SOFA_TEMPLATE(BendingPlateMechanicalMapping,BasicMapping), BasicMapping);
-    typedef BasicMapping Inherit;
-    typedef typename Inherit::In In;
-    typedef typename Inherit::Out Out;
-    typedef typename Out::VecCoord OutVecCoord;
-    typedef typename Out::VecDeriv OutVecDeriv;
-    typedef typename Out::Coord OutCoord;
-    typedef typename Out::Deriv OutDeriv;
-    typedef typename Out::DataTypes OutDataTypes;
-//    typedef typename std::map<unsigned int, OutDeriv>::const_iterator OutConstraintIterator;
+    SOFA_CLASS(SOFA_TEMPLATE2(BendingPlateMechanicalMapping,TIn,TOut), SOFA_TEMPLATE2(core::Mapping,TIn,TOut));
+    typedef core::Mapping<TIn, TOut> Inherit;
+    typedef TIn In;
+    typedef TOut Out;
 
-    typedef typename In::VecCoord InVecCoord;
-    typedef typename In::VecDeriv InVecDeriv;
-    typedef typename In::Coord InCoord;
-    typedef typename In::Deriv InDeriv;
-    typedef typename In::DataTypes InDataTypes;
+    typedef typename In::VecCoord		InVecCoord;
+    typedef typename In::VecDeriv		InVecDeriv;
+    typedef typename In::Coord			InCoord;
+    typedef typename In::Deriv			InDeriv;
+    typedef typename In::MatrixDeriv            InMatrixDeriv;
+
+    typedef typename Out::VecCoord		OutVecCoord;
+    typedef typename Out::VecDeriv		OutVecDeriv;
+    typedef typename Out::Coord			OutCoord;
+    typedef typename Out::Deriv			OutDeriv;
+    typedef typename Out::MatrixDeriv           OutMatrixDeriv;
+    typedef typename Out::Real                  Real;
+
+    typedef Vec<3, Real> Vec3;
+
 
     typedef BaseMeshTopology::Edge	Edge;
     typedef BaseMeshTopology::SeqEdges	SeqEdges;
     typedef BaseMeshTopology::Triangle	Triangle;
     typedef BaseMeshTopology::SeqTriangles SeqTriangles;
 
-    typedef typename Out::Real Real;
-    typedef Vec<3, Real> Vec3;
-
-    typedef typename TriangularBendingFEMForceField<InDataTypes>::TriangleInformation TriangleInformation;
 
 
-    
-    BendingPlateMechanicalMapping(In* from, Out* to);
+    typedef typename TriangularBendingFEMForceField<In>::TriangleInformation TriangleInformation;
+
+
+    BendingPlateMechanicalMapping(core::State<In>* from, core::State<Out>* to)
+    : Inherit(from, to)
+    , inputTopo(NULL)
+    , outputTopo(NULL)
+    , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
+    , nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
+    {
+    }
+
+    virtual ~BendingPlateMechanicalMapping()
+    {
+    }
 
     void init();
     void reinit();
     virtual void draw();
 //    virtual void drawVisual();
-
 //    Vec3 direction;
-    
-    virtual ~BendingPlateMechanicalMapping();
-    
-    void apply( typename Out::VecCoord& out, const typename In::VecCoord& in );    
-    void applyJ( typename Out::VecDeriv& out, const typename In::VecDeriv& in );    
-    void applyJT( typename In::VecDeriv& out, const typename Out::VecDeriv& in );
-    void applyJT( typename In::MatrixDeriv& out, const typename Out::MatrixDeriv& in );
+
+
+    void apply(Data<OutVecCoord>& out, const Data<InVecCoord>& in, const core::MechanicalParams *mparams);
+    void applyJ(Data<OutVecDeriv>& out, const Data<InVecDeriv>& in, const core::MechanicalParams *mparams);
+    void applyJT(Data<InVecDeriv>& out, const Data<OutVecDeriv>& in, const core::MechanicalParams *mparams);
+    void applyJT(Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in, const core::ConstraintParams *cparams);
 
 protected:
 
@@ -114,7 +131,7 @@ protected:
 	BaseMeshTopology* outputTopo;
         
         Data<bool> measureError;
-        Data<std::string> nameTargetTopology;
+        core::objectmodel::DataObjectRef nameTargetTopology;
 
         TriangleSetTopologyContainer* topologyTarget;
         OutVecCoord verticesTarget;
@@ -126,7 +143,7 @@ protected:
         helper::vector<Real> vectorErrorTarget;
 
         // Pointer on the forcefield associated with the in topology
-        TriangularBendingFEMForceField<InDataTypes>* triangularBendingForcefield;
+        TriangularBendingFEMForceField<In>* triangularBendingForcefield;
 
         // Pointer on the topological mapping to retrieve the list of edges
         TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
