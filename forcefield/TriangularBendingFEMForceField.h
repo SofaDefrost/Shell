@@ -164,9 +164,9 @@ public:
 	virtual ~TriangularBendingFEMForceField();
 	virtual void init();
 	virtual void reinit();
-        virtual void addForce(DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/, const sofa::core::MechanicalParams* /*mparams*/ ) ;
-        virtual void addDForce(DataVecDeriv& datadF, const DataVecDeriv& datadX, const sofa::core::MechanicalParams* /*mparams*/ ) ;
-        virtual void addKToMatrix(const sofa::core::behavior::MultiMatrixAccessor* matrix, const core::MechanicalParams* mparams);
+        virtual void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) ;
+        virtual void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) ;
+        virtual void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix);
         virtual void addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/);
 	virtual double getPotentialEnergy(const VecCoord& x) const;
 	virtual void handleTopologyChange();
@@ -218,7 +218,6 @@ protected :
 
         void testAddDforce(void);
 
-        void generateCylinder(void);
         void refineCoarseMeshToTarget(void);
         void subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::helper::vector<Vec3> &subVertices, SeqTriangles &subTriangles);
         void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);

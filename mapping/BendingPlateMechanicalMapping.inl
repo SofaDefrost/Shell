@@ -636,7 +636,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::computeBaryCoefs(Vec3 &baryCoefs,
 // Updates positions of the visual mesh from mechanical vertices
 template <class TIn, class TOut>
 //void BendingPlateMechanicalMapping<TIn, TOut>::apply( typename Out::VecCoord& out, const typename In::VecCoord& in )
-void BendingPlateMechanicalMapping<TIn, TOut>::apply(Data<OutVecCoord>& dOut, const Data<InVecCoord>& dIn, const core::MechanicalParams * /*mparams*/)
+void BendingPlateMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParams * /*mparams*/, Data<OutVecCoord>& dOut, const Data<InVecCoord>& dIn)
 {
 
     helper::WriteAccessor< Data<OutVecCoord> > out = dOut;
@@ -738,7 +738,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::apply(Data<OutVecCoord>& dOut, co
 
 // Updates velocities of the visual mesh from mechanical vertices
 template <class TIn, class TOut>
-void BendingPlateMechanicalMapping<TIn, TOut>::applyJ(Data<OutVecDeriv>& dOut, const Data<InVecDeriv>& dIn, const core::MechanicalParams* /*mparams*/)
+void BendingPlateMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParams* /*mparams*/, Data<OutVecDeriv>& dOut, const Data<InVecDeriv>& dIn)
 {
     helper::WriteAccessor< Data<OutVecDeriv> > out = dOut;
     helper::ReadAccessor< Data<InVecDeriv> > in = dIn;
@@ -861,7 +861,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJ(Data<OutVecDeriv>& dOut, c
 
 // Updates positions of the mechanical vertices from visual    f(n-1) = JT * fn
 template <class TIn, class TOut>
-void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(Data<InVecDeriv>& dOut, const Data<OutVecDeriv>& dIn, const core::MechanicalParams * /*mparams*/)
+void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalParams * /*mparams*/, Data<InVecDeriv>& dOut, const Data<OutVecDeriv>& dIn)
 {
     helper::WriteAccessor< Data<InVecDeriv> > out = dOut;
     helper::ReadAccessor< Data<OutVecDeriv> > in = dIn;
@@ -980,7 +980,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(Data<InVecDeriv>& dOut, c
 
 
 template <class TIn, class TOut>
-void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/, const core::ConstraintParams * /*cparams*/)
+void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/)
 {
 
 }
