@@ -207,7 +207,7 @@ protected :
 	static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
 	/// f += Kx where K is the stiffness matrix and x a displacement
-	virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double & kFactor);
+	virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
 	virtual void computeMaterialStiffness(const int i);
 
 	void initTriangle(const int i, const Index&a, const Index&b, const Index&c);

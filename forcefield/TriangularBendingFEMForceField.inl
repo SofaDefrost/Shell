@@ -399,6 +399,9 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
     triangleInfo.setDestroyParameter( (void *) this );
 
     triangleInfo.endEdit();
+
+
+//    testAddDforce();
 }
 
 
@@ -513,7 +516,7 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeriv& dx, const Index elementIndex, const double & kFactor)
+void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeriv& dx, const Index elementIndex, const double kFactor)
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
@@ -522,7 +525,7 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, cons
     const Index& a = tinfo->a;
     const Index& b = tinfo->b;
     const Index& c = tinfo->c;
-    
+
     // Computes displacements
     Displacement Disp;
     Vec3 x_a, x_b, x_c;
@@ -543,9 +546,9 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, cons
     dF = tinfo->stiffnessMatrix * Disp;
 
     // Transfer into global frame
-    getVCenter(v[a]) += tinfo->Qframe.inverseRotate(Vec3(-dF[0], -dF[1], 0));
-    getVCenter(v[b]) += tinfo->Qframe.inverseRotate(Vec3(-dF[2], -dF[3], 0));
-    getVCenter(v[c]) += tinfo->Qframe.inverseRotate(Vec3(-dF[4], -dF[5], 0));
+    getVCenter(v[a]) += tinfo->Qframe.inverseRotate(Vec3(-dF[0], -dF[1], 0)) * kFactor;
+    getVCenter(v[b]) += tinfo->Qframe.inverseRotate(Vec3(-dF[2], -dF[3], 0)) * kFactor;
+    getVCenter(v[c]) += tinfo->Qframe.inverseRotate(Vec3(-dF[4], -dF[5], 0)) * kFactor;
 
     // If bending is requested
     if (f_bending.getValue())
@@ -1034,7 +1037,7 @@ void TriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core::Mech
     const VecDeriv& dp  =   datadX.getValue()  ;
 
     double kFactor = mparams->kFactor();
-
+    
 //    sofa::helper::system::thread::ctime_t start, stop;
 //    sofa::helper::system::thread::CTime timer;
 //
@@ -1156,7 +1159,7 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
 #ifdef ASSEMBLED_K
 
 template<class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* /*mparams*/, const sofa::core::behavior::MultiMatrixAccessor* matrix)
+void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix)
 {
     StiffnessMatrixGlobalSpace K_gs;
 
@@ -1167,7 +1170,7 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::Mechani
     sofa::core::behavior::MultiMatrixAccessor::MatrixRef r = matrix->getMatrix(this->mstate);
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
-    //double kFactor = mparams->kFactor();
+    double kFactor = mparams->kFactor();
 
     for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
@@ -1194,7 +1197,7 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::Mechani
                                     {
                                             COLUMN = r.offset+6*node2+j;
                                             column = 6*n2+j;
-                                            r.matrix->add(ROW, COLUMN, K_gs[row][column] /* * kFactor */);
+                                            r.matrix->add(ROW, COLUMN, - K_gs[row][column] * kFactor);
                                     }
                             }
                     }
@@ -1272,11 +1275,9 @@ void TriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::defaulttype::
     
 }
 
-
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
 {
-//    #include <iostream>
 //    VecDeriv f1, f2, df, v, dx2;
 //    VecCoord x1, x2, dx1;
 //
