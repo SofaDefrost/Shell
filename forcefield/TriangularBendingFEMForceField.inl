@@ -494,6 +494,10 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
         computeStrainDisplacementMatrix(J, i, tinfo->localB, tinfo->localC);
 
         // Local rest orientations (Evaluates the difference between the rest position and the flat position to allow the use of a deformed rest shape)
+        tinfo->restLocalOrientations[0] = qDiffZ(x0[a].getOrientation(), Qframe0); 	 
+        tinfo->restLocalOrientations[1] = qDiffZ(x0[b].getOrientation(), Qframe0); 	 
+        tinfo->restLocalOrientations[2] = qDiffZ(x0[c].getOrientation(), Qframe0);
+
         // Creates a vector u_rest matching the difference between rest and flat positions
         tinfo->u_rest.clear();
         tinfo->u_rest[1] = tinfo->restLocalOrientations[0].toEulerVector()[0];
