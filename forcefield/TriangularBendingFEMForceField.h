@@ -188,6 +188,12 @@ public:
         VecCoordHigh targetVertices;
         SeqTriangles targetTriangles;
 
+        sofa::core::objectmodel::DataFileName exportFilename;
+        Data<unsigned int> exportEveryNbSteps;
+        Data<bool> exportAtBegin;
+        Data<bool> exportAtEnd;
+        unsigned int stepCounter;
+
 //        unsigned int indexTop;
 
 protected :
@@ -223,6 +229,13 @@ protected :
         void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
         void movePoint(Vec3& pointToMove);
         void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
+
+        void handleEvent(sofa::core::objectmodel::Event *event);
+        void bwdInit();
+        void cleanup();
+
+        const std::string getExpFilename();
+        void writeCoeffs();
 };
 
 

@@ -45,6 +45,9 @@
 #include <utility>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 
+#include <sofa/simulation/common/Simulation.h>
+#include <sofa/simulation/common/AnimateEndEvent.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -140,6 +143,11 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
 , iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
 , nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
+, exportFilename(initData(&exportFilename, "exportFilename", "file name to export coefficients into"))
+, exportEveryNbSteps(initData(&exportEveryNbSteps, (unsigned int)0, "exportEveryNumberOfSteps", "export file only at specified number of steps (0=disable)"))
+, exportAtBegin(initData(&exportAtBegin, false, "exportAtBegin", "export file at the initialization"))
+, exportAtEnd(initData(&exportAtEnd, false, "exportAtEnd", "export file when the simulation is finished"))
+, stepCounter(0)
 {
 }
 
@@ -1406,6 +1414,110 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
     
 }
 
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
+{
+    if ( /*simulation::AnimateEndEvent* ev =*/  dynamic_cast<simulation::AnimateEndEvent*>(event))
+	{
+        unsigned int maxStep = exportEveryNbSteps.getValue();
+        if (maxStep == 0) return;
+        
+        stepCounter++;
+        if(stepCounter >= maxStep)
+        {
+            stepCounter = 0;
+            writeCoeffs();
+        }
+	}
+}
+
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::cleanup()
+{
+	if (exportAtEnd.getValue())
+        writeCoeffs();
+}
+
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::bwdInit()
+{
+    if (exportAtBegin.getValue())
+        writeCoeffs();
+}
+
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::writeCoeffs()
+{
+    //sofa::helper::system::thread::ctime_t start, stop;
+    //sofa::helper::system::thread::CTime timer;
+    //start = timer.getTime();
+
+	std::string filename = getExpFilename();
+
+	std::ofstream outfile(filename.c_str());
+	if (!outfile.is_open())
+	{
+		serr << "Error creating file " << filename << sendl;
+		return;
+	}
+
+	// Write a message
+	outfile
+        << "# Data file with the coefficients of the deflection function\n";
+
+    TriangleInformation *tinfo = NULL;
+    int nbTriangles=_topology->getNbTriangles();
+    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    for (int i=0; i<nbTriangles; i++)
+    {
+        tinfo = &triangleInf[i];
+        tinfo->coefficients = tinfo->invC * (tinfo->u + tinfo->u_rest);
+
+        outfile << "f " << tinfo->coefficients << "\n";
+    }
+    triangleInfo.endEdit();
+
+    outfile.close();
+    sout << "Written " << filename << sendl;
+
+    //stop = timer.getTime();
+    //sout << "---------- " << __PRETTY_FUNCTION__ << " time=" << stop-start << " cycles" << sendl;
+}
+
+template <class DataTypes>
+const std::string TriangularBendingFEMForceField<DataTypes>::getExpFilename()
+{
+    // TODO: steps are reported strangely, in 'animate' the step is one less
+    // (-1) which is OK, but for end (cleanup) the step is one more than
+    // expected (+1)
+    unsigned int nbs = sofa::simulation::getSimulation()->nbSteps.getValue()+1;
+
+	std::ostringstream oss;
+	std::string filename = exportFilename.getFullPath();
+    std::size_t pos = 0;
+    while (pos != std::string::npos)
+    {
+        std::size_t newpos = filename.find('%',pos);
+        oss << filename.substr(pos, (newpos == std::string::npos) ? std::string::npos : newpos-pos);
+        pos = newpos;
+        if(pos != std::string::npos)
+        {
+            ++pos;
+            char c = filename[pos];
+            ++pos;
+            switch (c)
+            {
+            case 's' : oss << nbs; break;
+            case '%' : oss << '%'; 
+            default:
+                serr << "Invalid special character %" << c << " in filename" << sendl;
+            }
+        }
+    }
+
+    oss << ".shell";
+    return oss.str();
+}
 
 } // namespace forcefield
 
