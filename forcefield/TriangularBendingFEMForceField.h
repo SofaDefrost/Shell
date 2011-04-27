@@ -78,7 +78,9 @@ class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTyp
         typedef typename DataTypes::Coord                   Coord;
         typedef typename DataTypes::Deriv                   Deriv;
         typedef typename Coord::value_type                  Real;
+
         typedef Vec<3,Real> Vec3;
+        typedef Vec<2,Real> Vec2;
 
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
@@ -226,6 +228,8 @@ protected :
         void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
         void movePoint(Vec3& pointToMove);
         void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
+
+        void computeCurvature(Vec3 pt, Vec<9, Real> const &coefficients, Vec2 &curvature);
 
         void handleEvent(sofa::core::objectmodel::Event *event);
         void bwdInit();
