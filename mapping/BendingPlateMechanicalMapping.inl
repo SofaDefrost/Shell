@@ -40,14 +40,14 @@ namespace component
 namespace mapping
 {
 
-using namespace	sofa::component::collision;
+using namespace sofa::component::collision;
 
 
 template <class TIn, class TOut>
 void BendingPlateMechanicalMapping<TIn, TOut>::init()
 {
 //    std::cout << "BendingPlateMechanicalMapping::init()" << std::endl;
-    
+
     // Retrieves topology
     inputTopo = this->fromModel->getContext()->getMeshTopology();
     outputTopo = this->toModel->getContext()->getMeshTopology();
@@ -81,7 +81,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
             // Iterates over 'in' vertices
             sofa::helper::vector<unsigned int> listClosestVertices;
             minimumDistanceVertices = FindClosestPoints(listClosestVertices, outVertices[i], inVertices);
-            
+
             // Iterates over 'in' edges
             sofa::helper::vector<unsigned int> listClosestEdges;
             minimumDistanceEdges = FindClosestEdges(listClosestEdges, outVertices[i], inVertices, inEdges);
@@ -172,7 +172,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
                     break;
 
 
-                // If it is a vertex, consider the list of triangles
+                // If it is a triangle, consider the list of triangles
                 case 3 :
                     for (unsigned int j=0; j<listClosestTriangles.size(); j++)
                     {
@@ -279,7 +279,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
             if (correctedError > maximum)
                 correctedError = maximum;
             coloursPerVertex[i] = colourMapping[ (int)((correctedError/maximum)*239) ];
-        }        
+        }
     }
 
     // Initialises shader
@@ -521,7 +521,7 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
                 listClosestEdges.push_back(e);
             }
         }
-       
+
     }
 
     return minimumDistance;
@@ -642,14 +642,14 @@ void BendingPlateMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParam
     helper::WriteAccessor< Data<OutVecCoord> > out = dOut;
     helper::ReadAccessor< Data<InVecCoord> > in = dIn;
 
-    
+
 //    std::cout << "---------------- Apply ----------------------------" << std::endl;
 
 //    sofa::helper::system::thread::ctime_t start, stop;
 //    sofa::helper::system::thread::CTime timer;
 //
 //    start = timer.getTime();
-    
+
     if (!inputTopo || !outputTopo)
     {
         serr << "BendingPlateMechanicalMapping apply() was called before init()" << sendl;
@@ -686,14 +686,8 @@ void BendingPlateMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParam
         Real z;
         for (unsigned int i=0; i<out.size(); i++)
         {
-//            std::cout << "vertex " << i << std::endl;
-
-//            std::cout << "listBaseTriangles[i] " << listBaseTriangles[i] << std::endl;
-
             // Gets the first triangle that the vertex belongs to
             Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
-
-//            std::cout << "listBaseTriangles[i][0] = " << listBaseTriangles[i][0] << std::endl;
 
             // Gets its 3 vertices
             a = in[ triangle[0] ].getCenter();
@@ -701,17 +695,12 @@ void BendingPlateMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParam
             c = in[ triangle[2] ].getCenter();
 
             baryCoord = barycentricCoordinates[i][0];
-//            std::cout << "baryCoord for vertex " << i << ":    " << baryCoord << std::endl;
             out[i] = a*baryCoord[0] + b*baryCoord[1] + c*baryCoord[2];
 
             Vec3 Uz(0.0, 0.0, 0.0);
             Vec3 w(0, 0, 0);
             for (unsigned int t=0; t<listBaseTriangles[i].size();t++)
             {
-//                std::cout << "triangle " << t << std::endl;
-//                std::cout << "tinfo->u " << tinfo->u << std::endl;
-//                std::cout << "tinfo->u_rest " << tinfo->u_rest << std::endl;
-
                 triangle = triangularBendingForcefield->getTopology()->getTriangle(listBaseTriangles[i][t]);
                 tinfo = &triangleInf[listBaseTriangles[i][t]];
 
@@ -804,14 +793,11 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPara
             v_u[7] = va_c_local[0];   v_u[8] = va_c_local[1];
 
             tinfo->coefficients = tinfo->invC * v_u;
-
-//            std::cout << "triangle " << t << ":   " << tinfo->coefficients << std::endl;
         }
 
 
         // Iterates over out vertices to update coordinates
         Vec3 v_a, v_b, v_c, baryCoord, a, vertexLocal;
-//        Vec <9, Real> coeff;
         Real v_z;
         for (unsigned int i=0; i<out.size(); i++)
         {

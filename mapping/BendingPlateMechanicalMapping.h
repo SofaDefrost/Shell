@@ -72,26 +72,26 @@ public:
     typedef TIn In;
     typedef TOut Out;
 
-    typedef typename In::VecCoord		InVecCoord;
-    typedef typename In::VecDeriv		InVecDeriv;
-    typedef typename In::Coord			InCoord;
-    typedef typename In::Deriv			InDeriv;
+    typedef typename In::VecCoord               InVecCoord;
+    typedef typename In::VecDeriv               InVecDeriv;
+    //typedef typename In::Coord                  InCoord;
+    //typedef typename In::Deriv                  InDeriv;
     typedef typename In::MatrixDeriv            InMatrixDeriv;
 
-    typedef typename Out::VecCoord		OutVecCoord;
-    typedef typename Out::VecDeriv		OutVecDeriv;
-    typedef typename Out::Coord			OutCoord;
-    typedef typename Out::Deriv			OutDeriv;
+    typedef typename Out::VecCoord              OutVecCoord;
+    typedef typename Out::VecDeriv              OutVecDeriv;
+    //typedef typename Out::Coord                 OutCoord;
+    //typedef typename Out::Deriv                 OutDeriv;
     typedef typename Out::MatrixDeriv           OutMatrixDeriv;
     typedef typename Out::Real                  Real;
 
     typedef Vec<3, Real> Vec3;
 
 
-    typedef BaseMeshTopology::Edge	Edge;
-    typedef BaseMeshTopology::SeqEdges	SeqEdges;
-    typedef BaseMeshTopology::Triangle	Triangle;
-    typedef BaseMeshTopology::SeqTriangles SeqTriangles;
+    //typedef BaseMeshTopology::Edge              Edge;
+    typedef BaseMeshTopology::SeqEdges          SeqEdges;
+    typedef BaseMeshTopology::Triangle          Triangle;
+    typedef BaseMeshTopology::SeqTriangles      SeqTriangles;
 
 
 
@@ -114,8 +114,6 @@ public:
     void init();
     void reinit();
     virtual void draw();
-//    virtual void drawVisual();
-//    Vec3 direction;
 
 
     void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in);
@@ -128,15 +126,15 @@ protected:
         helper::gl::GLSLShader shader;
 
         BaseMeshTopology* inputTopo;
-	BaseMeshTopology* outputTopo;
-        
+        BaseMeshTopology* outputTopo;
+
         Data<bool> measureError;
         core::objectmodel::DataObjectRef nameTargetTopology;
 
         TriangleSetTopologyContainer* topologyTarget;
         OutVecCoord verticesTarget;
         SeqTriangles trianglesTarget;
-        
+
         helper::vector<Vec3> colourMapping;
         helper::vector<Vec3> coloursPerVertex;
         helper::vector<Real> vectorErrorCoarse;
