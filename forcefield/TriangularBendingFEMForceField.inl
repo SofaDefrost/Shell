@@ -196,10 +196,17 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
         if (_topologyTarget)
         {
-            targetTriangles = _topologyTarget->getTriangles();
-
             MechanicalState<Vec3Types>* mStateTarget = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyTarget->getContext()->getMechanicalState());
-            targetVertices = *mStateTarget->getX();
+            if (mStateTarget)
+            {
+                targetTriangles = _topologyTarget->getTriangles();
+                targetVertices = *mStateTarget->getX();
+            }
+            else
+            {
+                serr << "No mechanical state for target high resolution topology" << sendl;
+                return;
+            }
         }
         else
         {
