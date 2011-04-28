@@ -1317,29 +1317,20 @@ void TriangularBendingFEMForceField<DataTypes>::computeCurvature(Vec3 pt, Vec<9,
     // deflection function.
     //
     // Partial derivatives:
-    //  hx = c2 + c4x + c5y + c7x^2 + c8y^2
-    //  hy = c3 + c5x + c6y + c8xy + c9y^2
-    //  hxx = c4 + 2*c7x
-    //  hyy = c6 + c8x + 2c9y
-    //  hxy = c5 + c8y
-    //
-    //      [ 0 1 0 x y 0 x^2 y^2 0   ]
-    //      [ 0 0 1 0 x y 0   xy  y^2 ]
-    //  H = [ 0 0 0 1 0 0 2x  0   0   ]
-    //      [ 0 0 0 0 0 1 0   x   2y  ]
-    //      [ 0 0 0 0 1 0 0   y   0   ]
-    //
-    //  dH = H * coefficients
-
+    //  h_x   = c_2 + 2 c_4 x + c_5 y + 3 c_7 x^2 + c_8 y^2
+    //  h_y   = c_3 + c_5 x + 2 c_6 y + 2 c_8 xy + 3 c_9 y^2
+    //  h_xx  = 2 c_4 + 6 c_7 x
+    //  h_yy  = 2 c_6 + 2 c_8 x + 6 c_9 y
+    //  h_xy  = c_5 + 2 c_8 y
 
     // Compute the derivatives of the deflection function
     Mat<5, 9, Real> H;
 
-    H(0,1) = 1; H(0,3) = pt[0]; H(0,4) = pt[1]; H(0,6) = pt[0]*pt[0]; H(0,7) = pt[1]*pt[1];
-    H(1,2) = 1; H(1,4) = pt[0]; H(1,5) = pt[1]; H(1,7) = pt[0]*pt[1]; H(1,8) = pt[1]*pt[1];
-    H(2,3) = 1; H(2,6) = 2*pt[0];
-    H(3,5) = 1; H(3,7) = pt[0]; H(3,8) = 2*pt[1];
-    H(4,4) = 1; H(4,7) = pt[1];
+    H(0,1) = 1; H(0,3) = 2*pt[0]; H(0,4) = pt[1]; H(0,6) = 3*pt[0]*pt[0]; H(0,7) = pt[1]*pt[1];
+    H(1,2) = 1; H(1,4) = pt[0]; H(1,5) = 2*pt[1]; H(1,7) = 2*pt[0]*pt[1]; H(1,8) = 3*pt[1]*pt[1];
+    H(2,3) = 2; H(2,6) = 6*pt[0];
+    H(3,5) = 2; H(3,7) = 2*pt[0]; H(3,8) = 6*pt[1];
+    H(4,4) = 1; H(4,7) = 2*pt[1];
 
     Vec<5,Real> dH = H * coefficients;
 
@@ -1351,6 +1342,8 @@ void TriangularBendingFEMForceField<DataTypes>::computeCurvature(Vec3 pt, Vec<9,
     Real b = -(dH[0]*dH[1]*dH[3] - dH[4]*dH[1]*dH[1] - dH[4])/div;
     Real c = -(dH[0]*dH[2]*dH[1] - dH[0]*dH[0]*dH[4] - dH[4])/div;
     Real d =  (dH[0]*dH[0]*dH[3] - dH[0]*dH[4]*dH[1] + dH[3])/div;
+    // The shape operator is the square matrix  [ a c ]
+    //                                          [ b d ]
 
     // Compute the eigenvalues of the shape operator to get the principal curvatures
     Real Dr = sofa::helper::rsqrt(a*a - 2*a*d + 4*b*c + d*d);
@@ -1499,10 +1492,9 @@ void TriangularBendingFEMForceField<DataTypes>::writeCoeffs()
 
     // Write a message
     outfile
-        << "# Data file with the coefficients of the deflection function and\n"
-        << "# principal curvatures at the three corners and in the barycenter.\n"
-        << "# Every 'f' line is followed by 'v' line containing local coordinates\n"
-        << "# of the two corners (the first at [0,0,0]).\n";
+        << "# Data file with the coefficients of the deflection function (f),\n"
+        << "# the principal curvatures (c) at the three corners and in the barycenter,\n"
+        << "# and local coordinates (v) of the two corners (the third si at [0,0,0]).\n";
 
     TriangleInformation *tinfo = NULL;
     int nbTriangles=_topology->getNbTriangles();
@@ -1512,8 +1504,9 @@ void TriangularBendingFEMForceField<DataTypes>::writeCoeffs()
         tinfo = &triangleInf[i];
         tinfo->coefficients = tinfo->invC * (tinfo->u + tinfo->u_rest);
 
-        outfile << "f " << tinfo->coefficients << " ";
+        outfile << "f " << tinfo->coefficients << "\n";
         Vec2 pc;
+        outfile << "c ";
         computeCurvature(Vec3(0,0,0), tinfo->coefficients, pc);
         outfile << pc << " ";
         computeCurvature(tinfo->localB, tinfo->coefficients, pc);
@@ -1524,7 +1517,8 @@ void TriangularBendingFEMForceField<DataTypes>::writeCoeffs()
         computeCurvature(bary, tinfo->coefficients, pc);
         outfile << pc << "\n";
 
-        outfile << "v " << tinfo->localB << " " << tinfo->localC << "\n";
+        outfile << "v " << tinfo->localB[0] << " " << tinfo->localB[1] << " "
+            << tinfo->localC[0] << " " << tinfo->localC[1] << "\n";
     }
     triangleInfo.endEdit();
 

@@ -115,6 +115,7 @@ public:
         {
             public:
 
+                // position of B, C vertices in local (in-plane) coordinates (A is naturaly [0,0])
                 helper::fixed_array <Vec3, 2> restLocalPositions;
                 helper::fixed_array <Quat, 3> restLocalOrientations;
 
@@ -122,7 +123,7 @@ public:
                 MaterialStiffness materialMatrix;
                 // the strain-displacement matrices vector
                 StrainDisplacement strainDisplacementMatrix;
-                // the strain-displacement matrices vector
+                // the strain-displacement matrices vector (at Gauss points)
                 StrainDisplacementBending strainDisplacementMatrix1;
                 StrainDisplacementBending strainDisplacementMatrix2;
                 StrainDisplacementBending strainDisplacementMatrix3;
