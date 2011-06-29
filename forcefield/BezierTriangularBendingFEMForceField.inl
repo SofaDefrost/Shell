@@ -137,7 +137,7 @@ template <class DataTypes>
 BezierTriangularBendingFEMForceField<DataTypes>::BezierTriangularBendingFEMForceField()
 : f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson ratio in Hooke's law"))
 , f_young(initData(&f_young,(Real)3000.,"youngModulus","Young modulus in Hooke's law"))
-, f_bending(initData(&f_bending,false,"bending","Adds bending"))
+//, f_bending(initData(&f_bending,false,"bending","Adds bending"))
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
 //, f_membraneRatio(initData(&f_membraneRatio,(Real)1.0,"membraneRatio","In plane forces ratio"))
 //, f_bendingRatio(initData(&f_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
@@ -498,12 +498,12 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
     tinfo->restLocalPositions[0] = Qframe0.rotate(x0[b].getCenter() - x0[a].getCenter());
     tinfo->restLocalPositions[1] = Qframe0.rotate(x0[c].getCenter() - x0[a].getCenter());
 
-    if (f_bending.getValue())
-    {
+    //if (f_bending.getValue())
+    //{
         // Computes inverse of C for initial position (in case of the latter is different than the rest_position)
         tinfo->localB = Qframe.rotate(x[b].getCenter()-x[a].getCenter());
         tinfo->localC = Qframe.rotate(x[c].getCenter()-x[a].getCenter());
-        computeStrainDisplacementMatrixBending(tinfo, tinfo->localB, tinfo->localC);
+        computeStrainDisplacementMatrixBending(*tinfo);
 
         // Computes triangles' surface
         computeStrainDisplacementMatrix(i);
@@ -526,7 +526,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
         DisplacementBending Disp_bending;
         computeDisplacementBending(Disp_bending, x, i);
 
-    }
+    //}
     triangleInfo.endEdit();
 }
 
@@ -570,8 +570,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v
     getVCenter(v[c]) += tinfo->Qframe.inverseRotate(Vec3(-dF[4], -dF[5], 0)) * kFactor;
 
     // If bending is requested
-    if (f_bending.getValue())
-    {
+    //if (f_bending.getValue())
+    //{
         // Bending displacements
         DisplacementBending Disp_bending;
         Vec3 u;
@@ -608,7 +608,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v
         v[a] += Deriv(-fa1, -fa2) * kFactor;
         v[b] += Deriv(-fb1, -fb2) * kFactor;
         v[c] += Deriv(-fc1, -fc2) * kFactor;
-    }
+    //}
 
 
     triangleInfo.endEdit();
@@ -686,26 +686,40 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacement(
-    Displacement &Disp, /*const VecCoord &x,*/ const Index elementIndex)
+    Displacement &Disp, const VecCoord &x, const Index elementIndex)
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
+
+    Index a = tinfo->a;
+    Index b = tinfo->b;
+    Index c = tinfo->c;
 
     // In-plane local displacements
     Vec3 uAB, uAC;
     uAB = tinfo->pts[1] - tinfo->restLocalPositions[0];
     uAC = tinfo->pts[2] - tinfo->restLocalPositions[1];
 
+    // Rotations to the local frame, ...
+    Quat dQA = qDiff(x[a].getOrientation().inverse(), tinfo->Qframe.inverse());
+    Quat dQB = qDiff(x[b].getOrientation().inverse(), tinfo->Qframe.inverse());
+    Quat dQC = qDiff(x[c].getOrientation().inverse(), tinfo->Qframe.inverse());
+
+    // and their difference to the rest orientations
+    dQA = qDiff(tinfo->restLocalOrientations[0].inverse(), dQA.inverse());
+    dQB = qDiff(tinfo->restLocalOrientations[1].inverse(), dQB.inverse());
+    dQC = qDiff(tinfo->restLocalOrientations[2].inverse(), dQC.inverse());
+
     // TODO: add Z-rotations
     Disp[0] = 0;
     Disp[1] = 0;
-    Disp[2] = dT1z;
+    Disp[2] = dQA[2];
     Disp[3] = uAB[0];
     Disp[4] = 0;
-    Disp[5] = dT2z;
+    Disp[5] = dQB[2];
     Disp[6] = uAC[0];
     Disp[7] = uAC[1];
-    Disp[8] = dT3z;
+    Disp[8] = dQC[2];
 
     triangleInfo.endEdit();
 }
@@ -721,13 +735,15 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacementBending
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
+    // TODO: we already did the math in computeDisplacement(), reuse it
+
     Index a = tinfo->a;
     Index b = tinfo->b;
     Index c = tinfo->c;
 
-    Quat dQA = qDiffZ(x[a].getOrientation(), tinfo->Qframe);     // Rotation of axis Z from Qframe to axis Z from x[a].getOrientation()
-    Quat dQB = qDiffZ(x[b].getOrientation(), tinfo->Qframe);     // Rotation of axis Z from Qframe to axis Z from x[b].getOrientation()
-    Quat dQC = qDiffZ(x[c].getOrientation(), tinfo->Qframe);     // Rotation of axis Z from Qframe to axis Z from x[c].getOrientation()
+    Quat dQA = qDiff(x[a].getOrientation().inverse(), tinfo->Qframe.inverse());     // Rotation of axis Z from Qframe to axis Z from x[a].getOrientation()
+    Quat dQB = qDiff(x[b].getOrientation().inverse(), tinfo->Qframe.inverse());     // Rotation of axis Z from Qframe to axis Z from x[b].getOrientation()
+    Quat dQC = qDiff(x[c].getOrientation().inverse(), tinfo->Qframe.inverse());     // Rotation of axis Z from Qframe to axis Z from x[c].getOrientation()
 
     // Difference between the current and the rest orientations yields displacement (into the triangle's frame)
     dQA = qDiff(tinfo->restLocalOrientations[0].inverse(), dQA.inverse());
@@ -792,9 +808,6 @@ template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo)
 {
-    //helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-    //TriangleInformation& tinfo = triangleInf[elementIndex];
-
     // Directional vectors from corner nodes
     Vec3 P4P1 = tinfo.pts[3] - tinfo.pts[0];
     Vec3 P5P1 = tinfo.pts[4] - tinfo.pts[0];
@@ -908,8 +921,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     J[8][0] = dux_dx_T3;
     J[8][0] = duy_dy_T3;
     J[8][0] = duy_dx_T3 + dux_dy_T3;
-
-    //triangleInfo.endEdit();
 }
 
 
@@ -917,85 +928,200 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
 // --- Compute the bending strain-displacement matrix where (a, b, c) are the coordinates of the 3 nodes of a triangle
 // ------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrixBending(TriangleInformation *tinfo, const Vec3& b, const Vec3& c)
+void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrixBending(TriangleInformation &tinfo)
 {
-    // Computation of the inverse of matrix C. Its inverse gives the coefficients c1, c2, ..., c9 of the deflection function given by:
-    // Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*(x*y^2 + x^2*y) + c9*y^3
-    // Source: Tocher's deflection function presented by Przemieniecki
-    // Corrected deflection to get a symmetrical deformation: Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
+    // Calculation of the 3 Gauss points (pts[0] is (0,0,0))
+    // TODO: we already did that in computeStrainDisplacementMatrix(), reuse it
+    Vec3 gaussPoint1 = tinfo.pts[1]/6 + tinfo.pts[2]/6;     // + pts[0]*(2/3)
+    Vec3 gaussPoint2 = tinfo.pts[1]*(2/3) + tinfo.pts[2]/6; // + pts[0]/6
+    Vec3 gaussPoint3 = tinfo.pts[1]/6 + tinfo.pts[2]*(2/3); // + pts[0]/6
 
-    Mat<9, 9, Real> C;
-    C.clear();
-
-    // Corrected
-    C(0,0) = 1;
-    C(1,2) = 1;
-    C(2,1) = -1;
-    C(3,0) = 1;         C(3,1) = b[0];          C(3,3) = b[0]*b[0];         C(3,6) = b[0]*b[0]*b[0];
-    C(4,2) = 1;         C(4,4) = b[0];
-    C(5,1) = -1;        C(5,3) = -2*b[0];       C(5,6) = -3*b[0]*b[0];
-    C(6,0) = 1;         C(6,1) = c[0];          C(6,2) = c[1];              C(6,3) = c[0]*c[0];             C(6,4) = c[0]*c[1];         C(6,5) = c[1]*c[1];
-    C(6,6) = c[0]*c[0]*c[0];                    C(6,7) = c[0]*c[1]*c[1];    C(6,8) = c[1]*c[1]*c[1];
-    C(7,2) = 1;         C(7,4) = c[0];          C(7,5) = 2*c[1];            C(7,7) = 2*c[0]*c[1];           C(7,8) = 3*c[1]*c[1];
-    C(8,1) = -1;        C(8,3) = -2*c[0];       C(8,4) = -c[1];             C(8,6) = -3*c[0]*c[0];          C(8,7) = -c[1]*c[1];
-
-    // Inverse of C
-    Mat<9, 9, Real> invC;
-    invC.invert(C);
-    tinfo->invC = invC;
-
-    // Calculation of the 3 Gauss points taken in the centre of each edge
-    Vec3 gaussPoint1 = b*0.5;       // a is (0, 0, 0)
-    Vec3 gaussPoint2 = (b+c)*0.5;
-    Vec3 gaussPoint3 = c*0.5;       // a is (0, 0, 0)
-
-    // Retrieves the strain tensor used in flat-plate theory at each Gauss point
-    Mat<3, 9, Real> D1, D2, D3;
-    tensorFlatPlate(D1, gaussPoint1);
-    tensorFlatPlate(D2, gaussPoint2);
-    tensorFlatPlate(D3, gaussPoint3);
-
-    // Compute strain-displacement matrix
-    tinfo->strainDisplacementMatrixB1 = D1 * invC;
-    tinfo->strainDisplacementMatrixB2 = D2 * invC;
-    tinfo->strainDisplacementMatrixB3 = D3 * invC;
+    matrixSDB(tinfo.strainDisplacementMatrixB1, gaussPoint1, tinfo);
+    matrixSDB(tinfo.strainDisplacementMatrixB2, gaussPoint2, tinfo);
+    matrixSDB(tinfo.strainDisplacementMatrixB3, gaussPoint3, tinfo);
 }
 
+// ----------------------------------------------------------------------------
+// --- Compute the strain-displacement matrix for bending deformation
+// -----------------------------------------------------------------------------
+template <class DataTypes>
+void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
+    StrainDisplacementBending &J, const Vec3 &GP, const TriangleInformation& tinfo)
+{
+    // Directional vectors from corner nodes
+    Vec3 P4P1 = tinfo.pts[3] - tinfo.pts[0];
+    Vec3 P5P1 = tinfo.pts[4] - tinfo.pts[0];
+    Vec3 P6P2 = tinfo.pts[5] - tinfo.pts[1];
+    Vec3 P7P2 = tinfo.pts[6] - tinfo.pts[1];
+    Vec3 P8P3 = tinfo.pts[7] - tinfo.pts[2];
+    Vec3 P9P3 = tinfo.pts[8] - tinfo.pts[2];
+    Vec3 P10P1 = tinfo.pts[9] - tinfo.pts[0];
+    Vec3 P10P2 = tinfo.pts[9] - tinfo.pts[1];
+    Vec3 P10P3 = tinfo.pts[9] - tinfo.pts[2];
+
+    Vec3 P(1, GP[0], GP[1]);
+
+    Vec3 p; // Interpolated values
+    p[0] = tinfo.interpol.line(0)*P;
+    p[1] = tinfo.interpol.line(1)*P;
+    p[2] = tinfo.interpol.line(2)*P;
+    
+    //Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
+
+    Real b1 = tinfo.interpol(0,1);
+    Real c1 = tinfo.interpol(0,2);
+    Real b2 = tinfo.interpol(1,1);
+    Real c2 = tinfo.interpol(1,2);
+    Real b3 = tinfo.interpol(2,1);
+    Real c3 = tinfo.interpol(2,2);
+
+    // Doubles derivatives by x and y
+    Real D2Phi1n3_xx = 6*b1*b1*p[0];
+    Real D2Phi1n3_xy = 6*b1*c1*p[0];
+    Real D2Phi1n3_yy = 6*c1*c1*p[0];
+    //Real D2Phi1n2_xx = 2*b1*b1;
+    //Real D2Phi1n2_xy = 2*b1*c1;
+    //Real D2Phi1n2_yy = 2*c1*c1;
+
+    Real D2Phi2n3_xx = 6*b2*b2*p[1];
+    Real D2Phi2n3_xy = 6*b2*c2*p[1];
+    Real D2Phi2n3_yy = 6*c2*c2*p[1];
+    //Real D2Phi2n2_xx = 2*b2*b2;
+    //Real D2Phi2n2_xy = 2*b2*c2;
+    //Real D2Phi2n2_yy = 2*c2*c2;
+
+    Real D2Phi3n3_xx = 6*b3*b1*p[2];
+    Real D2Phi3n3_xy = 6*b3*c3*p[2];
+    Real D2Phi3n3_yy = 6*c3*c3*p[2];
+    //Real D2Phi3n2_xx = 2*b3*b3;
+    //Real D2Phi3n2_xy = 2*b3*c3;
+    //Real D2Phi3n2_yy = 2*c3*c3;
+
+    Real D2Phi123_xx = 2*b1*b2*p[2] + 2*b1*p[1]*b3 + 2*p[0]*b2*b3;
+    Real D2Phi123_xy = c1*b2*p[2] + c1*p[1]*b3 + b1*c2*p[2]+ p[0]*c2*b3 + b1*p[1]*c3 + p[0]*b2*c3;
+    Real D2Phi123_yy = 2*c1*c2*p[2] + 2*c1*p[1]*c3 + 2*p[0]*c2*c3;
+
+
+    Real D2Phi1n2Phi2_xx = 2*b1*b1*p[1]+ 4*p[0]*b1*b2;
+    Real D2Phi1n2Phi3_xx = 2*b1*b1*p[2]+ 4*p[0]*b1*b3;
+    Real D2Phi1n2Phi2_yy = 2*c1*c1*p[1]+ 4*p[0]*c1*c2;
+    Real D2Phi1n2Phi3_yy = 2*c1*c1*p[2]+ 4*p[0]*c1*c3;
+    Real D2Phi1n2Phi2_xy = 2*b1*c1*p[1]+ 2*b1*p[0]*c2 + 2*p[0]*c1*b2;
+    Real D2Phi1n2Phi3_xy = 2*b1*c1*p[2]+ 2*b1*p[0]*c3 + 2*p[0]*c1*b3;
+
+    Real D2Phi2n2Phi1_xx = 2*b2*b2*p[0]+ 4*p[1]*b2*b1;
+    Real D2Phi2n2Phi3_xx = 2*b2*b2*p[2]+ 4*p[1]*b2*b3;
+    Real D2Phi2n2Phi1_yy = 2*c2*c2*p[0]+ 4*p[1]*c2*c1;
+    Real D2Phi2n2Phi3_yy = 2*c2*c2*p[2]+ 4*p[1]*c2*c3;
+    Real D2Phi2n2Phi1_xy = 2*b2*c2*p[0]+ 2*b2*p[1]*c1 + 2*p[1]*c2*b1;
+    Real D2Phi2n2Phi3_xy = 2*b2*c2*p[2]+ 2*b2*p[1]*c3 + 2*p[1]*c2*b3;
+
+    Real D2Phi3n2Phi1_xx = 2*b3*b3*p[0]+ 4*p[2]*b3*b1;
+    Real D2Phi3n2Phi2_xx = 2*b3*b3*p[1]+ 4*p[2]*b3*b2;
+    Real D2Phi3n2Phi1_yy = 2*c3*c3*p[0]+ 4*p[2]*c3*c1;
+    Real D2Phi3n2Phi2_yy = 2*c3*c3*p[1]+ 4*p[2]*c3*c2;
+    Real D2Phi3n2Phi1_xy = 2*b3*c3*p[0]+ 2*b3*p[2]*c1 + 2*p[2]*c3*b1;
+    Real D2Phi3n2Phi2_xy = 2*b3*c3*p[1]+ 2*b3*p[2]*c2 + 2*p[2]*c3*b2;
+
+    // Derivees with respect to translations
+    Real d2uz_dxx_dU1 = D2Phi1n3_xx + 3*D2Phi1n2Phi2_xx + 3*D2Phi1n2Phi3_xx + 2*D2Phi123_xx;
+    Real d2uz_dxy_dU1 = D2Phi1n3_xy + 3*D2Phi1n2Phi2_xy + 3*D2Phi1n2Phi3_xy + 2*D2Phi123_xy;
+    Real d2uz_dyy_dU1 = D2Phi1n3_yy + 3*D2Phi1n2Phi2_yy + 3*D2Phi1n2Phi3_yy + 2*D2Phi123_yy;
+
+    Real d2uz_dxx_dU2 = D2Phi2n3_xx + 3*D2Phi2n2Phi1_xx + 3*D2Phi2n2Phi3_xx + 2*D2Phi123_xx;
+    Real d2uz_dxy_dU2 = D2Phi2n3_xy + 3*D2Phi2n2Phi1_xy + 3*D2Phi2n2Phi3_xy + 2*D2Phi123_xy;
+    Real d2uz_dyy_dU2 = D2Phi2n3_yy + 3*D2Phi2n2Phi1_yy + 3*D2Phi2n2Phi3_yy + 2*D2Phi123_yy;
+
+    Real d2uz_dxx_dU3 = D2Phi3n3_xx + 3*D2Phi3n2Phi1_xx + 3*D2Phi3n2Phi2_xx + 2*D2Phi123_xx;
+    Real d2uz_dxy_dU3 = D2Phi3n3_xy + 3*D2Phi3n2Phi1_xy + 3*D2Phi3n2Phi2_xy + 2*D2Phi123_xy;
+    Real d2uz_dyy_dU3 = D2Phi3n3_yy + 3*D2Phi3n2Phi1_yy + 3*D2Phi3n2Phi2_yy + 2*D2Phi123_yy;
+
+    // Derivatives with respect to rotations
+#define CROSS_VEC(p) Vec2 cv##p(-(p)[1], (p)[0]) // TODO: add a good comment
+    CROSS_VEC(P4P1);  CROSS_VEC(P6P2);  CROSS_VEC(P8P3);
+    CROSS_VEC(P5P1);  CROSS_VEC(P7P2);  CROSS_VEC(P9P3);
+    CROSS_VEC(P10P1); CROSS_VEC(P10P2); CROSS_VEC(P10P3);
+#undef CROSS_VEC
+
+    Vec2 d2uz_dxx_dT1 = cvP4P1*3*D2Phi1n2Phi2_xx + cvP5P1*3*D2Phi1n2Phi3_xx + cvP10P1*2*D2Phi123_xx;
+    Vec2 d2uz_dxy_dT1 = cvP4P1*3*D2Phi1n2Phi2_xy + cvP5P1*3*D2Phi1n2Phi3_xy + cvP10P1*2*D2Phi123_xy;
+    Vec2 d2uz_dyy_dT1 = cvP4P1*3*D2Phi1n2Phi2_yy + cvP5P1*3*D2Phi1n2Phi3_yy + cvP10P1*2*D2Phi123_yy;
+
+    Vec2 d2uz_dxx_dT2 = cvP6P2*3*D2Phi2n2Phi3_xx + cvP7P2*3*D2Phi2n2Phi1_xx + cvP10P2*2*D2Phi123_xx;
+    Vec2 d2uz_dxy_dT2 = cvP6P2*3*D2Phi2n2Phi3_xy + cvP7P2*3*D2Phi2n2Phi1_xy + cvP10P2*2*D2Phi123_xy;
+    Vec2 d2uz_dyy_dT2 = cvP6P2*3*D2Phi2n2Phi3_yy + cvP7P2*3*D2Phi2n2Phi1_yy + cvP10P2*2*D2Phi123_yy;
+
+    Vec2 d2uz_dxx_dT3 = cvP8P3*3*D2Phi3n2Phi1_xx + cvP9P3*3*D2Phi3n2Phi2_xx + cvP10P3*2*D2Phi123_xx;
+    Vec2 d2uz_dxy_dT3 = cvP8P3*3*D2Phi3n2Phi1_xy + cvP9P3*3*D2Phi3n2Phi2_xy + cvP10P3*2*D2Phi123_xy;
+    Vec2 d2uz_dyy_dT3 = cvP8P3*3*D2Phi3n2Phi1_yy + cvP9P3*3*D2Phi3n2Phi2_yy + cvP10P3*2*D2Phi123_yy;
+
+    // TODO: unify the dimensions with the matrixSD()
+    J[0][0] = -d2uz_dxx_dU1;
+    J[0][1] = -d2uz_dxx_dT1[0];
+    J[0][2] = -d2uz_dxx_dT1[1];
+    J[0][3] = -d2uz_dxx_dU2;
+    J[0][4] = -d2uz_dxx_dT2[0];
+    J[0][5] = -d2uz_dxx_dT2[1];
+    J[0][6] = -d2uz_dxx_dU3;
+    J[0][7] = -d2uz_dxx_dT3[0];
+    J[0][8] = -d2uz_dxx_dT3[1];
+
+    J[1][0] = -d2uz_dyy_dU1;
+    J[1][1] = -d2uz_dyy_dT1[0];
+    J[1][2] = -d2uz_dyy_dT1[1];
+    J[1][3] = -d2uz_dyy_dU2;
+    J[1][4] = -d2uz_dyy_dT2[0];
+    J[1][5] = -d2uz_dyy_dT2[1];
+    J[1][6] = -d2uz_dyy_dU3;
+    J[1][7] = -d2uz_dyy_dT3[0];
+    J[1][8] = -d2uz_dyy_dT3[1];
+
+    J[2][0] = -2*d2uz_dxy_dU1;
+    J[2][1] = -2*d2uz_dxy_dT1[0];
+    J[2][2] = -2*d2uz_dxy_dT1[1];
+    J[2][3] = -2*d2uz_dxy_dU2;
+    J[2][4] = -2*d2uz_dxy_dT2[0];
+    J[2][5] = -2*d2uz_dxy_dT2[1];
+    J[2][6] = -2*d2uz_dxy_dU3;
+    J[2][7] = -2*d2uz_dxy_dT3[0];
+    J[2][8] = -2*d2uz_dxy_dT3[1];
+
+    J *= f_thickness.getValue();
+}
 
 // --------------------------------------------------------------------------------------------------------
 // --- Computes the strain tensor used in flat-plate theory in a given point
 // --------------------------------------------------------------------------------------------------------
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P)
-{
-#ifdef DEBUG_TRIANGLEFEM
-    sout << "TriangleBendingFEMForceField::tensorFlatPlate"<<sendl;
-#endif
-
-    // Flat-plat theory gives:
-    // e = D * c with
-    //        [ 0  0  0  2  0  0  6x   2y   0  ]
-    // D = -z | 0  0  0  0  0  2  0    2x   6y |
-    //        [ 0  0  0  0  2  0  0  4(x+y) 0  ]
-    // where e is the strain vector and c the coefficient vector of the deflection function
-    //
-    // CORRECTED:
-    //        [ 0  0  0  2  0  0  6x  0   0  ]
-    // D = -z | 0  0  0  0  0  2  0   2x  6y |
-    //        [ 0  0  0  0  2  0  0   4y  0  ]
-
-    // Corrected
-    D.clear();
-    D(0,3) = 2;         D(0,6) = 6*P[0];
-    D(1,5) = 2;         D(1,7) = 2*P[0];        D(1,8) = 6*P[1];
-    D(2,4) = 2;         D(2,7) = 4*P[1];
-}
+//template <class DataTypes>
+//void BezierTriangularBendingFEMForceField<DataTypes>::tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P)
+//{
+//#ifdef DEBUG_TRIANGLEFEM
+//    sout << "TriangleBendingFEMForceField::tensorFlatPlate"<<sendl;
+//#endif
+//
+//    // Flat-plat theory gives:
+//    // e = D * c with
+//    //        [ 0  0  0  2  0  0  6x   2y   0  ]
+//    // D = -z | 0  0  0  0  0  2  0    2x   6y |
+//    //        [ 0  0  0  0  2  0  0  4(x+y) 0  ]
+//    // where e is the strain vector and c the coefficient vector of the deflection function
+//    //
+//    // CORRECTED:
+//    //        [ 0  0  0  2  0  0  6x  0   0  ]
+//    // D = -z | 0  0  0  0  0  2  0   2x  6y |
+//    //        [ 0  0  0  0  2  0  0   4y  0  ]
+//
+//    // Corrected
+//    D.clear();
+//    D(0,3) = 2;         D(0,6) = 6*P[0];
+//    D(1,5) = 2;         D(1,7) = 2*P[0];        D(1,8) = 6*P[1];
+//    D(2,4) = 2;         D(2,7) = 4*P[1];
+//}
 
 
 // -----------------------------------------------------------------------------
 // --- Compute the stiffness matrix K = J * M * Jt where J is the
 // --- strain-displacement matrix and M the material matrix
-// ---[ OK ]--
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrix(
@@ -1018,22 +1144,23 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrix(
 // --- Compute the stiffness matrix for bending K = J * M * Jt where J is the strain-displacement matrix and M the material matrix
 // ----------------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMatrixBending &K, TriangleInformation *tinfo)
+void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMatrixBending &K, const TriangleInformation &tinfo)
 {
     Mat<9, 3, Real> J1t, J2t, J3t;
-    J1t.transpose(tinfo->strainDisplacementMatrixB1);
-    J2t.transpose(tinfo->strainDisplacementMatrixB2);
-    J3t.transpose(tinfo->strainDisplacementMatrixB3);
+    J1t.transpose(tinfo.strainDisplacementMatrixB1);
+    J2t.transpose(tinfo.strainDisplacementMatrixB2);
+    J3t.transpose(tinfo.strainDisplacementMatrixB3);
 
-    // K = (surface/3)*(t^3)*(J1t*material*J1 + J2t*material*J2 + J3t*material*J3)
-    K = J1t * tinfo->materialMatrix * tinfo->strainDisplacementMatrixB1 +
-        J2t * tinfo->materialMatrix * tinfo->strainDisplacementMatrixB2 +
-        J3t * tinfo->materialMatrix * tinfo->strainDisplacementMatrixB3;
+    K = J1t * tinfo.materialMatrix * tinfo.strainDisplacementMatrixB1 +
+        J2t * tinfo.materialMatrix * tinfo.strainDisplacementMatrixB2 +
+        J3t * tinfo.materialMatrix * tinfo.strainDisplacementMatrixB3;
+
+    // TODO: there was thickness^3 here, why?
+    K *= f_thickness.getValue()*tinfo.area/3;
 }
 
 // -----------------------------------------------------------------------------
 // ---  Compute material stiffness (Hooke's law)
-// ---[ OK ]--
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(
@@ -1068,7 +1195,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(
 
 // -----------------------------------------------------------------------------
 // ---  Compute force F = J * material * Jt * u
-// ---[ OK ]--
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeForce(
@@ -1088,16 +1214,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForce(
     // Compute forces
     F = K * D;
 
-//[1 2 6 7 8 12 13 14 18]
-//U1=[U(1) ;U(2) ;U(3)];
-//U2=[U(7) ;U(8) ;U(9)]; 
-//U3=[U(13);U(14);U(15)];
-//
-//dTheta1= [U(4); U(5); U(6)];
-//dTheta2= [U(10);U(11);U(12)];
-//dTheta3= [U(16);U(17);U(18)];
-
-
     triangleInfo.endEdit();
 }
 
@@ -1109,17 +1225,15 @@ template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeForceBending(DisplacementBending &F_bending, const DisplacementBending& D_bending, const Index elementIndex)
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-    TriangleInformation *tinfo = &triangleInf[elementIndex];
+    TriangleInformation &tinfo = triangleInf[elementIndex];
 
     // Compute strain-displacement matrix J
-    computeStrainDisplacementMatrixBending(tinfo, tinfo->localB, tinfo->localC);
+    computeStrainDisplacementMatrixBending(tinfo);
 
     // Compute stiffness matrix K = Jt * material * J
     StiffnessMatrixBending K_bending;
     computeStiffnessMatrixBending(K_bending, tinfo);
-    Real t = f_thickness.getValue();
-    K_bending *= t*t*t*(triangleInf[elementIndex].area)/3;
-    tinfo->stiffnessMatrixBending = K_bending;
+    tinfo.stiffnessMatrixBending = K_bending;
 
     // Compute forces
     F_bending = K_bending * D_bending;
@@ -1147,43 +1261,38 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
     tinfo->Qframe = Qframe;
     computeLocalTriangle(x, elementIndex);
 
-    // Compute in-plane displacement into the triangle's frame
+    // Compute in-plane displacement in the triangle's frame
     Displacement D;
-    computeDisplacement(D, /*x,*/ elementIndex);
+    computeDisplacement(D, x, elementIndex);
 
     // Compute in-plane forces on this element (in the co-rotational space)
     Displacement F;
     computeForce(F, D, elementIndex);
 
+    //if (f_bending.getValue())
+    //{
+    // Compute bending displacement for bending into the triangle's frame
+    DisplacementBending D_bending;
+    computeDisplacementBending(D_bending, x, elementIndex);
+
+    // Compute bending forces on this element (in the co-rotational space)
+    DisplacementBending F_bending;
+    computeForceBending(F_bending, D_bending, elementIndex);
+    //}
+
     // Transform forces back into global reference frame
-    getVCenter(f[a]) -= tinfo->Qframe.inverseRotate(Vec3(F[0], F[1], 0));
-    getVCenter(f[b]) -= tinfo->Qframe.inverseRotate(Vec3(F[2], F[3], 0));
-    getVCenter(f[c]) -= tinfo->Qframe.inverseRotate(Vec3(F[4], F[5], 0));
+    Vec3 fa1 = tinfo->Qframe.inverseRotate(Vec3(F[0], F[1], F_bending[0]));
+    Vec3 fa2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[1], F_bending[2], F[2]));
 
-    if (f_bending.getValue())
-    {
-        // Compute bending displacement for bending into the triangle's frame
-        DisplacementBending D_bending;
-        computeDisplacementBending(D_bending, x, elementIndex);
+    Vec3 fb1 = tinfo->Qframe.inverseRotate(Vec3(F[3], F[4], F_bending[3]));
+    Vec3 fb2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[4], F_bending[5], F[5]));
 
-        // Compute bending forces on this element (in the co-rotational space)
-        DisplacementBending F_bending;
-        computeForceBending(F_bending, D_bending, elementIndex);
+    Vec3 fc1 = tinfo->Qframe.inverseRotate(Vec3(F[6], F[7], F_bending[6]));
+    Vec3 fc2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[7], F_bending[8], F[8]));
 
-        // Transform forces back into global reference frame
-        Vec3 fa1 = tinfo->Qframe.inverseRotate(Vec3(0.0, 0.0, F_bending[0]));
-        Vec3 fa2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[1], F_bending[2], 0.0));
-
-        Vec3 fb1 = tinfo->Qframe.inverseRotate(Vec3(0.0, 0.0, F_bending[3]));
-        Vec3 fb2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[4], F_bending[5], 0.0));
-
-        Vec3 fc1 = tinfo->Qframe.inverseRotate(Vec3(0.0, 0.0, F_bending[6]));
-        Vec3 fc2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[7], F_bending[8], 0.0));
-
-        f[a] += Deriv(-fa1, -fa2);
-        f[b] += Deriv(-fb1, -fb2);
-        f[c] += Deriv(-fc1, -fc2);
-    }
+    f[a] += Deriv(-fa1, -fa2);
+    f[b] += Deriv(-fb1, -fb2);
+    f[c] += Deriv(-fc1, -fc2);
 
     triangleInfo.endEdit();
 }
@@ -1195,6 +1304,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ )
 {
+    serr << "called addForce()" << sendl;
+
     VecDeriv& f        = *(dataF.beginEdit());
     const VecCoord& p  =   dataX.getValue()  ;
 
@@ -1223,6 +1334,10 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core:
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core::MechanicalParams* mparams, DataVecDeriv& datadF, const DataVecDeriv& datadX )
 {
+    // TODO
+    serr << "addDForce not implemented" << sendl;
+    return;
+
     VecDeriv& df        = *(datadF.beginEdit());
     const VecDeriv& dp  =   datadX.getValue()  ;
 
@@ -1282,8 +1397,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
     }
 
 
-    if (f_bending.getValue())
-    {
+    //if (f_bending.getValue())
+    //{
         // Stiffness matrix in bending of current triangle
         const StiffnessMatrixBending &K_bending = tinfo->stiffnessMatrixBending;
 
@@ -1310,7 +1425,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
             }
         }
 
-    }
+    //}
 
     // Extend rotation matrix and its transpose
     Transformation R, Rt;
@@ -1341,6 +1456,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
 template<class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix)
 {
+    serr << "addKToMatrix(1) not implemented" << sendl;
+    return;
+
     StiffnessMatrixGlobalSpace K_gs;
 
     // Build Matrix Block for this ForceField
@@ -1405,6 +1523,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::M
 template<class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset)
 {
+    serr << "addKToMatrix(1) not implemented" << sendl;
+    return;
+
     VecCoord X = *this->mstate->getX();
     VecDeriv df, dx;
 
@@ -1452,6 +1573,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::default
 template<class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/)
 {
+    serr << "addBToMatrix() not implemented" << sendl;
+    return;
+
 
 }
 

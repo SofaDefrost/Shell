@@ -96,7 +96,9 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         // Displacement vector for in-plane forces:
         //  [ U1x, U1y, dT1z, U2x, U2y, dT2z, U3x, U3y, dT3z ]
         typedef Vec<9, Real> Displacement;
-        typedef Vec<9, Real> DisplacementBending;               ///< displacement vector for bending forces
+        // Displacement vector for bending forces:
+        //  [ U1z, dT1x, dT1y, U2z, dT2x, dT2y, U3z, dT3x, dT3y ]
+        typedef Vec<9, Real> DisplacementBending;
         typedef Mat<3, 3, Real> MaterialStiffness;              ///< matrix of material stiffness
         typedef Mat<9, 3, Real> StrainDisplacement;             ///< strain-displacement matrix for in-plane forces
         typedef Mat<3, 9, Real> StrainDisplacementBending;
@@ -219,16 +221,18 @@ protected :
         TriangleData<TriangleInformation> triangleInfo;
 
         void computeLocalTriangle(const VecCoord &x, const Index elementIndex);
-        void computeDisplacement(Displacement &Disp, /*const VecCoord &x,*/ const Index elementIndex);
+        void computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex);
         void computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, const Index elementIndex);
         void computeStrainDisplacementMatrix(const Index elementIndex);
-        void computeStrainDisplacementMatrixBending(TriangleInformation *tinfo, const Vec3& b, const Vec3& c);
-        void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
+        void computeStrainDisplacementMatrixBending(TriangleInformation &tinfo);
+        //void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
         void computeStiffnessMatrix(StiffnessMatrix &K, const TriangleInformation &tinfo);
-        void computeStiffnessMatrixBending(StiffnessMatrixBending &K, TriangleInformation *tinfo);
+        void computeStiffnessMatrixBending(StiffnessMatrixBending &K, const TriangleInformation &tinfo);
         void computeForce(Displacement &F, const Displacement& D, const Index elementIndex);
         void computeForceBending(DisplacementBending &F, const DisplacementBending& D, const Index elementIndex);
-        void matrixSD(StrainDisplacement &J, const Vec3 &P, const TriangleInformation& tinfo);
+        // Strain-displacement matrices
+        void matrixSD(StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo);
+        void matrixSDB(StrainDisplacementBending &J, const Vec3 &GP, const TriangleInformation& tinfo);
 
         static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
