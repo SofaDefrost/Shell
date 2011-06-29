@@ -545,71 +545,60 @@ void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v
     const Index& b = tinfo->b;
     const Index& c = tinfo->c;
 
-    // Computes displacements
+    // Computes in-plane displacements and bending displacements
     Displacement Disp;
-    Vec3 x_a, x_b, x_c;
-    x_a = tinfo->Qframe.rotate(getVCenter(dx[a]));
-    Disp[0] = x_a[0];
-    Disp[1] = x_a[1];
+    DisplacementBending Disp_bending;
+    Vec3 x, o;
 
-    x_b = tinfo->Qframe.rotate(getVCenter(dx[b]));
-    Disp[2] = x_b[0];
-    Disp[3] = x_b[1];
+    x = tinfo->Qframe.rotate(getVCenter(dx[a]));
+    o = tinfo->Qframe.rotate(getVOrientation(dx[a]));
+    Disp[0] = x[0];
+    Disp[1] = x[1];
+    Disp[2] = o[2];
+    Disp_bending[0] = x[2];
+    Disp_bending[1] = o[0];
+    Disp_bending[2] = o[1];
 
-    x_c = tinfo->Qframe.rotate(getVCenter(dx[c]));
-    Disp[4] = x_c[0];
-    Disp[5] = x_c[1];
+    x = tinfo->Qframe.rotate(getVCenter(dx[b]));
+    o = tinfo->Qframe.rotate(getVOrientation(dx[b]));
+    Disp[3] = x[0];
+    Disp[4] = x[1];
+    Disp[5] = o[2];
+    Disp_bending[3] = x[2];
+    Disp_bending[4] = o[0];
+    Disp_bending[5] = o[1];
+
+    x = tinfo->Qframe.rotate(getVCenter(dx[c]));
+    o = tinfo->Qframe.rotate(getVOrientation(dx[c]));
+    Disp[6] = x[0];
+    Disp[7] = x[1];
+    Disp[8] = o[2];
+    Disp_bending[6] = x[2];
+    Disp_bending[7] = o[0];
+    Disp_bending[8] = o[1];
 
     // Compute dF
     Displacement dF;
     dF = tinfo->stiffnessMatrix * Disp;
 
-    // Transfer into global frame
-    getVCenter(v[a]) += tinfo->Qframe.inverseRotate(Vec3(-dF[0], -dF[1], 0)) * kFactor;
-    getVCenter(v[b]) += tinfo->Qframe.inverseRotate(Vec3(-dF[2], -dF[3], 0)) * kFactor;
-    getVCenter(v[c]) += tinfo->Qframe.inverseRotate(Vec3(-dF[4], -dF[5], 0)) * kFactor;
+    // Compute dF_bending
+    DisplacementBending dF_bending;
+    dF_bending = tinfo->stiffnessMatrixBending * Disp_bending;
 
-    // If bending is requested
-    //if (f_bending.getValue())
-    //{
-        // Bending displacements
-        DisplacementBending Disp_bending;
-        Vec3 u;
-        u = tinfo->Qframe.rotate(getVOrientation(dx[a]));
-        Disp_bending[0] = x_a[2];
-        Disp_bending[1] = u[0];
-        Disp_bending[2] = u[1];
+    // Go back into global frame
+    Vec3 fa1, fa2, fb1, fb2, fc1, fc2;
+    fa1 = tinfo->Qframe.inverseRotate(Vec3(dF[0], dF[1], dF_bending[0]));
+    fa2 = tinfo->Qframe.inverseRotate(Vec3(dF_bending[1], dF_bending[2], dF[2]));
 
-        u = tinfo->Qframe.rotate(getVOrientation(dx[b]));
-        Disp_bending[3] = x_b[2];
-        Disp_bending[4] = u[0];
-        Disp_bending[5] = u[1];
+    fb1 = tinfo->Qframe.inverseRotate(Vec3(dF[3], dF[4], dF_bending[3]));
+    fb2 = tinfo->Qframe.inverseRotate(Vec3(dF_bending[4], dF_bending[5], dF[5]));
 
-        u = tinfo->Qframe.rotate(getVOrientation(dx[c]));
-        Disp_bending[6] = x_c[2];
-        Disp_bending[7] = u[0];
-        Disp_bending[8] = u[1];
+    fc1 = tinfo->Qframe.inverseRotate(Vec3(dF[6], dF[7], dF_bending[6]));
+    fc2 = tinfo->Qframe.inverseRotate(Vec3(dF_bending[7], dF_bending[8], dF[8]));
 
-        // Compute dF
-        DisplacementBending dF_bending;
-        dF_bending = tinfo->stiffnessMatrixBending * Disp_bending;
-
-        // Go back into global frame
-        Vec3 fa1, fa2, fb1, fb2, fc1, fc2;
-        fa1 = tinfo->Qframe.inverseRotate(Vec3(0.0, 0.0, dF_bending[0]));
-        fa2 = tinfo->Qframe.inverseRotate(Vec3(dF_bending[1], dF_bending[2], 0.0));
-
-        fb1 = tinfo->Qframe.inverseRotate(Vec3(0.0, 0.0, dF_bending[3]));
-        fb2 = tinfo->Qframe.inverseRotate(Vec3(dF_bending[4], dF_bending[5], 0.0));
-
-        fc1 = tinfo->Qframe.inverseRotate(Vec3(0.0, 0.0, dF_bending[6]));
-        fc2 = tinfo->Qframe.inverseRotate(Vec3(dF_bending[7], dF_bending[8], 0.0));
-
-        v[a] += Deriv(-fa1, -fa2) * kFactor;
-        v[b] += Deriv(-fb1, -fb2) * kFactor;
-        v[c] += Deriv(-fc1, -fc2) * kFactor;
-    //}
-
+    v[a] += Deriv(-fa1, -fa2) * kFactor;
+    v[b] += Deriv(-fb1, -fb2) * kFactor;
+    v[c] += Deriv(-fc1, -fc2) * kFactor;
 
     triangleInfo.endEdit();
 }
@@ -1304,8 +1293,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ )
 {
-    serr << "called addForce()" << sendl;
-
     VecDeriv& f        = *(dataF.beginEdit());
     const VecCoord& p  =   dataX.getValue()  ;
 
@@ -1334,10 +1321,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core:
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core::MechanicalParams* mparams, DataVecDeriv& datadF, const DataVecDeriv& datadX )
 {
-    // TODO
-    serr << "addDForce not implemented" << sendl;
-    return;
-
     VecDeriv& df        = *(datadF.beginEdit());
     const VecDeriv& dp  =   datadX.getValue()  ;
 
@@ -1523,9 +1506,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::M
 template<class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset)
 {
-    serr << "addKToMatrix(1) not implemented" << sendl;
-    return;
-
     VecCoord X = *this->mstate->getX();
     VecDeriv df, dx;
 

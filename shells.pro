@@ -23,13 +23,19 @@ LIBS += $$SOFA_EXT_LIBS
 INCLUDEPATH += $$SOFA_DIR/extlibs
 
 SOURCES = 	forcefield/TriangularBendingFEMForceField.cpp \
+			forcefield/BezierTriangularBendingFEMForceField.cpp \
 			mapping/BendingPlateMechanicalMapping.cpp \
+			mapping/BezierTriangleMechanicalMapping.cpp \
 			initPluginShells.cpp
 
 HEADERS = 	forcefield/TriangularBendingFEMForceField.h \
 			forcefield/TriangularBendingFEMForceField.inl \
+			forcefield/BezierTriangularBendingFEMForceField.h \
+			forcefield/BezierTriangularBendingFEMForceField.inl \
 			mapping/BendingPlateMechanicalMapping.h \
-			mapping/BendingPlateMechanicalMapping.inl
+			mapping/BendingPlateMechanicalMapping.inl \
+			mapping/BezierTriangleMechanicalMapping.h \
+			mapping/BezierTriangleMechanicalMapping.inl
 		  
 README_FILE = PluginShells.txt
 
