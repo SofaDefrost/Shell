@@ -467,6 +467,10 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeRotation(Quat& Qfra
     R[2][2] = edgez[2];
 
     Qframe.fromMatrix(R);
+
+    if(this->f_printLog.getValue())
+        sout<<"Qframe = "<<Qframe<<sendl;
+
 }
 
 
@@ -617,23 +621,49 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
 
     // Compute local postions of vertices B and C in the co-rotational frame,
     // A is always (0,0,0)
-    //pts[0] = Vec3(0,0,0);
-    pts[1] = tinfo->Qframe.rotate(x[tinfo->b].getCenter()-x[tinfo->a].getCenter());
-    pts[2] = tinfo->Qframe.rotate(x[tinfo->c].getCenter()-x[tinfo->a].getCenter());
+
+
+
+
+
+
+    ////////// TODO : apply the "GOOD" transformation !
+
+
+    pts[9] = x[tinfo->a].getCenter()*(1.0/3.0) +x[tinfo->b].getCenter()*(1.0/3.0) +x[tinfo->c].getCenter()*(1.0/3.0);
+    // the element is being rotated along the
+
+
+    pts[0] = tinfo->Qframe.rotate(x[tinfo->a].getCenter() );
+    pts[1] = tinfo->Qframe.rotate(x[tinfo->b].getCenter() );
+    pts[2] = tinfo->Qframe.rotate(x[tinfo->c].getCenter() );
+
 
     // TODO: remove this later
     tinfo->localB = pts[1];
     tinfo->localC = pts[2];
 
     // Bezier Points
-    // TODO: shouldn't we consider also the rotations/normals?
-    pts[3] = pts[1]*(2/3) + pts[2]/3;
-    pts[6] = pts[1]/3 + pts[2]*(2/3);
-    pts[4] = pts[1]*(2/3) + pts[3]/3;
-    pts[7] = pts[1]/3 + pts[3]*(2/3);
-    pts[5] = pts[2]*(2/3) + pts[3]/3;
-    pts[8] = pts[2]/3 + pts[3]*(2/3);
-    pts[9] = pts[1]/3 + pts[2]/3 + pts[3]/3;
+    // TODO: shouldn't we consider also the rotations/normals? /// CHRISTIAN  WARNING pb with indices !!
+//    P4=(2/3)*P1+(1/3)*P2;
+//    P7=(1/3)*P1+(2/3)*P2;
+//    P5=(2/3)*P1+(1/3)*P3;
+//    P8=(1/3)*P1+(2/3)*P3;
+//    P6=(2/3)*P2+(1/3)*P3;
+//    P9=(1/3)*P2+(2/3)*P3;
+//    P10=(1/3)*P1+(1/3)*P2+(1/3)*P3;
+
+    pts[3] = pts[0]*(2.0/3.0) + pts[1]*(1.0/3.0);
+    pts[6] = pts[0]*(1.0/3.0) + pts[1]*(2.0/3.0);
+    pts[4] = pts[0]*(2.0/3.0) + pts[2]*(1.0/3.0);
+    pts[7] = pts[0]*(1.0/3.0) + pts[2]*(2.0/3.0);
+    pts[5] = pts[1]*(2.0/3.0) + pts[2]*(1.0/3.0);
+    pts[8] = pts[1]*(1.0/3.0) + pts[2]*(2.0/3.0);
+    pts[9] = pts[0]*(1.0/3.0) + pts[1]*(1.0/3.0) + pts[2]*(1.0/3.0);
+
+
+    std::cout<<" pts = " << pts<<std::endl;
+
 
     // TODO
     //P4P1=P1-P4;
@@ -779,9 +809,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementM
     tinfo.area = 0.5*determinant;
 
     // Calculation of the 3 Gauss points (pts[0] is (0,0,0))
-    Vec3 gaussPoint1 = tinfo.pts[1]/6 + tinfo.pts[2]/6;     // + pts[0]*(2/3)
-    Vec3 gaussPoint2 = tinfo.pts[1]*(2/3) + tinfo.pts[2]/6; // + pts[0]/6
-    Vec3 gaussPoint3 = tinfo.pts[1]/6 + tinfo.pts[2]*(2/3); // + pts[0]/6
+    Vec3 gaussPoint1 = tinfo.pts[0]*(2.0/3.0) + tinfo.pts[1]/6.0 + tinfo.pts[2]/6.0; //
+    Vec3 gaussPoint2 = tinfo.pts[0]/6.0 + tinfo.pts[1]*(2.0/3.0) + tinfo.pts[2]/6.0; //
+    Vec3 gaussPoint3 = tinfo.pts[0]/6.0 + tinfo.pts[1]/6.0 + tinfo.pts[2]*(2.0/3.0); //
 
     matrixSD(tinfo.strainDisplacementMatrix1, gaussPoint1, tinfo);
     matrixSD(tinfo.strainDisplacementMatrix2, gaussPoint2, tinfo);
@@ -910,6 +940,10 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     J[8][0] = dux_dx_T3;
     J[8][0] = duy_dy_T3;
     J[8][0] = duy_dx_T3 + dux_dy_T3;
+
+
+    if (this->f_printLog.getValue())
+        sout<<" matrix J (inplane) : \n"<< J <<sendl;
 }
 
 
@@ -921,9 +955,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementM
 {
     // Calculation of the 3 Gauss points (pts[0] is (0,0,0))
     // TODO: we already did that in computeStrainDisplacementMatrix(), reuse it
-    Vec3 gaussPoint1 = tinfo.pts[1]/6 + tinfo.pts[2]/6;     // + pts[0]*(2/3)
-    Vec3 gaussPoint2 = tinfo.pts[1]*(2/3) + tinfo.pts[2]/6; // + pts[0]/6
-    Vec3 gaussPoint3 = tinfo.pts[1]/6 + tinfo.pts[2]*(2/3); // + pts[0]/6
+    Vec3 gaussPoint1 = tinfo.pts[0]*(2.0/3.0) + tinfo.pts[1]/6.0 + tinfo.pts[2]/6.0; //
+    Vec3 gaussPoint2 = tinfo.pts[0]/6.0 + tinfo.pts[1]*(2.0/3.0) + tinfo.pts[2]/6.0; //
+    Vec3 gaussPoint3 = tinfo.pts[0]/6.0 + tinfo.pts[1]/6.0 + tinfo.pts[2]*(2.0/3.0); //
 
     matrixSDB(tinfo.strainDisplacementMatrixB1, gaussPoint1, tinfo);
     matrixSDB(tinfo.strainDisplacementMatrixB2, gaussPoint2, tinfo);
@@ -948,12 +982,20 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Vec3 P10P2 = tinfo.pts[9] - tinfo.pts[1];
     Vec3 P10P3 = tinfo.pts[9] - tinfo.pts[2];
 
+    std::cout<<"========== BENDING ==========="<<std::endl;
+
+    std::cout<<"P4P1 = "<<P4P1<<" - P5P1 = "<<P5P1<<" - P6P2 = "<<P6P2<<" - P7P2 = "<<P7P2<<" - P8P3 = "<<P8P3<<" - P9P3 = "<<P9P3<<" - P10P1 = "<<P10P1<<std::endl;
+
     Vec3 P(1, GP[0], GP[1]);
+    std::cout<<" GP = "<<GP<<std::endl;
 
     Vec3 p; // Interpolated values
     p[0] = tinfo.interpol.line(0)*P;
     p[1] = tinfo.interpol.line(1)*P;
     p[2] = tinfo.interpol.line(2)*P;
+
+    std::cout<<" p ="<<p<<std::endl;
+
     
     //Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
 
@@ -963,6 +1005,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Real c2 = tinfo.interpol(1,2);
     Real b3 = tinfo.interpol(2,1);
     Real c3 = tinfo.interpol(2,2);
+
+    std::cout<<"b1 ="<<b1<<" - c1 ="<<c1<<" - b2 ="<<b2<<" - c2 ="<<c2<<" - b3 ="<<b3<<" - c3 ="<<c3<<std::endl;
 
     // Doubles derivatives by x and y
     Real D2Phi1n3_xx = 6*b1*b1*p[0];
@@ -1076,6 +1120,10 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     J[2][8] = -2*d2uz_dxy_dT3[1];
 
     J *= f_thickness.getValue();
+
+    if (this->f_printLog.getValue())
+        sout<<" matrix J (bending) : \n"<< J <<sendl;
+
 }
 
 // --------------------------------------------------------------------------------------------------------
@@ -1203,6 +1251,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForce(
     // Compute forces
     F = K * D;
 
+    if (this->f_printLog.getValue())
+    {
+        sout<<"-----> In-plane stiffness matrix for element "<<elementIndex<< "is :\n "<<K<<sendl;
+    }
+
     triangleInfo.endEdit();
 }
 
@@ -1226,6 +1279,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForceBending(Displa
 
     // Compute forces
     F_bending = K_bending * D_bending;
+
+    if (this->f_printLog.getValue())
+    {
+        sout<<"-----> Bending stiffness matrix for element "<<elementIndex<< "is :\n "<<K_bending<<sendl;
+    }
 
     triangleInfo.endEdit();
 }
