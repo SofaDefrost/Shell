@@ -300,9 +300,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::subdivide(const Vec3& a, c
 {
     // Global coordinates
     Vec3 mAB, mAC, mBC;
-    mAB = (a+b)/2;
-    mAC = (a+c)/2;
-    mBC = (b+c)/2;
+    mAB = (a+b)/2.0;
+    mAC = (a+c)/2.0;
+    mBC = (b+c)/2.0;
 
     // Adds vertex if we deal with a new point
     int indexAB, indexAC, indexBC;
@@ -353,7 +353,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::movePoint(Vec3& pointToMov
 {
     sofa::helper::vector<Vec3> listClosestPoints;
     FindClosestGravityPoints(pointToMove, listClosestPoints);
-    pointToMove = (listClosestPoints[0]+listClosestPoints[1]+listClosestPoints[2])/3;
+    pointToMove = (listClosestPoints[0]+listClosestPoints[1]+listClosestPoints[2])/3.0;
 }
 
 
@@ -371,7 +371,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(c
         Vec3 pointTriangle2 = targetVertices[ targetTriangles[t][1] ];
         Vec3 pointTriangle3 = targetVertices[ targetTriangles[t][2] ];
 
-        Vec3 G = (pointTriangle1+pointTriangle2+pointTriangle3)/3;
+        Vec3 G = (pointTriangle1+pointTriangle2+pointTriangle3)/3.0;
 
         // Distance between the point and current triangle
         Real distance = (G-point).norm2();
@@ -683,6 +683,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
     m(2,0) = pts[0][1]; m(2,1) = pts[1][1]; m(2,2) = pts[2][1];
 
     tinfo->interpol.invert(m);
+    tinfo->area = 0.5*fabs((Real) determinant(m) ) ;
+
+    std::cout<<" AIRE ="<<tinfo->area<<std::endl;
 
     //Phi1 = Interpol(1,:); // 1re ligne de la matrice invA
     //Phi2 = Interpol(2,:); // 2me ligne
@@ -803,10 +806,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementM
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation& tinfo = triangleInf[elementIndex];
-
+/*
     Real determinant;
     determinant = tinfo.pts[1][0] * tinfo.pts[2][1]; // since pts[1][1] = 0
     tinfo.area = 0.5*determinant;
+*/
 
     // Calculation of the 3 Gauss points (pts[0] is (0,0,0))
     Vec3 gaussPoint1 = tinfo.pts[0]*(2.0/3.0) + tinfo.pts[1]/6.0 + tinfo.pts[2]/6.0; //
@@ -827,6 +831,8 @@ template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo)
 {
+
+    std::cout<<" ++++++++++++++++ IN PLANE +++++++++++++++ "<<std::endl;
     // Directional vectors from corner nodes
     Vec3 P4P1 = tinfo.pts[3] - tinfo.pts[0];
     Vec3 P5P1 = tinfo.pts[4] - tinfo.pts[0];
@@ -844,6 +850,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     p[0] = tinfo.interpol.line(0)*P;
     p[1] = tinfo.interpol.line(1)*P;
     p[2] = tinfo.interpol.line(2)*P;
+    std::cout<<"GP = "<<GP<<" -  p ="<<p<<" - tinfo.area="<<tinfo.area<<"  - tinfo.interpol"<<tinfo.interpol<<std::endl;
+
     
     Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
 
@@ -855,54 +863,57 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     Real c3 = tinfo.interpol(2,2);
 
     // Derivatives of powers of p (by x and y)
-    Real DPhi1n3_x= 3 * b1 * p2[0];
-    Real DPhi1n2_x= 2 * b1 * p[0];
-    Real DPhi1n3_y= 3 * c1 * p2[0];
-    Real DPhi1n2_y= 2 * c1 * p[0];
-    Real DPhi2n3_x= 3 * b2 * p2[1];
-    Real DPhi2n2_x= 2 * b2 * p[1];
-    Real DPhi2n3_y= 3 * c2 * p2[1];
-    Real DPhi2n2_y= 2 * c2 * p[1];
-    Real DPhi3n3_x= 3 * b3 * p2[2];
-    Real DPhi3n2_x= 2 * b3 * p[2];
-    Real DPhi3n3_y= 3 * c3 * p2[2];
-    Real DPhi3n2_y= 2 * c3 * p[2];  
+    Real DPhi1n3_x= 3.0 * b1 * p2[0];
+    Real DPhi1n2_x= 2.0 * b1 * p[0];
+    Real DPhi1n3_y= 3.0 * c1 * p2[0];
+    Real DPhi1n2_y= 2.0 * c1 * p[0];
+    Real DPhi2n3_x= 3.0 * b2 * p2[1];
+    Real DPhi2n2_x= 2.0 * b2 * p[1];
+    Real DPhi2n3_y= 3.0 * c2 * p2[1];
+    Real DPhi2n2_y= 2.0 * c2 * p[1];
+    Real DPhi3n3_x= 3.0 * b3 * p2[2];
+    Real DPhi3n2_x= 2.0 * b3 * p[2];
+    Real DPhi3n3_y= 3.0 * c3 * p2[2];
+    Real DPhi3n2_y= 2.0 * c3 * p[2];
 
     Real DPhi123_x = b1*p[1]*p[2] + p[0]*b2*p[2] + p[0]*p[1]*b3;
     Real DPhi123_y = c1*p[1]*p[2] + p[0]*c2*p[2] + p[0]*p[1]*c3;
 
     // Derivatives of the U1, U2, U3 parts (with respect to x and y)
-    Real du_dx_U1= DPhi1n3_x + 3*p2[0]*b2 + 3*DPhi1n2_x*p[1] + 3*p2[0]*b3 + 3*DPhi1n2_x*p[2] + 2*DPhi123_x;
-    Real du_dx_U2= DPhi2n3_x + 3*p2[1]*b3 + 3*DPhi2n2_x*p[2] + 3*p2[1]*b1 + 3*DPhi2n2_x*p[0] + 2*DPhi123_x;
-    Real du_dx_U3= DPhi3n3_x + 3*p2[2]*b1 + 3*DPhi3n2_x*p[0] + 3*p2[2]*b2 + 3*DPhi3n2_x*p[1] + 2*DPhi123_x;
+    Real du_dx_U1= DPhi1n3_x + 3.0*p2[0]*b2 + 3.0*DPhi1n2_x*p[1] + 3.0*p2[0]*b3 + 3.0*DPhi1n2_x*p[2] + 2.0*DPhi123_x;
+    Real du_dx_U2= DPhi2n3_x + 3.0*p2[1]*b3 + 3.0*DPhi2n2_x*p[2] + 3.0*p2[1]*b1 + 3.0*DPhi2n2_x*p[0] + 2.0*DPhi123_x;
+    Real du_dx_U3= DPhi3n3_x + 3.0*p2[2]*b1 + 3.0*DPhi3n2_x*p[0] + 3.0*p2[2]*b2 + 3.0*DPhi3n2_x*p[1] + 2.0*DPhi123_x;
 
     // du_dx  = du_dx_DU1 * dU1 + ...
 
-    Real du_dy_U1= DPhi1n3_y + 3*p2[0]*c2 + 3*DPhi1n2_y*p[1] + 3*p2[0]*c3 + 3*DPhi1n2_y*p[2] + 2*DPhi123_y;
-    Real du_dy_U2= DPhi2n3_y + 3*p2[1]*c3 + 3*DPhi2n2_y*p[2] + 3*p2[1]*c1 + 3*DPhi2n2_y*p[0] + 2*DPhi123_y;
-    Real du_dy_U3= DPhi3n3_y + 3*p2[2]*c1 + 3*DPhi3n2_y*p[0] + 3*p2[2]*c2 + 3*DPhi3n2_y*p[1] + 2*DPhi123_y;
+    Real du_dy_U1= DPhi1n3_y + 3.0*p2[0]*c2 + 3.0*DPhi1n2_y*p[1] + 3.0*p2[0]*c3 + 3.0*DPhi1n2_y*p[2] + 2.0*DPhi123_y;
+    Real du_dy_U2= DPhi2n3_y + 3.0*p2[1]*c3 + 3.0*DPhi2n2_y*p[2] + 3.0*p2[1]*c1 + 3.0*DPhi2n2_y*p[0] + 2.0*DPhi123_y;
+    Real du_dy_U3= DPhi3n3_y + 3.0*p2[2]*c1 + 3.0*DPhi3n2_y*p[0] + 3.0*p2[2]*c2 + 3.0*DPhi3n2_y*p[1] + 2.0*DPhi123_y;
 
 
-    // Derivatives of Theta1..3
-    Real dux_dx_T1=-3*DPhi1n2_x*p[1]*P4P1(2) - 3*p2[0]*b2*P4P1(2) - 3*DPhi1n2_x*p[2]*P5P1(2) - 3*p2[0]*b3*P5P1(2) - 2*DPhi123_x*P10P1(2);
-    Real duy_dx_T1= 3*DPhi1n2_x*p[1]*P4P1(1) + 3*p2[0]*b2*P4P1(1) + 3*DPhi1n2_x*p[2]*P5P1(1) + 3*p2[0]*b3*P5P1(1) + 2*DPhi123_x*P10P1(1);
+    // Derivatives of Theta1..3.0
+    Real dux_dx_T1=-3.0*DPhi1n2_x*p[1]*P4P1[1] - 3.0*p2[0]*b2*P4P1[1] - 3.0*DPhi1n2_x*p[2]*P5P1[1] - 3.0*p2[0]*b3*P5P1[1] - 2.0*DPhi123_x*P10P1[1];
+    Real duy_dx_T1= 3.0*DPhi1n2_x*p[1]*P4P1[0] + 3.0*p2[0]*b2*P4P1[0] + 3.0*DPhi1n2_x*p[2]*P5P1[0] + 3.0*p2[0]*b3*P5P1[0] + 2.0*DPhi123_x*P10P1[0];
 
-    Real dux_dy_T1=-3*DPhi1n2_y*p[1]*P4P1(2) - 3*p2[0]*c2*P4P1(2) - 3*DPhi1n2_y*p[2]*P5P1(2) - 3*p2[0]*c3*P5P1(2) - 2*DPhi123_y*P10P1(2);
-    Real duy_dy_T1= 3*DPhi1n2_y*p[1]*P4P1(1) + 3*p2[0]*c2*P4P1(1) + 3*DPhi1n2_y*p[2]*P5P1(1) + 3*p2[0]*c3*P5P1(1) + 2*DPhi123_y*P10P1(1);
-
-
-    Real dux_dx_T2=-3*DPhi2n2_x*p[2]*P6P2(2) - 3*p2[1]*b3*P6P2(2) - 3*DPhi2n2_x*p[0]*P7P2(2) - 3*p2[1]*b1*P7P2(2) - 2*DPhi123_x*P10P2(2);
-    Real duy_dx_T2= 3*DPhi2n2_x*p[2]*P6P2(1) + 3*p2[1]*b3*P6P2(1) + 3*DPhi2n2_x*p[0]*P7P2(1) + 3*p2[1]*b1*P7P2(1) + 2*DPhi123_x*P10P2(1);
-
-    Real dux_dy_T2=-3*DPhi2n2_y*p[2]*P6P2(2) - 3*p2[1]*c3*P6P2(2) - 3*DPhi2n2_y*p[0]*P7P2(2) - 3*p2[1]*c1*P7P2(2) - 2*DPhi123_y*P10P2(2);
-    Real duy_dy_T2= 3*DPhi2n2_y*p[2]*P6P2(1) + 3*p2[1]*c3*P6P2(1) + 3*DPhi2n2_y*p[0]*P7P2(1) + 3*p2[1]*c1*P7P2(1) + 2*DPhi123_y*P10P2(1);
+    Real dux_dy_T1=-3.0*DPhi1n2_y*p[1]*P4P1[1] - 3.0*p2[0]*c2*P4P1[1] - 3.0*DPhi1n2_y*p[2]*P5P1[1] - 3.0*p2[0]*c3*P5P1[1] - 2.0*DPhi123_y*P10P1[1];
+    Real duy_dy_T1= 3.0*DPhi1n2_y*p[1]*P4P1[0] + 3.0*p2[0]*c2*P4P1[0] + 3.0*DPhi1n2_y*p[2]*P5P1[0] + 3.0*p2[0]*c3*P5P1[0] + 2.0*DPhi123_y*P10P1[0];
 
 
-    Real dux_dx_T3=-3*DPhi3n2_x*p[0]*P8P3(2) - 3*p2[2]*b1*P8P3(2) - 3*DPhi3n2_x*p[1]*P9P3(2) - 3*p2[2]*b2*P9P3(2) - 2*DPhi123_x*P10P3(2);
-    Real duy_dx_T3= 3*DPhi3n2_x*p[0]*P8P3(1) + 3*p2[2]*b1*P8P3(1) + 3*DPhi3n2_x*p[1]*P9P3(1) + 3*p2[2]*b2*P9P3(1) + 2*DPhi123_x*P10P3(1);
+    Real dux_dx_T2=-3.0*DPhi2n2_x*p[2]*P6P2[1] - 3.0*p2[1]*b3*P6P2[1] - 3.0*DPhi2n2_x*p[0]*P7P2[1] - 3.0*p2[1]*b1*P7P2[1] - 2.0*DPhi123_x*P10P2[1];
+    Real duy_dx_T2= 3.0*DPhi2n2_x*p[2]*P6P2[0] + 3.0*p2[1]*b3*P6P2[0] + 3.0*DPhi2n2_x*p[0]*P7P2[0] + 3.0*p2[1]*b1*P7P2[0] + 2.0*DPhi123_x*P10P2[0];
 
-    Real dux_dy_T3=-3*DPhi3n2_y*p[0]*P8P3(2) - 3*p2[2]*c1*P8P3(2) - 3*DPhi3n2_y*p[1]*P9P3(2) - 3*p2[2]*c2*P9P3(2) - 2*DPhi123_y*P10P3(2);
-    Real duy_dy_T3= 3*DPhi3n2_y*p[0]*P8P3(1) + 3*p2[2]*c1*P8P3(1) + 3*DPhi3n2_y*p[1]*P9P3(1) + 3*p2[2]*c2*P9P3(1) + 2*DPhi123_y*P10P3(1);
+    Real dux_dy_T2=-3.0*DPhi2n2_y*p[2]*P6P2[1] - 3.0*p2[1]*c3*P6P2[1] - 3.0*DPhi2n2_y*p[0]*P7P2[1] - 3.0*p2[1]*c1*P7P2[1] - 2.0*DPhi123_y*P10P2[1];
+    Real duy_dy_T2= 3.0*DPhi2n2_y*p[2]*P6P2[0] + 3.0*p2[1]*c3*P6P2[0] + 3.0*DPhi2n2_y*p[0]*P7P2[0] + 3.0*p2[1]*c1*P7P2[0] + 2.0*DPhi123_y*P10P2[0];
+
+
+    Real dux_dx_T3=-3.0*DPhi3n2_x*p[0]*P8P3[1] - 3.0*p2[2]*b1*P8P3[1] - 3.0*DPhi3n2_x*p[1]*P9P3[1] - 3.0*p2[2]*b2*P9P3[1] - 2.0*DPhi123_x*P10P3[1];
+    Real duy_dx_T3= 3.0*DPhi3n2_x*p[0]*P8P3[0] + 3.0*p2[2]*b1*P8P3[0] + 3.0*DPhi3n2_x*p[1]*P9P3[0] + 3.0*p2[2]*b2*P9P3[0] + 2.0*DPhi123_x*P10P3[0];
+
+    Real dux_dy_T3=-3.0*DPhi3n2_y*p[0]*P8P3[1] - 3.0*p2[2]*c1*P8P3[1] - 3.0*DPhi3n2_y*p[1]*P9P3[1] - 3.0*p2[2]*c2*P9P3[1] - 2.0*DPhi123_y*P10P3[1];
+    Real duy_dy_T3= 3.0*DPhi3n2_y*p[0]*P8P3[0] + 3.0*p2[2]*c1*P8P3[0] + 3.0*DPhi3n2_y*p[1]*P9P3[0] + 3.0*p2[2]*c2*P9P3[0] + 2.0*DPhi123_y*P10P3[0];
+
+    std::cout<<"dux_dx_T1 = "<<dux_dx_T1<<" - DPhi1n2_x "<<DPhi1n2_x<<" DPhi123_x "<<DPhi123_x<<std::endl;
+
 
 
     J[0][0] = du_dx_U1;
@@ -934,12 +945,12 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     J[6][2] = du_dy_U3;
 
     J[7][0] = 0;
-    J[7][0] = du_dy_U3;
-    J[7][0] = du_dx_U3;
+    J[7][1] = du_dy_U3;
+    J[7][2] = du_dx_U3;
 
     J[8][0] = dux_dx_T3;
-    J[8][0] = duy_dy_T3;
-    J[8][0] = duy_dx_T3 + dux_dy_T3;
+    J[8][1] = duy_dy_T3;
+    J[8][2] = duy_dx_T3 + dux_dy_T3;
 
 
     if (this->f_printLog.getValue())
@@ -972,15 +983,15 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     StrainDisplacementBending &J, const Vec3 &GP, const TriangleInformation& tinfo)
 {
     // Directional vectors from corner nodes
-    Vec3 P4P1 = tinfo.pts[3] - tinfo.pts[0];
-    Vec3 P5P1 = tinfo.pts[4] - tinfo.pts[0];
-    Vec3 P6P2 = tinfo.pts[5] - tinfo.pts[1];
-    Vec3 P7P2 = tinfo.pts[6] - tinfo.pts[1];
-    Vec3 P8P3 = tinfo.pts[7] - tinfo.pts[2];
-    Vec3 P9P3 = tinfo.pts[8] - tinfo.pts[2];
-    Vec3 P10P1 = tinfo.pts[9] - tinfo.pts[0];
-    Vec3 P10P2 = tinfo.pts[9] - tinfo.pts[1];
-    Vec3 P10P3 = tinfo.pts[9] - tinfo.pts[2];
+    Vec3 P4P1 = tinfo.pts[0] - tinfo.pts[3] ;
+    Vec3 P5P1 = tinfo.pts[0] - tinfo.pts[4] ;
+    Vec3 P6P2 = tinfo.pts[1] - tinfo.pts[5] ;
+    Vec3 P7P2 = tinfo.pts[1] - tinfo.pts[6] ;
+    Vec3 P8P3 = tinfo.pts[2] - tinfo.pts[7] ;
+    Vec3 P9P3 = tinfo.pts[2] - tinfo.pts[8] ;
+    Vec3 P10P1 = tinfo.pts[0] - tinfo.pts[9] ;
+    Vec3 P10P2 = tinfo.pts[1] - tinfo.pts[9] ;
+    Vec3 P10P3 = tinfo.pts[2] - tinfo.pts[9] ;
 
     std::cout<<"========== BENDING ==========="<<std::endl;
 
@@ -1030,44 +1041,44 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     //Real D2Phi3n2_xy = 2*b3*c3;
     //Real D2Phi3n2_yy = 2*c3*c3;
 
-    Real D2Phi123_xx = 2*b1*b2*p[2] + 2*b1*p[1]*b3 + 2*p[0]*b2*b3;
+    Real D2Phi123_xx = 2.0*b1*b2*p[2] + 2.0*b1*p[1]*b3 + 2.0*p[0]*b2*b3;
     Real D2Phi123_xy = c1*b2*p[2] + c1*p[1]*b3 + b1*c2*p[2]+ p[0]*c2*b3 + b1*p[1]*c3 + p[0]*b2*c3;
-    Real D2Phi123_yy = 2*c1*c2*p[2] + 2*c1*p[1]*c3 + 2*p[0]*c2*c3;
+    Real D2Phi123_yy = 2.0*c1*c2*p[2] + 2.0*c1*p[1]*c3 + 2.0*p[0]*c2*c3;
 
 
-    Real D2Phi1n2Phi2_xx = 2*b1*b1*p[1]+ 4*p[0]*b1*b2;
-    Real D2Phi1n2Phi3_xx = 2*b1*b1*p[2]+ 4*p[0]*b1*b3;
-    Real D2Phi1n2Phi2_yy = 2*c1*c1*p[1]+ 4*p[0]*c1*c2;
-    Real D2Phi1n2Phi3_yy = 2*c1*c1*p[2]+ 4*p[0]*c1*c3;
-    Real D2Phi1n2Phi2_xy = 2*b1*c1*p[1]+ 2*b1*p[0]*c2 + 2*p[0]*c1*b2;
-    Real D2Phi1n2Phi3_xy = 2*b1*c1*p[2]+ 2*b1*p[0]*c3 + 2*p[0]*c1*b3;
+    Real D2Phi1n2Phi2_xx = 2.0*b1*b1*p[1]+ 4.0*p[0]*b1*b2;
+    Real D2Phi1n2Phi3_xx = 2.0*b1*b1*p[2]+ 4.0*p[0]*b1*b3;
+    Real D2Phi1n2Phi2_yy = 2.0*c1*c1*p[1]+ 4.0*p[0]*c1*c2;
+    Real D2Phi1n2Phi3_yy = 2.0*c1*c1*p[2]+ 4.0*p[0]*c1*c3;
+    Real D2Phi1n2Phi2_xy = 2.0*b1*c1*p[1]+ 2.0*b1*p[0]*c2 + 2.0*p[0]*c1*b2;
+    Real D2Phi1n2Phi3_xy = 2.0*b1*c1*p[2]+ 2.0*b1*p[0]*c3 + 2.0*p[0]*c1*b3;
 
-    Real D2Phi2n2Phi1_xx = 2*b2*b2*p[0]+ 4*p[1]*b2*b1;
-    Real D2Phi2n2Phi3_xx = 2*b2*b2*p[2]+ 4*p[1]*b2*b3;
-    Real D2Phi2n2Phi1_yy = 2*c2*c2*p[0]+ 4*p[1]*c2*c1;
-    Real D2Phi2n2Phi3_yy = 2*c2*c2*p[2]+ 4*p[1]*c2*c3;
-    Real D2Phi2n2Phi1_xy = 2*b2*c2*p[0]+ 2*b2*p[1]*c1 + 2*p[1]*c2*b1;
-    Real D2Phi2n2Phi3_xy = 2*b2*c2*p[2]+ 2*b2*p[1]*c3 + 2*p[1]*c2*b3;
+    Real D2Phi2n2Phi1_xx = 2.0*b2*b2*p[0]+ 4.0*p[1]*b2*b1;
+    Real D2Phi2n2Phi3_xx = 2.0*b2*b2*p[2]+ 4.0*p[1]*b2*b3;
+    Real D2Phi2n2Phi1_yy = 2.0*c2*c2*p[0]+ 4.0*p[1]*c2*c1;
+    Real D2Phi2n2Phi3_yy = 2.0*c2*c2*p[2]+ 4.0*p[1]*c2*c3;
+    Real D2Phi2n2Phi1_xy = 2.0*b2*c2*p[0]+ 2.0*b2*p[1]*c1 + 2.0*p[1]*c2*b1;
+    Real D2Phi2n2Phi3_xy = 2.0*b2*c2*p[2]+ 2.0*b2*p[1]*c3 + 2.0*p[1]*c2*b3;
 
-    Real D2Phi3n2Phi1_xx = 2*b3*b3*p[0]+ 4*p[2]*b3*b1;
-    Real D2Phi3n2Phi2_xx = 2*b3*b3*p[1]+ 4*p[2]*b3*b2;
-    Real D2Phi3n2Phi1_yy = 2*c3*c3*p[0]+ 4*p[2]*c3*c1;
-    Real D2Phi3n2Phi2_yy = 2*c3*c3*p[1]+ 4*p[2]*c3*c2;
-    Real D2Phi3n2Phi1_xy = 2*b3*c3*p[0]+ 2*b3*p[2]*c1 + 2*p[2]*c3*b1;
-    Real D2Phi3n2Phi2_xy = 2*b3*c3*p[1]+ 2*b3*p[2]*c2 + 2*p[2]*c3*b2;
+    Real D2Phi3n2Phi1_xx = 2.0*b3*b3*p[0]+ 4.0*p[2]*b3*b1;
+    Real D2Phi3n2Phi2_xx = 2.0*b3*b3*p[1]+ 4.0*p[2]*b3*b2;
+    Real D2Phi3n2Phi1_yy = 2.0*c3*c3*p[0]+ 4.0*p[2]*c3*c1;
+    Real D2Phi3n2Phi2_yy = 2.0*c3*c3*p[1]+ 4.0*p[2]*c3*c2;
+    Real D2Phi3n2Phi1_xy = 2.0*b3*c3*p[0]+ 2.0*b3*p[2]*c1 + 2.0*p[2]*c3*b1;
+    Real D2Phi3n2Phi2_xy = 2.0*b3*c3*p[1]+ 2.0*b3*p[2]*c2 + 2.0*p[2]*c3*b2;
 
     // Derivees with respect to translations
-    Real d2uz_dxx_dU1 = D2Phi1n3_xx + 3*D2Phi1n2Phi2_xx + 3*D2Phi1n2Phi3_xx + 2*D2Phi123_xx;
-    Real d2uz_dxy_dU1 = D2Phi1n3_xy + 3*D2Phi1n2Phi2_xy + 3*D2Phi1n2Phi3_xy + 2*D2Phi123_xy;
-    Real d2uz_dyy_dU1 = D2Phi1n3_yy + 3*D2Phi1n2Phi2_yy + 3*D2Phi1n2Phi3_yy + 2*D2Phi123_yy;
+    Real d2uz_dxx_dU1 = D2Phi1n3_xx + 3.0*D2Phi1n2Phi2_xx + 3.0*D2Phi1n2Phi3_xx + 2.0*D2Phi123_xx;
+    Real d2uz_dxy_dU1 = D2Phi1n3_xy + 3.0*D2Phi1n2Phi2_xy + 3.0*D2Phi1n2Phi3_xy + 2.0*D2Phi123_xy;
+    Real d2uz_dyy_dU1 = D2Phi1n3_yy + 3.0*D2Phi1n2Phi2_yy + 3.0*D2Phi1n2Phi3_yy + 2.0*D2Phi123_yy;
 
-    Real d2uz_dxx_dU2 = D2Phi2n3_xx + 3*D2Phi2n2Phi1_xx + 3*D2Phi2n2Phi3_xx + 2*D2Phi123_xx;
-    Real d2uz_dxy_dU2 = D2Phi2n3_xy + 3*D2Phi2n2Phi1_xy + 3*D2Phi2n2Phi3_xy + 2*D2Phi123_xy;
-    Real d2uz_dyy_dU2 = D2Phi2n3_yy + 3*D2Phi2n2Phi1_yy + 3*D2Phi2n2Phi3_yy + 2*D2Phi123_yy;
+    Real d2uz_dxx_dU2 = D2Phi2n3_xx + 3.0*D2Phi2n2Phi1_xx + 3.0*D2Phi2n2Phi3_xx + 2.0*D2Phi123_xx;
+    Real d2uz_dxy_dU2 = D2Phi2n3_xy + 3.0*D2Phi2n2Phi1_xy + 3.0*D2Phi2n2Phi3_xy + 2.0*D2Phi123_xy;
+    Real d2uz_dyy_dU2 = D2Phi2n3_yy + 3.0*D2Phi2n2Phi1_yy + 3.0*D2Phi2n2Phi3_yy + 2.0*D2Phi123_yy;
 
-    Real d2uz_dxx_dU3 = D2Phi3n3_xx + 3*D2Phi3n2Phi1_xx + 3*D2Phi3n2Phi2_xx + 2*D2Phi123_xx;
-    Real d2uz_dxy_dU3 = D2Phi3n3_xy + 3*D2Phi3n2Phi1_xy + 3*D2Phi3n2Phi2_xy + 2*D2Phi123_xy;
-    Real d2uz_dyy_dU3 = D2Phi3n3_yy + 3*D2Phi3n2Phi1_yy + 3*D2Phi3n2Phi2_yy + 2*D2Phi123_yy;
+    Real d2uz_dxx_dU3 = D2Phi3n3_xx + 3.0*D2Phi3n2Phi1_xx + 3.0*D2Phi3n2Phi2_xx + 2.0*D2Phi123_xx;
+    Real d2uz_dxy_dU3 = D2Phi3n3_xy + 3.0*D2Phi3n2Phi1_xy + 3.0*D2Phi3n2Phi2_xy + 2.0*D2Phi123_xy;
+    Real d2uz_dyy_dU3 = D2Phi3n3_yy + 3.0*D2Phi3n2Phi1_yy + 3.0*D2Phi3n2Phi2_yy + 2.0*D2Phi123_yy;
 
     // Derivatives with respect to rotations
 #define CROSS_VEC(p) Vec2 cv##p(-(p)[1], (p)[0]) // TODO: add a good comment
@@ -1076,17 +1087,17 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     CROSS_VEC(P10P1); CROSS_VEC(P10P2); CROSS_VEC(P10P3);
 #undef CROSS_VEC
 
-    Vec2 d2uz_dxx_dT1 = cvP4P1*3*D2Phi1n2Phi2_xx + cvP5P1*3*D2Phi1n2Phi3_xx + cvP10P1*2*D2Phi123_xx;
-    Vec2 d2uz_dxy_dT1 = cvP4P1*3*D2Phi1n2Phi2_xy + cvP5P1*3*D2Phi1n2Phi3_xy + cvP10P1*2*D2Phi123_xy;
-    Vec2 d2uz_dyy_dT1 = cvP4P1*3*D2Phi1n2Phi2_yy + cvP5P1*3*D2Phi1n2Phi3_yy + cvP10P1*2*D2Phi123_yy;
+    Vec2 d2uz_dxx_dT1 = cvP4P1*3.0*D2Phi1n2Phi2_xx + cvP5P1*3.0*D2Phi1n2Phi3_xx + cvP10P1*2.0*D2Phi123_xx;
+    Vec2 d2uz_dxy_dT1 = cvP4P1*3.0*D2Phi1n2Phi2_xy + cvP5P1*3.0*D2Phi1n2Phi3_xy + cvP10P1*2.0*D2Phi123_xy;
+    Vec2 d2uz_dyy_dT1 = cvP4P1*3.0*D2Phi1n2Phi2_yy + cvP5P1*3.0*D2Phi1n2Phi3_yy + cvP10P1*2.0*D2Phi123_yy;
 
-    Vec2 d2uz_dxx_dT2 = cvP6P2*3*D2Phi2n2Phi3_xx + cvP7P2*3*D2Phi2n2Phi1_xx + cvP10P2*2*D2Phi123_xx;
-    Vec2 d2uz_dxy_dT2 = cvP6P2*3*D2Phi2n2Phi3_xy + cvP7P2*3*D2Phi2n2Phi1_xy + cvP10P2*2*D2Phi123_xy;
-    Vec2 d2uz_dyy_dT2 = cvP6P2*3*D2Phi2n2Phi3_yy + cvP7P2*3*D2Phi2n2Phi1_yy + cvP10P2*2*D2Phi123_yy;
+    Vec2 d2uz_dxx_dT2 = cvP6P2*3.0*D2Phi2n2Phi3_xx + cvP7P2*3.0*D2Phi2n2Phi1_xx + cvP10P2*2.0*D2Phi123_xx;
+    Vec2 d2uz_dxy_dT2 = cvP6P2*3.0*D2Phi2n2Phi3_xy + cvP7P2*3.0*D2Phi2n2Phi1_xy + cvP10P2*2.0*D2Phi123_xy;
+    Vec2 d2uz_dyy_dT2 = cvP6P2*3.0*D2Phi2n2Phi3_yy + cvP7P2*3.0*D2Phi2n2Phi1_yy + cvP10P2*2.0*D2Phi123_yy;
 
-    Vec2 d2uz_dxx_dT3 = cvP8P3*3*D2Phi3n2Phi1_xx + cvP9P3*3*D2Phi3n2Phi2_xx + cvP10P3*2*D2Phi123_xx;
-    Vec2 d2uz_dxy_dT3 = cvP8P3*3*D2Phi3n2Phi1_xy + cvP9P3*3*D2Phi3n2Phi2_xy + cvP10P3*2*D2Phi123_xy;
-    Vec2 d2uz_dyy_dT3 = cvP8P3*3*D2Phi3n2Phi1_yy + cvP9P3*3*D2Phi3n2Phi2_yy + cvP10P3*2*D2Phi123_yy;
+    Vec2 d2uz_dxx_dT3 = cvP8P3*3.0*D2Phi3n2Phi1_xx + cvP9P3*3.0*D2Phi3n2Phi2_xx + cvP10P3*2.0*D2Phi123_xx;
+    Vec2 d2uz_dxy_dT3 = cvP8P3*3.0*D2Phi3n2Phi1_xy + cvP9P3*3.0*D2Phi3n2Phi2_xy + cvP10P3*2.0*D2Phi123_xy;
+    Vec2 d2uz_dyy_dT3 = cvP8P3*3.0*D2Phi3n2Phi1_yy + cvP9P3*3.0*D2Phi3n2Phi2_yy + cvP10P3*2.0*D2Phi123_yy;
 
     // TODO: unify the dimensions with the matrixSD()
     J[0][0] = -d2uz_dxx_dU1;
@@ -1109,15 +1120,15 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     J[1][7] = -d2uz_dyy_dT3[0];
     J[1][8] = -d2uz_dyy_dT3[1];
 
-    J[2][0] = -2*d2uz_dxy_dU1;
-    J[2][1] = -2*d2uz_dxy_dT1[0];
-    J[2][2] = -2*d2uz_dxy_dT1[1];
-    J[2][3] = -2*d2uz_dxy_dU2;
-    J[2][4] = -2*d2uz_dxy_dT2[0];
-    J[2][5] = -2*d2uz_dxy_dT2[1];
-    J[2][6] = -2*d2uz_dxy_dU3;
-    J[2][7] = -2*d2uz_dxy_dT3[0];
-    J[2][8] = -2*d2uz_dxy_dT3[1];
+    J[2][0] = -2.0*d2uz_dxy_dU1;
+    J[2][1] = -2.0*d2uz_dxy_dT1[0];
+    J[2][2] = -2.0*d2uz_dxy_dT1[1];
+    J[2][3] = -2.0*d2uz_dxy_dU2;
+    J[2][4] = -2.0*d2uz_dxy_dT2[0];
+    J[2][5] = -2.0*d2uz_dxy_dT2[1];
+    J[2][6] = -2.0*d2uz_dxy_dU3;
+    J[2][7] = -2.0*d2uz_dxy_dT3[0];
+    J[2][8] = -2.0*d2uz_dxy_dT3[1];
 
     J *= f_thickness.getValue();
 
@@ -1173,7 +1184,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrix(
         tinfo.strainDisplacementMatrix2 * tinfo.materialMatrix * Jt2 +
         tinfo.strainDisplacementMatrix3 * tinfo.materialMatrix * Jt3;
 
-    K *= f_thickness.getValue() * tinfo.area/3;
+    K *= f_thickness.getValue() * tinfo.area/3.0;
 }
 
 
@@ -1193,7 +1204,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBend
         J3t * tinfo.materialMatrix * tinfo.strainDisplacementMatrixB3;
 
     // TODO: there was thickness^3 here, why?
-    K *= f_thickness.getValue()*tinfo.area/3;
+    K *= f_thickness.getValue()*tinfo.area/3.0;
 }
 
 // -----------------------------------------------------------------------------
@@ -1863,7 +1874,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::writeCoeffs()
         outfile << pc << " ";
         computeCurvature(tinfo->localC, tinfo->coefficients, pc);
         outfile << pc << " ";
-        Vec3 bary = (tinfo->localB + tinfo->localC)/3;
+        Vec3 bary = (tinfo->localB + tinfo->localC)/3.0;
         computeCurvature(bary, tinfo->coefficients, pc);
         outfile << pc << "\n";
 
