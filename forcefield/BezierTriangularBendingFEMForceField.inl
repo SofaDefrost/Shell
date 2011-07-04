@@ -846,11 +846,10 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
 
     Vec3 P(1, GP[0], GP[1]);
 
-    Vec3 p; // Interpolated values
+    Vec3 p; // Interpolated values at each Poin
     p[0] = tinfo.interpol.line(0)*P;
     p[1] = tinfo.interpol.line(1)*P;
     p[2] = tinfo.interpol.line(2)*P;
-    std::cout<<"GP = "<<GP<<" -  p ="<<p<<" - tinfo.area="<<tinfo.area<<"  - tinfo.interpol"<<tinfo.interpol<<std::endl;
 
     
     Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
@@ -911,8 +910,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
 
     Real dux_dy_T3=-3.0*DPhi3n2_y*p[0]*P8P3[1] - 3.0*p2[2]*c1*P8P3[1] - 3.0*DPhi3n2_y*p[1]*P9P3[1] - 3.0*p2[2]*c2*P9P3[1] - 2.0*DPhi123_y*P10P3[1];
     Real duy_dy_T3= 3.0*DPhi3n2_y*p[0]*P8P3[0] + 3.0*p2[2]*c1*P8P3[0] + 3.0*DPhi3n2_y*p[1]*P9P3[0] + 3.0*p2[2]*c2*P9P3[0] + 2.0*DPhi123_y*P10P3[0];
-
-    std::cout<<"dux_dx_T1 = "<<dux_dx_T1<<" - DPhi1n2_x "<<DPhi1n2_x<<" DPhi123_x "<<DPhi123_x<<std::endl;
 
 
 
@@ -1098,6 +1095,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Vec2 d2uz_dxx_dT3 = cvP8P3*3.0*D2Phi3n2Phi1_xx + cvP9P3*3.0*D2Phi3n2Phi2_xx + cvP10P3*2.0*D2Phi123_xx;
     Vec2 d2uz_dxy_dT3 = cvP8P3*3.0*D2Phi3n2Phi1_xy + cvP9P3*3.0*D2Phi3n2Phi2_xy + cvP10P3*2.0*D2Phi123_xy;
     Vec2 d2uz_dyy_dT3 = cvP8P3*3.0*D2Phi3n2Phi1_yy + cvP9P3*3.0*D2Phi3n2Phi2_yy + cvP10P3*2.0*D2Phi123_yy;
+
+    std::cout<<"d2uz_dxx_dT1 = "<<d2uz_dxx_dT1<<" | cvP4P1 = "<<cvP4P1<<" | D2Phi1n2Phi2_xx="<<D2Phi1n2Phi2_xx<<std::endl;
 
     // TODO: unify the dimensions with the matrixSD()
     J[0][0] = -d2uz_dxx_dU1;
