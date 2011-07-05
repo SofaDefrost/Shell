@@ -579,6 +579,103 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(cons
 }
 
 
+template <class DataTypes>
+void BezierTriangularBendingFEMForceField<DataTypes>::bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier)
+{
+    Real a=1-baryCoord[0]-baryCoord[1];
+    Real b=baryCoord[1];
+    Real c=baryCoord[2];
+
+    f_bezier[0]=  a*a*a;
+    f_bezier[1]=  b*b*b;
+    f_bezier[2]=  c*c*c;
+    f_bezier[3]=3*a*a*b; f_bezier[4]=3*a*a*c;
+    f_bezier[5]=3*b*b*c; f_bezier[6]=3*b*b*a;
+    f_bezier[7]=3*c*c*a; f_bezier[8]=3*c*c*b;
+    f_bezier[9]=6*a*b*c;
+
+}
+
+template <class DataTypes>
+void BezierTriangularBendingFEMForceField<DataTypes>::bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier)
+{
+    Real a=1-baryCoord[0]-baryCoord[1];
+    Real b=baryCoord[0];
+    Real c=baryCoord[1];
+
+    df_dx_bezier[0]= -3.0*a*a;
+    df_dx_bezier[1]= 3.0*b*b;
+    df_dx_bezier[2]= 0;
+    df_dx_bezier[3]= -6.0*a*b+3.0*a*a ; df_dx_bezier[4]= -6.0*a*c;
+    df_dx_bezier[5]= 6.0*b*c;           df_dx_bezier[6]=6.0*b*a - 3.0*b*b;
+    df_dx_bezier[7]= -3.0*c*c;          df_dx_bezier[8]=3.0*c*c;
+    df_dx_bezier[9]= -6.0*b*c + 6.0*a*c;
+
+    df_dy_bezier[0]=  -3.0*a*a;
+    df_dy_bezier[1]=  0.0;
+    df_dy_bezier[2]=  3.0*c*c;
+    df_dy_bezier[3]=-6.0*a*b;           df_dy_bezier[4]=-6.0*a*c+3.0*a*a;
+    df_dy_bezier[5]=3.0*b*b;            df_dy_bezier[6]=-3.0*b*b;
+    df_dy_bezier[7]=-3.0*c*c+6.0*c*a;   df_dy_bezier[8]=6.0*c*b;
+    df_dy_bezier[9]=-6.0*b*c + 6.0*a*b;
+
+
+}
+
+template <class DataTypes>
+void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame( const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame )
+{
+    const VecCoord& x0 = *this->mstate->getX0();
+
+    // get the position of the bezier Points
+    sofa::helper::fixed_array<Vec3,10> X_bezierPoints;
+    this->computePosBezierPoint(tinfo, x, x0,X_bezierPoints);
+
+    // use the position of the central bezier point (P9) for the reference frame
+    interpolatedFrame.getCenter() = X_bezierPoints[9];
+
+
+
+
+    // compute the derivative of the interpolation for the rotation of the RefFrame
+    sofa::helper::fixed_array<Real,10> df_dx_bezier,df_dy_bezier;
+    this->bezierDerivateFunctions(baryCoord, df_dx_bezier, df_dy_bezier);
+    Vec3 X1(0.0,0.0,0.0),Y1(0.0,0.0,0.0);
+    for (unsigned int i=0;i<10;i++){
+        X1 += X_bezierPoints[i]*df_dx_bezier[i];
+        Y1 += X_bezierPoints[i]*df_dy_bezier[i];
+    }
+
+    Vec3 Y,Z;
+    // compute the orthogonal frame directions
+    if (X1.norm() > 1e-20 && Y1.norm() > 1e-20 && fabs(dot(X1,Y1)) >1e-20 )
+    {
+        X1.normalize();
+        Y1.normalize();
+        Z=cross(X1,Y1);
+        Z.normalize();
+        Y=cross(Z,X1);
+    }
+    else
+    {
+        serr<<" WARNING : can not compute the Ref FRame of the element"<<sout;
+        X1=Vec3(1.0,0.0,0.0);
+        Y =Vec3(0.0,1.0,0.0);
+        Z =Vec3(0.0,0.0,1.0);
+    }
+
+    // compute the corresponding rotation
+    defaulttype::Matrix3 R(X1,Y,Z);
+    Quat Qout;
+    Qout.fromMatrix(R);
+    Qout.normalize();
+    interpolatedFrame.getOrientation() = Qout;
+
+
+
+}
+
+
 
 
 // --------------------------------------------------------------------------------------
@@ -1761,6 +1858,23 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
 
         glEnd();
         glPointSize(1);
+
+        // Compute and Render the frame of each element
+        Vec2 baryCoord(1.0/3.0, 1.0/3.0);
+
+        for (int i=0; i<_topology->getNbTriangles(); ++i)
+        {
+            TriangleInformation *tinfo = &triangleInf[i];
+            Coord interpolatedFrame;
+            this->interpolateRefFrame( tinfo, baryCoord,  x,  interpolatedFrame );
+
+            Vec3 P1P2= x0[tinfo->b].getCenter() - x0[tinfo->a].getCenter();
+
+            sofa::simulation::getSimulation()->DrawUtility().drawFrame(interpolatedFrame.getCenter(), interpolatedFrame.getOrientation(), Vec3(P1P2.norm()/3.0,P1P2.norm()/3.0,P1P2.norm()/3.0)  );
+
+        }
+
+
     }
 
     if(this->getContext()->getShowInteractionForceFields())

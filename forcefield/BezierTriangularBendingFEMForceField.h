@@ -246,6 +246,10 @@ protected :
 
         void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
         void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, const VecCoord& x0, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
+        void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
+        void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
+        void interpolateRefFrame( const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame );
+
 
         void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
