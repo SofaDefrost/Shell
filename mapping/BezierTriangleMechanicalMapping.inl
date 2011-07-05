@@ -698,53 +698,52 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
         Vec3 dT1 = in[ triangle[0] ].getOrientation().toEulerVector();
         Vec3 dT2 = in[ triangle[1] ].getOrientation().toEulerVector();
         Vec3 dT3 = in[ triangle[2] ].getOrientation().toEulerVector();
-        std::cout << "dT: " << dT1 << " " << dT2 << " " << dT3 << "\n";
 
         // Edge 1-2
         //p = bn[0]*2/3 + bn[1]/3;
         //bn[3] = p + cross((bn[0]-p), dT1);
-        bn[3] = bn[0]*2/3 + bn[1]/3;
+        bn[3] = bn[0]*2.0/3.0 + bn[1]/3.0;
         p = cross((bn[0]-bn[3]), (dT1 != Vec3(0,0,0)) ? dT1 : -dT2);
         bn[3] +=p; cp += p;
 
         //p = bn[0]/3 + bn[1]*2/3;
         //bn[6] = p + cross((bn[1]-p), dT2);
-        bn[6] = bn[0]/3 + bn[1]*2/3;
+        bn[6] = bn[0]/3.0 + bn[1]*2.0/3.0;
         p = cross((bn[1]-bn[6]), (dT2 != Vec3(0,0,0)) ? dT2 : -dT1);
         bn[6] += p; cp +=p;
 
         // Edge 1-3
         //p = bn[0]*2/3 + bn[2]/3;
         //bn[4] = p + cross((bn[0]-p), dT1);
-        bn[4] = bn[0]*2/3 + bn[2]/3;
+        bn[4] = bn[0]*2.0/3.0 + bn[2]/3.0;
         p = cross((bn[0]-bn[4]), (dT1 != Vec3(0,0,0)) ? dT1 : -dT3);
         bn[4] += p; cp += p;
 
         //p = bn[0]/3 + bn[2]*2/3;
         //bn[7] = p + cross((bn[2]-p), dT3);
-        bn[7] = bn[0]/3 + bn[2]*2/3;
+        bn[7] = bn[0]/3.0 + bn[2]*2.0/3.0;
         p = cross((bn[2]-bn[7]), (dT3 != Vec3(0,0,0)) ? dT3 : -dT1);
         bn[7] += p; cp += p;
 
         // Edge 2-3
         //p = bn[1]*2/3 + bn[2]/3;
         //bn[5] = p + cross((bn[1]-p), dT2);
-        bn[5] = bn[1]*2/3 + bn[2]/3;
+        bn[5] = bn[1]*2.0/3.0 + bn[2]/3.0;
         p = cross((bn[1]-bn[5]), (dT2 != Vec3(0,0,0)) ? dT2 : -dT3);
         bn[5] += p; cp += p;
 
         //p = bn[1]/3 + bn[2]*2/3;
         //bn[8] = p + cross((bn[2]-p), dT3);
-        bn[8] = bn[1]/3 + bn[2]*2/3;
+        bn[8] = bn[1]/3.0 + bn[2]*2.0/3.0;
         p = cross((bn[2]-bn[8]), (dT3 != Vec3(0,0,0)) ? dT3 : -dT2);
         bn[8] += p; cp += p;
 
         // Center
-        p = bn[0]/3 + bn[1]/3 + bn[2]/3;
+        p = bn[0]/3.0 + bn[1]/3.0 + bn[2]/3.0;
         //bn[9] = p + cross(bn[0]-p, dT1)/3 +
         //    cross(bn[1]-p, dT2)/3 +
         //    cross(bn[2]-p, dT3)/3;
-        bn[9] = p + cp/6;   // XXX: this may not be completly correct and may deform the shell in the center
+        bn[9] = p + cp/6.0;   // XXX: this may not be completly correct and may deform the shell in the center
     }
 
     for (unsigned int i=0; i<out.size(); i++)
@@ -777,11 +776,6 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
 template <class TIn, class TOut>
 void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParams* /*mparams*/, Data<OutVecDeriv>& dOut, const Data<InVecDeriv>& dIn)
 {
-    // TODO
-    serr << "BezierTriangleMechanicalMapping applyJ() not implemented" << sendl;
-    return;
-    //////
-
     helper::WriteAccessor< Data<OutVecDeriv> > out = dOut;
     helper::ReadAccessor< Data<InVecDeriv> > in = dIn;
 
@@ -803,95 +797,95 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
         return;
     }
 
-    //if (!triangularBendingForcefield)
-    //{
-    //    serr << "No TriangularBendingForcefield has been found" << sendl;
-    //    this->getContext()->get(triangularBendingForcefield);
-    //    return;
-    //}
-    //else
-    //{
-    //    helper::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
-    //    TriangleInformation *tinfo = NULL;
+    // NOTE: If I understand it right this should in our case work exactly as apply() but on velocities
 
-    //     // List of 'in' positions
-    //    const InVecCoord &inVertices = *this->fromModel->getX();
+    // List of in triangles
+    const SeqTriangles& inTriangles = inputTopo->getTriangles();
 
-    //    // List of 'out' positions
-    //    const OutVecCoord &outVertices = *this->toModel->getX();
+    // Compute nodes of the Bézier triangle for each input triangle
+    bezierNodesV.resize(inTriangles.size());
+    for (unsigned int t=0; t<inTriangles.size();t++)
+    {
+        Vec3 p, cp;
 
-    //    // List of in triangles
-    //    const SeqTriangles& inTriangles = inputTopo->getTriangles();
+        sofa::helper::fixed_array<Vec3,10> &bn = bezierNodesV[t];
+        Triangle triangle = inTriangles[t];
 
-    //    // Computes the coefficients ci for each triangle
-    //    Vec3 va_a, va_b, va_c, va_a_local, va_b_local, va_c_local;
-    //    Vec <9, Real> v_u;
-    //    for (unsigned int t=0; t<inTriangles.size();t++)
-    //    {
-    //        Triangle triangle = triangularBendingForcefield->getTopology()->getTriangle(t);
-    //        tinfo = &triangleInf[t];
+        // Velocoties in corner nodes
+        bn[0] = in[ triangle[0] ].getVCenter();
+        bn[1] = in[ triangle[1] ].getVCenter();
+        bn[2] = in[ triangle[2] ].getVCenter();
 
-    //        // Gets the angular velocities of each vertex
-    //        va_a = getVOrientation(in[ triangle[0] ]);
-    //        va_b = getVOrientation(in[ triangle[1] ]);
-    //        va_c = getVOrientation(in[ triangle[2] ]);
-    //        // In local frame
-    //        va_a_local = tinfo->Qframe.rotate(va_a);
-    //        va_b_local = tinfo->Qframe.rotate(va_b);
-    //        va_c_local = tinfo->Qframe.rotate(va_c);
-    //        // Fills in du/dt
-    //        v_u.clear();
-    //        v_u[1] = va_a_local[0];   v_u[2] = va_a_local[1];
-    //        v_u[4] = va_b_local[0];   v_u[5] = va_b_local[1];
-    //        v_u[7] = va_c_local[0];   v_u[8] = va_c_local[1];
+        Vec3 dT1 = in[ triangle[0] ].getVOrientation();
+        Vec3 dT2 = in[ triangle[1] ].getVOrientation();
+        Vec3 dT3 = in[ triangle[2] ].getVOrientation();
 
-    //        tinfo->coefficients = tinfo->invC * v_u;
-    //    }
+        // Edge 1-2
+        //p = bn[0]*2/3 + bn[1]/3;
+        //bn[3] = p + cross((bn[0]-p), dT1);
+        bn[3] = bn[0]*2.0/3.0 + bn[1]/3.0;
+        p = cross((bn[0]-bn[3]), (dT1 != Vec3(0,0,0)) ? dT1 : -dT2);
+        bn[3] +=p; cp += p;
 
+        //p = bn[0]/3 + bn[1]*2/3;
+        //bn[6] = p + cross((bn[1]-p), dT2);
+        bn[6] = bn[0]/3.0 + bn[1]*2.0/3.0;
+        p = cross((bn[1]-bn[6]), (dT2 != Vec3(0,0,0)) ? dT2 : -dT1);
+        bn[6] += p; cp +=p;
 
-    //    // Iterates over out vertices to update coordinates
-    //    Vec3 v_a, v_b, v_c, baryCoord, a, vertexLocal;
-    //    Real v_z;
-    //    for (unsigned int i=0; i<out.size(); i++)
-    //    {
-    //        // Gets the first triangle that the vertex belongs to
-    //        Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
+        // Edge 1-3
+        //p = bn[0]*2/3 + bn[2]/3;
+        //bn[4] = p + cross((bn[0]-p), dT1);
+        bn[4] = bn[0]*2.0/3.0 + bn[2]/3.0;
+        p = cross((bn[0]-bn[4]), (dT1 != Vec3(0,0,0)) ? dT1 : -dT3);
+        bn[4] += p; cp += p;
 
-    //        // Gets the linear velocities of each vertex
-    //        v_a = getVCenter(in[ triangle[0] ]);
-    //        v_b = getVCenter(in[ triangle[1] ]);
-    //        v_c = getVCenter(in[ triangle[2] ]);
+        //p = bn[0]/3 + bn[2]*2/3;
+        //bn[7] = p + cross((bn[2]-p), dT3);
+        bn[7] = bn[0]/3.0 + bn[2]*2.0/3.0;
+        p = cross((bn[2]-bn[7]), (dT3 != Vec3(0,0,0)) ? dT3 : -dT1);
+        bn[7] += p; cp += p;
 
-    //        baryCoord = barycentricCoordinates[i][0];
-    //        out[i] = v_a*baryCoord[0] + v_b*baryCoord[1] + v_c*baryCoord[2];
+        // Edge 2-3
+        //p = bn[1]*2/3 + bn[2]/3;
+        //bn[5] = p + cross((bn[1]-p), dT2);
+        bn[5] = bn[1]*2.0/3.0 + bn[2]/3.0;
+        p = cross((bn[1]-bn[5]), (dT2 != Vec3(0,0,0)) ? dT2 : -dT3);
+        bn[5] += p; cp += p;
 
-    //        Vec3 Uz(0.0, 0.0, 0.0);
-    //        Real w = 0;
-    //        for (unsigned int t=0; t<listBaseTriangles[i].size();t++)
-    //        {
-    //            triangle = triangularBendingForcefield->getTopology()->getTriangle(listBaseTriangles[i][t]);
-    //            tinfo = &triangleInf[listBaseTriangles[i][t]];
+        //p = bn[1]/3 + bn[2]*2/3;
+        //bn[8] = p + cross((bn[2]-p), dT3);
+        bn[8] = bn[1]/3.0 + bn[2]*2.0/3.0;
+        p = cross((bn[2]-bn[8]), (dT3 != Vec3(0,0,0)) ? dT3 : -dT2);
+        bn[8] += p; cp += p;
 
-    //            // Local coordinates needed to compute deflection
-    //            a = inVertices[ triangle[0] ].getCenter();
-    //            vertexLocal = tinfo->Qframe.rotate(outVertices[i]-a);
+        // Center
+        p = bn[0]/3.0 + bn[1]/3.0 + bn[2]/3.0;
+        //bn[9] = p + cross(bn[0]-p, dT1)/3 +
+        //    cross(bn[1]-p, dT2)/3 +
+        //    cross(bn[2]-p, dT3)/3;
+        bn[9] = p + cp/6;
+    }
 
-    //            // Adds deflection velocity
-    //            v_z = tinfo->coefficients[0] + tinfo->coefficients[1]*vertexLocal[0] + tinfo->coefficients[2]*vertexLocal[1] + tinfo->coefficients[3]*vertexLocal[0]*vertexLocal[0] + tinfo->coefficients[4]*vertexLocal[0]*vertexLocal[1] + tinfo->coefficients[5]*vertexLocal[1]*vertexLocal[1] + tinfo->coefficients[6]*vertexLocal[0]*vertexLocal[0]*vertexLocal[0] + tinfo->coefficients[7]*vertexLocal[0]*vertexLocal[1]*vertexLocal[1] + tinfo->coefficients[8]*vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
-    //            w += v_z;
+    for (unsigned int i=0; i<out.size(); i++)
+    {
+        // Gets the first triangle that the vertex belongs to
+        Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
 
-    //        }
+        Vec3 bc = barycentricCoordinates[i][0];
 
-    //        // Position in Qframe
-    //        Vec3 out0 = tinfo->Qframe.rotate(out[i]);
-    //        // Computed deflection w in Qframe
-    //        out0[2] += w/listBaseTriangles[i].size();
-    //        out[i] = tinfo->Qframe.inverseRotate(out0);
-    //    }
-
-    //    triangularBendingForcefield->getTriangleInfo().endEdit();
-
-    //}
+        sofa::helper::fixed_array<Vec3,10> &bn = bezierNodesV[ listBaseTriangles[i][0] ];
+        out[i] = bn[0] * bc[0]*bc[0]*bc[0] +
+            bn[1] * bc[1]*bc[1]*bc[1] +
+            bn[2] * bc[2]*bc[2]*bc[2] +
+            bn[3] * 3*bc[0]*bc[0]*bc[1] +
+            bn[4] * 3*bc[0]*bc[0]*bc[2] +
+            bn[5] * 3*bc[1]*bc[1]*bc[2] +
+            bn[6] * 3*bc[0]*bc[1]*bc[1] +
+            bn[7] * 3*bc[0]*bc[2]*bc[2] +
+            bn[8] * 3*bc[1]*bc[2]*bc[2] +
+            bn[9] * 6*bc[0]*bc[1]*bc[2];
+    }
 
 //    stop = timer.getTime();
 //    std::cout << "time applyJ = " << stop-start << std::endl;
@@ -902,11 +896,6 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
 template <class TIn, class TOut>
 void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalParams * /*mparams*/, Data<InVecDeriv>& dOut, const Data<OutVecDeriv>& dIn)
 {
-    // TODO
-    serr << "BezierTriangleMechanicalMapping applyJT() not implemented" << sendl;
-    return;
-    //////
-
     helper::WriteAccessor< Data<InVecDeriv> > out = dOut;
     helper::ReadAccessor< Data<OutVecDeriv> > in = dIn;
 
@@ -928,95 +917,93 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
         return;
     }
 
-    //if (!triangularBendingForcefield)
-    //{
-    //    serr << "No TriangularBendingForcefield has been found" << sendl;
-    //    this->getContext()->get(triangularBendingForcefield);
-    //    return;
-    //}
-    //else
-    //{
-    //    helper::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
-    //    TriangleInformation *tinfo = NULL;
+    // List of in triangles
+    const SeqTriangles& inTriangles = inputTopo->getTriangles();
 
-    //    // List of in triangles
-    //    const SeqTriangles& inTriangles = inputTopo->getTriangles();
+    Vec3 f1, f2, f3;    // resulting linear forces on corner nodes 
+    Vec3 f1r, f2r, f3r; // resulting torques
+    Vec3 fn;
 
-    //    sofa::helper::vector< Mat<9, 9, Real> > vecTransposedInvC;
-    //    for (unsigned int t=0; t<inTriangles.size();t++)
-    //    {
-    //        tinfo = &triangleInf[t];
-    //        vecTransposedInvC.push_back(tinfo->invC.transposed());
-    //    }
+    for (unsigned int i=0; i<in.size(); i++)
+    {
+        if (in[i] == Vec3(0,0,0)) continue;
 
-    //    // List of 'in' positions
-    //    const OutVecCoord &inVertices = *this->toModel->getX();
+        // The corresponding triangle
+        int t = listBaseTriangles[i][0];
 
-    //    // List of 'out' positions (mechanical points)
-    //    const InVecCoord &outVertices = *this->fromModel->getX();
+        sofa::helper::fixed_array<Vec3,10> &bn = bezierNodesV[t];
+        Triangle triangle = inTriangles[t];
+        Vec3 bc = barycentricCoordinates[t][0];
 
-    //    // Iterates over in vertices
-    //    Triangle triangle;
-    //    Vec3 baryCoord, inLocal, a, vertexLocal, torqueA, torqueB, torqueC;
-    //    Real Fz;
-    //    Vec<9, Real> polynomDeflection, a_u;
-    //    for (unsigned int i=0; i<in.size(); i++)
-    //    {
-    //        triangle = inTriangles[ listBaseTriangles[i][0] ];
-    //        tinfo = &triangleInf[listBaseTriangles[i][0]];
+        // Compute the influence on the corner nodes
+        f1 = in[i] * bc[0]*bc[0]*bc[0];
+        f2 = in[i] * bc[1]*bc[1]*bc[1];
+        f3 = in[i] * bc[2]*bc[2]*bc[2];
+        // TODO: what about f1r, ...?
 
-    //        // Linear acceleration
-    //        baryCoord = barycentricCoordinates[i][0];
-    //        getVCenter(out[ triangle[0] ]) += in[i] * baryCoord[0];
-    //        getVCenter(out[ triangle[1] ]) += in[i] * baryCoord[1];
-    //        getVCenter(out[ triangle[2] ]) += in[i] * baryCoord[2];
+        // Now the influence through other nodes
 
-    //        // Iterates over triangles
-    //        for (unsigned int t=0; t<listBaseTriangles[i].size();t++)
-    //        {
-    //            triangle = triangularBendingForcefield->getTopology()->getTriangle(listBaseTriangles[i][t]);
-    //            tinfo = &triangleInf[listBaseTriangles[i][t]];
+        fn = in[i] * 3*bc[0]*bc[0]*bc[1];
+        if (fn != Vec3(0,0,0))
+        {
+            f1 += fn;
+            f1r += cross((bn[3]-bn[0]), fn);
+        }
 
-    //            // Applied force into local frame
-    //            inLocal = tinfo->Qframe.rotate(in[i]);
-    //            Fz = inLocal[2];
+        fn = in[i] * 3*bc[0]*bc[0]*bc[2];
+        if (fn != Vec3(0,0,0))
+        {
+            f1 += fn;
+            f1r += cross((bn[4]-bn[0]), fn);
+        }
 
-    //            if (Fz != 0)
-    //            {
-    //                // Local coordinates needed to compute deflection
-    //                a = outVertices[ triangle[0] ].getCenter();
-    //                vertexLocal = tinfo->Qframe.rotate(inVertices[i]-a); // WARNING: SHOULD NOT WE NEED TO PROJECT THE INVERTICES INTO THE TRIANGLE'S PLAN FIRST?
+        fn = in[i] * 3*bc[1]*bc[1]*bc[2];
+        if (fn != Vec3(0,0,0))
+        {
+            f2 += fn;
+            f2r += cross((bn[5]-bn[1]), fn);
+        }
 
-    //                // Uz = c1 + c2*x+ c3*y + c4*x^2 + c5*x*y + c6*y^2 + c7*x^3 + c8*x*y^2 + c9*y^3
-    //                polynomDeflection[0] = 1;
-    //                polynomDeflection[1] = vertexLocal[0];
-    //                polynomDeflection[2] = vertexLocal[1];
-    //                polynomDeflection[3] = vertexLocal[0]*vertexLocal[0];
-    //                polynomDeflection[4] = vertexLocal[0]*vertexLocal[1];
-    //                polynomDeflection[5] = vertexLocal[1]*vertexLocal[1];
-    //                polynomDeflection[6] = vertexLocal[0]*vertexLocal[0]*vertexLocal[0];
-    //                polynomDeflection[7] = vertexLocal[0]*vertexLocal[1]*vertexLocal[1];
-    //                polynomDeflection[8] = vertexLocal[1]*vertexLocal[1]*vertexLocal[1];
+        fn = in[i] * 3*bc[0]*bc[1]*bc[1];
+        if (fn != Vec3(0,0,0))
+        {
+            f2 += fn;
+            f2r += cross((bn[6]-bn[1]), fn);
+        }
 
-    //                polynomDeflection *= Fz;
+        fn = in[i] * 3*bc[0]*bc[2]*bc[2];
+        if (fn != Vec3(0,0,0))
+        {
+            f3 += fn;
+            f3r += cross((bn[7]-bn[2]), fn);
+        }
 
-    //                // Moments at each point
-    //                a_u = (vecTransposedInvC[ listBaseTriangles[i][t] ] * polynomDeflection) / listBaseTriangles[i].size();
+        fn = in[i] * 3*bc[1]*bc[2]*bc[2];
+        if (fn != Vec3(0,0,0))
+        {
+            f3 += fn;
+            f3r += cross((bn[8]-bn[2]), fn);
+        }
 
-    //                // Moments into global frame
-    //                torqueA = tinfo->Qframe.inverseRotate(Vec3(a_u[1], a_u[2], 0));
-    //                torqueB = tinfo->Qframe.inverseRotate(Vec3(a_u[4], a_u[5], 0));
-    //                torqueC = tinfo->Qframe.inverseRotate(Vec3(a_u[7], a_u[8], 0));
+        fn = in[i] * 6*bc[0]*bc[1]*bc[2];
+        if (fn != Vec3(0,0,0))
+        {
+            f1 += fn;
+            f2 += fn;
+            f3 += fn;
+            f1r += cross((bn[9]-bn[0]), fn);
+            f2r += cross((bn[9]-bn[1]), fn);
+            f3r += cross((bn[9]-bn[2]), fn);
+        }
 
-    //                getVOrientation(out[ triangle[0] ]) += torqueA;
-    //                getVOrientation(out[ triangle[1] ]) += torqueB;
-    //                getVOrientation(out[ triangle[2] ]) += torqueC;
-    //            }
-    //        }
-    //    }
+        getVCenter(out[ triangle[0] ]) += f1;
+        getVCenter(out[ triangle[1] ]) += f2;
+        getVCenter(out[ triangle[2] ]) += f3;
 
-    //}
-
+        getVOrientation(out[ triangle[0] ]) += f1r;
+        getVOrientation(out[ triangle[1] ]) += f2r;
+        getVOrientation(out[ triangle[2] ]) += f3r;
+    }
 
 //    stop = timer.getTime();
 //    std::cout << "time applyJT = " << stop-start << std::endl;

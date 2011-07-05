@@ -148,6 +148,7 @@ protected:
 
         // Nodes of the Bézier triangles
         sofa::helper::vector< sofa::helper::fixed_array<Vec3,10> > bezierNodes;
+        sofa::helper::vector< sofa::helper::fixed_array<Vec3,10> > bezierNodesV;
 
         //void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
         //void MeasureError();
