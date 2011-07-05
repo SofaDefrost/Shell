@@ -1860,7 +1860,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
         glPointSize(1);
 
         // Compute and Render the frame of each element
-        Vec2 baryCoord(1.0/3.0, 1.0/3.0);
+        Vec2 baryCoord(0.0/3.0, 0.0/3.0);
 
         for (int i=0; i<_topology->getNbTriangles(); ++i)
         {
