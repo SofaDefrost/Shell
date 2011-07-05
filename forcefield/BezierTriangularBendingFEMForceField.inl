@@ -535,6 +535,52 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
 }
 
 
+// ------------------------
+// --- Compute the position of the B?zier points
+// ------------------------
+template <class DataTypes>
+void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, const VecCoord& x0, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints)
+{
+
+
+
+    // 3 points corresponding to the node position
+    X_bezierPoints[0] = x[tinfo->a].getCenter();
+    X_bezierPoints[1] = x[tinfo->b].getCenter();
+    X_bezierPoints[2] = x[tinfo->c].getCenter();
+
+    // get the segment position in the reference frames of the rest-shape
+    Vec3 P0_P1_inFrame0 = x0[tinfo->a].getOrientation().inverseRotate( x0[tinfo->b].getCenter() - x0[tinfo->a].getCenter()  ) ;
+    Vec3 P0_P2_inFrame0 = x0[tinfo->a].getOrientation().inverseRotate( x0[tinfo->c].getCenter() - x0[tinfo->a].getCenter()  ) ;
+
+    Vec3 P1_P2_inFrame1 = x0[tinfo->b].getOrientation().inverseRotate( x0[tinfo->c].getCenter() - x0[tinfo->b].getCenter()  ) ;
+    Vec3 P1_P0_inFrame1 = x0[tinfo->b].getOrientation().inverseRotate( x0[tinfo->a].getCenter() - x0[tinfo->b].getCenter()  ) ;
+
+    Vec3 P2_P0_inFrame2 = x0[tinfo->c].getOrientation().inverseRotate( x0[tinfo->a].getCenter() - x0[tinfo->c].getCenter()  ) ;
+    Vec3 P2_P1_inFrame2 = x0[tinfo->c].getOrientation().inverseRotate( x0[tinfo->b].getCenter() - x0[tinfo->c].getCenter()  ) ;
+
+
+    // compute the corresponding Bezier Points
+        // (3,4) is attached to frame 0
+    X_bezierPoints[3] = x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( P0_P1_inFrame0/3.0 );
+    X_bezierPoints[4] = x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( P0_P2_inFrame0/3.0 );
+        // (5,6) is attached to frame 1
+    X_bezierPoints[5] = x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( P1_P2_inFrame1/3.0 );
+    X_bezierPoints[6] = x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( P1_P0_inFrame1/3.0 );
+        // (7,8) is attached to frame 2
+    X_bezierPoints[7] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( P2_P0_inFrame2/3.0 );
+    X_bezierPoints[8] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( P2_P1_inFrame2/3.0 );
+        // (9) use a kind of skinning function (average of the position obtained when attached respectively to 0, 1 and 2)
+    X_bezierPoints[9] = (x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( (P0_P1_inFrame0 + P0_P2_inFrame0) /3.0))/3.0 +
+                        (x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( (P1_P2_inFrame1 + P1_P0_inFrame1) /3.0))/3.0 +
+                        (x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( (P2_P0_inFrame2 + P2_P1_inFrame2) /3.0))/3.0;
+
+
+}
+
+
+
+
 // --------------------------------------------------------------------------------------
 // ---
 // --------------------------------------------------------------------------------------
@@ -662,7 +708,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
     pts[9] = pts[0]*(1.0/3.0) + pts[1]*(1.0/3.0) + pts[2]*(1.0/3.0);
 
 
-    std::cout<<" pts = " << pts<<std::endl;
 
 
     // TODO
@@ -685,7 +730,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
     tinfo->interpol.invert(m);
     tinfo->area = 0.5*fabs((Real) determinant(m) ) ;
 
-    std::cout<<" AIRE ="<<tinfo->area<<std::endl;
 
     //Phi1 = Interpol(1,:); // 1re ligne de la matrice invA
     //Phi2 = Interpol(2,:); // 2me ligne
@@ -832,7 +876,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo)
 {
 
-    std::cout<<" ++++++++++++++++ IN PLANE +++++++++++++++ "<<std::endl;
+
     // Directional vectors from corner nodes
     Vec3 P4P1 = tinfo.pts[3] - tinfo.pts[0];
     Vec3 P5P1 = tinfo.pts[4] - tinfo.pts[0];
@@ -990,19 +1034,15 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Vec3 P10P2 = tinfo.pts[1] - tinfo.pts[9] ;
     Vec3 P10P3 = tinfo.pts[2] - tinfo.pts[9] ;
 
-    std::cout<<"========== BENDING ==========="<<std::endl;
-
-    std::cout<<"P4P1 = "<<P4P1<<" - P5P1 = "<<P5P1<<" - P6P2 = "<<P6P2<<" - P7P2 = "<<P7P2<<" - P8P3 = "<<P8P3<<" - P9P3 = "<<P9P3<<" - P10P1 = "<<P10P1<<std::endl;
 
     Vec3 P(1, GP[0], GP[1]);
-    std::cout<<" GP = "<<GP<<std::endl;
+
 
     Vec3 p; // Interpolated values
     p[0] = tinfo.interpol.line(0)*P;
     p[1] = tinfo.interpol.line(1)*P;
     p[2] = tinfo.interpol.line(2)*P;
 
-    std::cout<<" p ="<<p<<std::endl;
 
     
     //Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
@@ -1014,7 +1054,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Real b3 = tinfo.interpol(2,1);
     Real c3 = tinfo.interpol(2,2);
 
-    std::cout<<"b1 ="<<b1<<" - c1 ="<<c1<<" - b2 ="<<b2<<" - c2 ="<<c2<<" - b3 ="<<b3<<" - c3 ="<<c3<<std::endl;
+
 
     // Doubles derivatives by x and y
     Real D2Phi1n3_xx = 6*b1*b1*p[0];
@@ -1096,7 +1136,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Vec2 d2uz_dxy_dT3 = cvP8P3*3.0*D2Phi3n2Phi1_xy + cvP9P3*3.0*D2Phi3n2Phi2_xy + cvP10P3*2.0*D2Phi123_xy;
     Vec2 d2uz_dyy_dT3 = cvP8P3*3.0*D2Phi3n2Phi1_yy + cvP9P3*3.0*D2Phi3n2Phi2_yy + cvP10P3*2.0*D2Phi123_yy;
 
-    std::cout<<"d2uz_dxx_dT1 = "<<d2uz_dxx_dT1<<" | cvP4P1 = "<<cvP4P1<<" | D2Phi1n2Phi2_xx="<<D2Phi1n2Phi2_xx<<std::endl;
+
 
     // TODO: unify the dimensions with the matrixSD()
     J[0][0] = -d2uz_dxx_dU1;
@@ -1136,34 +1176,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
 
 }
 
-// --------------------------------------------------------------------------------------------------------
-// --- Computes the strain tensor used in flat-plate theory in a given point
-// --------------------------------------------------------------------------------------------------------
-//template <class DataTypes>
-//void BezierTriangularBendingFEMForceField<DataTypes>::tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P)
-//{
-//#ifdef DEBUG_TRIANGLEFEM
-//    sout << "TriangleBendingFEMForceField::tensorFlatPlate"<<sendl;
-//#endif
-//
-//    // Flat-plat theory gives:
-//    // e = D * c with
-//    //        [ 0  0  0  2  0  0  6x   2y   0  ]
-//    // D = -z | 0  0  0  0  0  2  0    2x   6y |
-//    //        [ 0  0  0  0  2  0  0  4(x+y) 0  ]
-//    // where e is the strain vector and c the coefficient vector of the deflection function
-//    //
-//    // CORRECTED:
-//    //        [ 0  0  0  2  0  0  6x  0   0  ]
-//    // D = -z | 0  0  0  0  0  2  0   2x  6y |
-//    //        [ 0  0  0  0  2  0  0   4y  0  ]
-//
-//    // Corrected
-//    D.clear();
-//    D(0,3) = 2;         D(0,6) = 6*P[0];
-//    D(1,5) = 2;         D(1,7) = 2*P[0];        D(1,8) = 6*P[1];
-//    D(2,4) = 2;         D(2,7) = 4*P[1];
-//}
+
 
 
 // -----------------------------------------------------------------------------
@@ -1714,6 +1727,42 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeCurvature(Vec3 pt, 
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::draw()
 {
+
+    if(this->getContext()->getShowForceFields())
+    {
+        // Gets vertices of rest and initial positions respectively
+        const VecCoord& x0 = *this->mstate->getX0();
+        const VecCoord& x = *this->mstate->getX();
+        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+
+
+        // Compute pos and Render Bezier points
+
+        bezierNodes.resize(_topology->getNbTriangles());
+
+        glPointSize(8);
+        glDisable(GL_LIGHTING);
+        glBegin(GL_POINTS);
+
+        for (int i=0; i<_topology->getNbTriangles(); ++i)
+        {
+            TriangleInformation *tinfo = &triangleInf[i];
+            this->computePosBezierPoint( tinfo,x,x0, bezierNodes[i]);
+
+
+
+            sofa::helper::fixed_array<Vec3,10> &bn = bezierNodes[i];
+            for (int j=0; j<10; j++)
+            {
+                glColor4f(0.0, 0.7, 0.0, 1.0);
+                glVertex3f(bn[j][0], bn[j][1], bn[j][2]);
+            }
+        }
+
+        glEnd();
+        glPointSize(1);
+    }
+
     if(this->getContext()->getShowInteractionForceFields())
     {
         glDisable(GL_LIGHTING);

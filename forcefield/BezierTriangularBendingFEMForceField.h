@@ -110,6 +110,9 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         sofa::core::topology::BaseMeshTopology* _topology;
         sofa::core::topology::BaseMeshTopology* _topologyTarget;
 
+        // Nodes of the Bezier triangles
+        sofa::helper::vector< sofa::helper::fixed_array<Vec3,10> > bezierNodes;
+
 //        BezierTriangularBendingFEMForceFieldInternalData<DataTypes> data;
 //        friend class BezierTriangularBendingFEMForceFieldInternalData<DataTypes>;
 
@@ -220,6 +223,7 @@ protected :
 
         TriangleData<TriangleInformation> triangleInfo;
 
+
         void computeLocalTriangle(const VecCoord &x, const Index elementIndex);
         void computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex);
         void computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, const Index elementIndex);
@@ -241,6 +245,8 @@ protected :
         virtual void computeMaterialStiffness(const int i);
 
         void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
+        void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, const VecCoord& x0, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
+
         void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
 
