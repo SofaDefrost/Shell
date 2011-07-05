@@ -6,6 +6,13 @@
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
     <CollisionGroup/>
 
+    <Node name="points">
+        <MechanicalObject template="Rigid" name="fixedPoints"
+                          position="0.5 0.9 1 0.3856834 0 0 0.9238795"
+                          showObject="true" />
+        <FixedConstraint indices="0" />
+    </Node>
+
     <Node name="shell">
         <EulerImplicitSolver/>
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
@@ -29,10 +36,10 @@
 
 
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.2" totalmass="1"/>
-        <FixedConstraint indices="1 2" drawSize="0"/>
+        <FixedConstraint indices="0 1" drawSize="0"/>
 
         <RestShapeSpringsForceField template="Rigid" name="Springs" external_rest_shape="../points/fixedPoints"
-            points="0"
+            points="2"
             external_points="0"
             stiffness="50000"
             angularStiffness="50000" />
@@ -53,11 +60,6 @@
             </Node>
         </Node>
         
-    </Node>
-
-    <Node name="points">
-        <MechanicalObject template="Rigid" name="fixedPoints" position="0 0 1 0 0.3826834 0 0.9238795" />
-        <FixedConstraint indices="0" />
     </Node>
 
     <Node name="shellBezier">
@@ -83,10 +85,10 @@
 
 
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.2" totalmass="1"/>
-        <FixedConstraint indices="1 2" drawSize="0"/>
+        <FixedConstraint indices="0 1" drawSize="0"/>
 
         <RestShapeSpringsForceField template="Rigid" name="Springs" external_rest_shape="../points/fixedPoints"
-            points="0"
+            points="2"
             external_points="0"
             stiffness="50000"
             angularStiffness="50000" />
