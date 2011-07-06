@@ -219,7 +219,6 @@ protected :
 
         void computeLocalTriangle(const VecCoord &x, const Index elementIndex);
         void computeDisplacements( Displacement &Disp, DisplacementBending &BDisp, const VecCoord &x, TriangleInformation *tinfo);
-        void computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, TriangleInformation &tinfo);
         void computeStrainDisplacementMatrix(TriangleInformation &tinfo);
         void computeStrainDisplacementMatrixBending(TriangleInformation &tinfo);
         //void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
