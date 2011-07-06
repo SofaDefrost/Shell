@@ -432,47 +432,6 @@ template <class DataTypes>
 }
 
 
-// --------------------------------------------------------------------------------------
-// Computes the quaternion that embodies the rotation from triangle to world
-// --------------------------------------------------------------------------------------
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computeRotation(Quat& Qframe, const VecCoord &x, const Index &a, const Index &b, const Index &c)
-{
-    // First vector on first edge
-    // Second vector in the plane of the two first edges
-    // Third vector orthogonal to first and second
-
-    Vec3 edgex = x[b].getCenter() - x[a].getCenter();
-    edgex.normalize();
-
-    Vec3 edgey = x[c].getCenter() - x[a].getCenter();
-    edgey.normalize();
-
-    Vec3 edgez;
-    edgez = cross(edgex, edgey);
-    edgez.normalize();
-
-    edgey = cross(edgez, edgex);
-    edgey.normalize();
-
-    Transformation R;
-    R[0][0] = edgex[0];
-    R[0][1] = edgex[1];
-    R[0][2] = edgex[2];
-    R[1][0] = edgey[0];
-    R[1][1] = edgey[1];
-    R[1][2] = edgey[2];
-    R[2][0] = edgez[0];
-    R[2][1] = edgez[1];
-    R[2][2] = edgez[2];
-
-    Qframe.fromMatrix(R);
-
-    if(this->f_printLog.getValue())
-        sout<<"Qframe = "<<Qframe<<sendl;
-
-}
-
 
 // --------------------------------------------------------------------------------------
 // --- Store the initial position of the nodes
@@ -490,47 +449,35 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
 
     // Gets vertices of rest and initial positions respectively
     const VecCoord& x0 = *this->mstate->getX0();
-    const VecCoord& x = *this->mstate->getX();
+    //const VecCoord& x = *this->mstate->getX();
 
-    // Rotation from triangle to world at rest and initial positions (respectively)
-    Quat Qframe0, Qframe;
-    computeRotation(Qframe0, x0, a, b, c );
-    computeRotation(Qframe, x, a, b, c );
-    tinfo->Qframe = Qframe;
+    // compute the initial position and rotation in the reference frame
+    Coord ElementFrame0;
+    this->interpolateRefFrame(tinfo,Vec2(1.0/3.0,1.0/3.0),x0, ElementFrame0 );
 
-    // The positions of each point is expressed into the local frame at rest position
-    tinfo->restLocalPositions[0] = Qframe0.rotate(x0[b].getCenter() - x0[a].getCenter());
-    tinfo->restLocalPositions[1] = Qframe0.rotate(x0[c].getCenter() - x0[a].getCenter());
+    // get Rest position => _global_Rframe_element^{-1}*(nodeRest_global - Center_global)
+    tinfo->restLocalPositions[0] = ElementFrame0.getOrientation().inverseRotate(x0[a].getCenter() - ElementFrame0.getCenter());
+    tinfo->restLocalPositions[1] = ElementFrame0.getOrientation().inverseRotate(x0[b].getCenter() - ElementFrame0.getCenter());
+    tinfo->restLocalPositions[2] = ElementFrame0.getOrientation().inverseRotate(x0[c].getCenter() - ElementFrame0.getCenter());
 
-    //if (f_bending.getValue())
-    //{
-        // Computes inverse of C for initial position (in case of the latter is different than the rest_position)
-        tinfo->localB = Qframe.rotate(x[b].getCenter()-x[a].getCenter());
-        tinfo->localC = Qframe.rotate(x[c].getCenter()-x[a].getCenter());
-        computeStrainDisplacementMatrixBending(*tinfo);
+    // get Rest orientation => _element_R_nodeRest = _global_Rframe_element^{-1}*_global_R_nodeRest
+    tinfo->restLocalOrientations[0] =  ElementFrame0.getOrientation().inverse()* x0[a].getOrientation();
+    tinfo->restLocalOrientations[1] =  ElementFrame0.getOrientation().inverse()* x0[b].getOrientation();
+    tinfo->restLocalOrientations[2] =  ElementFrame0.getOrientation().inverse()* x0[c].getOrientation();
 
-        // Computes triangles' surface
-        computeStrainDisplacementMatrix(i);
 
-        // Local rest orientations (Evaluates the difference between the rest position and the flat position to allow the use of a deformed rest shape)
-        tinfo->restLocalOrientations[0] = qDiffZ(x0[a].getOrientation(), Qframe0);
-        tinfo->restLocalOrientations[1] = qDiffZ(x0[b].getOrientation(), Qframe0);
-        tinfo->restLocalOrientations[2] = qDiffZ(x0[c].getOrientation(), Qframe0);
 
-        // Creates a vector u_rest matching the difference between rest and flat positions
-        tinfo->u_rest.clear();
-        tinfo->u_rest[1] = tinfo->restLocalOrientations[0].toEulerVector()[0];
-        tinfo->u_rest[2] = tinfo->restLocalOrientations[0].toEulerVector()[1];
-        tinfo->u_rest[4] = tinfo->restLocalOrientations[1].toEulerVector()[0];
-        tinfo->u_rest[5] = tinfo->restLocalOrientations[1].toEulerVector()[1];
-        tinfo->u_rest[7] = tinfo->restLocalOrientations[2].toEulerVector()[0];
-        tinfo->u_rest[8] = tinfo->restLocalOrientations[2].toEulerVector()[1];
+    /////// Matrices are supposed to be constant but are recomputed in computeForce Functions
+  //  tinfo->Qframe = ElementFrame0.getOrientation();
 
-        // Computes vector displacement between initial position and rest positions (actual displacements that define the amount of stress within the structure)
-        DisplacementBending Disp_bending;
-        computeDisplacementBending(Disp_bending, x, i);
+    // compute the stiffness matrix (bending)
+    //computeStrainDisplacementMatrixBending(*tinfo);
 
-    //}
+    // Computes the stiffness matrix (in-plane)
+    //computeStrainDisplacementMatrix(*tinfo);
+
+
+//}
     triangleInfo.endEdit();
 }
 
@@ -583,8 +530,8 @@ template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier)
 {
     Real a=1-baryCoord[0]-baryCoord[1];
-    Real b=baryCoord[1];
-    Real c=baryCoord[2];
+    Real b=baryCoord[0];
+    Real c=baryCoord[1];
 
     f_bezier[0]=  a*a*a;
     f_bezier[1]=  b*b*b;
@@ -631,8 +578,15 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame( const
     sofa::helper::fixed_array<Vec3,10> X_bezierPoints;
     this->computePosBezierPoint(tinfo, x, x0,X_bezierPoints);
 
-    // use the position of the central bezier point (P9) for the reference frame
-    interpolatedFrame.getCenter() = X_bezierPoints[9];
+
+    // use the bezier functions to interpolate the positions
+    sofa::helper::fixed_array<Real,10> f_bezier;
+    this->bezierFunctions(baryCoord, f_bezier);
+    interpolatedFrame.getCenter().clear();
+    for (unsigned int i=0;i<10;i++){
+        interpolatedFrame.getCenter() += X_bezierPoints[i]*f_bezier[i];
+        std::cout<<" add pos = "<<X_bezierPoints[i]*f_bezier[i]<<" f_bezier["<<i<<"]="<<f_bezier[i]<<"  X_bezierPoints="<<X_bezierPoints[i]<<std::endl;
+    }
 
 
 
@@ -646,6 +600,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame( const
         Y1 += X_bezierPoints[i]*df_dy_bezier[i];
     }
 
+
     Vec3 Y,Z;
     // compute the orthogonal frame directions
     if (X1.norm() > 1e-20 && Y1.norm() > 1e-20 && fabs(dot(X1,Y1)) >1e-20 )
@@ -655,6 +610,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame( const
         Z=cross(X1,Y1);
         Z.normalize();
         Y=cross(Z,X1);
+        Y.normalize();
     }
     else
     {
@@ -664,12 +620,18 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame( const
         Z =Vec3(0.0,0.0,1.0);
     }
 
+
+
     // compute the corresponding rotation
     defaulttype::Matrix3 R(X1,Y,Z);
+    R.transpose();
+
+
     Quat Qout;
     Qout.fromMatrix(R);
     Qout.normalize();
     interpolatedFrame.getOrientation() = Qout;
+
 
 
 
@@ -782,9 +744,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
     pts[2] = tinfo->Qframe.rotate(x[tinfo->c].getCenter() );
 
 
-    // TODO: remove this later
-    tinfo->localB = pts[1];
-    tinfo->localC = pts[2];
+
 
     // Bezier Points
     // TODO: shouldn't we consider also the rotations/normals? /// CHRISTIAN  WARNING pb with indices !!
@@ -848,105 +808,80 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
 // --- reference
 // -----------------------------------------------------------------------------
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacement(
-    Displacement &Disp, const VecCoord &x, const Index elementIndex)
+void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacements( Displacement &Disp, DisplacementBending &BDisp, const VecCoord &x, TriangleInformation *tinfo)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-    TriangleInformation *tinfo = &triangleInf[elementIndex];
+
+    Coord elementFrame;
+    this->interpolateRefFrame(tinfo, Vec2(1.0/3.0,1.0/3.0), x, elementFrame);
 
     Index a = tinfo->a;
     Index b = tinfo->b;
     Index c = tinfo->c;
 
-    // In-plane local displacements
-    Vec3 uAB, uAC;
-    uAB = tinfo->pts[1] - tinfo->restLocalPositions[0];
-    uAC = tinfo->pts[2] - tinfo->restLocalPositions[1];
+    Quat _global_R_element = elementFrame.getOrientation();
 
-    // Rotations to the local frame, ...
-    Quat dQA = qDiff(x[a].getOrientation().inverse(), tinfo->Qframe.inverse());
-    Quat dQB = qDiff(x[b].getOrientation().inverse(), tinfo->Qframe.inverse());
-    Quat dQC = qDiff(x[c].getOrientation().inverse(), tinfo->Qframe.inverse());
+    // element_R_node = _global_R_element^-1 * _global_R_node
+    Quat element_R_node0 = _global_R_element.inverse()*x[a].getOrientation();
+    Quat element_R_node1 = _global_R_element.inverse()*x[b].getOrientation();
+    Quat element_R_node2 = _global_R_element.inverse()*x[c].getOrientation();
 
-    // and their difference to the rest orientations
-    dQA = qDiff(tinfo->restLocalOrientations[0].inverse(), dQA.inverse());
-    dQB = qDiff(tinfo->restLocalOrientations[1].inverse(), dQB.inverse());
-    dQC = qDiff(tinfo->restLocalOrientations[2].inverse(), dQC.inverse());
+    // nodeRest_R_node = element_R_nodeRest^-1 * element_R_node
+    Quat node0Rest_R_node0 =  tinfo->restLocalOrientations[0].inverse() * element_R_node0;
+    Quat node1Rest_R_node1 =  tinfo->restLocalOrientations[1].inverse() * element_R_node1;
+    Quat node2Rest_R_node2 =  tinfo->restLocalOrientations[2].inverse() * element_R_node2;
 
-    // TODO: add Z-rotations
-    Disp[0] = 0;
-    Disp[1] = 0;
-    Disp[2] = dQA[2];
-    Disp[3] = uAB[0];
-    Disp[4] = 0;
-    Disp[5] = dQB[2];
-    Disp[6] = uAC[0];
-    Disp[7] = uAC[1];
-    Disp[8] = dQC[2];
+    // dQ_in_elmentFrame = element_R_nodeRest*dQ_in_nodeRest
+    Vec3 dQ0 = tinfo->restLocalOrientations[0].rotate(node0Rest_R_node0.toEulerVector());
+    Vec3 dQ1 = tinfo->restLocalOrientations[1].rotate(node1Rest_R_node1.toEulerVector());
+    Vec3 dQ2 = tinfo->restLocalOrientations[2].rotate(node2Rest_R_node2.toEulerVector());
 
-    triangleInfo.endEdit();
+    //bending => rotation along X and Y
+    BDisp[1] = dQ0[0];
+    BDisp[2] = dQ0[1];
+    BDisp[4] = dQ1[0];
+    BDisp[5] = dQ1[1];
+    BDisp[7] = dQ2[0];
+    BDisp[8] = dQ2[1];
+
+    // inPlane => rotation along Z
+    Disp[2] = dQ0[2];
+    Disp[5] = dQ1[2];
+    Disp[8] = dQ2[2];
+
+
+    // translation compute the current position of the node on the element frame
+    Vec3 Center_T_node0 = _global_R_element.inverseRotate( x[a].getCenter() - elementFrame.getCenter());
+    Vec3 Center_T_node1 = _global_R_element.inverseRotate( x[b].getCenter() - elementFrame.getCenter());
+    Vec3 Center_T_node2 = _global_R_element.inverseRotate( x[c].getCenter() - elementFrame.getCenter());
+
+    // compare this position with the rest position
+    Vec3 dX0 = Center_T_node0 - tinfo->restLocalPositions[0];
+    Vec3 dX1 = Center_T_node1 - tinfo->restLocalPositions[1];
+    Vec3 dX2 = Center_T_node2 - tinfo->restLocalPositions[2];
+
+    // inPlane => translation along X and  Y
+    Disp[0] = dX0[0];
+    Disp[1] = dX0[1];
+    Disp[3] = dX1[0];
+    Disp[4] = dX1[1];
+    Disp[6] = dX2[0];
+    Disp[7] = dX2[1];
+
+    //inPlane => translation along Z
+    BDisp[0] = dX0[2];
+    BDisp[3] = dX1[2];
+    BDisp[6] = dX2[2];
 }
 
 
-// -------------------------------------------------------------------------------------------------------------
-// --- Compute bending displacement vector D as the difference between current current position 'p' and initial position
-// --- expressed in the co-rotational frame of reference
-// -------------------------------------------------------------------------------------------------------------
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, const Index elementIndex)
-{
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-    TriangleInformation *tinfo = &triangleInf[elementIndex];
 
-    // TODO: we already did the math in computeDisplacement(), reuse it
-
-    Index a = tinfo->a;
-    Index b = tinfo->b;
-    Index c = tinfo->c;
-
-    Quat dQA = qDiff(x[a].getOrientation().inverse(), tinfo->Qframe.inverse());     // Rotation of axis Z from Qframe to axis Z from x[a].getOrientation()
-    Quat dQB = qDiff(x[b].getOrientation().inverse(), tinfo->Qframe.inverse());     // Rotation of axis Z from Qframe to axis Z from x[b].getOrientation()
-    Quat dQC = qDiff(x[c].getOrientation().inverse(), tinfo->Qframe.inverse());     // Rotation of axis Z from Qframe to axis Z from x[c].getOrientation()
-
-    // Difference between the current and the rest orientations yields displacement (into the triangle's frame)
-    dQA = qDiff(tinfo->restLocalOrientations[0].inverse(), dQA.inverse());
-    dQB = qDiff(tinfo->restLocalOrientations[1].inverse(), dQB.inverse());
-    dQC = qDiff(tinfo->restLocalOrientations[2].inverse(), dQC.inverse());
-
-    // Takes the Euler vector to get the rotation's axis
-    Vec3 rA, rB, rC;
-    rA = dQA.toEulerVector();
-    rB = dQB.toEulerVector();
-    rC = dQC.toEulerVector();
-
-    // Writes the computed displacements
-    Disp[0] = 0;          // z displacement in A
-    Disp[1] = rA[0];      // x rotation in A
-    Disp[2] = rA[1];      // y rotation in A
-
-    Disp[3]  = 0;         // z displacement in B
-    Disp[4] = rB[0];     // x rotation in B
-    Disp[5] = rB[1];     // y rotation in B
-
-    Disp[6] = 0;         // z displacement in C
-    Disp[7] = rC[0];     // x rotation in C
-    Disp[8] = rC[1];     // y rotation in C
-
-    // Stores the vector u of displacements (used by the mechanical mapping for rendering)
-    tinfo->u = Disp;
-
-    triangleInfo.endEdit();
-}
 
 // ----------------------------------------------------------------------------
 // --- Compute the strain-displacement matrix for in-plane deformation
 // -----------------------------------------------------------------------------
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrix(
-    const Index elementIndex)
+void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrix(TriangleInformation &tinfo)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-    TriangleInformation& tinfo = triangleInf[elementIndex];
 /*
     Real determinant;
     determinant = tinfo.pts[1][0] * tinfo.pts[2][1]; // since pts[1][1] = 0
@@ -1361,7 +1296,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForce(
     TriangleInformation &tinfo = triangleInf[elementIndex];
 
     // Compute strain-displacement matrix J
-    computeStrainDisplacementMatrix(elementIndex);
+    computeStrainDisplacementMatrix(tinfo);
 
     // Compute stiffness matrix K = J*material*Jt
     StiffnessMatrix K;
@@ -1423,14 +1358,17 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
     const Index& c = tinfo->c;
 
     // Compute the quaternion that embodies the rotation between the triangle and world frames (co-rotational method)
-    Quat Qframe;
-    computeRotation(Qframe, x, a, b, c);
-    tinfo->Qframe = Qframe;
+    Coord elementFrame;
+    this->interpolateRefFrame(tinfo, Vec2(1.0/3.0, 1.0/3.0), x, elementFrame);
+
+    tinfo->Qframe = elementFrame.getOrientation();
     computeLocalTriangle(x, elementIndex);
 
     // Compute in-plane displacement in the triangle's frame
     Displacement D;
-    computeDisplacement(D, x, elementIndex);
+    // Compute bending displacement for bending into the triangle's frame
+    DisplacementBending D_bending;
+    this->computeDisplacements(D, D_bending, x, tinfo);
 
     // Compute in-plane forces on this element (in the co-rotational space)
     Displacement F;
@@ -1438,9 +1376,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 
     //if (f_bending.getValue())
     //{
-    // Compute bending displacement for bending into the triangle's frame
-    DisplacementBending D_bending;
-    computeDisplacementBending(D_bending, x, elementIndex);
+
+
 
     // Compute bending forces on this element (in the co-rotational space)
     DisplacementBending F_bending;
@@ -1860,7 +1797,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
         glPointSize(1);
 
         // Compute and Render the frame of each element
-        Vec2 baryCoord(0.0/3.0, 0.0/3.0);
+        Vec2 baryCoord(1.0/3.0, 1.0/3.0);
 
         for (int i=0; i<_topology->getNbTriangles(); ++i)
         {
@@ -2000,6 +1937,12 @@ void BezierTriangularBendingFEMForceField<DataTypes>::bwdInit()
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::writeCoeffs()
 {
+
+    // tinfo->localB and tinfo->localC were removed from tinfo and replaced by restLocalPositions (for node A, B and C)
+    serr<<"writeCoeffs does not work anymore => need to store the local coordinates of the 3 nodes"<<sendl;
+    return;
+
+
     //sofa::helper::system::thread::ctime_t start, stop;
     //sofa::helper::system::thread::CTime timer;
     //start = timer.getTime();
@@ -2026,21 +1969,21 @@ void BezierTriangularBendingFEMForceField<DataTypes>::writeCoeffs()
     for (int i=0; i<nbTriangles; i++)
     {
         tinfo = &triangleInf[i];
-        tinfo->coefficients = tinfo->invC * (tinfo->u + tinfo->u_rest);
+ //       tinfo->coefficients = tinfo->invC * (tinfo->u + tinfo->u_rest);
 
-        outfile << "f " << tinfo->coefficients << " ";
-        Vec2 pc;
-        computeCurvature(Vec3(0,0,0), tinfo->coefficients, pc);
-        outfile << pc << " ";
-        computeCurvature(tinfo->localB, tinfo->coefficients, pc);
-        outfile << pc << " ";
-        computeCurvature(tinfo->localC, tinfo->coefficients, pc);
-        outfile << pc << " ";
-        Vec3 bary = (tinfo->localB + tinfo->localC)/3.0;
-        computeCurvature(bary, tinfo->coefficients, pc);
-        outfile << pc << "\n";
+//        outfile << "f " << tinfo->coefficients << " ";
+//        Vec2 pc;
+//        computeCurvature(Vec3(0,0,0), tinfo->coefficients, pc);
+//        outfile << pc << " ";
+       // computeCurvature(tinfo->localB, tinfo->coefficients, pc);
+//        outfile << pc << " ";
+       // computeCurvature(tinfo->localC, tinfo->coefficients, pc);
+//        outfile << pc << " ";
+     //   Vec3 bary = (tinfo->localB + tinfo->localC)/3.0;
+     //   computeCurvature(bary, tinfo->coefficients, pc);
+//        outfile << pc << "\n";
 
-        outfile << "v " << tinfo->localB << " " << tinfo->localC << "\n";
+  //      outfile << "v " << tinfo->localB << " " << tinfo->localC << "\n";
     }
     triangleInfo.endEdit();
 

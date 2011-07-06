@@ -122,15 +122,11 @@ public:
         {
             public:
 
-                helper::fixed_array <Vec3, 2> restLocalPositions;
+                helper::fixed_array <Vec3, 3> restLocalPositions;
                 helper::fixed_array <Quat, 3> restLocalOrientations;
 
                 // Indices of each vertex
                 Index a, b, c;
-
-                // Local coordinates 
-                // TODO: remove this, it's in pts
-                Vec3 localB, localC;
 
                 // Transformation rotation;
                 Quat Qframe;
@@ -165,9 +161,6 @@ public:
                 Real area;
                 // Variables needed for drawing the shell
                 Vec<9, Real> u; // displacement vector
-                Mat<9, 9, Real> invC; // inverse of C (used in bending mode only)
-                Vec<9, Real> coefficients; // coefficients Ci computed from tinfo->invC * (tinfo->u + tinfo->u_flat)
-                Vec <9, Real> u_rest; // difference between the initial position and the flate position to allow the use of an initial deformed shape
 
                 TriangleInformation() { }
 
@@ -225,9 +218,9 @@ protected :
 
 
         void computeLocalTriangle(const VecCoord &x, const Index elementIndex);
-        void computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex);
-        void computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, const Index elementIndex);
-        void computeStrainDisplacementMatrix(const Index elementIndex);
+        void computeDisplacements( Displacement &Disp, DisplacementBending &BDisp, const VecCoord &x, TriangleInformation *tinfo);
+        void computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, TriangleInformation &tinfo);
+        void computeStrainDisplacementMatrix(TriangleInformation &tinfo);
         void computeStrainDisplacementMatrixBending(TriangleInformation &tinfo);
         //void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
         void computeStiffnessMatrix(StiffnessMatrix &K, const TriangleInformation &tinfo);
@@ -251,7 +244,7 @@ protected :
         void interpolateRefFrame( const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame );
 
 
-        void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
+       // void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
 
         void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixGlobalSpace &K_gs, TriangleInformation *tinfo);
