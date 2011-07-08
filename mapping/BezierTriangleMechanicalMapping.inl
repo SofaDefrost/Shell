@@ -695,48 +695,29 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
         bn[1] = in[ triangle[1] ].getCenter();
         bn[2] = in[ triangle[2] ].getCenter();
 
-        Vec3 dT1 = in[ triangle[0] ].getOrientation().toEulerVector();
-        Vec3 dT2 = in[ triangle[1] ].getOrientation().toEulerVector();
-        Vec3 dT3 = in[ triangle[2] ].getOrientation().toEulerVector();
+        Vec3 xt[3] = { in[ triangle[0] ].getOrientation().toEulerVector(),
+            in[ triangle[1] ].getOrientation().toEulerVector(),
+            in[ triangle[2] ].getOrientation().toEulerVector() };
+
+#define BN(i, p1, p2) do { \
+        bn[i] = bn[p1]*2.0/3.0 + bn[p2]/3.0; \
+        p = cross((bn[p1]-bn[i]), (xt[p1] != Vec3(0,0,0)) ? xt[p1] : -xt[p2]); \
+        bn[i] +=p; cp += p; \
+} while (0)
 
         // Edge 1-2
-        //p = bn[0]*2/3 + bn[1]/3;
-        //bn[3] = p + cross((bn[0]-p), dT1);
-        bn[3] = bn[0]*2.0/3.0 + bn[1]/3.0;
-        p = cross((bn[0]-bn[3]), (dT1 != Vec3(0,0,0)) ? dT1 : -dT2);
-        bn[3] +=p; cp += p;
-
-        //p = bn[0]/3 + bn[1]*2/3;
-        //bn[6] = p + cross((bn[1]-p), dT2);
-        bn[6] = bn[0]/3.0 + bn[1]*2.0/3.0;
-        p = cross((bn[1]-bn[6]), (dT2 != Vec3(0,0,0)) ? dT2 : -dT1);
-        bn[6] += p; cp +=p;
+        BN(3, 0, 1);
+        BN(6, 1, 0);
 
         // Edge 1-3
-        //p = bn[0]*2/3 + bn[2]/3;
-        //bn[4] = p + cross((bn[0]-p), dT1);
-        bn[4] = bn[0]*2.0/3.0 + bn[2]/3.0;
-        p = cross((bn[0]-bn[4]), (dT1 != Vec3(0,0,0)) ? dT1 : -dT3);
-        bn[4] += p; cp += p;
-
-        //p = bn[0]/3 + bn[2]*2/3;
-        //bn[7] = p + cross((bn[2]-p), dT3);
-        bn[7] = bn[0]/3.0 + bn[2]*2.0/3.0;
-        p = cross((bn[2]-bn[7]), (dT3 != Vec3(0,0,0)) ? dT3 : -dT1);
-        bn[7] += p; cp += p;
+        BN(4, 0, 2);
+        BN(7, 2, 0);
 
         // Edge 2-3
-        //p = bn[1]*2/3 + bn[2]/3;
-        //bn[5] = p + cross((bn[1]-p), dT2);
-        bn[5] = bn[1]*2.0/3.0 + bn[2]/3.0;
-        p = cross((bn[1]-bn[5]), (dT2 != Vec3(0,0,0)) ? dT2 : -dT3);
-        bn[5] += p; cp += p;
+        BN(5, 1, 2);
+        BN(8, 2, 1);
 
-        //p = bn[1]/3 + bn[2]*2/3;
-        //bn[8] = p + cross((bn[2]-p), dT3);
-        bn[8] = bn[1]/3.0 + bn[2]*2.0/3.0;
-        p = cross((bn[2]-bn[8]), (dT3 != Vec3(0,0,0)) ? dT3 : -dT2);
-        bn[8] += p; cp += p;
+#undef BN
 
         // Center
         p = bn[0]/3.0 + bn[1]/3.0 + bn[2]/3.0;
@@ -766,6 +747,23 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
             bn[9] * 6*bc[0]*bc[1]*bc[2];
     }
 
+    //{
+    //    std::cout << "| In[" << in.size() << "] : ";
+    //    for (unsigned int i=0; i<in.size(); i++) {
+    //        if (i != 0) std::cout << ", ";
+    //        std::cout << in[i];
+    //    }
+    //    std::cout << std::endl;
+
+    //    helper::ReadAccessor< Data<OutVecCoord> > rout = dOut;
+    //    std::cout << "| Out[" << rout.size() << "]: ";
+    //    for (unsigned int i=0; i<rout.size(); i++) {
+    //        if (i != 0) std::cout << ", ";
+    //        std::cout << rout[i];
+    //    }
+    //    std::cout << std::endl;
+    //}
+
 
     //stop = timer.getTime();
     //std::cout << "time apply = " << stop-start << std::endl;
@@ -779,12 +777,12 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
     helper::WriteAccessor< Data<OutVecDeriv> > out = dOut;
     helper::ReadAccessor< Data<InVecDeriv> > in = dIn;
 
-//    std::cout << "---------------- ApplyJ ----------------------------" << std::endl;
+    //std::cout << "---------------- ApplyJ ----------------------------" << std::endl;
 
-//    sofa::helper::system::thread::ctime_t start, stop;
-//    sofa::helper::system::thread::CTime timer;
-//
-//    start = timer.getTime();
+    //sofa::helper::system::thread::ctime_t start, stop;
+    //sofa::helper::system::thread::CTime timer;
+    //
+    //start = timer.getTime();
 
     if (!inputTopo || !outputTopo)
     {
@@ -797,10 +795,10 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
         return;
     }
 
-    // NOTE: If I understand it right this should in our case work exactly as apply() but on velocities
-
     // List of in triangles
     const SeqTriangles& inTriangles = inputTopo->getTriangles();
+    //const helper::vector<Rigid>& inVertices = *this->fromModel->getX();
+    const InVecCoord& inVertices = *this->fromModel->getX();
 
     // Compute nodes of the Bézier triangle for each input triangle
     bezierNodesV.resize(inTriangles.size());
@@ -811,60 +809,63 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
         sofa::helper::fixed_array<Vec3,10> &bn = bezierNodesV[t];
         Triangle triangle = inTriangles[t];
 
+        // Node positions and rotations
+        Vec3 x[3] = {
+            inVertices[ triangle[0] ].getCenter(),
+            inVertices[ triangle[1] ].getCenter(),
+            inVertices[ triangle[2] ].getCenter() };
+
+        Vec3 xt[3] = {
+            inVertices[ triangle[0] ].getOrientation().toEulerVector(),
+            inVertices[ triangle[1] ].getOrientation().toEulerVector(),
+            inVertices[ triangle[2] ].getOrientation().toEulerVector() };
+
         // Velocoties in corner nodes
         bn[0] = in[ triangle[0] ].getVCenter();
         bn[1] = in[ triangle[1] ].getVCenter();
         bn[2] = in[ triangle[2] ].getVCenter();
 
-        Vec3 dT1 = in[ triangle[0] ].getVOrientation();
-        Vec3 dT2 = in[ triangle[1] ].getVOrientation();
-        Vec3 dT3 = in[ triangle[2] ].getVOrientation();
+        Vec3 vt[3] = {
+            in[ triangle[0] ].getVOrientation(),
+            in[ triangle[1] ].getVOrientation(),
+            in[ triangle[2] ].getVOrientation() };
+
+        //p = bn[p1]*2/3 + bn[p2]/3; \
+        //bn[i] = p + cross((bn[p1]-p), vt[p1]); \
+        //---
+        //bn[i] = bn[p1]*2.0/3.0 + bn[p2]/3.0; \
+        //p = cross((bn[p1]-bn[i]), (vt[p1] != Vec3(0,0,0)) ? vt[p1] : -vt[p2]); \
+        //bn[i] +=p; cp += p; \
+        //---
+#define BN(i, p1, p2) do { \
+    bn[i] = bn[p1]*2.0/3.0 + bn[p2]/3.0; \
+    p = cross((bn[p1]-bn[i]), (vt[p1] != Vec3(0,0,0)) ? vt[p1] : -vt[p2]) \
+    + cross((bn[p1]-bn[i]), (xt[p1] != Vec3(0,0,0)) ? xt[p1] : -xt[p2]) \
+    + cross((x[p1]-(x[p1]*2.0/3.0 + x[p2]/3.0)), (vt[p1] != Vec3(0,0,0)) ? vt[p1] : -vt[p2]); \
+    bn[i] +=p; cp += p; \
+} while (0)
+
 
         // Edge 1-2
-        //p = bn[0]*2/3 + bn[1]/3;
-        //bn[3] = p + cross((bn[0]-p), dT1);
-        bn[3] = bn[0]*2.0/3.0 + bn[1]/3.0;
-        p = cross((bn[0]-bn[3]), (dT1 != Vec3(0,0,0)) ? dT1 : -dT2);
-        bn[3] +=p; cp += p;
-
-        //p = bn[0]/3 + bn[1]*2/3;
-        //bn[6] = p + cross((bn[1]-p), dT2);
-        bn[6] = bn[0]/3.0 + bn[1]*2.0/3.0;
-        p = cross((bn[1]-bn[6]), (dT2 != Vec3(0,0,0)) ? dT2 : -dT1);
-        bn[6] += p; cp +=p;
+        BN(3, 0, 1);
+        BN(6, 1, 0);
 
         // Edge 1-3
-        //p = bn[0]*2/3 + bn[2]/3;
-        //bn[4] = p + cross((bn[0]-p), dT1);
-        bn[4] = bn[0]*2.0/3.0 + bn[2]/3.0;
-        p = cross((bn[0]-bn[4]), (dT1 != Vec3(0,0,0)) ? dT1 : -dT3);
-        bn[4] += p; cp += p;
-
-        //p = bn[0]/3 + bn[2]*2/3;
-        //bn[7] = p + cross((bn[2]-p), dT3);
-        bn[7] = bn[0]/3.0 + bn[2]*2.0/3.0;
-        p = cross((bn[2]-bn[7]), (dT3 != Vec3(0,0,0)) ? dT3 : -dT1);
-        bn[7] += p; cp += p;
+        BN(4, 0, 2);
+        BN(7, 2, 0);
 
         // Edge 2-3
-        //p = bn[1]*2/3 + bn[2]/3;
-        //bn[5] = p + cross((bn[1]-p), dT2);
-        bn[5] = bn[1]*2.0/3.0 + bn[2]/3.0;
-        p = cross((bn[1]-bn[5]), (dT2 != Vec3(0,0,0)) ? dT2 : -dT3);
-        bn[5] += p; cp += p;
+        BN(5, 1, 2);
+        BN(8, 2, 1);
 
-        //p = bn[1]/3 + bn[2]*2/3;
-        //bn[8] = p + cross((bn[2]-p), dT3);
-        bn[8] = bn[1]/3.0 + bn[2]*2.0/3.0;
-        p = cross((bn[2]-bn[8]), (dT3 != Vec3(0,0,0)) ? dT3 : -dT2);
-        bn[8] += p; cp += p;
+#undef BN
 
         // Center
         p = bn[0]/3.0 + bn[1]/3.0 + bn[2]/3.0;
         //bn[9] = p + cross(bn[0]-p, dT1)/3 +
         //    cross(bn[1]-p, dT2)/3 +
         //    cross(bn[2]-p, dT3)/3;
-        bn[9] = p + cp/6;
+        bn[9] = p + cp/6.0;
     }
 
     for (unsigned int i=0; i<out.size(); i++)
@@ -887,8 +888,59 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
             bn[9] * 6*bc[0]*bc[1]*bc[2];
     }
 
-//    stop = timer.getTime();
-//    std::cout << "time applyJ = " << stop-start << std::endl;
+    //{
+    //    std::cout << "In[" << in.size() << "] : ";
+    //    for (unsigned int i=0; i<in.size(); i++) {
+    //        if (i != 0) std::cout << ", ";
+    //        std::cout << in[i];
+    //    }
+    //    std::cout << std::endl;
+
+    //    helper::ReadAccessor< Data<OutVecCoord> > rout = dOut;
+    //    std::cout << "Out[" << rout.size() << "]: ";
+    //    for (unsigned int i=0; i<rout.size(); i++) {
+    //        if (i != 0) std::cout << ", ";
+    //        std::cout << out[i];
+    //    }
+    //    std::cout << std::endl;
+    //}
+
+    // Approximate the velocity as two-point difference
+
+    //Real epsilon = 1e-6;
+
+    //Data<OutVecCoord>
+    //    dOutVertices(*this->toModel->getX()),
+    //    dOutVertices2(*this->toModel->getX());
+
+    //Data<InVecCoord>
+    //    dInVertices(*this->fromModel->getX()),
+    //    dInVertices2(*this->fromModel->getX());
+
+    //helper::WriteAccessor< Data<InVecCoord> > iv = dInVertices;
+    //helper::WriteAccessor< Data<InVecCoord> > iv2 = dInVertices2;
+
+    //for (unsigned int i=0; i<iv.size(); i++) {
+    //    iv[i] += -in[i]*epsilon;
+    //    iv2[i] += in[i]*epsilon;
+    //}
+
+    //apply(NULL, dOutVertices, dInVertices);
+    //apply(NULL, dOutVertices2, dInVertices2);
+
+    //helper::ReadAccessor< Data<OutVecCoord> > ov = dOutVertices;
+    //helper::ReadAccessor< Data<OutVecCoord> > ov2 = dOutVertices2;
+
+    //std::cout << "Dif[" << ov.size() << "]: ";
+    //for (unsigned int i=0; i<out.size(); i++) {
+    //    out[i] = (ov2[i] - ov[i])/(2.0*epsilon);
+    //    if (i != 0) std::cout << ", ";
+    //    std::cout << out[i];
+    //}
+    //std::cout << std::endl;
+
+    //stop = timer.getTime();
+    //std::cout << "time applyJ = " << stop-start << std::endl;
 }
 
 
@@ -1106,7 +1158,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw()
             sofa::helper::fixed_array<Vec3,10> &bn = bezierNodes[i];
             for (int j=0; j<10; j++)
             {
-                glColor4f(0.0, 0.7, 0.0, 1.0);
+                glColor4f(0.0, 0.5, 0.3, 1.0);
                 glVertex3f(bn[j][0], bn[j][1], bn[j][2]);
             }
         } 
