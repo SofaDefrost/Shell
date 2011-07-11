@@ -992,14 +992,13 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
     {
         if (in[i] == Vec3(0,0,0)) continue;
 
-        Triangle triangle = inTriangles[t];
-        TriangleInformation &tinfo = triangleInfo[t];
-
         // The corresponding triangle
         int t = listBaseTriangles[i][0];
 
-        sofa::helper::fixed_array<Vec3,10> &bn = bezierNodesV[t];
         Triangle triangle = inTriangles[t];
+        TriangleInformation &tinfo = triangleInfo[t];
+
+        sofa::helper::fixed_array<Vec3,10> &bn = tinfo.bezierNodesV;
         Vec3 bc = barycentricCoordinates[t][0];
 
         // Compute the influence on the corner nodes
@@ -1074,7 +1073,6 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
 
 //    stop = timer.getTime();
 //    std::cout << "time applyJT = " << stop-start << std::endl;
-#endif
 }
 
 
