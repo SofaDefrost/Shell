@@ -74,14 +74,14 @@ public:
 
     typedef typename In::VecCoord               InVecCoord;
     typedef typename In::VecDeriv               InVecDeriv;
-    //typedef typename In::Coord                  InCoord;
-    //typedef typename In::Deriv                  InDeriv;
+    typedef typename In::Coord                  InCoord;
+    typedef typename In::Deriv                  InDeriv;
     typedef typename In::MatrixDeriv            InMatrixDeriv;
 
     typedef typename Out::VecCoord              OutVecCoord;
     typedef typename Out::VecDeriv              OutVecDeriv;
-    //typedef typename Out::Coord                 OutCoord;
-    //typedef typename Out::Deriv                 OutDeriv;
+    typedef typename Out::Coord                 OutCoord;
+    typedef typename Out::Deriv                 OutDeriv;
     typedef typename Out::MatrixDeriv           OutMatrixDeriv;
     typedef typename Out::Real                  Real;
 
@@ -123,6 +123,22 @@ public:
 
 protected:
 
+    typedef struct {
+
+        // Nodes of the Bézier triangle
+        sofa::helper::fixed_array<Vec3, 10> bezierNodes;
+        sofa::helper::fixed_array<Vec3, 10> bezierNodesV;
+
+        // Segments in the reference frame
+        Vec3 P0_P1;
+        Vec3 P0_P2;
+        Vec3 P1_P2;
+        Vec3 P1_P0;
+        Vec3 P2_P0;
+        Vec3 P2_P1;
+
+    } TriangleInformation;
+
         helper::gl::GLSLShader shader;
 
         BaseMeshTopology* inputTopo;
@@ -140,15 +156,13 @@ protected:
         //helper::vector<Real> vectorErrorCoarse;
         //helper::vector<Real> vectorErrorTarget;
 
+        helper::vector<TriangleInformation> triangleInfo;
+
         // Pointer on the forcefield associated with the in topology
         //TriangularBendingFEMForceField<In>* triangularBendingForcefield;
 
         // Pointer on the topological mapping to retrieve the list of edges
         TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
-
-        // Nodes of the Bézier triangles
-        sofa::helper::vector< sofa::helper::fixed_array<Vec3,10> > bezierNodes;
-        sofa::helper::vector< sofa::helper::fixed_array<Vec3,10> > bezierNodesV;
 
         //void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
         //void MeasureError();

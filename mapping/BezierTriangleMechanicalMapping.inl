@@ -63,6 +63,8 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
 
         // Retrieves 'in' vertices and triangles
         const InVecCoord &inVerticesRigid = *this->fromModel->getX();
+        const InVecCoord &inVerticesRigid0 = *this->fromModel->getX0();
+
         // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
         OutVecCoord inVertices;
         for (unsigned int i=0; i<inVerticesRigid.size(); i++)
@@ -71,6 +73,34 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         }
         const SeqEdges &inEdges = inputTopo->getEdges();
         const SeqTriangles &inTriangles = inputTopo->getTriangles();
+
+        // Iterates over 'in' triangles
+        triangleInfo.resize(inTriangles.size());
+        for (unsigned int t=0; t<inTriangles.size(); t++) {
+
+            InCoord x0[3] = {
+                inVerticesRigid0[ inTriangles[t][0] ],
+                inVerticesRigid0[ inTriangles[t][1] ],
+                inVerticesRigid0[ inTriangles[t][2] ] };
+
+            TriangleInformation &tinfo = triangleInfo[t];
+
+            // get the segment positions in the reference frames of the rest-shape
+            tinfo.P0_P1 = x0[0].getOrientation().inverseRotate(
+                x0[1].getCenter() - x0[0].getCenter());
+            tinfo.P0_P2 = x0[0].getOrientation().inverseRotate(
+                x0[2].getCenter() - x0[0].getCenter());
+
+            tinfo.P1_P2 = x0[1].getOrientation().inverseRotate(
+                x0[2].getCenter() - x0[1].getCenter());
+            tinfo.P1_P0 = x0[1].getOrientation().inverseRotate(
+                x0[0].getCenter() - x0[1].getCenter());
+
+            tinfo.P2_P0 = x0[2].getOrientation().inverseRotate(
+                x0[0].getCenter() - x0[2].getCenter());
+            tinfo.P2_P1 = x0[2].getOrientation().inverseRotate(
+                x0[1].getCenter() - x0[2].getCenter());
+        }
 
         // Iterates over 'out' vertices
         Real minimumDistanceVertices, minimumDistanceEdges, minimumDistanceTriangles, minimumDistance;
@@ -682,49 +712,43 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
     const SeqTriangles& inTriangles = inputTopo->getTriangles();
 
     // Compute nodes of the Bézier triangle for each input triangle
-    bezierNodes.resize(inTriangles.size());
+    triangleInfo.resize(inTriangles.size());
     for (unsigned int t=0; t<inTriangles.size();t++)
     {
-        Vec3 p, cp;
+        //Vec3 p, cp;
 
-        sofa::helper::fixed_array<Vec3,10> &bn = bezierNodes[t];
+        TriangleInformation &tinfo = triangleInfo[t];
         Triangle triangle = inTriangles[t];
 
         // Corners
-        bn[0] = in[ triangle[0] ].getCenter();
-        bn[1] = in[ triangle[1] ].getCenter();
-        bn[2] = in[ triangle[2] ].getCenter();
+        tinfo.bezierNodes[0] = in[ triangle[0] ].getCenter();
+        tinfo.bezierNodes[1] = in[ triangle[1] ].getCenter();
+        tinfo.bezierNodes[2] = in[ triangle[2] ].getCenter();
 
-        Vec3 xt[3] = { in[ triangle[0] ].getOrientation().toEulerVector(),
-            in[ triangle[1] ].getOrientation().toEulerVector(),
-            in[ triangle[2] ].getOrientation().toEulerVector() };
+        Quaternion q[3] = {
+            in[ triangle[0] ].getOrientation(),
+            in[ triangle[1] ].getOrientation(),
+            in[ triangle[2] ].getOrientation() };
 
-#define BN(i, p1, p2) do { \
-        bn[i] = bn[p1]*2.0/3.0 + bn[p2]/3.0; \
-        p = cross((bn[p1]-bn[i]), (xt[p1] != Vec3(0,0,0)) ? xt[p1] : -xt[p2]); \
-        bn[i] +=p; cp += p; \
+#define BN(i, p, seg) do { \
+    tinfo.bezierNodes[(i)] = tinfo.bezierNodes[(p)] + \
+        q[(p)].rotate(tinfo.seg/3.0); \
 } while (0)
 
-        // Edge 1-2
-        BN(3, 0, 1);
-        BN(6, 1, 0);
-
-        // Edge 1-3
-        BN(4, 0, 2);
-        BN(7, 2, 0);
-
-        // Edge 2-3
-        BN(5, 1, 2);
-        BN(8, 2, 1);
+        BN(3, 0, P0_P1);
+        BN(4, 0, P0_P2);
+        BN(5, 1, P1_P2);
+        BN(6, 1, P1_P0);
+        BN(7, 2, P2_P0);
+        BN(8, 2, P2_P1);
 
 #undef BN
 
         // Center
-        p = bn[0]/3.0 + bn[1]/3.0 + bn[2]/3.0;
-        //bn[9] = p + cross(bn[0]-p, dT1)/3 +
-        //    cross(bn[1]-p, dT2)/3 +
-        //    cross(bn[2]-p, dT3)/3;
-        bn[9] = p + cp/6.0;   // XXX: this may not be completly correct and may deform the shell in the center
+        tinfo.bezierNodes[9] =
+            (tinfo.bezierNodes[0] + q[0].rotate( (tinfo.P0_P1 + tinfo.P0_P2)/3.0 ))/3.0 +
+            (tinfo.bezierNodes[1] + q[1].rotate( (tinfo.P1_P0 + tinfo.P1_P2)/3.0 ))/3.0 +
+            (tinfo.bezierNodes[2] + q[2].rotate( (tinfo.P2_P0 + tinfo.P2_P1)/3.0 ))/3.0;
     }
 
     for (unsigned int i=0; i<out.size(); i++)
@@ -734,7 +758,8 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
 
         Vec3 bc = barycentricCoordinates[i][0];
 
-        sofa::helper::fixed_array<Vec3,10> &bn = bezierNodes[ listBaseTriangles[i][0] ];
+        sofa::helper::fixed_array<Vec3,10> &bn = triangleInfo[ listBaseTriangles[i][0] ].bezierNodes;
+        // TODO: precompute the coefficients
         out[i] = bn[0] * bc[0]*bc[0]*bc[0] +
             bn[1] * bc[1]*bc[1]*bc[1] +
             bn[2] * bc[2]*bc[2]*bc[2] +
@@ -801,91 +826,78 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
     const InVecCoord& inVertices = *this->fromModel->getX();
 
     // Compute nodes of the Bézier triangle for each input triangle
-    bezierNodesV.resize(inTriangles.size());
     for (unsigned int t=0; t<inTriangles.size();t++)
     {
-        Vec3 p, cp;
-
-        sofa::helper::fixed_array<Vec3,10> &bn = bezierNodesV[t];
         Triangle triangle = inTriangles[t];
+        TriangleInformation &tinfo = triangleInfo[t];
 
-        // Node positions and rotations
-        Vec3 x[3] = {
-            inVertices[ triangle[0] ].getCenter(),
-            inVertices[ triangle[1] ].getCenter(),
-            inVertices[ triangle[2] ].getCenter() };
+        // Node rotations
+        Quaternion q[3] = {
+            inVertices[ triangle[0] ].getOrientation(),
+            inVertices[ triangle[1] ].getOrientation(),
+            inVertices[ triangle[2] ].getOrientation() };
 
-        Vec3 xt[3] = {
-            inVertices[ triangle[0] ].getOrientation().toEulerVector(),
-            inVertices[ triangle[1] ].getOrientation().toEulerVector(),
-            inVertices[ triangle[2] ].getOrientation().toEulerVector() };
+        // Combined orientation quaternion of x+v
+        Quaternion xvq[3] = {
+            inVertices[ triangle[0] ].getOrientation()
+                + Quat::createQuaterFromEuler(in[ triangle[0] ].getVOrientation()),
+            inVertices[ triangle[1] ].getOrientation()
+                + Quat::createQuaterFromEuler(in[ triangle[1] ].getVOrientation()),
+            inVertices[ triangle[2] ].getOrientation()
+                + Quat::createQuaterFromEuler(in[ triangle[2] ].getVOrientation()) };
 
-        // Velocoties in corner nodes
-        bn[0] = in[ triangle[0] ].getVCenter();
-        bn[1] = in[ triangle[1] ].getVCenter();
-        bn[2] = in[ triangle[2] ].getVCenter();
+        // Velocities in corner nodes
+        tinfo.bezierNodesV[0] = in[ triangle[0] ].getVCenter();
+        tinfo.bezierNodesV[1] = in[ triangle[1] ].getVCenter();
+        tinfo.bezierNodesV[2] = in[ triangle[2] ].getVCenter();
 
-        Vec3 vt[3] = {
-            in[ triangle[0] ].getVOrientation(),
-            in[ triangle[1] ].getVOrientation(),
-            in[ triangle[2] ].getVOrientation() };
-
-        //p = bn[p1]*2/3 + bn[p2]/3; \
-        //bn[i] = p + cross((bn[p1]-p), vt[p1]); \
-        //---
-        //bn[i] = bn[p1]*2.0/3.0 + bn[p2]/3.0; \
-        //p = cross((bn[p1]-bn[i]), (vt[p1] != Vec3(0,0,0)) ? vt[p1] : -vt[p2]); \
-        //bn[i] +=p; cp += p; \
-        //---
-#define BN(i, p1, p2) do { \
-    bn[i] = bn[p1]*2.0/3.0 + bn[p2]/3.0; \
-    p = cross((bn[p1]-bn[i]), (vt[p1] != Vec3(0,0,0)) ? vt[p1] : -vt[p2]) \
-    + cross((bn[p1]-bn[i]), (xt[p1] != Vec3(0,0,0)) ? xt[p1] : -xt[p2]) \
-    + cross((x[p1]-(x[p1]*2.0/3.0 + x[p2]/3.0)), (vt[p1] != Vec3(0,0,0)) ? vt[p1] : -vt[p2]); \
-    bn[i] +=p; cp += p; \
+#define BN(i, p, seg) do { \
+    tinfo.bezierNodesV[(i)] = tinfo.bezierNodesV[(p)] \
+        + xvq[(p)].rotate(tinfo.seg) \
+        - q[(p)].rotate(tinfo.seg); \
 } while (0)
 
 
-        // Edge 1-2
-        BN(3, 0, 1);
-        BN(6, 1, 0);
-
-        // Edge 1-3
-        BN(4, 0, 2);
-        BN(7, 2, 0);
-
-        // Edge 2-3
-        BN(5, 1, 2);
-        BN(8, 2, 1);
+        BN(3, 0, P0_P1);
+        BN(4, 0, P0_P2);
+        BN(5, 1, P1_P2);
+        BN(6, 1, P1_P0);
+        BN(7, 2, P2_P0);
+        BN(8, 2, P2_P1);
 
 #undef BN
 
         // Center
-        p = bn[0]/3.0 + bn[1]/3.0 + bn[2]/3.0;
-        //bn[9] = p + cross(bn[0]-p, dT1)/3 +
-        //    cross(bn[1]-p, dT2)/3 +
-        //    cross(bn[2]-p, dT3)/3;
-        bn[9] = p + cp/6.0;
+        tinfo.bezierNodesV[9] = (tinfo.bezierNodesV[0]
+            + xvq[0].rotate((tinfo.P0_P1 + tinfo.P0_P2)/3.0) 
+            - q[0].rotate((tinfo.P0_P1 + tinfo.P0_P2)/3.0))/3.0
+        + (tinfo.bezierNodesV[1]
+            + xvq[1].rotate((tinfo.P1_P2 + tinfo.P1_P0)/3.0) 
+            - q[1].rotate((tinfo.P1_P2 + tinfo.P1_P0)/3.0))/3.0
+        + (tinfo.bezierNodesV[2]
+            + xvq[0].rotate((tinfo.P2_P0 + tinfo.P2_P1)/3.0) 
+            - q[0].rotate((tinfo.P2_P0 + tinfo.P2_P1)/3.0))/3.0;
     }
 
     for (unsigned int i=0; i<out.size(); i++)
     {
         // Gets the first triangle that the vertex belongs to
         Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
+        TriangleInformation &tinfo = triangleInfo[ listBaseTriangles[i][0] ];
 
         Vec3 bc = barycentricCoordinates[i][0];
 
-        sofa::helper::fixed_array<Vec3,10> &bn = bezierNodesV[ listBaseTriangles[i][0] ];
-        out[i] = bn[0] * bc[0]*bc[0]*bc[0] +
-            bn[1] * bc[1]*bc[1]*bc[1] +
-            bn[2] * bc[2]*bc[2]*bc[2] +
-            bn[3] * 3*bc[0]*bc[0]*bc[1] +
-            bn[4] * 3*bc[0]*bc[0]*bc[2] +
-            bn[5] * 3*bc[1]*bc[1]*bc[2] +
-            bn[6] * 3*bc[0]*bc[1]*bc[1] +
-            bn[7] * 3*bc[0]*bc[2]*bc[2] +
-            bn[8] * 3*bc[1]*bc[2]*bc[2] +
-            bn[9] * 6*bc[0]*bc[1]*bc[2];
+        out[i] =
+            tinfo.bezierNodesV[0] * bc[0]*bc[0]*bc[0] +
+            tinfo.bezierNodesV[1] * bc[1]*bc[1]*bc[1] +
+            tinfo.bezierNodesV[2] * bc[2]*bc[2]*bc[2] +
+            tinfo.bezierNodesV[3] * 3*bc[0]*bc[0]*bc[1] +
+            tinfo.bezierNodesV[4] * 3*bc[0]*bc[0]*bc[2] +
+            tinfo.bezierNodesV[5] * 3*bc[1]*bc[1]*bc[2] +
+            tinfo.bezierNodesV[6] * 3*bc[0]*bc[1]*bc[1] +
+            tinfo.bezierNodesV[7] * 3*bc[0]*bc[2]*bc[2] +
+            tinfo.bezierNodesV[8] * 3*bc[1]*bc[2]*bc[2] +
+            tinfo.bezierNodesV[9] * 6*bc[0]*bc[1]*bc[2];
     }
 
     //{
@@ -980,6 +992,9 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
     {
         if (in[i] == Vec3(0,0,0)) continue;
 
+        Triangle triangle = inTriangles[t];
+        TriangleInformation &tinfo = triangleInfo[t];
+
         // The corresponding triangle
         int t = listBaseTriangles[i][0];
 
@@ -1059,6 +1074,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
 
 //    stop = timer.getTime();
 //    std::cout << "time applyJT = " << stop-start << std::endl;
+#endif
 }
 
 
@@ -1155,7 +1171,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw()
         glBegin(GL_POINTS);
         for (unsigned int i=0; i<inputTopo->getTriangles().size(); i++)
         {
-            sofa::helper::fixed_array<Vec3,10> &bn = bezierNodes[i];
+            sofa::helper::fixed_array<Vec3,10> &bn = triangleInfo[i].bezierNodes;
             for (int j=0; j<10; j++)
             {
                 glColor4f(0.0, 0.5, 0.3, 1.0);
