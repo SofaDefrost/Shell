@@ -103,137 +103,69 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         }
 
         // Iterates over 'out' vertices
-        Real minimumDistanceVertices, minimumDistanceEdges, minimumDistanceTriangles, minimumDistance;
-        int caseToProcess, triangleID;
-        Vec3 vertexBaryCoord;
         for (unsigned int i=0; i<outVertices.size(); i++)
         {
+            unsigned int closestVertex, closestEdge, closestTriangle;
+            Real minVertex, minEdge, minTriangle;
+            int triangleID;
+            Vec3 vertexBaryCoord;
+
             // Iterates over 'in' vertices
-            sofa::helper::vector<unsigned int> listClosestVertices;
-            minimumDistanceVertices = FindClosestPoints(listClosestVertices, outVertices[i], inVertices);
+            minVertex = FindClosestPoint(closestVertex, outVertices[i], inVertices);
 
             // Iterates over 'in' edges
-            sofa::helper::vector<unsigned int> listClosestEdges;
-            minimumDistanceEdges = FindClosestEdges(listClosestEdges, outVertices[i], inVertices, inEdges);
+            minEdge = FindClosestEdge(closestEdge, outVertices[i], inVertices, inEdges);
 
             // Iterates over 'in' triangles
-            sofa::helper::vector<unsigned int> listClosestTriangles;
-            minimumDistanceTriangles = FindClosestTriangles(listClosestTriangles, outVertices[i], inVertices, inTriangles);
+            minTriangle = FindClosestTriangle(closestTriangle, outVertices[i], inVertices, inTriangles);
 
-            // Finds out which type of primitive is the closest
-            minimumDistance = std::min(minimumDistanceVertices, std::min(minimumDistanceEdges, minimumDistanceTriangles));
-
-
-            // Adds the list of triangles attached to the primitives found
-            caseToProcess = 0;
-            if ( minimumDistance == minimumDistanceVertices )
-                caseToProcess = 1;
-            if ( minimumDistance == minimumDistanceEdges )
-                caseToProcess = 2;
-            if ( minimumDistance == minimumDistanceTriangles )
-                caseToProcess = 3;
-
-            // TODO: we need just one triangle
-            switch(caseToProcess)
+            if ((minVertex <= minEdge) && (minVertex <= minTriangle))
             {
-                // If it is a vertex, consider the triangles attached to it
-                case 1 :
-                    for (unsigned int j=0; j<listClosestVertices.size(); j++)
-                    {
-                        TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex( listClosestVertices[j] );
-                        for (unsigned int t=0; t<trianglesAroundVertex.size(); t++)
-                        {
-                            triangleID = trianglesAroundVertex[t];
-                            listBaseTriangles[i].push_back(triangleID);
+                // If it is a vertex, consider one of the triangles attached to it
+                TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex(closestVertex);
+                triangleID = trianglesAroundVertex[0];
+                listBaseTriangles[i] = triangleID;
 
-                            // Computes barycentric coordinates within each triangles
-                            Vec3 v1 = inVertices[ inTriangles[triangleID][0] ];
-                            Vec3 v2 = inVertices[ inTriangles[triangleID][1] ];
-                            Vec3 v3 = inVertices[ inTriangles[triangleID][2] ];
+                // Computes barycentric coordinates within the triangle
+                computeBaryCoefs(vertexBaryCoord, outVertices[i],
+                    inVertices[ inTriangles[triangleID][0] ],
+                    inVertices[ inTriangles[triangleID][1] ],
+                    inVertices[ inTriangles[triangleID][2] ]);
 
-//                            // Computes triangle's normal
-//                            Vec3 M = (Vec3) (v2-v1).cross(v3-v1);
-//                            double norm2_M = M*(M);
-//                            Vec3 N =  M/norm2_M;
-//
-//                            // Computes projection of the vertex onto this triangle
-//                            const Vec3 AP = outVertices[i]-v1;
-//                            Vec3 proj = outVertices[i] - N*(AP*N);
+                // Adds the barycentric coordinates to the list
+                barycentricCoordinates[i] = vertexBaryCoord;
 
-                            computeBaryCoefs(vertexBaryCoord, outVertices[i], v1, v2, v3);
+            }
+            else if ((minEdge <= minTriangle) && (minEdge <= minVertex))
+            {
+                // If it is an edge, consider one of the triangles attached to it
+                TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge(closestEdge);
+                triangleID = trianglesAroundEdge[0];
+                listBaseTriangles[i] = triangleID;
 
-                            // Adds the barycentric coordinates to the list
-                            barycentricCoordinates[i].push_back(vertexBaryCoord);
+                // Computes barycentric coordinates within the triangle
+                computeBaryCoefs(vertexBaryCoord, outVertices[i],
+                    inVertices[ inTriangles[triangleID][0] ],
+                    inVertices[ inTriangles[triangleID][1] ],
+                    inVertices[ inTriangles[triangleID][2] ]);
 
-                        }
-                    }
-                    break;
+                // Adds the barycentric coordinates to the list
+                barycentricCoordinates[i] = vertexBaryCoord;
 
+            }
+            else
+            {
+                // If it is a triangle, consider it
+                listBaseTriangles[i] = closestTriangle;
 
-                // If it is an edge, consider the triangles attached to it
-                case 2 :
-                    for (unsigned int j=0; j<listClosestEdges.size(); j++)
-                    {
-                        TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge( listClosestEdges[j] );
-                        for (unsigned int t=0; t<trianglesAroundEdge.size(); t++)
-                        {
-                            triangleID = trianglesAroundEdge[t];
-                            listBaseTriangles[i].push_back(triangleID);
+                // Computes barycentric coordinates within each triangles
+                computeBaryCoefs(vertexBaryCoord, outVertices[i],
+                    inVertices[ inTriangles[closestTriangle][0] ],
+                    inVertices[ inTriangles[closestTriangle][1] ],
+                    inVertices[ inTriangles[closestTriangle][2] ]);
 
-                            // Computes barycentric coordinates within each triangles
-                            Vec3 v1 = inVertices[ inTriangles[triangleID][0] ];
-                            Vec3 v2 = inVertices[ inTriangles[triangleID][1] ];
-                            Vec3 v3 = inVertices[ inTriangles[triangleID][2] ];
-
-//                            // Computes triangle's normal
-//                            Vec3 M = (Vec3) (v2-v1).cross(v3-v1);
-//                            double norm2_M = M*(M);
-//                            Vec3 N =  M/norm2_M;
-//
-//                            // Computes projection of the vertex onto this triangle
-//                            const Vec3 AP = outVertices[i]-v1;
-//                            Vec3 proj = outVertices[i] - N*(AP*N);
-
-                            computeBaryCoefs(vertexBaryCoord, outVertices[i], v1, v2, v3);
-
-                            // Adds the barycentric coordinates to the list
-                            barycentricCoordinates[i].push_back(vertexBaryCoord);
-                         }
-                    }
-                    break;
-
-
-                // If it is a triangle, consider the list of triangles
-                case 3 :
-                    for (unsigned int j=0; j<listClosestTriangles.size(); j++)
-                    {
-                        listBaseTriangles[i].push_back(listClosestTriangles[j]);
-
-                        // Computes barycentric coordinates within each triangles
-                        Vec3 v1 = inVertices[ inTriangles[listClosestTriangles[j]][0] ];
-                        Vec3 v2 = inVertices[ inTriangles[listClosestTriangles[j]][1] ];
-                        Vec3 v3 = inVertices[ inTriangles[listClosestTriangles[j]][2] ];
-
-//                        // Computes triangle's normal
-//                        Vec3 M = (Vec3) (v2-v1).cross(v3-v1);
-//                        double norm2_M = M*(M);
-//                        Vec3 N =  M/norm2_M;
-//
-//                        // Computes projection of the vertex onto this triangle
-//                        const Vec3 AP = outVertices[i]-v1;
-//                        Vec3 proj = outVertices[i] - N*(AP*N);
-
-                        computeBaryCoefs(vertexBaryCoord, outVertices[i], v1, v2, v3);
-
-                        // Adds the barycentric coordinates to the list
-                        barycentricCoordinates[i].push_back(vertexBaryCoord);
-                    }
-                    break;
-
-
-                default :
-                    serr << "BezierTriangleMechanicalMapping init(): No closest primitive has been found for vertex " << i << sendl;
-                    return;
+                // Adds the barycentric coordinates to the list
+                barycentricCoordinates[i] = vertexBaryCoord;
             }
         }
 
@@ -275,62 +207,52 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
     }
 
     // If we want to measure the error between the two meshes using Hausdorff distance
-    //if (measureError.getValue())
-    //{
-    //    // List of colours to create a colour map
-    //    Vec3 colour;
-    //    Real incr = (float)2/3/240; // (2/3) is chosen stop the gradient to blue
-    //    for (int i=0; i<240; i++)
-    //    {
-    //        HSL2RGB(colour, (float)2/3-i*incr, 0.8, 0.5);
-    //        colourMapping.push_back(colour);
-    //    }
+    if (measureError.getValue())
+    {
+        // List of colours to create a colour map
+        Vec3 colour;
+        Real incr = (float)2/3/240; // (2/3) is chosen stop the gradient to blue
+        for (int i=0; i<240; i++)
+        {
+            HSL2RGB(colour, (float)2/3-i*incr, 0.8, 0.5);
+            colourMapping.push_back(colour);
+        }
 
-    //    // Retrieves high resolution mesh topology
-//#if 0
-    //    topologyTarget = NULL;
-    //    //getContext()->get(topologyTarget, "/TargetMesh/targetTopo"); 	 
-    //    // The following searches for a 'tag' insted of a 'path', but I don't know how to work with tags in the scene --Nyoxi
-    //    //getContext()->get(topologyTarget, nameTargetTopology.getValue(), sofa::core::objectmodel::BaseContext::SearchRoot);
-    //    getContext()->get(topologyTarget, nameTargetTopology.getValue());
-    //    if (measureError.getValue() && topologyTarget == NULL)
-    //    {
-    //        // TODO: why not serr?
-    //        std::cout << "WARNING(BezierTriangleMechanicalMapping): target mesh " << nameTargetTopology.getValue() << " was not found" << std::endl;
-    //        return;
-    //    }
-//#else
-    //    // TODO: make sure the following works, and switch back if not
-    //    //          work means: mesh is found properly, warning is printed if not
-    //    const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
-    //    topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
-//#endif
+        // Retrieves high resolution mesh topology
+        const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
+        topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
+        if (topologyTarget == NULL)
+        {
+            serr << "Target mesh " << nameTargetTopology.getValue() << " was not found" << sendl;
+            return;
+        }
 
-    //    // Computes two-sided Hausdorff distance
-    //    //MeasureError();
+        // Computes two-sided Hausdorff distance
+        MeasureError();
 
-    //    // Overwrites colour for each vertex based on the error and colour map
-    //    Real maximum = 0;
-    //    // Normalises the error
-    //    for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
-    //    {
-    //        if (fabs(vectorErrorCoarse[i])>maximum)
-    //        {
-    //            maximum = fabs(vectorErrorCoarse[i]);
-    //        }
-    //    }
-    //    Real correctedError;
-    //    for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
-    //    {
-    //        correctedError = fabs(vectorErrorCoarse[i])*5;
-    //        if (correctedError > maximum)
-    //            correctedError = maximum;
-    //        coloursPerVertex[i] = colourMapping[ (int)((correctedError/maximum)*239) ];
-    //    }
-    //    // Initialises shader
-    //    shader.InitShaders("applications/plugins/shells/shaders/errorMap.vert", "applications/plugins/shells/shaders/errorMap.frag");
+        // Overwrites colour for each vertex based on the error and colour map
+        Real maximum = 0;
+        // Normalises the error
+        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+        {
+            if (fabs(vectorErrorCoarse[i])>maximum)
+            {
+                maximum = fabs(vectorErrorCoarse[i]);
+            }
+        }
+        Real correctedError;
+        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+        {
+            correctedError = fabs(vectorErrorCoarse[i])*5;
+            if (correctedError > maximum)
+                correctedError = maximum;
+            coloursPerVertex[i] = colourMapping[ (int)((correctedError/maximum)*239) ];
+        }
 
-    //}
+        // Initialises shader
+        //shader.InitShaders("applications/plugins/shells/shaders/errorMap.vert", "applications/plugins/shells/shaders/errorMap.frag");
+
+    }
 
 }
 
@@ -346,174 +268,168 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::reinit()
 // Given H,S,L in range of 0-1
 // Returns a RGB colour in range of 0-255
 // http://www.geekymonkey.com/Programming/CSharp/RGB2HSL_HSL2RGB.htm
-//template <class TIn, class TOut>
-//void BezierTriangleMechanicalMapping<TIn, TOut>::HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l)
-//{
-//    Real v;
-//    Real r,g,b;
-//
-//    r = l;   // default to gray
-//    g = l;
-//    b = l;
-//    v = (l <= 0.5) ? (l * (1.0 + sl)) : (l + sl - l * sl);
-//    if (v > 0)
-//    {
-//          Real m;
-//          Real sv;
-//          int sextant;
-//          Real fract, vsf, mid1, mid2;
-//
-//          m = l + l - v;
-//          sv = (v - m ) / v;
-//          h *= 6.0;
-//          sextant = (int)h;
-//          fract = h - sextant;
-//          vsf = v * sv * fract;
-//          mid1 = m + vsf;
-//          mid2 = v - vsf;
-//          switch (sextant)
-//          {
-//                case 0:
-//                      r = v;
-//                      g = mid1;
-//                      b = m;
-//                      break;
-//                case 1:
-//                      r = mid2;
-//                      g = v;
-//                      b = m;
-//                      break;
-//                case 2:
-//                      r = m;
-//                      g = v;
-//                      b = mid1;
-//                      break;
-//                case 3:
-//                      r = m;
-//                      g = mid2;
-//                      b = v;
-//                      break;
-//                case 4:
-//                      r = mid1;
-//                      g = m;
-//                      b = v;
-//                      break;
-//                case 5:
-//                      r = v;
-//                      g = m;
-//                      b = mid2;
-//                      break;
-//          }
-//    }
-//
-//    rgb[0] = r;
-//    rgb[1] = g;
-//    rgb[2] = b;
-//}
+template <class TIn, class TOut>
+void BezierTriangleMechanicalMapping<TIn, TOut>::HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l)
+{
+    Real v;
+    Real r,g,b;
+
+    r = l;   // default to gray
+    g = l;
+    b = l;
+    v = (l <= 0.5) ? (l * (1.0 + sl)) : (l + sl - l * sl);
+    if (v > 0)
+    {
+          Real m;
+          Real sv;
+          int sextant;
+          Real fract, vsf, mid1, mid2;
+
+          m = l + l - v;
+          sv = (v - m ) / v;
+          h *= 6.0;
+          sextant = (int)h;
+          fract = h - sextant;
+          vsf = v * sv * fract;
+          mid1 = m + vsf;
+          mid2 = v - vsf;
+          switch (sextant)
+          {
+                case 0:
+                      r = v;
+                      g = mid1;
+                      b = m;
+                      break;
+                case 1:
+                      r = mid2;
+                      g = v;
+                      b = m;
+                      break;
+                case 2:
+                      r = m;
+                      g = v;
+                      b = mid1;
+                      break;
+                case 3:
+                      r = m;
+                      g = mid2;
+                      b = v;
+                      break;
+                case 4:
+                      r = mid1;
+                      g = m;
+                      b = v;
+                      break;
+                case 5:
+                      r = v;
+                      g = m;
+                      b = mid2;
+                      break;
+          }
+    }
+
+    rgb[0] = r;
+    rgb[1] = g;
+    rgb[2] = b;
+}
 
 
-//template <class TIn, class TOut>
-//void BezierTriangleMechanicalMapping<TIn, TOut>::MeasureError()
-//{
-//    Real distance1;
-//    std::cout << "Computing Hausdorff distance high res->coarse" << std::endl;
-//    distance1 = DistanceHausdorff(topologyTarget, outputTopo, vectorErrorTarget);
-//    std::cout << "Hausdorff distance between high res mesh and coarse mesh = " << distance1 << std::endl;
-//
-//    Real average = 0;
-//    for (unsigned int i=0; i<vectorErrorTarget.size(); i++)
-//    {
-//        average += vectorErrorTarget[i];
-//    }
-//    std::cout << "Mean Hausdorff distance = " << average/vectorErrorTarget.size() << std::endl;
-//
-//
-//
-//    Real distance2;
-//    std::cout << "Computing Hausdorff distance coarse->high res" << std::endl;
-//    distance2 = DistanceHausdorff(outputTopo, topologyTarget, vectorErrorCoarse);
-//    std::cout << "Hausdorff distance between coarse mesh and high res mesh = " << distance2 << std::endl;
-//
-//    average = 0;
-//    for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
-//    {
-//        average += vectorErrorCoarse[i];
-//    }
-//    std::cout << "Mean Hausdorff distance = " << average/vectorErrorCoarse.size() << std::endl;
-//
-//}
+template <class TIn, class TOut>
+void BezierTriangleMechanicalMapping<TIn, TOut>::MeasureError()
+{
+    Real distance1;
+    std::cout << "Computing Hausdorff distance high res->coarse" << std::endl;
+    distance1 = DistanceHausdorff(topologyTarget, outputTopo, vectorErrorTarget);
+    std::cout << "Hausdorff distance between high res mesh and coarse mesh = " << distance1 << std::endl;
 
-//template <class TIn, class TOut>
-//typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError)
-//{
-//    // Mesh 1
-//    MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
-//    const OutVecCoord &vertices1 = *mState1->getX();
-//
-//    // Mesh 2
-//    MechanicalState<Out>* mState2 = dynamic_cast<MechanicalState<Out>*> (topo2->getContext()->getMechanicalState());
-//    const OutVecCoord &vertices2 = *mState2->getX();
-//    const SeqEdges edges2 = topo2->getEdges();
-//    const SeqTriangles triangles2 = topo2->getTriangles();
-//
-//    // Dummy list (lists of primitives are useless here)
-//    sofa::helper::vector<unsigned int> listDummy;
-//
-//    // Iterates over 'mesh1' vertices
-//    Real minimumDistanceVertices, minimumDistanceEdges, minimumDistanceTriangles, minimumDistance;
-//    Real HausdorffDistance = -1;
-//    for (unsigned int i=0; i<vertices1.size(); i++)
-//    {
-//        // Iterates over 'mesh2' vertices
-//        minimumDistanceVertices = FindClosestPoints(listDummy, vertices1[i], vertices2);
-//
-//        // Iterates over 'mesh2' edges
-//        minimumDistanceEdges = FindClosestEdges(listDummy, vertices1[i], vertices2, edges2);
-//
-//        // Iterates over 'mesh2' triangles
-//        minimumDistanceTriangles = FindClosestTriangles(listDummy, vertices1[i], vertices2, triangles2);
-//
-//        // Finds out which type of primitive is the closest
-//        minimumDistance = std::min(minimumDistanceVertices, std::min(minimumDistanceEdges, minimumDistanceTriangles));
-//        // And stores the distance between the vertex of mesh1 and mesh2
-//        vectorError.push_back(minimumDistance);
-//
-//        // The maximum distance is the Hausdorff distance between mesh1 and mesh2
-//        if (minimumDistance > HausdorffDistance)
-//        {
-//            HausdorffDistance = minimumDistance;
-//        }
-//    }
-//
-//    return HausdorffDistance;
-//}
+    Real average = 0;
+    for (unsigned int i=0; i<vectorErrorTarget.size(); i++)
+    {
+        average += vectorErrorTarget[i];
+    }
+    std::cout << "Mean Hausdorff distance = " << average/vectorErrorTarget.size() << std::endl;
+
+
+
+    Real distance2;
+    std::cout << "Computing Hausdorff distance coarse->high res" << std::endl;
+    distance2 = DistanceHausdorff(outputTopo, topologyTarget, vectorErrorCoarse);
+    std::cout << "Hausdorff distance between coarse mesh and high res mesh = " << distance2 << std::endl;
+
+    average = 0;
+    for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+    {
+        average += vectorErrorCoarse[i];
+    }
+    std::cout << "Mean Hausdorff distance = " << average/vectorErrorCoarse.size() << std::endl;
+
+}
+
+template <class TIn, class TOut>
+typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError)
+{
+    // Mesh 1
+    MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
+    const OutVecCoord &vertices1 = *mState1->getX();
+
+    // Mesh 2
+    MechanicalState<Out>* mState2 = dynamic_cast<MechanicalState<Out>*> (topo2->getContext()->getMechanicalState());
+    const OutVecCoord &vertices2 = *mState2->getX();
+    const SeqEdges edges2 = topo2->getEdges();
+    const SeqTriangles triangles2 = topo2->getTriangles();
+
+    // The primitive is useless here
+    unsigned int dummy;
+
+    // Iterates over 'mesh1' vertices
+    Real minVertex, minEdge, minTriangle, minDistance;
+    Real HausdorffDistance = -1;
+    for (unsigned int i=0; i<vertices1.size(); i++)
+    {
+        // Iterates over 'mesh2' vertices
+        minVertex = FindClosestPoint(dummy, vertices1[i], vertices2);
+
+        // Iterates over 'mesh2' edges
+        minEdge = FindClosestEdge(dummy, vertices1[i], vertices2, edges2);
+
+        // Iterates over 'mesh2' triangles
+        minTriangle = FindClosestTriangle(dummy, vertices1[i], vertices2, triangles2);
+
+        // Finds out which type of primitive is the closest
+        minDistance = std::min(minVertex, std::min(minEdge, minTriangle));
+
+        // And stores the distance between the vertex of mesh1 and mesh2
+        vectorError.push_back(minDistance);
+
+        // The maximum distance is the Hausdorff distance between mesh1 and mesh2
+        if (minDistance > HausdorffDistance)
+        {
+            HausdorffDistance = minDistance;
+        }
+    }
+
+    return HausdorffDistance;
+}
 
 
 // --------------------------------------------------------------------------------------
-// Finds the list of the closest points to a point
+// Finds the closest point to a specified point
 // --------------------------------------------------------------------------------------
 template <class TIn, class TOut>
-typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::FindClosestPoints(sofa::helper::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices)
+typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::FindClosestPoint(unsigned int& closestVertex, const Vec3& point, const OutVecCoord &inVertices)
 {
     Real minimumDistance = 10e12;
     for (unsigned int v=0; v<inVertices.size(); v++)
     {
         Real distance = (inVertices[v] - point).norm2();
 
-        Real threshold = 1e-12;
         if (distance < minimumDistance)
         {
-            // We deal with a new minimum, so clear the previous list
-            listClosestVertices.clear();
-            // Adds the new minimum
-            listClosestVertices.push_back(v);
+            // Store the new closest vertex
+            closestVertex = v;
+
             // Updates the minimum's value
             minimumDistance = distance;
-        }
-        else if ( distance-minimumDistance < threshold )
-        {
-            // Adds the new minimum
-            listClosestVertices.push_back(v);
         }
     }
 
@@ -525,7 +441,7 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
 // Finds the list of the closest edges to a point
 // --------------------------------------------------------------------------------------
 template <class TIn, class TOut>
-typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::FindClosestEdges(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges)
+typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::FindClosestEdge(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges)
 {
     Real minimumDistance = 10e12;
     for (unsigned int e=0; e<inEdges.size(); e++)
@@ -552,23 +468,15 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
             PQ = Q-P;
 
             Real distance = PQ.norm2();
-            Real threshold = 1e-12;
             if (distance < minimumDistance)
             {
-                // We deal with a new minimum, so clear the previous list
-                listClosestEdges.clear();
-                // Adds the new minimum
-                listClosestEdges.push_back(e);
+                // Store the new closest edge
+                closestEdge = e;
+
                 // Updates the minimum's value
                 minimumDistance = distance;
             }
-            else if ( distance-minimumDistance < threshold )
-            {
-                // Adds the new minimum
-                listClosestEdges.push_back(e);
-            }
         }
-
     }
 
     return minimumDistance;
@@ -579,7 +487,7 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
 // Finds the list of the closest triangles to a point
 // --------------------------------------------------------------------------------------
 template <class TIn, class TOut>
-typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::FindClosestTriangles(sofa::helper::vector<unsigned int>& listClosestTriangles, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles)
+typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::FindClosestTriangle(unsigned int& closestTriangle, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles)
 {
     Real minimumDistance = 10e12;
     for (unsigned int t=0; t<inTriangles.size(); t++)
@@ -618,7 +526,6 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
         double beta  = (b[1]*A[0][0] - b[0]*A[1][0])/det;
 
         // If point is on one of the edge, returns
-        Real threshold = 1e-12;
         if (alpha >= 0 && beta >= 0 && alpha + beta <= 1 )
         {
             const Vector3 PQ = AB * alpha + AC * beta - AP;
@@ -626,17 +533,11 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
             Real distance = PQ.norm2();
             if (distance < minimumDistance)
             {
-                // We deal with a new minimum, so clear the previous list
-                listClosestTriangles.clear();
-                // Adds the new minimum
-                listClosestTriangles.push_back(t);
+                // Store the new closest triangle
+                closestTriangle = t;
+
                 // Updates the minimum's value
                 minimumDistance = distance;
-            }
-            else if ( distance-minimumDistance < threshold )
-            {
-                // Adds the new minimum
-                listClosestTriangles.push_back(t);
             }
         }
     }
@@ -754,11 +655,11 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
     for (unsigned int i=0; i<out.size(); i++)
     {
         // Gets the first triangle that the vertex belongs to
-        Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
+        Triangle triangle = inTriangles[ listBaseTriangles[i] ];
 
-        Vec3 bc = barycentricCoordinates[i][0];
+        Vec3 bc = barycentricCoordinates[i];
 
-        sofa::helper::fixed_array<Vec3,10> &bn = triangleInfo[ listBaseTriangles[i][0] ].bezierNodes;
+        sofa::helper::fixed_array<Vec3,10> &bn = triangleInfo[ listBaseTriangles[i] ].bezierNodes;
         // TODO: precompute the coefficients
         out[i] = bn[0] * bc[0]*bc[0]*bc[0] +
             bn[1] * bc[1]*bc[1]*bc[1] +
@@ -882,10 +783,10 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
     for (unsigned int i=0; i<out.size(); i++)
     {
         // Gets the first triangle that the vertex belongs to
-        Triangle triangle = inTriangles[ listBaseTriangles[i][0] ];
-        TriangleInformation &tinfo = triangleInfo[ listBaseTriangles[i][0] ];
+        Triangle triangle = inTriangles[ listBaseTriangles[i] ];
+        TriangleInformation &tinfo = triangleInfo[ listBaseTriangles[i] ];
 
-        Vec3 bc = barycentricCoordinates[i][0];
+        Vec3 bc = barycentricCoordinates[i];
 
         out[i] =
             tinfo.bezierNodesV[0] * bc[0]*bc[0]*bc[0] +
@@ -993,13 +894,13 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
         if (in[i] == Vec3(0,0,0)) continue;
 
         // The corresponding triangle
-        int t = listBaseTriangles[i][0];
+        int t = listBaseTriangles[i];
 
         Triangle triangle = inTriangles[t];
         TriangleInformation &tinfo = triangleInfo[t];
 
         sofa::helper::fixed_array<Vec3,10> &bn = tinfo.bezierNodesV;
-        Vec3 bc = barycentricCoordinates[t][0];
+        Vec3 bc = barycentricCoordinates[t];
 
         // Compute the influence on the corner nodes
         f1 = in[i] * bc[0]*bc[0]*bc[0];
@@ -1088,9 +989,9 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw()
 {
     const OutVecCoord &outVertices = *this->toModel->getX();
 
-    bool merror = measureError.getValue();
-    if (merror)
-        shader.TurnOn();
+    //bool merror = measureError.getValue();
+    //if (merror)
+    //    shader.TurnOn();
 
     if(this->getContext()->getShowVisualModels())
     {
@@ -1163,6 +1064,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw()
         }
         glEnd();
 
+#if 0
         // Render nodes of the Bézier triangles
         glPointSize(8);
         glDisable(GL_LIGHTING);
@@ -1179,11 +1081,12 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw()
         glEnd();
         glPointSize(1);
         // TODO: visualise the mesh
+#endif
 
     }
 
-    if (merror)
-        shader.TurnOff();
+    //if (merror)
+    //    shader.TurnOff();
 }
 
 

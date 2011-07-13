@@ -35,11 +35,8 @@
 
 
 #include <sofa/helper/gl/GLSLShader.h>
-//#include <sofa/core/VisualModel.h>
 
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
-
-//#include "../forcefield/TriangularBendingFEMForceField.h"
 #include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
 
 #include <sofa/defaulttype/VecTypes.h>
@@ -61,7 +58,7 @@ using namespace sofa::defaulttype;
 using namespace sofa::component::topology;
 using namespace sofa::helper::system::thread;
 using namespace core::topology;
-
+using namespace sofa::core::behavior;
 
 template <class TIn, class TOut>
 class BezierTriangleMechanicalMapping : public core::Mapping<TIn, TOut>
@@ -87,15 +84,10 @@ public:
 
     typedef Vec<3, Real> Vec3;
 
-
     //typedef BaseMeshTopology::Edge              Edge;
     typedef BaseMeshTopology::SeqEdges          SeqEdges;
     typedef BaseMeshTopology::Triangle          Triangle;
     typedef BaseMeshTopology::SeqTriangles      SeqTriangles;
-
-
-
-    //typedef typename TriangularBendingFEMForceField<In>::TriangleInformation TriangleInformation;
 
 
     BezierTriangleMechanicalMapping(core::State<In>* from, core::State<Out>* to)
@@ -151,36 +143,33 @@ protected:
         OutVecCoord verticesTarget;
         SeqTriangles trianglesTarget;
 
-        //helper::vector<Vec3> colourMapping;
+        helper::vector<Vec3> colourMapping;
         helper::vector<Vec3> coloursPerVertex;
-        //helper::vector<Real> vectorErrorCoarse;
-        //helper::vector<Real> vectorErrorTarget;
+        helper::vector<Real> vectorErrorCoarse;
+        helper::vector<Real> vectorErrorTarget;
 
         helper::vector<TriangleInformation> triangleInfo;
-
-        // Pointer on the forcefield associated with the in topology
-        //TriangularBendingFEMForceField<In>* triangularBendingForcefield;
 
         // Pointer on the topological mapping to retrieve the list of edges
         TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
 
-        //void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
-        //void MeasureError();
-        //Real DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError);
+        void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
+        void MeasureError();
+        Real DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError);
         void ComputeNormals(helper::vector<Vec3> &normals);
         void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals);
 
         // Computes the barycentric coordinates of a vertex within a triangle
         void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c);
 
-        Real FindClosestPoints(sofa::helper::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices);
-        Real FindClosestEdges(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges);
-        Real FindClosestTriangles(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
+        Real FindClosestPoint(unsigned int& closestVerticex, const Vec3& point, const OutVecCoord &inVertices);
+        Real FindClosestEdge(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges);
+        Real FindClosestTriangle(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
 
         // Contains the list of base triangles a vertex belongs to
-        sofa::helper::vector< sofa::helper::vector<int> > listBaseTriangles;
+        sofa::helper::vector<int> listBaseTriangles;
         // Contains the barycentric coordinates of the same vertex within all base triangles
-        sofa::helper::vector< sofa::helper::vector<Vec3> > barycentricCoordinates;
+        sofa::helper::vector<Vec3> barycentricCoordinates;
 };
 
 } // namespace mapping
