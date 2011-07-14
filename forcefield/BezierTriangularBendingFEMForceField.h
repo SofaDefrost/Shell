@@ -158,13 +158,12 @@ public:
 
                 // Stiffness matrix K = J * M * Jt
                 StiffnessMatrix stiffnessMatrix;
+
                 // Stiffness matrix for bending K = Jt * M * J
                 StiffnessMatrixBending stiffnessMatrixBending;
 
                 // Surface
                 Real area;
-                // Variables needed for drawing the shell
-                //Vec<9, Real> u; // displacement vector
 
                 TriangleInformation() { }
 
@@ -212,15 +211,18 @@ protected :
         TriangleData<TriangleInformation> triangleInfo;
 
 
+        void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
+
         void computeLocalTriangle(const VecCoord &x, const Index elementIndex);
+
         void computeDisplacements( Displacement &Disp, DisplacementBending &BDisp, const VecCoord &x, TriangleInformation *tinfo);
         void computeStrainDisplacementMatrix(TriangleInformation &tinfo);
         void computeStrainDisplacementMatrixBending(TriangleInformation &tinfo);
-        //void tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P);
         void computeStiffnessMatrix(StiffnessMatrix &K, const TriangleInformation &tinfo);
         void computeStiffnessMatrixBending(StiffnessMatrixBending &K, const TriangleInformation &tinfo);
         void computeForce(Displacement &F, const Displacement& D, const Index elementIndex);
         void computeForceBending(DisplacementBending &F, const DisplacementBending& D, const Index elementIndex);
+
         // Strain-displacement matrices
         void matrixSD(StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo);
         void matrixSDB(StrainDisplacementBending &J, const Vec3 &GP, const TriangleInformation& tinfo);
@@ -231,7 +233,6 @@ protected :
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
         virtual void computeMaterialStiffness(const int i);
 
-        void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
         void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
         void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
         void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
@@ -242,12 +243,12 @@ protected :
 
         void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixGlobalSpace &K_gs, TriangleInformation *tinfo);
 
+        // Mesh refinement
         void refineCoarseMeshToTarget(void);
         void subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::helper::vector<Vec3> &subVertices, SeqTriangles &subTriangles);
         void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
         void movePoint(Vec3& pointToMove);
         void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
-
 };
 
 

@@ -933,11 +933,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrixBending(TriangleInformation &tinfo)
 {
-    // Calculation of the 3 Gauss points (pts[0] is (0,0,0))
+    // Calculation of the 3 Gauss points
     // TODO: we already did that in computeStrainDisplacementMatrix(), reuse it
-    Vec3 gaussPoint1 = tinfo.pts[0]*(2.0/3.0) + tinfo.pts[1]/6.0 + tinfo.pts[2]/6.0; //
-    Vec3 gaussPoint2 = tinfo.pts[0]/6.0 + tinfo.pts[1]*(2.0/3.0) + tinfo.pts[2]/6.0; //
-    Vec3 gaussPoint3 = tinfo.pts[0]/6.0 + tinfo.pts[1]/6.0 + tinfo.pts[2]*(2.0/3.0); //
+    Vec3 gaussPoint1 = tinfo.pts[0]*(2.0/3.0) + tinfo.pts[1]/6.0 + tinfo.pts[2]/6.0;
+    Vec3 gaussPoint2 = tinfo.pts[0]/6.0 + tinfo.pts[1]*(2.0/3.0) + tinfo.pts[2]/6.0;
+    Vec3 gaussPoint3 = tinfo.pts[0]/6.0 + tinfo.pts[1]/6.0 + tinfo.pts[2]*(2.0/3.0);
 
     matrixSDB(tinfo.strainDisplacementMatrixB1, gaussPoint1, tinfo);
     matrixSDB(tinfo.strainDisplacementMatrixB2, gaussPoint2, tinfo);
@@ -988,28 +988,18 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Real D2Phi1n3_xx = 6*b1*b1*p[0];
     Real D2Phi1n3_xy = 6*b1*c1*p[0];
     Real D2Phi1n3_yy = 6*c1*c1*p[0];
-    //Real D2Phi1n2_xx = 2*b1*b1;
-    //Real D2Phi1n2_xy = 2*b1*c1;
-    //Real D2Phi1n2_yy = 2*c1*c1;
 
     Real D2Phi2n3_xx = 6*b2*b2*p[1];
     Real D2Phi2n3_xy = 6*b2*c2*p[1];
     Real D2Phi2n3_yy = 6*c2*c2*p[1];
-    //Real D2Phi2n2_xx = 2*b2*b2;
-    //Real D2Phi2n2_xy = 2*b2*c2;
-    //Real D2Phi2n2_yy = 2*c2*c2;
 
     Real D2Phi3n3_xx = 6*b3*b1*p[2];
     Real D2Phi3n3_xy = 6*b3*c3*p[2];
     Real D2Phi3n3_yy = 6*c3*c3*p[2];
-    //Real D2Phi3n2_xx = 2*b3*b3;
-    //Real D2Phi3n2_xy = 2*b3*c3;
-    //Real D2Phi3n2_yy = 2*c3*c3;
 
     Real D2Phi123_xx = 2.0*b1*b2*p[2] + 2.0*b1*p[1]*b3 + 2.0*p[0]*b2*b3;
     Real D2Phi123_xy = c1*b2*p[2] + c1*p[1]*b3 + b1*c2*p[2]+ p[0]*c2*b3 + b1*p[1]*c3 + p[0]*b2*c3;
     Real D2Phi123_yy = 2.0*c1*c2*p[2] + 2.0*c1*p[1]*c3 + 2.0*p[0]*c2*c3;
-
 
     Real D2Phi1n2Phi2_xx = 2.0*b1*b1*p[1]+ 4.0*p[0]*b1*b2;
     Real D2Phi1n2Phi3_xx = 2.0*b1*b1*p[2]+ 4.0*p[0]*b1*b3;
@@ -1045,13 +1035,15 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Real d2uz_dxy_dU3 = D2Phi3n3_xy + 3.0*D2Phi3n2Phi1_xy + 3.0*D2Phi3n2Phi2_xy + 2.0*D2Phi123_xy;
     Real d2uz_dyy_dU3 = D2Phi3n3_yy + 3.0*D2Phi3n2Phi1_yy + 3.0*D2Phi3n2Phi2_yy + 2.0*D2Phi123_yy;
 
-    // Derivatives with respect to rotations
-#define CROSS_VEC(p) Vec2 cv##p(-(p)[1], (p)[0]) // TODO: add a good comment
+    // The macro gives a vector with first two values (the third one is 0) on
+    // the 3rd line of the 3x3 cross-vector matrix
+#define CROSS_VEC(p) Vec2 cv##p(-(p)[1], (p)[0])
     CROSS_VEC(P4P1);  CROSS_VEC(P6P2);  CROSS_VEC(P8P3);
     CROSS_VEC(P5P1);  CROSS_VEC(P7P2);  CROSS_VEC(P9P3);
     CROSS_VEC(P10P1); CROSS_VEC(P10P2); CROSS_VEC(P10P3);
 #undef CROSS_VEC
 
+    // Derivatives with respect to rotations
     Vec2 d2uz_dxx_dT1 = cvP4P1*3.0*D2Phi1n2Phi2_xx + cvP5P1*3.0*D2Phi1n2Phi3_xx + cvP10P1*2.0*D2Phi123_xx;
     Vec2 d2uz_dxy_dT1 = cvP4P1*3.0*D2Phi1n2Phi2_xy + cvP5P1*3.0*D2Phi1n2Phi3_xy + cvP10P1*2.0*D2Phi123_xy;
     Vec2 d2uz_dyy_dT1 = cvP4P1*3.0*D2Phi1n2Phi2_yy + cvP5P1*3.0*D2Phi1n2Phi3_yy + cvP10P1*2.0*D2Phi123_yy;
@@ -1101,7 +1093,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
 
     if (this->f_printLog.getValue())
         sout<<" matrix J (bending) : \n"<< J <<sendl;
-
 }
 
 
@@ -1143,7 +1134,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBend
         J2t * tinfo.materialMatrix * tinfo.strainDisplacementMatrixB2 +
         J3t * tinfo.materialMatrix * tinfo.strainDisplacementMatrixB3;
 
-    // TODO: there was thickness^3 here, why?
     K *= f_thickness.getValue()*tinfo.area/3.0;
 }
 
@@ -1170,12 +1160,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(
     tinfo->materialMatrix[2][1] = 0;
     tinfo->materialMatrix[2][2] = 0.5 * (1 - f_poisson.getValue());
 
-    // XXX: There was a magical constant '12' here, why?
     tinfo->materialMatrix *= f_young.getValue() / (
         1 - f_poisson.getValue() * f_poisson.getValue());
-
-    //Real t = f_thickness.getValue();
-    //tinfo->materialMatrix *= t ;
 
     triangleInfo.endEdit();
 }
@@ -1222,16 +1208,14 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForceBending(Displa
     computeStrainDisplacementMatrixBending(tinfo);
 
     // Compute stiffness matrix K = Jt * material * J
-    StiffnessMatrixBending K_bending;
-    computeStiffnessMatrixBending(K_bending, tinfo);
-    tinfo.stiffnessMatrixBending = K_bending;
+    computeStiffnessMatrixBending(tinfo.stiffnessMatrixBending, tinfo);
 
     // Compute forces
-    F_bending = K_bending * D_bending;
+    F_bending = tinfo.stiffnessMatrixBending * D_bending;
 
     if (this->f_printLog.getValue())
     {
-        sout<<"-----> Bending stiffness matrix for element "<<elementIndex<< "is :\n "<<K_bending<<sendl;
+        sout<<"-----> Bending stiffness matrix for element "<<elementIndex<< "is :\n "<<tinfo.stiffnessMatrixBending<<sendl;
     }
 
     triangleInfo.endEdit();
@@ -1566,7 +1550,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
         const VecCoord& x = *this->mstate->getX();
         helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
-
         // Compute pos and Render Bezier points
 
         bezierNodes.resize(_topology->getNbTriangles());
@@ -1578,11 +1561,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
         for (int i=0; i<_topology->getNbTriangles(); ++i)
         {
             TriangleInformation *tinfo = &triangleInf[i];
-            this->computePosBezierPoint( tinfo, x, bezierNodes[i]);
-
-
-
             sofa::helper::fixed_array<Vec3,10> &bn = bezierNodes[i];
+            this->computePosBezierPoint(tinfo, x, bn);
+
             for (int j=0; j<10; j++)
             {
                 glColor4f(0.0, 0.7, 0.0, 1.0);
@@ -1607,9 +1588,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
             sofa::simulation::getSimulation()->DrawUtility().drawFrame(interpolatedFrame.getCenter(), interpolatedFrame.getOrientation(), Vec3(P1P2.norm()/3.0,P1P2.norm()/3.0,P1P2.norm()/3.0)  );
 
         }
-
-
-    }
+    } // if(this->getContext()->getShowForceFields())
 
     if(this->getContext()->getShowInteractionForceFields())
     {
@@ -1696,7 +1675,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
 //            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
         }
 
-   }
+   } // if(this->getContext()->getShowInteractionForceFields())
 
 }
 
