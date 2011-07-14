@@ -113,9 +113,6 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         // Nodes of the Bezier triangles
         sofa::helper::vector< sofa::helper::fixed_array<Vec3,10> > bezierNodes;
 
-//        BezierTriangularBendingFEMForceFieldInternalData<DataTypes> data;
-//        friend class BezierTriangularBendingFEMForceFieldInternalData<DataTypes>;
-
 public:
 
         class TriangleInformation
@@ -135,8 +132,6 @@ public:
                 Mat<3,3> interpol;
 
                 // Nodes of the Bezier triangle in local frame
-                // NOTES:   pts[0] is (0,0,0)   (A)
-                //          pts[1][0] is 0      (B)
                 helper::fixed_array <Vec3, 10> pts;
 
                 /// material stiffness matrices of each tetrahedron
@@ -160,7 +155,7 @@ public:
                 // Surface
                 Real area;
                 // Variables needed for drawing the shell
-                Vec<9, Real> u; // displacement vector
+                //Vec<9, Real> u; // displacement vector
 
                 TriangleInformation() { }
 
@@ -196,21 +191,12 @@ public:
 
         Data<Real> f_poisson;
         Data<Real> f_young;
-        Data<bool> f_bending;
         Data <Real> f_thickness;
-        //Data <Real> f_membraneRatio;
-        //Data <Real> f_bendingRatio;
         Data<bool> refineMesh;
         Data<int> iterations;
         core::objectmodel::DataObjectRef nameTargetTopology;
         VecCoordHigh targetVertices;
         SeqTriangles targetTriangles;
-
-        sofa::core::objectmodel::DataFileName exportFilename;
-        Data<unsigned int> exportEveryNbSteps;
-        Data<bool> exportAtBegin;
-        Data<bool> exportAtEnd;
-        unsigned int stepCounter;
 
 protected :
 
@@ -243,12 +229,9 @@ protected :
         void interpolateRefFrame( const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame );
 
 
-       // void computeRotation(Quat &Qframe, const VecCoord &p, const Index &a, const Index &b, const Index &c);
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
 
         void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixGlobalSpace &K_gs, TriangleInformation *tinfo);
-
-        void testAddDforce(void);
 
         void refineCoarseMeshToTarget(void);
         void subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::helper::vector<Vec3> &subVertices, SeqTriangles &subTriangles);
@@ -256,14 +239,6 @@ protected :
         void movePoint(Vec3& pointToMove);
         void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
 
-        void computeCurvature(Vec3 pt, Vec<9, Real> const &coefficients, Vec2 &curvature);
-
-        void handleEvent(sofa::core::objectmodel::Event *event);
-        void bwdInit();
-        void cleanup();
-
-        const std::string getExpFilename();
-        void writeCoeffs();
 };
 
 

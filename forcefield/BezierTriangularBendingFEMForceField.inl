@@ -64,52 +64,6 @@ namespace sofa
 			using namespace	sofa::component::topology;
 
 
-inline Quat qDiff(Quat a, const Quat& b)
-{
-    // If the axes are not oriented in the same direction, flip the axis and angle of a to get the same convention than b
-    if (a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3]<0)
-    {
-        a[0] = -a[0];
-        a[1] = -a[1];
-        a[2] = -a[2];
-        a[3] = -a[3];
-    }
-    Quat q = b.inverse() * a;
-    return q;
-}
-
-
-
-inline Quat qDiffZ(const Quat& vertex, const Quat& Qframe)
-{
-    // dQ is the quaternion that embodies the rotation between the z axis of the vertex and the z axis of the local triangle's frame (in local space)
-    Quat dQ;
-
-    // u = z axis of the triangle's frame
-    Vec3d u(0,0,1);
-
-    // v = z axis of the vertex's frame is expressed into world space
-    Vec3d v = vertex.rotate(Vec3d(0.0, 0.0, 1.0));
-    // v0 = v expressed into local triangle's frame
-    Vec3d v0 = Qframe.rotate(v);
-
-    // Axis of rotation between the 2 vectors u and v lies into the plan of the 2 vectors
-    Vec3d axis = cross(u, v0);
-    // Shortest angle between the 2 vectors
-    double angle = acos(dot(u, v0));
-
-    // Quaternion associated to this axis and this angle
-    if (fabs(angle)>1e-6)
-    {
-        dQ.axisToQuat(axis,angle);
-    }
-    else
-    {
-        dQ = Quat(0,0,0,1);
-    }
-
-    return dQ;
-}
 
 // --------------------------------------------------------------------------------------
 // ---
@@ -135,20 +89,12 @@ void BezierTriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFuncti
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 BezierTriangularBendingFEMForceField<DataTypes>::BezierTriangularBendingFEMForceField()
-: f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson ratio in Hooke's law"))
-, f_young(initData(&f_young,(Real)3000.,"youngModulus","Young modulus in Hooke's law"))
-//, f_bending(initData(&f_bending,false,"bending","Adds bending"))
+: f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson's ratio in Hooke's law"))
+, f_young(initData(&f_young,(Real)3000.,"youngModulus","Young's modulus in Hooke's law"))
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
-//, f_membraneRatio(initData(&f_membraneRatio,(Real)1.0,"membraneRatio","In plane forces ratio"))
-//, f_bendingRatio(initData(&f_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
 , refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
 , iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
 , nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
-, exportFilename(initData(&exportFilename, "exportFilename", "file name to export coefficients into"))
-, exportEveryNbSteps(initData(&exportEveryNbSteps, (unsigned int)0, "exportEveryNumberOfSteps", "export file only at specified number of steps (0=disable)"))
-, exportAtBegin(initData(&exportAtBegin, false, "exportAtBegin", "export file at the initialization"))
-, exportAtEnd(initData(&exportAtEnd, false, "exportAtEnd", "export file when the simulation is finished"))
-, stepCounter(0)
 {
 }
 
@@ -157,10 +103,10 @@ BezierTriangularBendingFEMForceField<DataTypes>::BezierTriangularBendingFEMForce
 // --------------------------------------------------------------------------------------
 template <class DataTypes> void BezierTriangularBendingFEMForceField<DataTypes>::handleTopologyChange()
 {
-//    std::list<const TopologyChange *>::const_iterator itBegin=_topology->firstChange();
-//    std::list<const TopologyChange *>::const_iterator itEnd=_topology->lastChange();
-//
-//    triangleInfo.handleTopologyEvents(itBegin,itEnd);
+    serr << "handleTopologyChange() not implemented" << sendl;
+    //std::list<const TopologyChange *>::const_iterator itBegin=_topology->firstChange();
+    //std::list<const TopologyChange *>::const_iterator itEnd=_topology->lastChange();
+    //triangleInfo.handleTopologyEvents(itBegin,itEnd);
 }
 
 // --------------------------------------------------------------------------------------
@@ -211,7 +157,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
         }
         else
         {
-            std::cout << "WARNING(BezierTriangularBendingFEMForceField): no target high resolution mesh found" << std::endl;
+            serr << "No target high resolution mesh found" << sendl;
             return;
         }
 
@@ -224,7 +170,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
 {
-    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << targetTriangles.size() << " triangles" << std::endl;
+    sout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << targetTriangles.size() << " triangles" << sendl;
 
     // List of vertices
     const VecCoord& x = *this->mstate->getX();
@@ -735,7 +681,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
     ////////// TODO : apply the "GOOD" transformation !
 
 
-    pts[9] = x[tinfo->a].getCenter()*(1.0/3.0) +x[tinfo->b].getCenter()*(1.0/3.0) +x[tinfo->c].getCenter()*(1.0/3.0);
+    //pts[9] = x[tinfo->a].getCenter()*(1.0/3.0) +x[tinfo->b].getCenter()*(1.0/3.0) +x[tinfo->c].getCenter()*(1.0/3.0);
     // the element is being rotated along the
 
 
@@ -867,7 +813,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacements( Disp
     Disp[6] = dX2[0];
     Disp[7] = dX2[1];
 
-    //inPlane => translation along Z
+    // inPlane => translation along Z
     BDisp[0] = dX0[2];
     BDisp[3] = dX1[2];
     BDisp[6] = dX2[2];
@@ -1374,15 +1320,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
     Displacement F;
     computeForce(F, D, elementIndex);
 
-    //if (f_bending.getValue())
-    //{
-
-
-
     // Compute bending forces on this element (in the co-rotational space)
     DisplacementBending F_bending;
     computeForceBending(F_bending, D_bending, elementIndex);
-    //}
 
     // Transform forces back into global reference frame
     Vec3 fa1 = tinfo->Qframe.inverseRotate(Vec3(F[0], F[1], F_bending[0]));
@@ -1495,35 +1435,31 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
     }
 
 
-    //if (f_bending.getValue())
-    //{
-        // Stiffness matrix in bending of current triangle
-        const StiffnessMatrixBending &K_bending = tinfo->stiffnessMatrixBending;
+    // Stiffness matrix in bending of current triangle
+    const StiffnessMatrixBending &K_bending = tinfo->stiffnessMatrixBending;
 
-        // Copy the stiffness matrix by block 3x3 into global matrix (the new index of each bloc into global matrix is a combination of 2, 8 and 15 in indices)
-        for (unsigned int bx=0; bx<3; bx++)
+    // Copy the stiffness matrix by block 3x3 into global matrix (the new index of each bloc into global matrix is a combination of 2, 8 and 15 in indices)
+    for (unsigned int bx=0; bx<3; bx++)
+    {
+        // Global row index
+        ig = 6*bx+2;
+
+        for (unsigned int by=0; by<3; by++)
         {
-            // Global row index
-            ig = 6*bx+2;
+            // Global column index
+            jg = 6*by+2;
 
-            for (unsigned int by=0; by<3; by++)
+            // Iterates over the indices of the bloc 3x3
+            for (unsigned int i=0; i<3; i++)
             {
-                // Global column index
-                jg = 6*by+2;
-
-                // Iterates over the indices of the bloc 3x3
-                for (unsigned int i=0; i<3; i++)
+                for (unsigned int j=0; j<3; j++)
                 {
-                    for (unsigned int j=0; j<3; j++)
-                    {
-                        K_18x18[ig+i][jg+j] += K_bending[3*bx+i][3*by+j];
-                    }
+                    K_18x18[ig+i][jg+j] += K_bending[3*bx+i][3*by+j];
                 }
-
             }
-        }
 
-    //}
+        }
+    }
 
     // Extend rotation matrix and its transpose
     Transformation R, Rt;
@@ -1670,92 +1606,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::default
 {
     serr << "addBToMatrix() not implemented" << sendl;
     return;
-
-
-}
-
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::testAddDforce()
-{
-//    VecDeriv f1, f2, df, v, dx2;
-//    VecCoord x1, x2, dx1;
-//
-//    x1 = *this->mstate->getX();
-//    x2.resize(x1.size());
-//    f1.resize(x1.size());
-//    f2.resize(x1.size());
-//    df.resize(x1.size());
-//    dx1.resize(x1.size());
-//    dx2.resize(x1.size());
-//    v.resize(x1.size());
-//
-//    dx1[x1.size()-1] = Coord(Vec3(0.0, 0.0, 0.0), Quat(0.00499998, 0, 0, 0.999988));
-//
-//    for (unsigned int i=0; i<x1.size(); i++)
-//    x2[i] = x1[i] + dx1[i];
-//
-//    addForce(f1, x1, v);
-//    addForce(f2, x2, v);
-//
-//    for (unsigned int i=0; i<f1.size(); i++)
-//    df[i] = f2[i] - f1[i];
-//    std::cout << "df = f2-f1 = " << df << std::endl;
-//
-//    df.clear();
-//    dx2[x1.size()-1] = Deriv(Vec3(0.0, 0, 0.0), Vec3(0.01, 0, 0));
-//    addDForce(df, dx2);
-//
-//    std::cout << "df from addDforce = " << df << std::endl;
-//    std::cout << " " << std::endl;
-}
-
-// Computes principal curvatures for the shell at the given point
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computeCurvature(Vec3 pt, Vec<9, Real> const &coefficients, Vec2 &curvature)
-{
-    // The shell is a Monge patch: X = (x, y, h(x,y)) where h = Uz is the
-    // deflection function.
-    //
-    // Partial derivatives:
-    //  hx = c2 + c4x + c5y + c7x^2 + c8y^2
-    //  hy = c3 + c5x + c6y + c8xy + c9y^2
-    //  hxx = c4 + 2*c7x
-    //  hyy = c6 + c8x + 2c9y
-    //  hxy = c5 + c8y
-    //
-    //      [ 0 1 0 x y 0 x^2 y^2 0   ]
-    //      [ 0 0 1 0 x y 0   xy  y^2 ]
-    //  H = [ 0 0 0 1 0 0 2x  0   0   ]
-    //      [ 0 0 0 0 0 1 0   x   2y  ]
-    //      [ 0 0 0 0 1 0 0   y   0   ]
-    //
-    //  dH = H * coefficients
-
-
-    // Compute the derivatives of the deflection function
-    Mat<5, 9, Real> H;
-
-    H(0,1) = 1; H(0,3) = pt[0]; H(0,4) = pt[1]; H(0,6) = pt[0]*pt[0]; H(0,7) = pt[1]*pt[1];
-    H(1,2) = 1; H(1,4) = pt[0]; H(1,5) = pt[1]; H(1,7) = pt[0]*pt[1]; H(1,8) = pt[1]*pt[1];
-    H(2,3) = 1; H(2,6) = 2*pt[0];
-    H(3,5) = 1; H(3,7) = pt[0]; H(3,8) = 2*pt[1];
-    H(4,4) = 1; H(4,7) = pt[1];
-
-    Vec<5,Real> dH = H * coefficients;
-
-    // Compute the shape operator
-    Real div = (dH[1]*dH[1] + dH[0]*dH[0] + 1);
-    div = sofa::helper::rsqrt(div*div*div);
-
-    Real a =  (dH[2]*dH[1]*dH[1] - dH[0]*dH[4]*dH[1] + dH[2])/div;
-    Real b = -(dH[0]*dH[1]*dH[3] - dH[4]*dH[1]*dH[1] - dH[4])/div;
-    Real c = -(dH[0]*dH[2]*dH[1] - dH[0]*dH[0]*dH[4] - dH[4])/div;
-    Real d =  (dH[0]*dH[0]*dH[3] - dH[0]*dH[4]*dH[1] + dH[3])/div;
-
-    // Compute the eigenvalues of the shape operator to get the principal curvatures
-    Real Dr = sofa::helper::rsqrt(a*a - 2*a*d + 4*b*c + d*d);
-    curvature[0] = (a+d-Dr)/2;
-    curvature[1] = (a+d+Dr)/2;
 }
 
 template <class DataTypes>
@@ -1901,132 +1751,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
 
    }
 
-}
-
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
-{
-    if ( /*simulation::AnimateEndEvent* ev =*/  dynamic_cast<simulation::AnimateEndEvent*>(event))
-    {
-        unsigned int maxStep = exportEveryNbSteps.getValue();
-        if (maxStep == 0) return;
-
-        stepCounter++;
-        if(stepCounter >= maxStep)
-        {
-            stepCounter = 0;
-            writeCoeffs();
-        }
-    }
-}
-
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::cleanup()
-{
-    if (exportAtEnd.getValue())
-        writeCoeffs();
-}
-
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::bwdInit()
-{
-    if (exportAtBegin.getValue())
-        writeCoeffs();
-}
-
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::writeCoeffs()
-{
-
-    // tinfo->localB and tinfo->localC were removed from tinfo and replaced by restLocalPositions (for node A, B and C)
-    serr<<"writeCoeffs does not work anymore => need to store the local coordinates of the 3 nodes"<<sendl;
-    return;
-
-
-    //sofa::helper::system::thread::ctime_t start, stop;
-    //sofa::helper::system::thread::CTime timer;
-    //start = timer.getTime();
-
-    std::string filename = getExpFilename();
-
-    std::ofstream outfile(filename.c_str());
-    if (!outfile.is_open())
-    {
-        serr << "Error creating file " << filename << sendl;
-        return;
-    }
-
-    // Write a message
-    outfile
-        << "# Data file with the coefficients of the deflection function and\n"
-        << "# principal curvatures at the three corners and in the barycenter.\n"
-        << "# Every 'f' line is followed by 'v' line containing local coordinates\n"
-        << "# of the two corners (the first at [0,0,0]).\n";
-
-    TriangleInformation *tinfo = NULL;
-    int nbTriangles=_topology->getNbTriangles();
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-    for (int i=0; i<nbTriangles; i++)
-    {
-        tinfo = &triangleInf[i];
- //       tinfo->coefficients = tinfo->invC * (tinfo->u + tinfo->u_rest);
-
-//        outfile << "f " << tinfo->coefficients << " ";
-//        Vec2 pc;
-//        computeCurvature(Vec3(0,0,0), tinfo->coefficients, pc);
-//        outfile << pc << " ";
-       // computeCurvature(tinfo->localB, tinfo->coefficients, pc);
-//        outfile << pc << " ";
-       // computeCurvature(tinfo->localC, tinfo->coefficients, pc);
-//        outfile << pc << " ";
-     //   Vec3 bary = (tinfo->localB + tinfo->localC)/3.0;
-     //   computeCurvature(bary, tinfo->coefficients, pc);
-//        outfile << pc << "\n";
-
-  //      outfile << "v " << tinfo->localB << " " << tinfo->localC << "\n";
-    }
-    triangleInfo.endEdit();
-
-    outfile.close();
-    sout << "Written " << filename << sendl;
-
-    //stop = timer.getTime();
-    //sout << "---------- " << __PRETTY_FUNCTION__ << " time=" << stop-start << " cycles" << sendl;
-}
-
-template <class DataTypes>
-const std::string BezierTriangularBendingFEMForceField<DataTypes>::getExpFilename()
-{
-    // TODO: steps are reported strangely, in 'animate' the step is one less
-    // (-1) which is OK, but for end (cleanup) the step is one more than
-    // expected (+1)
-    unsigned int nbs = sofa::simulation::getSimulation()->nbSteps.getValue()+1;
-
-    std::ostringstream oss;
-    std::string filename = exportFilename.getFullPath();
-    std::size_t pos = 0;
-    while (pos != std::string::npos)
-    {
-        std::size_t newpos = filename.find('%',pos);
-        oss << filename.substr(pos, (newpos == std::string::npos) ? std::string::npos : newpos-pos);
-        pos = newpos;
-        if(pos != std::string::npos)
-        {
-            ++pos;
-            char c = filename[pos];
-            ++pos;
-            switch (c)
-            {
-            case 's' : oss << nbs; break;
-            case '%' : oss << '%';
-            default:
-                serr << "Invalid special character %" << c << " in filename" << sendl;
-            }
-        }
-    }
-
-    oss << ".shell";
-    return oss.str();
 }
 
 } // namespace forcefield

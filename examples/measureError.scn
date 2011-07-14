@@ -28,8 +28,10 @@
 
         <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.00001" totalmass="1"/>
 
+        <!-- BendingPlateMechanicalMapping needs this
         <FixedRotationConstraint FixedZRotation="true"/>
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1" refineMesh="false"/>
+        -->
 
         <!--
         <Node name="visual">
@@ -44,7 +46,6 @@
             <MechanicalObject name="subCoarse_MO"/>
             <!--<BendingPlateMechanicalMapping measureError="1" targetTopology="/TargetMesh/targetTopo" />-->
             <BezierTriangleMechanicalMapping measureError="1" targetTopology="/TargetMesh/targetTopo" />
-            <Triangle contactStiffness="0.001"/>
 
             <!--
             <Node name="visual">
