@@ -96,6 +96,8 @@ public:
     , outputTopo(NULL)
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
+    , verticesTarget(OutVecCoord()) // dummy initialization
+    , trianglesTarget(SeqTriangles()) // dummy initialization
     {
     }
 
@@ -140,8 +142,8 @@ protected:
         core::objectmodel::DataObjectRef nameTargetTopology;
 
         TriangleSetTopologyContainer* topologyTarget;
-        OutVecCoord verticesTarget;
-        SeqTriangles trianglesTarget;
+        const OutVecCoord& verticesTarget;
+        const SeqTriangles& trianglesTarget;
 
         helper::vector<Vec3> colourMapping;
         helper::vector<Vec3> coloursPerVertex;

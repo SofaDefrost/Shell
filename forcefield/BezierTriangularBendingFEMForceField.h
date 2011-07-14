@@ -126,10 +126,19 @@ public:
                 Index a, b, c;
 
                 // Transformation rotation;
-                Quat Qframe;
+                Coord frame;
+                Quat Qframe; // TODO: remove this
 
                 // Matrix of interpolation functions
                 Mat<3,3> interpol;
+
+                // Segments in rest position used to keep Bézier points rigidly fixed
+                Vec3 P0_P1_inFrame0;
+                Vec3 P0_P2_inFrame0;
+                Vec3 P1_P2_inFrame1;
+                Vec3 P1_P0_inFrame1;
+                Vec3 P2_P0_inFrame2;
+                Vec3 P2_P1_inFrame2;
 
                 // Nodes of the Bezier triangle in local frame
                 helper::fixed_array <Vec3, 10> pts;
@@ -223,7 +232,7 @@ protected :
         virtual void computeMaterialStiffness(const int i);
 
         void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
-        void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, const VecCoord& x0, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
+        void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
         void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
         void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
         void interpolateRefFrame( const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame );

@@ -74,11 +74,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFuncti
     BezierTriangularBendingFEMForceField<DataTypes> *ff= (BezierTriangularBendingFEMForceField<DataTypes> *)param;
     if (ff)
     {
-        Index a = t[0];
-        Index b = t[1];
-        Index c = t[2];
-
-        ff->initTriangle(triangleIndex, a, b, c);
+        ff->initTriangle(triangleIndex, t[0], t[1], t[2]);
         ff->computeMaterialStiffness(triangleIndex);
     }
 }
@@ -220,8 +216,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(v
     }
 
 
-    std::cout << "Number of vertices of the resulting mesh = " << subVertices.size() << std::endl;
-    std::cout << "Number of shells of the resulting mesh   = " << subTriangles.size() << std::endl;
+    sout << "Number of vertices of the resulting mesh = " << subVertices.size() << sendl;
+    sout << "Number of shells of the resulting mesh   = " << subTriangles.size() << sendl;
 
     // Writes in Gmsh format
     std::ofstream myfile;
@@ -235,7 +231,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(v
         myfile << "f " << subTriangles[element][0]+1 << " " << subTriangles[element][1]+1 << " " << subTriangles[element][2]+1 << "\n";
     }
     myfile.close();
-    std::cout << "Mesh written in mesh_refined.obj" << std::endl;
+    sout << "Mesh written in mesh_refined.obj" << sendl;
 }
 
 // --------------------------------------------------------------------------------------
@@ -276,21 +272,16 @@ void BezierTriangularBendingFEMForceField<DataTypes>::subdivide(const Vec3& a, c
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index)
 {
-    bool alreadyHere = false;
-
     for (unsigned int v=0; v<subVertices.size(); v++)
     {
         if ( (subVertices[v]-vertex).norm() < 0.0000001)
         {
-            alreadyHere = true;
             index = v;
+            return;
         }
     }
-    if (alreadyHere == false)
-    {
-        subVertices.push_back(vertex);
-        index = (int)subVertices.size()-1;
-    }
+    subVertices.push_back(vertex);
+    index = (int)subVertices.size()-1;
 }
 
 
@@ -361,9 +352,6 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
     triangleInfo.setDestroyParameter( (void *) this );
 
     triangleInfo.endEdit();
-
-
-//    testAddDforce();
 }
 
 
@@ -373,7 +361,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
 template <class DataTypes>
     double BezierTriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
 {
-    serr<<"BezierTriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
+    serr<<"getPotentialEnergy() is not implemented !!!"<<sendl;
     return 0;
 }
 
@@ -393,24 +381,35 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
     tinfo->b = b;
     tinfo->c = c;
 
-    // Gets vertices of rest and initial positions respectively
+    // Gets vertices of rest positions
     const VecCoord& x0 = *this->mstate->getX0();
-    //const VecCoord& x = *this->mstate->getX();
+
+    // get the segment position in the reference frames of the rest-shape
+    tinfo->P0_P1_inFrame0 = x0[a].getOrientation().inverseRotate( x0[b].getCenter() - x0[a].getCenter() )/3.0;
+    tinfo->P0_P2_inFrame0 = x0[a].getOrientation().inverseRotate( x0[c].getCenter() - x0[a].getCenter() )/3.0;
+
+    tinfo->P1_P2_inFrame1 = x0[b].getOrientation().inverseRotate( x0[c].getCenter() - x0[b].getCenter() )/3.0;
+    tinfo->P1_P0_inFrame1 = x0[b].getOrientation().inverseRotate( x0[a].getCenter() - x0[b].getCenter() )/3.0;
+
+    tinfo->P2_P0_inFrame2 = x0[c].getOrientation().inverseRotate( x0[a].getCenter() - x0[c].getCenter() )/3.0;
+    tinfo->P2_P1_inFrame2 = x0[c].getOrientation().inverseRotate( x0[b].getCenter() - x0[c].getCenter() )/3.0;
+
 
     // compute the initial position and rotation in the reference frame
     Coord ElementFrame0;
-    this->interpolateRefFrame(tinfo,Vec2(1.0/3.0,1.0/3.0),x0, ElementFrame0 );
+    this->interpolateRefFrame(tinfo, Vec2(1.0/3.0,1.0/3.0), x0, ElementFrame0);
+
 
     // get Rest position => _global_Rframe_element^{-1}*(nodeRest_global - Center_global)
-    tinfo->restLocalPositions[0] = ElementFrame0.getOrientation().inverseRotate(x0[a].getCenter() - ElementFrame0.getCenter());
-    tinfo->restLocalPositions[1] = ElementFrame0.getOrientation().inverseRotate(x0[b].getCenter() - ElementFrame0.getCenter());
-    tinfo->restLocalPositions[2] = ElementFrame0.getOrientation().inverseRotate(x0[c].getCenter() - ElementFrame0.getCenter());
+    tinfo->restLocalPositions[0] = ElementFrame0.getOrientation().inverseRotate( x0[a].getCenter() - ElementFrame0.getCenter());
+    tinfo->restLocalPositions[1] = ElementFrame0.getOrientation().inverseRotate( x0[b].getCenter() - ElementFrame0.getCenter());
+    tinfo->restLocalPositions[2] = ElementFrame0.getOrientation().inverseRotate( x0[c].getCenter() - ElementFrame0.getCenter());
+
 
     // get Rest orientation => _element_R_nodeRest = _global_Rframe_element^{-1}*_global_R_nodeRest
-    tinfo->restLocalOrientations[0] =  ElementFrame0.getOrientation().inverse()* x0[a].getOrientation();
-    tinfo->restLocalOrientations[1] =  ElementFrame0.getOrientation().inverse()* x0[b].getOrientation();
-    tinfo->restLocalOrientations[2] =  ElementFrame0.getOrientation().inverse()* x0[c].getOrientation();
-
+    tinfo->restLocalOrientations[0] = ElementFrame0.getOrientation().inverse()* x0[a].getOrientation();
+    tinfo->restLocalOrientations[1] = ElementFrame0.getOrientation().inverse()* x0[b].getOrientation();
+    tinfo->restLocalOrientations[2] = ElementFrame0.getOrientation().inverse()* x0[c].getOrientation();
 
 
     /////// Matrices are supposed to be constant but are recomputed in computeForce Functions
@@ -423,52 +422,42 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
     //computeStrainDisplacementMatrix(*tinfo);
 
 
-//}
     triangleInfo.endEdit();
 }
 
 
 // ------------------------
-// --- Compute the position of the B?zier points
+// --- Compute the position of the Bézier points
 // ------------------------
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, const VecCoord& x0, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints)
+void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(
+    const TriangleInformation *tinfo,
+    const VecCoord& x, /*const VecCoord& x0,*/
+    sofa::helper::fixed_array<Vec3,10> &X_bezierPoints)
 {
-
-
-
     // 3 points corresponding to the node position
     X_bezierPoints[0] = x[tinfo->a].getCenter();
     X_bezierPoints[1] = x[tinfo->b].getCenter();
     X_bezierPoints[2] = x[tinfo->c].getCenter();
 
-    // get the segment position in the reference frames of the rest-shape
-    Vec3 P0_P1_inFrame0 = x0[tinfo->a].getOrientation().inverseRotate( x0[tinfo->b].getCenter() - x0[tinfo->a].getCenter()  ) ;
-    Vec3 P0_P2_inFrame0 = x0[tinfo->a].getOrientation().inverseRotate( x0[tinfo->c].getCenter() - x0[tinfo->a].getCenter()  ) ;
-
-    Vec3 P1_P2_inFrame1 = x0[tinfo->b].getOrientation().inverseRotate( x0[tinfo->c].getCenter() - x0[tinfo->b].getCenter()  ) ;
-    Vec3 P1_P0_inFrame1 = x0[tinfo->b].getOrientation().inverseRotate( x0[tinfo->a].getCenter() - x0[tinfo->b].getCenter()  ) ;
-
-    Vec3 P2_P0_inFrame2 = x0[tinfo->c].getOrientation().inverseRotate( x0[tinfo->a].getCenter() - x0[tinfo->c].getCenter()  ) ;
-    Vec3 P2_P1_inFrame2 = x0[tinfo->c].getOrientation().inverseRotate( x0[tinfo->b].getCenter() - x0[tinfo->c].getCenter()  ) ;
-
-
     // compute the corresponding Bezier Points
+
         // (3,4) is attached to frame 0
-    X_bezierPoints[3] = x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( P0_P1_inFrame0/3.0 );
-    X_bezierPoints[4] = x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( P0_P2_inFrame0/3.0 );
+    X_bezierPoints[3] = x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( tinfo->P0_P1_inFrame0 );
+    X_bezierPoints[4] = x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( tinfo->P0_P2_inFrame0 );
+
         // (5,6) is attached to frame 1
-    X_bezierPoints[5] = x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( P1_P2_inFrame1/3.0 );
-    X_bezierPoints[6] = x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( P1_P0_inFrame1/3.0 );
+    X_bezierPoints[5] = x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( tinfo->P1_P2_inFrame1 );
+    X_bezierPoints[6] = x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( tinfo->P1_P0_inFrame1 );
+
         // (7,8) is attached to frame 2
-    X_bezierPoints[7] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( P2_P0_inFrame2/3.0 );
-    X_bezierPoints[8] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( P2_P1_inFrame2/3.0 );
+    X_bezierPoints[7] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( tinfo->P2_P0_inFrame2 );
+    X_bezierPoints[8] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( tinfo->P2_P1_inFrame2 );
+
         // (9) use a kind of skinning function (average of the position obtained when attached respectively to 0, 1 and 2)
-    X_bezierPoints[9] = (x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( (P0_P1_inFrame0 + P0_P2_inFrame0) /3.0))/3.0 +
-                        (x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( (P1_P2_inFrame1 + P1_P0_inFrame1) /3.0))/3.0 +
-                        (x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( (P2_P0_inFrame2 + P2_P1_inFrame2) /3.0))/3.0;
-
-
+    X_bezierPoints[9] = (x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( tinfo->P0_P1_inFrame0 + tinfo->P0_P2_inFrame0 ))/3.0 +
+                        (x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( tinfo->P1_P2_inFrame1 + tinfo->P1_P0_inFrame1 ))/3.0 +
+                        (x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( tinfo->P2_P0_inFrame2 + tinfo->P2_P1_inFrame2 ))/3.0;
 }
 
 
@@ -486,7 +475,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::bezierFunctions(const Vec2
     f_bezier[5]=3*b*b*c; f_bezier[6]=3*b*b*a;
     f_bezier[7]=3*c*c*a; f_bezier[8]=3*c*c*b;
     f_bezier[9]=6*a*b*c;
-
 }
 
 template <class DataTypes>
@@ -496,34 +484,29 @@ void BezierTriangularBendingFEMForceField<DataTypes>::bezierDerivateFunctions(co
     Real b=baryCoord[0];
     Real c=baryCoord[1];
 
-    df_dx_bezier[0]= -3.0*a*a;
-    df_dx_bezier[1]= 3.0*b*b;
-    df_dx_bezier[2]= 0;
-    df_dx_bezier[3]= -6.0*a*b+3.0*a*a ; df_dx_bezier[4]= -6.0*a*c;
-    df_dx_bezier[5]= 6.0*b*c;           df_dx_bezier[6]=6.0*b*a - 3.0*b*b;
-    df_dx_bezier[7]= -3.0*c*c;          df_dx_bezier[8]=3.0*c*c;
-    df_dx_bezier[9]= -6.0*b*c + 6.0*a*c;
+    df_dx_bezier[0] = -3.0*a*a;
+    df_dx_bezier[1] =  3.0*b*b;
+    df_dx_bezier[2] =  0;
+    df_dx_bezier[3] = -6.0*a*b + 3.0*a*a;   df_dx_bezier[4] = -6.0*a*c;
+    df_dx_bezier[5] =  6.0*b*c;             df_dx_bezier[6] =  6.0*b*a - 3.0*b*b;
+    df_dx_bezier[7] = -3.0*c*c;             df_dx_bezier[8] =  3.0*c*c;
+    df_dx_bezier[9] = -6.0*b*c + 6.0*a*c;
 
-    df_dy_bezier[0]=  -3.0*a*a;
-    df_dy_bezier[1]=  0.0;
-    df_dy_bezier[2]=  3.0*c*c;
-    df_dy_bezier[3]=-6.0*a*b;           df_dy_bezier[4]=-6.0*a*c+3.0*a*a;
-    df_dy_bezier[5]=3.0*b*b;            df_dy_bezier[6]=-3.0*b*b;
-    df_dy_bezier[7]=-3.0*c*c+6.0*c*a;   df_dy_bezier[8]=6.0*c*b;
-    df_dy_bezier[9]=-6.0*b*c + 6.0*a*b;
-
-
+    df_dy_bezier[0] = -3.0*a*a;
+    df_dy_bezier[1] =  0.0;
+    df_dy_bezier[2] =  3.0*c*c;
+    df_dy_bezier[3] = -6.0*a*b;             df_dy_bezier[4] = -6.0*a*c + 3.0*a*a;
+    df_dy_bezier[5] =  3.0*b*b;             df_dy_bezier[6] = -3.0*b*b;
+    df_dy_bezier[7] = -3.0*c*c + 6.0*c*a;   df_dy_bezier[8] =  6.0*c*b;
+    df_dy_bezier[9] = -6.0*b*c + 6.0*a*b;
 }
 
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame( const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame )
 {
-    const VecCoord& x0 = *this->mstate->getX0();
-
     // get the position of the bezier Points
     sofa::helper::fixed_array<Vec3,10> X_bezierPoints;
-    this->computePosBezierPoint(tinfo, x, x0,X_bezierPoints);
-
+    this->computePosBezierPoint(tinfo, x, X_bezierPoints);
 
     // use the bezier functions to interpolate the positions
     sofa::helper::fixed_array<Real,10> f_bezier;
@@ -531,14 +514,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame( const
     interpolatedFrame.getCenter().clear();
     for (unsigned int i=0;i<10;i++){
         interpolatedFrame.getCenter() += X_bezierPoints[i]*f_bezier[i];
-        std::cout<<" add pos = "<<X_bezierPoints[i]*f_bezier[i]<<" f_bezier["<<i<<"]="<<f_bezier[i]<<"  X_bezierPoints="<<X_bezierPoints[i]<<std::endl;
+        sout << " add pos = "<<X_bezierPoints[i]*f_bezier[i]<<" f_bezier["<<i<<"]="<<f_bezier[i]<<"  X_bezierPoints="<<X_bezierPoints[i]<<sendl;
     }
 
-
-
-
     // compute the derivative of the interpolation for the rotation of the RefFrame
-    sofa::helper::fixed_array<Real,10> df_dx_bezier,df_dy_bezier;
+    sofa::helper::fixed_array<Real,10> df_dx_bezier, df_dy_bezier;
     this->bezierDerivateFunctions(baryCoord, df_dx_bezier, df_dy_bezier);
     Vec3 X1(0.0,0.0,0.0),Y1(0.0,0.0,0.0);
     for (unsigned int i=0;i<10;i++){
@@ -546,9 +526,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame( const
         Y1 += X_bezierPoints[i]*df_dy_bezier[i];
     }
 
-
-    Vec3 Y,Z;
     // compute the orthogonal frame directions
+    Vec3 Y,Z;
     if (X1.norm() > 1e-20 && Y1.norm() > 1e-20 && fabs(dot(X1,Y1)) >1e-20 )
     {
         X1.normalize();
@@ -566,25 +545,15 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame( const
         Z =Vec3(0.0,0.0,1.0);
     }
 
-
-
     // compute the corresponding rotation
     defaulttype::Matrix3 R(X1,Y,Z);
     R.transpose();
-
 
     Quat Qout;
     Qout.fromMatrix(R);
     Qout.normalize();
     interpolatedFrame.getOrientation() = Qout;
-
-
-
-
 }
-
-
-
 
 // --------------------------------------------------------------------------------------
 // ---
@@ -681,7 +650,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
     ////////// TODO : apply the "GOOD" transformation !
 
 
-    //pts[9] = x[tinfo->a].getCenter()*(1.0/3.0) +x[tinfo->b].getCenter()*(1.0/3.0) +x[tinfo->c].getCenter()*(1.0/3.0);
     // the element is being rotated along the
 
 
@@ -749,22 +717,17 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
 }
 
 // -----------------------------------------------------------------------------
-// --- Compute displacement vector D as the difference between current position
-// --- 'p' and initial position expressed in the co-rotational frame of
-// --- reference
+// --- Compute displacement vectors for in-plane and bending deformations in
+// --- co-rotational frame of reference.
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacements( Displacement &Disp, DisplacementBending &BDisp, const VecCoord &x, TriangleInformation *tinfo)
 {
-
-    Coord elementFrame;
-    this->interpolateRefFrame(tinfo, Vec2(1.0/3.0,1.0/3.0), x, elementFrame);
-
     Index a = tinfo->a;
     Index b = tinfo->b;
     Index c = tinfo->c;
 
-    Quat _global_R_element = elementFrame.getOrientation();
+    Quat _global_R_element = tinfo->frame.getOrientation();
 
     // element_R_node = _global_R_element^-1 * _global_R_node
     Quat element_R_node0 = _global_R_element.inverse()*x[a].getOrientation();
@@ -796,9 +759,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacements( Disp
 
 
     // translation compute the current position of the node on the element frame
-    Vec3 Center_T_node0 = _global_R_element.inverseRotate( x[a].getCenter() - elementFrame.getCenter());
-    Vec3 Center_T_node1 = _global_R_element.inverseRotate( x[b].getCenter() - elementFrame.getCenter());
-    Vec3 Center_T_node2 = _global_R_element.inverseRotate( x[c].getCenter() - elementFrame.getCenter());
+    Vec3 Center_T_node0 = _global_R_element.inverseRotate( x[a].getCenter() - tinfo->frame.getCenter() );
+    Vec3 Center_T_node1 = _global_R_element.inverseRotate( x[b].getCenter() - tinfo->frame.getCenter() );
+    Vec3 Center_T_node2 = _global_R_element.inverseRotate( x[c].getCenter() - tinfo->frame.getCenter() );
 
     // compare this position with the rest position
     Vec3 dX0 = Center_T_node0 - tinfo->restLocalPositions[0];
@@ -819,31 +782,20 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacements( Disp
     BDisp[6] = dX2[2];
 }
 
-
-
-
 // ----------------------------------------------------------------------------
 // --- Compute the strain-displacement matrix for in-plane deformation
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrix(TriangleInformation &tinfo)
 {
-/*
-    Real determinant;
-    determinant = tinfo.pts[1][0] * tinfo.pts[2][1]; // since pts[1][1] = 0
-    tinfo.area = 0.5*determinant;
-*/
-
-    // Calculation of the 3 Gauss points (pts[0] is (0,0,0))
-    Vec3 gaussPoint1 = tinfo.pts[0]*(2.0/3.0) + tinfo.pts[1]/6.0 + tinfo.pts[2]/6.0; //
-    Vec3 gaussPoint2 = tinfo.pts[0]/6.0 + tinfo.pts[1]*(2.0/3.0) + tinfo.pts[2]/6.0; //
-    Vec3 gaussPoint3 = tinfo.pts[0]/6.0 + tinfo.pts[1]/6.0 + tinfo.pts[2]*(2.0/3.0); //
+    // Calculation of the 3 Gauss points
+    Vec3 gaussPoint1 = tinfo.pts[0]*(2.0/3.0) + tinfo.pts[1]/6.0 + tinfo.pts[2]/6.0;
+    Vec3 gaussPoint2 = tinfo.pts[0]/6.0 + tinfo.pts[1]*(2.0/3.0) + tinfo.pts[2]/6.0;
+    Vec3 gaussPoint3 = tinfo.pts[0]/6.0 + tinfo.pts[1]/6.0 + tinfo.pts[2]*(2.0/3.0);
 
     matrixSD(tinfo.strainDisplacementMatrix1, gaussPoint1, tinfo);
     matrixSD(tinfo.strainDisplacementMatrix2, gaussPoint2, tinfo);
     matrixSD(tinfo.strainDisplacementMatrix3, gaussPoint3, tinfo);
-
-    triangleInfo.endEdit();
 }
 
 // ----------------------------------------------------------------------------
@@ -853,8 +805,6 @@ template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo)
 {
-
-
     // Directional vectors from corner nodes
     Vec3 P4P1 = tinfo.pts[3] - tinfo.pts[0];
     Vec3 P5P1 = tinfo.pts[4] - tinfo.pts[0];
@@ -1245,16 +1195,14 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForce(
     computeStrainDisplacementMatrix(tinfo);
 
     // Compute stiffness matrix K = J*material*Jt
-    StiffnessMatrix K;
-    computeStiffnessMatrix(K, tinfo);
-    tinfo.stiffnessMatrix = K;
+    computeStiffnessMatrix(tinfo.stiffnessMatrix, tinfo);
 
     // Compute forces
-    F = K * D;
+    F = tinfo.stiffnessMatrix * D;
 
     if (this->f_printLog.getValue())
     {
-        sout<<"-----> In-plane stiffness matrix for element "<<elementIndex<< "is :\n "<<K<<sendl;
+        sout<<"-----> In-plane stiffness matrix for element "<<elementIndex<< "is :\n "<<tinfo.stiffnessMatrix<<sendl;
     }
 
     triangleInfo.endEdit();
@@ -1303,18 +1251,17 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
     const Index& b = tinfo->b;
     const Index& c = tinfo->c;
 
-    // Compute the quaternion that embodies the rotation between the triangle and world frames (co-rotational method)
-    Coord elementFrame;
-    this->interpolateRefFrame(tinfo, Vec2(1.0/3.0, 1.0/3.0), x, elementFrame);
+    // Compute the quaternion that embodies the rotation between the triangle
+    // and world frames (co-rotational method)
+    interpolateRefFrame(tinfo, Vec2(1.0/3.0, 1.0/3.0), x, tinfo->frame);
+    tinfo->Qframe = tinfo->frame.getOrientation();
 
-    tinfo->Qframe = elementFrame.getOrientation();
     computeLocalTriangle(x, elementIndex);
 
-    // Compute in-plane displacement in the triangle's frame
+    // Compute in-plane and bending displacements in the triangle's frame
     Displacement D;
-    // Compute bending displacement for bending into the triangle's frame
     DisplacementBending D_bending;
-    this->computeDisplacements(D, D_bending, x, tinfo);
+    computeDisplacements(D, D_bending, x, tinfo);
 
     // Compute in-plane forces on this element (in the co-rotational space)
     Displacement F;
@@ -1325,14 +1272,14 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
     computeForceBending(F_bending, D_bending, elementIndex);
 
     // Transform forces back into global reference frame
-    Vec3 fa1 = tinfo->Qframe.inverseRotate(Vec3(F[0], F[1], F_bending[0]));
-    Vec3 fa2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[1], F_bending[2], F[2]));
+    Vec3 fa1 = tinfo->frame.getOrientation().inverseRotate(Vec3(F[0], F[1], F_bending[0]));
+    Vec3 fa2 = tinfo->frame.getOrientation().inverseRotate(Vec3(F_bending[1], F_bending[2], F[2]));
 
-    Vec3 fb1 = tinfo->Qframe.inverseRotate(Vec3(F[3], F[4], F_bending[3]));
-    Vec3 fb2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[4], F_bending[5], F[5]));
+    Vec3 fb1 = tinfo->frame.getOrientation().inverseRotate(Vec3(F[3], F[4], F_bending[3]));
+    Vec3 fb2 = tinfo->frame.getOrientation().inverseRotate(Vec3(F_bending[4], F_bending[5], F[5]));
 
-    Vec3 fc1 = tinfo->Qframe.inverseRotate(Vec3(F[6], F[7], F_bending[6]));
-    Vec3 fc2 = tinfo->Qframe.inverseRotate(Vec3(F_bending[7], F_bending[8], F[8]));
+    Vec3 fc1 = tinfo->frame.getOrientation().inverseRotate(Vec3(F[6], F[7], F_bending[6]));
+    Vec3 fc2 = tinfo->frame.getOrientation().inverseRotate(Vec3(F_bending[7], F_bending[8], F[8]));
 
     f[a] += Deriv(-fa1, -fa2);
     f[b] += Deriv(-fb1, -fb2);
@@ -1631,7 +1578,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
         for (int i=0; i<_topology->getNbTriangles(); ++i)
         {
             TriangleInformation *tinfo = &triangleInf[i];
-            this->computePosBezierPoint( tinfo,x,x0, bezierNodes[i]);
+            this->computePosBezierPoint( tinfo, x, bezierNodes[i]);
 
 
 
