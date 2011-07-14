@@ -100,7 +100,7 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         //  [ U1z, dT1x, dT1y, U2z, dT2x, dT2y, U3z, dT3x, dT3y ]
         typedef Vec<9, Real> DisplacementBending;
         typedef Mat<3, 3, Real> MaterialStiffness;              ///< matrix of material stiffness
-        typedef Mat<9, 3, Real> StrainDisplacement;             ///< strain-displacement matrix for in-plane forces
+        typedef Mat<3, 9, Real> StrainDisplacement;             ///< strain-displacement matrix for in-plane forces
         typedef Mat<3, 9, Real> StrainDisplacementBending;
         typedef Mat<3, 3, Real > Transformation;                ///< matrix for rigid transformations like rotations
         typedef Mat<9, 9, Real> StiffnessMatrix;
@@ -111,7 +111,6 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         sofa::core::topology::BaseMeshTopology* _topologyTarget;
 
         // Nodes of the Bezier triangles
-        sofa::helper::vector< sofa::helper::fixed_array<Vec3,10> > bezierNodes;
 
 public:
 
@@ -127,7 +126,6 @@ public:
 
                 // Transformation rotation;
                 Coord frame;
-                Quat Qframe; // TODO: remove this
 
                 // Matrix of interpolation functions
                 Mat<3,3> interpol;
@@ -140,8 +138,9 @@ public:
                 Vec3 P2_P0_inFrame2;
                 Vec3 P2_P1_inFrame2;
 
-                // Nodes of the Bezier triangle in local frame
-                helper::fixed_array <Vec3, 10> pts;
+                // Nodes of the Bezier triangle
+                helper::fixed_array<Vec3, 10> bezierNodes;  // ... in global frame
+                helper::fixed_array<Vec3, 10> pts;          // ... in local frame
 
                 /// material stiffness matrices of each tetrahedron
                 MaterialStiffness materialMatrix;
@@ -236,7 +235,7 @@ protected :
         void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
         void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
         void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
-        void interpolateRefFrame( const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame );
+        void interpolateRefFrame( const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints );
 
 
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
