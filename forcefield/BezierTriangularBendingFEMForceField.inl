@@ -356,18 +356,6 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
 
 
 // --------------------------------------------------------------------------------------
-// ---
-// --------------------------------------------------------------------------------------
-template <class DataTypes>
-    double BezierTriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
-{
-    serr<<"getPotentialEnergy() is not implemented !!!"<<sendl;
-    return 0;
-}
-
-
-
-// --------------------------------------------------------------------------------------
 // --- Store the initial position of the nodes
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
@@ -513,7 +501,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(const 
     interpolatedFrame.getCenter().clear();
     for (unsigned int i=0;i<10;i++){
         interpolatedFrame.getCenter() += X_bezierPoints[i]*f_bezier[i];
-        sout << " add pos = "<<X_bezierPoints[i]*f_bezier[i]<<" f_bezier["<<i<<"]="<<f_bezier[i]<<"  X_bezierPoints="<<X_bezierPoints[i]<<sendl;
+        //sout << " add pos = "<<X_bezierPoints[i]*f_bezier[i]<<" f_bezier["<<i<<"]="<<f_bezier[i]<<"  X_bezierPoints="<<X_bezierPoints[i]<<sendl;
     }
 
     // compute the derivative of the interpolation for the rotation of the RefFrame
@@ -527,7 +515,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(const 
 
     // compute the orthogonal frame directions
     Vec3 Y,Z;
-    if (X1.norm() > 1e-20 && Y1.norm() > 1e-20 && fabs(dot(X1,Y1)) >1e-20 )
+    if (X1.norm() > 1e-20 && Y1.norm() > 1e-20 /*&& fabs(dot(X1,Y1)) >1e-20*/ ) ///TODO: what's with the third condition?
     {
         X1.normalize();
         Y1.normalize();
@@ -538,7 +526,10 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(const 
     }
     else
     {
-        serr<<" WARNING : can not compute the Ref FRame of the element"<<sout;
+        serr<<" WARNING : can not compute the Ref FRame of the element: "
+            << X_bezierPoints[0] << ", " << X_bezierPoints[1] << ", "
+            << X_bezierPoints[2] <<
+            " tangent: " << X1 << ", " << Y1 << sendl;
         X1=Vec3(1.0,0.0,0.0);
         Y =Vec3(0.0,1.0,0.0);
         Z =Vec3(0.0,0.0,1.0);
@@ -631,86 +622,39 @@ void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
-    const VecCoord &x, const Index elementIndex)
+    const VecCoord &/*x*/, const Index elementIndex)
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     helper::fixed_array <Vec3, 10> &pts = tinfo->pts;
 
-    // Compute local postions of vertices B and C in the co-rotational frame,
-    // A is always (0,0,0)
+    // TODO: compare speed but try to prefer 1st version
+
+    // The element is being rotated along the frame situated at the center of
+    // the element
+
+    //// 1st way: Rotate the already computed nodes
+    //sout << "QFrame: " << tinfo->frame.getOrientation() << sendl;
+    for (int i = 0; i < 10; i++) {
+        tinfo->pts[i] = tinfo->frame.getOrientation().inverseRotate(tinfo->bezierNodes[i] - tinfo->frame.getCenter());
+        sout << "bn[" << i << "]=" << tinfo->bezierNodes[i]
+            << " pt[" << i << "]=" << tinfo->pts[i] << sendl;
+    }
 
 
-
-
-
-
-    ////////// TODO : apply the "GOOD" transformation !
-
-
-    // the element is being rotated along the
-
-
-    pts[0] = tinfo->frame.getOrientation().rotate(x[tinfo->a].getCenter() );
-    pts[1] = tinfo->frame.getOrientation().rotate(x[tinfo->b].getCenter() );
-    pts[2] = tinfo->frame.getOrientation().rotate(x[tinfo->c].getCenter() );
-
-
-
-
-    // Bezier Points
-    // TODO: shouldn't we consider also the rotations/normals? /// CHRISTIAN  WARNING pb with indices !!
-//    P4=(2/3)*P1+(1/3)*P2;
-//    P7=(1/3)*P1+(2/3)*P2;
-//    P5=(2/3)*P1+(1/3)*P3;
-//    P8=(1/3)*P1+(2/3)*P3;
-//    P6=(2/3)*P2+(1/3)*P3;
-//    P9=(1/3)*P2+(2/3)*P3;
-//    P10=(1/3)*P1+(1/3)*P2+(1/3)*P3;
-
-    pts[3] = pts[0]*(2.0/3.0) + pts[1]*(1.0/3.0);
-    pts[6] = pts[0]*(1.0/3.0) + pts[1]*(2.0/3.0);
-    pts[4] = pts[0]*(2.0/3.0) + pts[2]*(1.0/3.0);
-    pts[7] = pts[0]*(1.0/3.0) + pts[2]*(2.0/3.0);
-    pts[5] = pts[1]*(2.0/3.0) + pts[2]*(1.0/3.0);
-    pts[8] = pts[1]*(1.0/3.0) + pts[2]*(2.0/3.0);
-    pts[9] = pts[0]*(1.0/3.0) + pts[1]*(1.0/3.0) + pts[2]*(1.0/3.0);
-
-
-
-
+    //// 2st way: Compute the nodes directly in the local frame
     // TODO
-    //P4P1=P1-P4;
-    //P5P1=P1-P5;
-    //P6P2=P2-P6;
-    //P7P2=P2-P7;
-    //P8P3=P3-P8;
-    //P9P3=P3-P9;
-    //P10P1=P1-P10;
-    //P10P2=P2-P10;
-    //P10P3=P3-P10;
 
-
+    // TODO: this is no longer correct, or is it? (the nodes of the shell don't
+    // lie on the plane of reference frame and have non-zero z-coordinate)
     Mat<3, 3, Real> m;
     m(0,0) = 1;         m(0,1) = 1;         m(0,2) = 1;
     m(1,0) = pts[0][0]; m(1,1) = pts[1][0]; m(1,2) = pts[2][0];
     m(2,0) = pts[0][1]; m(2,1) = pts[1][1]; m(2,2) = pts[2][1];
 
     tinfo->interpol.invert(m);
-    tinfo->area = 0.5*fabs((Real) determinant(m) ) ;
-
-
-    //Phi1 = Interpol(1,:); // 1re ligne de la matrice invA
-    //Phi2 = Interpol(2,:); // 2me ligne
-    //Phi3 = Interpol(3,:); // 3me ligne
-    
-    //b1=Interpol(1,2);
-    //c1=Interpol(1,3);
-    //b2=Interpol(2,2);
-    //c2=Interpol(2,3);
-    //b3=Interpol(3,2);
-    //c3=Interpol(3,3);
+    tinfo->area = 0.5 * cross(pts[1] - pts[0], pts[2] - pts[0]).norm();
 
     triangleInfo.endEdit();
 }
@@ -758,14 +702,14 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacements( Disp
 
 
     // translation compute the current position of the node on the element frame
-    Vec3 Center_T_node0 = _global_R_element.inverseRotate( x[a].getCenter() - tinfo->frame.getCenter() );
-    Vec3 Center_T_node1 = _global_R_element.inverseRotate( x[b].getCenter() - tinfo->frame.getCenter() );
-    Vec3 Center_T_node2 = _global_R_element.inverseRotate( x[c].getCenter() - tinfo->frame.getCenter() );
+    //Vec3 Center_T_node0 = _global_R_element.inverseRotate( x[a].getCenter() - tinfo->frame.getCenter() );
+    //Vec3 Center_T_node1 = _global_R_element.inverseRotate( x[b].getCenter() - tinfo->frame.getCenter() );
+    //Vec3 Center_T_node2 = _global_R_element.inverseRotate( x[c].getCenter() - tinfo->frame.getCenter() );
 
-    // compare this position with the rest position
-    Vec3 dX0 = Center_T_node0 - tinfo->restLocalPositions[0];
-    Vec3 dX1 = Center_T_node1 - tinfo->restLocalPositions[1];
-    Vec3 dX2 = Center_T_node2 - tinfo->restLocalPositions[2];
+    // Compare this current position with the rest position
+    Vec3 dX0 = tinfo->pts[0] - tinfo->restLocalPositions[0];
+    Vec3 dX1 = tinfo->pts[1] - tinfo->restLocalPositions[1];
+    Vec3 dX2 = tinfo->pts[2] - tinfo->restLocalPositions[2];
 
     // inPlane => translation along X and  Y
     Disp[0] = dX0[0];
@@ -817,7 +761,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
 
     Vec3 P(1, GP[0], GP[1]);
 
-    Vec3 p; // Interpolated values at each Poin
+    Vec3 p; // Barycentric coordinates of the point GP
     p[0] = tinfo.interpol.line(0)*P;
     p[1] = tinfo.interpol.line(1)*P;
     p[2] = tinfo.interpol.line(2)*P;
@@ -958,7 +902,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Vec3 P(1, GP[0], GP[1]);
 
 
-    Vec3 p; // Interpolated values
+    Vec3 p; // Barycentric coordinates of the point GP
     p[0] = tinfo.interpol.line(0)*P;
     p[1] = tinfo.interpol.line(1)*P;
     p[2] = tinfo.interpol.line(2)*P;
@@ -1268,6 +1212,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ )
 {
+    sout << "addForce" << sendl;
     VecDeriv& f        = *(dataF.beginEdit());
     const VecCoord& p  =   dataX.getValue()  ;
 
@@ -1296,6 +1241,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core:
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core::MechanicalParams* mparams, DataVecDeriv& datadF, const DataVecDeriv& datadX )
 {
+    sout << "addDForce" << sendl;
     VecDeriv& df        = *(datadF.beginEdit());
     const VecDeriv& dp  =   datadX.getValue()  ;
 
@@ -1343,14 +1289,29 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
             // Global column index
             jg = 6*by;
 
-            // Iterates over the indices of the bloc 2x2
+
+            // Iterates over the linear x and y
+            /* The loop is unrolled below
             for (unsigned int i=0; i<2; i++)
             {
-                for (unsigned int j=0; j<2; j++)
-                {
-                    K_18x18[ig+i][jg+j] = K[2*bx+i][2*by+j];
-                }
+                K_18x18[ig+i][jg+0] = K[2*bx+i][2*by+0]; // linear X
+                K_18x18[ig+i][jg+1] = K[2*bx+i][2*by+1]; // linear Y
+                K_18x18[ig+i][jg+5] = K[2*bx+i][2*by+5]; // angular Z
             }
+            */
+
+            K_18x18[ig+0][jg+0] = K[2*bx+0][2*by+0]; // linear X
+            K_18x18[ig+0][jg+1] = K[2*bx+0][2*by+1]; // linear Y
+            K_18x18[ig+0][jg+5] = K[2*bx+0][2*by+5]; // angular Z
+
+            K_18x18[ig+1][jg+0] = K[2*bx+1][2*by+0]; // linear X
+            K_18x18[ig+1][jg+1] = K[2*bx+1][2*by+1]; // linear Y
+            K_18x18[ig+1][jg+5] = K[2*bx+1][2*by+5]; // angular Z
+
+            // angular Z
+            K_18x18[ig+5][jg+0] = K[2*bx+5][2*by+0]; // linear X
+            K_18x18[ig+5][jg+1] = K[2*bx+5][2*by+1]; // linear Y
+            K_18x18[ig+5][jg+5] = K[2*bx+5][2*by+5]; // angular Z
         }
     }
 
@@ -1410,9 +1371,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
 template<class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix)
 {
-    serr << "addKToMatrix(1) not implemented" << sendl;
-    return;
-
+    sout << "addKToMatrix" << sendl;
     StiffnessMatrixGlobalSpace K_gs;
 
     // Build Matrix Block for this ForceField
@@ -1524,8 +1483,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::default
 template<class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/)
 {
-    serr << "addBToMatrix() not implemented" << sendl;
-    return;
 }
 
 template <class DataTypes>
