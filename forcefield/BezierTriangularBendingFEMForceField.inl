@@ -490,11 +490,12 @@ void BezierTriangularBendingFEMForceField<DataTypes>::bezierDerivateFunctions(co
 }
 
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints)
+void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(const TriangleInformation *tinfo, const Vec2& /*baryCoord*/, const VecCoord& x, Coord& interpolatedFrame, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints)
 {
     // get the position of the bezier Points
     this->computePosBezierPoint(tinfo, x, X_bezierPoints);
 
+#if 0 //Reference frame by rotation at the center of the bezier triangle
     // use the bezier functions to interpolate the positions
     sofa::helper::fixed_array<Real,10> f_bezier;
     this->bezierFunctions(baryCoord, f_bezier);
@@ -512,6 +513,14 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(const 
         X1 += X_bezierPoints[i]*df_dx_bezier[i];
         Y1 += X_bezierPoints[i]*df_dy_bezier[i];
     }
+#else // Reference frame by the corner nodes
+    interpolatedFrame.getCenter() = (
+        X_bezierPoints[0] + X_bezierPoints[1] + X_bezierPoints[2])/3;
+
+    Vec3 X1 = X_bezierPoints[1] - X_bezierPoints[0],
+         Y1 = X_bezierPoints[2] - X_bezierPoints[0];
+
+#endif
 
     // compute the orthogonal frame directions
     Vec3 Y,Z;
@@ -564,8 +573,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v
     DisplacementBending Disp_bending;
     Vec3 x, o;
 
-    x = tinfo->frame.getOrientation().rotate(getVCenter(dx[a]));
-    o = tinfo->frame.getOrientation().rotate(getVOrientation(dx[a]));
+    x = tinfo->frame.getOrientation().inverseRotate(getVCenter(dx[a]));
+    o = tinfo->frame.getOrientation().inverseRotate(getVOrientation(dx[a]));
     Disp[0] = x[0];
     Disp[1] = x[1];
     Disp[2] = o[2];
@@ -573,8 +582,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v
     Disp_bending[1] = o[0];
     Disp_bending[2] = o[1];
 
-    x = tinfo->frame.getOrientation().rotate(getVCenter(dx[b]));
-    o = tinfo->frame.getOrientation().rotate(getVOrientation(dx[b]));
+    x = tinfo->frame.getOrientation().inverseRotate(getVCenter(dx[b]));
+    o = tinfo->frame.getOrientation().inverseRotate(getVOrientation(dx[b]));
     Disp[3] = x[0];
     Disp[4] = x[1];
     Disp[5] = o[2];
@@ -582,8 +591,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v
     Disp_bending[4] = o[0];
     Disp_bending[5] = o[1];
 
-    x = tinfo->frame.getOrientation().rotate(getVCenter(dx[c]));
-    o = tinfo->frame.getOrientation().rotate(getVOrientation(dx[c]));
+    x = tinfo->frame.getOrientation().inverseRotate(getVCenter(dx[c]));
+    o = tinfo->frame.getOrientation().inverseRotate(getVOrientation(dx[c]));
     Disp[6] = x[0];
     Disp[7] = x[1];
     Disp[8] = o[2];
@@ -601,14 +610,14 @@ void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v
 
     // Go back into global frame
     Vec3 fa1, fa2, fb1, fb2, fc1, fc2;
-    fa1 = tinfo->frame.getOrientation().inverseRotate(Vec3(dF[0], dF[1], dF_bending[0]));
-    fa2 = tinfo->frame.getOrientation().inverseRotate(Vec3(dF_bending[1], dF_bending[2], dF[2]));
+    fa1 = tinfo->frame.getOrientation().rotate(Vec3(dF[0], dF[1], dF_bending[0]));
+    fa2 = tinfo->frame.getOrientation().rotate(Vec3(dF_bending[1], dF_bending[2], dF[2]));
 
-    fb1 = tinfo->frame.getOrientation().inverseRotate(Vec3(dF[3], dF[4], dF_bending[3]));
-    fb2 = tinfo->frame.getOrientation().inverseRotate(Vec3(dF_bending[4], dF_bending[5], dF[5]));
+    fb1 = tinfo->frame.getOrientation().rotate(Vec3(dF[3], dF[4], dF_bending[3]));
+    fb2 = tinfo->frame.getOrientation().rotate(Vec3(dF_bending[4], dF_bending[5], dF[5]));
 
-    fc1 = tinfo->frame.getOrientation().inverseRotate(Vec3(dF[6], dF[7], dF_bending[6]));
-    fc2 = tinfo->frame.getOrientation().inverseRotate(Vec3(dF_bending[7], dF_bending[8], dF[8]));
+    fc1 = tinfo->frame.getOrientation().rotate(Vec3(dF[6], dF[7], dF_bending[6]));
+    fc2 = tinfo->frame.getOrientation().rotate(Vec3(dF_bending[7], dF_bending[8], dF[8]));
 
     v[a] += Deriv(-fa1, -fa2) * kFactor;
     v[b] += Deriv(-fb1, -fb2) * kFactor;
@@ -929,7 +938,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Real D2Phi2n3_xy = 6*b2*c2*p[1];
     Real D2Phi2n3_yy = 6*c2*c2*p[1];
 
-    Real D2Phi3n3_xx = 6*b3*b1*p[2];
+    Real D2Phi3n3_xx = 6*b3*b3*p[2];
     Real D2Phi3n3_xy = 6*b3*c3*p[2];
     Real D2Phi3n3_yy = 6*c3*c3*p[2];
 
@@ -972,7 +981,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Real d2uz_dyy_dU3 = D2Phi3n3_yy + 3.0*D2Phi3n2Phi1_yy + 3.0*D2Phi3n2Phi2_yy + 2.0*D2Phi123_yy;
 
     // The macro gives a vector with first two values (the third one is 0) on
-    // the 3rd line of the 3x3 cross-vector matrix
+    // the 3rd line of the 3x3 vector cross product matrix
 #define CROSS_VEC(p) Vec2 cv##p(-(p)[1], (p)[0])
     CROSS_VEC(P4P1);  CROSS_VEC(P6P2);  CROSS_VEC(P8P3);
     CROSS_VEC(P5P1);  CROSS_VEC(P7P2);  CROSS_VEC(P9P3);
@@ -1189,14 +1198,14 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
     computeForceBending(F_bending, D_bending, elementIndex);
 
     // Transform forces back into global reference frame
-    Vec3 fa1 = tinfo->frame.getOrientation().inverseRotate(Vec3(F[0], F[1], F_bending[0]));
-    Vec3 fa2 = tinfo->frame.getOrientation().inverseRotate(Vec3(F_bending[1], F_bending[2], F[2]));
+    Vec3 fa1 = tinfo->frame.getOrientation().rotate(Vec3(F[0], F[1], F_bending[0]));
+    Vec3 fa2 = tinfo->frame.getOrientation().rotate(Vec3(F_bending[1], F_bending[2], F[2]));
 
-    Vec3 fb1 = tinfo->frame.getOrientation().inverseRotate(Vec3(F[3], F[4], F_bending[3]));
-    Vec3 fb2 = tinfo->frame.getOrientation().inverseRotate(Vec3(F_bending[4], F_bending[5], F[5]));
+    Vec3 fb1 = tinfo->frame.getOrientation().rotate(Vec3(F[3], F[4], F_bending[3]));
+    Vec3 fb2 = tinfo->frame.getOrientation().rotate(Vec3(F_bending[4], F_bending[5], F[5]));
 
-    Vec3 fc1 = tinfo->frame.getOrientation().inverseRotate(Vec3(F[6], F[7], F_bending[6]));
-    Vec3 fc2 = tinfo->frame.getOrientation().inverseRotate(Vec3(F_bending[7], F_bending[8], F[8]));
+    Vec3 fc1 = tinfo->frame.getOrientation().rotate(Vec3(F[6], F[7], F_bending[6]));
+    Vec3 fc2 = tinfo->frame.getOrientation().rotate(Vec3(F_bending[7], F_bending[8], F[8]));
 
     f[a] += Deriv(-fa1, -fa2);
     f[b] += Deriv(-fb1, -fb2);
@@ -1371,6 +1380,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
 template<class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix)
 {
+    // TODO: this still does not seem to work properly
     sout << "addKToMatrix" << sendl;
     StiffnessMatrixGlobalSpace K_gs;
 
@@ -1416,12 +1426,12 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::M
     }
 
     #ifdef PRINT
-    std::cout << "Global matrix (" << mat->rowSize() << "x" << mat->colSize() << ")" << std::endl;
-    for (unsigned int i=0; i<mat->rowSize(); i++)
+    std::cout << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" << std::endl;
+    for (unsigned int i=0; i<r.matrix->rowSize(); i++)
     {
-        for (unsigned int j=0; j<mat->colSize(); j++)
+        for (unsigned int j=0; j<r.matrix->colSize(); j++)
         {
-            std::cout << mat->element(i,j) << ",";
+            std::cout << r.matrix->element(i,j) << ",";
         }
         std::cout << std::endl;
     }
