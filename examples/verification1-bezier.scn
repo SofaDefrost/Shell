@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<!--
+
+Simulation of plate bending under clamped boundary conditions
+
+    ν = 0.3 (Poisson ratio)
+    E = 1.7472e7
+    L = 2 and h = 0.01 (2x2 plate with thickness 0.01)
+    q = 1e-4 (q is a uniformly distributed load per unit area)
+    or
+    P = 4e-4 (P is concentrated central load)
+
+Theoretical results are:
+
+    Boundary supports   Displacement at center of plate (1e-6)
+                        Uniform pressure    Concentrated force
+    Simple              4.062               11.60
+    Clamped             1.26                5.6
+
+-->
+
+<Node name="root" dt="0.1" gravity="0 0 0"
+    showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" showWireFrame="1" showNormals="0" >
+    <CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <CollisionResponse response="default" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+    <CollisionGroup />
+
+    <Node name="Square2" activated="true">
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
+        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
+<!--
+        <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
+        <CGLinearSolver iterations="20" tolerance="1e-15" threshold="1e-15"/>
+        <SparseLUSolver name="SparseLUL Solver" printLog="false" />
+        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+        <LULinearSolver name="LU Solver" printLog="false" />
+-->
+
+        <RegularGrid name="gridTopo" min="-1 -1 0" max="1 1 0" nx="3" ny="3" nz="1" />
+        <MechanicalObject template="Rigid" />
+
+        <Node>
+            <TriangleSetTopologyContainer name="trianglesTopo"/>
+            <TriangleSetTopologyModifier name="Modifier" />
+            <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
+            <MechanicalObject name="basePoints" template="Rigid" showIndices="true" />
+
+            <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="1" totalmass="0.00012" />
+
+            <BoxROI name="box1" box="-1.1 -1.1 -0.1 1.1 -0.9 0.1" drawSize="0"/>
+            <FixedConstraint indices="@box1.indices" drawSize="0"/>
+
+            <BoxROI name="box2" box="-1.1 0.9 -0.1 1.1 1.1 0.1" drawSize="0"/>
+            <FixedConstraint indices="@box2.indices" drawSize="0"/>
+
+            <BoxROI name="box3" box="-1.1 -1.1 -0.1 -0.9 1.1 0.1" drawSize="0"/>
+            <FixedConstraint indices="@box3.indices" drawSize="0"/>
+
+            <BoxROI name="box4" box="0.9 -1.1 -0.1 1.1 1.1 0.1" drawSize="0"/>
+            <FixedConstraint indices="@box4.indices" drawSize="0"/>
+
+            <BoxROI name="boxCenter" box="-1e-4 -1e-4 -1e-4  1e-4 1e-4 1e-4" drawSize="0"/>
+            <BoxROI name="boxAll" box="-1.1 -1.1 -1.1  1.1 1.1 1.1" drawSize="0"/>
+
+            <!-- Distributed load 
+            -->
+            <ConstantForceField points="@boxAll.indices" totalForce="0 0 4e-4 0 0 0"/>
+            <!-- Concentrated load
+            <ConstantForceField points="@boxCenter.indices" forces="0 0 4e-4 0 0 0"/>
+            -->
+            <!--<FixedRotationConstraint FixedZRotation="true"/>-->
+
+            <BezierTriangularBendingFEMForceField name="FEM" youngModulus="1.7472e7" poissonRatio="0.3" thickness="0.01" printLog="false" />
+            
+            <OglModel name="Visual" />
+            <IdentityMapping object1="basePoints" object2="Visual"/>
+
+            <!--
+            <WriteState filename="verification1-bezier-9x9.state"
+                writeX="true" writeX0="false" writeV="false"
+                time="0" period="1" />
+
+            <MeshExporter filename="verification1-bezier-9x9-%s"  format="gmsh"
+                quads="0" tetras="0" hexas="0"
+                listening="true"
+                exportEveryNumberOfSteps="100" exportAtBegin="0" exportAtEnd="0" />
+            -->
+
+            <!--
+            <Node name="SubTriangles">
+                <TriangleSetTopologyContainer name="subTrianglesTopo"/>
+                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>
+                <MechanicalObject name="subPoints" />
+                <BendingPlateMechanicalMapping />
+                <Node name="visual">
+                    <OglModel name="Visual" color="red"/>
+                    <IdentityMapping object1="subPoints" object2="Visual"/>
+                </Node>
+            </Node>
+            -->
+        </Node>
+    </Node>
+
+</Node>

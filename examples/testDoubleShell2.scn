@@ -10,7 +10,14 @@
         <EulerImplicitSolver/>
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
 <!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
-        <TriangleSetTopologyContainer name="trianglesTopo" filename="applications/plugins/shells/mesh/oneTriangle.obj"/>
+
+        <TriangleSetTopologyContainer name="trianglesTopo"
+            nbPoints="3" position="
+                0   0   0
+                1   0   0
+                0.5 0.9 0"
+            edges="1 2 0 2 0 1" triangles="0 1 2"
+        />
 
         <!--                No rotation - flat rest position                -->
 <!--        <MechanicalObject name="tri" template="Rigid" />-->

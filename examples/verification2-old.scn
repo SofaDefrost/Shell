@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!--
+
+Twisted beam
+
+    L = 120
+    w = 1.1;
+    t = 0.32
+    twist = 90° (root to tip)
+    E = 29.0e6
+    v = 0.22
+    Loading: unit forces at tip.
+
+Theoretical solution:
+    Tip load direction  Displacement in direction of load
+    In-plane shear      0.005424
+    Out-of-plane shear  0.001754
+
+-->
+
+<Node name="root" dt="0.01" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
+    <CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <CollisionResponse response="default" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+    <CollisionGroup />
+
+    <Node name="Square2" activated="true">
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
+        <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
+<!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
+
+        <TriangleSetTopologyContainer name="baseTopo" filename="../mesh/twisted12.obj"/>
+        <MechanicalObject name="basePoints" template="Rigid"
+            showIndices="false" showIndicesScale="0.0001"/>
+
+        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="1" totalmass="0.00012" />
+
+        <BoxROI name="box1" box="-0.1 -0.1 -2 0.1 0.1 2" drawSize="0"/>
+        <FixedConstraint indices="@box1.indices" drawSize="0"/>
+
+        <ConstantForceField points="36-38" forces="0 1 0 0 0 0"/>
+
+        <FixedRotationConstraint FixedZRotation="true"/>
+
+        <TriangularBendingFEMForceField name="FEM" bending="true"
+            youngModulus="29.0e6" poissonRatio="0.22" thickness="0.32" />
+        
+        <OglModel name="Visual" />
+        <IdentityMapping object1="basePoints" object2="Visual"/>
+
+        <WriteState filename="verification2-old-12.state"
+            writeX="true" writeX0="false" writeV="false"
+            time="0" period="1" />
+
+        <MeshExporter filename="verification2-old-12-%s"  format="gmsh"
+            quads="0" tetras="0" hexas="0"
+            listening="true"
+            exportEveryNumberOfSteps="100" exportAtBegin="0" exportAtEnd="0" />
+        <!--
+        -->
+
+        <!--
+        <Node name="SubTriangles">
+            <TriangleSetTopologyContainer name="subTrianglesTopo"/>
+            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>
+            <MechanicalObject name="subPoints" />
+            <BendingPlateMechanicalMapping />
+            <Node name="visual">
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping object1="subPoints" object2="Visual"/>
+            </Node>
+        </Node>
+        -->
+    </Node>
+
+</Node>
