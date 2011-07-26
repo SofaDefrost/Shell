@@ -1340,22 +1340,22 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
             {
                 K_18x18[ig+i][jg+0] = K[2*bx+i][2*by+0]; // linear X
                 K_18x18[ig+i][jg+1] = K[2*bx+i][2*by+1]; // linear Y
-                K_18x18[ig+i][jg+5] = K[2*bx+i][2*by+5]; // angular Z
+                K_18x18[ig+i][jg+5] = K[2*bx+i][2*by+2]; // angular Z
             }
             */
 
             K_18x18[ig+0][jg+0] = K[2*bx+0][2*by+0]; // linear X
             K_18x18[ig+0][jg+1] = K[2*bx+0][2*by+1]; // linear Y
-            K_18x18[ig+0][jg+5] = K[2*bx+0][2*by+5]; // angular Z
+            K_18x18[ig+0][jg+5] = K[2*bx+0][2*by+2]; // angular Z
 
             K_18x18[ig+1][jg+0] = K[2*bx+1][2*by+0]; // linear X
             K_18x18[ig+1][jg+1] = K[2*bx+1][2*by+1]; // linear Y
-            K_18x18[ig+1][jg+5] = K[2*bx+1][2*by+5]; // angular Z
+            K_18x18[ig+1][jg+5] = K[2*bx+1][2*by+2]; // angular Z
 
             // angular Z
-            K_18x18[ig+5][jg+0] = K[2*bx+5][2*by+0]; // linear X
-            K_18x18[ig+5][jg+1] = K[2*bx+5][2*by+1]; // linear Y
-            K_18x18[ig+5][jg+5] = K[2*bx+5][2*by+5]; // angular Z
+            K_18x18[ig+5][jg+0] = K[2*bx+2][2*by+0]; // linear X
+            K_18x18[ig+5][jg+1] = K[2*bx+2][2*by+1]; // linear Y
+            K_18x18[ig+5][jg+5] = K[2*bx+2][2*by+2]; // angular Z
         }
     }
 
