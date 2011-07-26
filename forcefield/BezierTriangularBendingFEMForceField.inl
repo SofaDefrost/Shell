@@ -372,15 +372,19 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
     // Gets vertices of rest positions
     const VecCoord& x0 = *this->mstate->getX0();
 
+    // Compute orientation of the triangle
+    Quaternion triFrame;
+    computeFrame(triFrame, x0[a].getCenter(), x0[b].getCenter(), x0[c].getCenter());
+
     // get the segment position in the reference frames of the rest-shape
-    tinfo->P0_P1_inFrame0 = x0[a].getOrientation().inverseRotate( x0[b].getCenter() - x0[a].getCenter() )/3.0;
-    tinfo->P0_P2_inFrame0 = x0[a].getOrientation().inverseRotate( x0[c].getCenter() - x0[a].getCenter() )/3.0;
+    tinfo->P0_P1_inFrame0 = /*x0[a].getOrientation().inverseRotate*/ triFrame.inverseRotate( x0[b].getCenter() - x0[a].getCenter() )/3.0;
+    tinfo->P0_P2_inFrame0 = /*x0[a].getOrientation().inverseRotate*/ triFrame.inverseRotate( x0[c].getCenter() - x0[a].getCenter() )/3.0;
 
-    tinfo->P1_P2_inFrame1 = x0[b].getOrientation().inverseRotate( x0[c].getCenter() - x0[b].getCenter() )/3.0;
-    tinfo->P1_P0_inFrame1 = x0[b].getOrientation().inverseRotate( x0[a].getCenter() - x0[b].getCenter() )/3.0;
+    tinfo->P1_P2_inFrame1 = /*x0[b].getOrientation().inverseRotate*/ triFrame.inverseRotate( x0[c].getCenter() - x0[b].getCenter() )/3.0;
+    tinfo->P1_P0_inFrame1 = /*x0[b].getOrientation().inverseRotate*/ triFrame.inverseRotate( x0[a].getCenter() - x0[b].getCenter() )/3.0;
 
-    tinfo->P2_P0_inFrame2 = x0[c].getOrientation().inverseRotate( x0[a].getCenter() - x0[c].getCenter() )/3.0;
-    tinfo->P2_P1_inFrame2 = x0[c].getOrientation().inverseRotate( x0[b].getCenter() - x0[c].getCenter() )/3.0;
+    tinfo->P2_P0_inFrame2 = /*x0[c].getOrientation().inverseRotate*/ triFrame.inverseRotate( x0[a].getCenter() - x0[c].getCenter() )/3.0;
+    tinfo->P2_P1_inFrame2 = /*x0[c].getOrientation().inverseRotate*/ triFrame.inverseRotate( x0[b].getCenter() - x0[c].getCenter() )/3.0;
 
 
     // compute the initial position and rotation in the reference frame
@@ -413,6 +417,33 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
     triangleInfo.endEdit();
 }
 
+template <class DataTypes>
+void BezierTriangularBendingFEMForceField<DataTypes>::computeFrame(Quat& Qframe, const Vec3 &a, const Vec3 &b, const Vec3 &c)
+{
+    //
+    // WARNING: The frame computed by this function is not the same as the one computed by interpolateRefFrame() !!!
+    //          This is not a problem as long as both frames are used carefully and are not interchanged.
+    //
+
+    Vec3 xAxis, yAxis, zAxis;
+
+    zAxis = cross(b-a, c-a);
+    zAxis.normalize();
+
+    // The following is based on the algorithm in Vertex2Frame and must be kept in sync with it
+    yAxis = Vec3(1.0, 0.0, 0.0);
+    if ( fabs(dot(yAxis, zAxis)) > 0.7) {
+        yAxis = Vector3(0.0, 0.0, 1.0);
+    }
+
+    xAxis = yAxis.cross(zAxis);
+    xAxis.normalize();
+
+    yAxis = zAxis.cross(xAxis);
+    yAxis.normalize();
+
+    Qframe = Quat::createQuaterFromFrame(xAxis, yAxis, zAxis);
+}
 
 // ------------------------
 // --- Compute the position of the Bézier points
@@ -423,6 +454,10 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(
     const VecCoord& x, /*const VecCoord& x0,*/
     sofa::helper::fixed_array<Vec3,10> &X_bezierPoints)
 {
+    // Compute orientation of the triangle
+    //Quaternion triFrame;
+    //computeFrame(triFrame, x[tinfo->a].getCenter(), x[tinfo->b].getCenter(), x[tinfo->c].getCenter());
+
     // 3 points corresponding to the node position
     X_bezierPoints[0] = x[tinfo->a].getCenter();
     X_bezierPoints[1] = x[tinfo->b].getCenter();
@@ -521,6 +556,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(const 
          Y1 = X_bezierPoints[2] - X_bezierPoints[0];
 
 #endif
+
+    //
+    // WARNING: The frame computed by this function is not the same as the one computed by computeFrame() !!!
+    //          This is not a problem as long as both frames are used carefully and are not interchanged.
+    //
 
     // compute the orthogonal frame directions
     Vec3 Y,Z;
@@ -638,12 +678,10 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
 
     helper::fixed_array <Vec3, 10> &pts = tinfo->pts;
 
-    // TODO: compare speed but try to prefer 1st version
-
     // The element is being rotated along the frame situated at the center of
     // the element
 
-    //// 1st way: Rotate the already computed nodes
+    //// Rotate the already computed nodes
     //sout << "QFrame: " << tinfo->frame.getOrientation() << sendl;
     for (int i = 0; i < 10; i++) {
         tinfo->pts[i] = tinfo->frame.getOrientation().inverseRotate(tinfo->bezierNodes[i] - tinfo->frame.getCenter());
@@ -651,9 +689,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
             << " pt[" << i << "]=" << tinfo->pts[i] << sendl;
     }
 
-
-    //// 2st way: Compute the nodes directly in the local frame
-    // TODO
 
     // TODO: this is no longer correct, or is it? (the nodes of the shell don't
     // lie on the plane of reference frame and have non-zero z-coordinate)

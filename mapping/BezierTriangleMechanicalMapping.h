@@ -43,6 +43,7 @@
 
 #include <sofa/helper/system/thread/CTime.h>
 
+#include "../forcefield/BezierTriangularBendingFEMForceField.h"
 
 namespace sofa
 {

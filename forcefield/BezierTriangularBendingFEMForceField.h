@@ -193,6 +193,8 @@ public:
 
         virtual void draw();
 
+        static void computeFrame(Quat& Qframe, const Vec3 &a, const Vec3 &b, const Vec3 &c);
+
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
         TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}
 

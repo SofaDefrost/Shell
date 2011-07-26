@@ -28,6 +28,7 @@
 #include "BezierTriangleMechanicalMapping.h"
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 #include <sofa/component/collision/MinProximityIntersection.h>
+#include <sofa/simulation/common/Simulation.h>
 
 #include <sofa/component/forcefield/ConstantForceField.h>
 
@@ -95,21 +96,31 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
 
         TriangleInformation &tinfo = triangleInfo[t];
 
+        Quaternion triFrame;
+        sofa::component::forcefield::BezierTriangularBendingFEMForceField<TIn>::computeFrame(triFrame, x0[0].getCenter(), x0[1].getCenter(), x0[2].getCenter());
+
+        // TODO: Concept 1 -- the nodes are fully attached to rest position,
+        // including the original relative directions to other nodes
+
         // get the segment positions in the reference frames of the rest-shape
-        tinfo.P0_P1 = x0[0].getOrientation().inverseRotate(
-            x0[1].getCenter() - x0[0].getCenter());
-        tinfo.P0_P2 = x0[0].getOrientation().inverseRotate(
-            x0[2].getCenter() - x0[0].getCenter());
+        tinfo.P0_P1 = /*x0[0].getOrientation().inverseRotate*/ triFrame.inverseRotate(
+            x0[1].getCenter() - x0[0].getCenter())/3.0;
+        tinfo.P0_P2 = /*x0[0].getOrientation().inverseRotate*/ triFrame.inverseRotate(
+            x0[2].getCenter() - x0[0].getCenter())/3.0;
 
-        tinfo.P1_P2 = x0[1].getOrientation().inverseRotate(
-            x0[2].getCenter() - x0[1].getCenter());
-        tinfo.P1_P0 = x0[1].getOrientation().inverseRotate(
-            x0[0].getCenter() - x0[1].getCenter());
+        tinfo.P1_P2 = /*x0[1].getOrientation().inverseRotate*/ triFrame.inverseRotate(
+            x0[2].getCenter() - x0[1].getCenter())/3.0;
+        tinfo.P1_P0 = /*x0[1].getOrientation().inverseRotate*/ triFrame.inverseRotate(
+            x0[0].getCenter() - x0[1].getCenter())/3.0;
 
-        tinfo.P2_P0 = x0[2].getOrientation().inverseRotate(
-            x0[0].getCenter() - x0[2].getCenter());
-        tinfo.P2_P1 = x0[2].getOrientation().inverseRotate(
-            x0[1].getCenter() - x0[2].getCenter());
+        tinfo.P2_P0 = /*x0[2].getOrientation().inverseRotate*/ triFrame.inverseRotate(
+            x0[0].getCenter() - x0[2].getCenter())/3.0;
+        tinfo.P2_P1 = /*x0[2].getOrientation().inverseRotate*/ triFrame.inverseRotate(
+            x0[1].getCenter() - x0[2].getCenter())/3.0;
+
+        // TODO: Concept 2 -- the nodes are only attached in terms of original
+        // distance at rest postion and are free to rotate so they always face
+        // the oposite node
     }
 
     // Iterates over 'out' vertices
@@ -129,41 +140,68 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         // Iterates over 'in' triangles
         minTriangle = FindClosestTriangle(closestTriangle, outVertices[i], inVertices, inTriangles);
 
+        int which = 2; /* 0 vertex, 1 edge, 2 triangle */
+
         if ((minVertex <= minEdge) && (minVertex <= minTriangle))
         {
-            // If it is a vertex, consider one of the triangles attached to it
-            TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex(closestVertex);
-            triangleID = trianglesAroundVertex[0];
-            listBaseTriangles[i] = triangleID;
-
-            // Computes barycentric coordinates within the triangle
-            computeBaryCoefs(vertexBaryCoord, outVertices[i],
-                inVertices[ inTriangles[triangleID][0] ],
-                inVertices[ inTriangles[triangleID][1] ],
-                inVertices[ inTriangles[triangleID][2] ]);
-
-            // Adds the barycentric coordinates to the list
-            barycentricCoordinates[i] = vertexBaryCoord;
-
+            which = 0;
         }
         else if ((minEdge <= minTriangle) && (minEdge <= minVertex))
         {
+            which = 1;
+        }
+
+        if (which == 0)
+        {
+            // If it is a vertex, consider one of the triangles attached to it
+            TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex(closestVertex);
+            if (trianglesAroundVertex.size() <= 0)
+            {
+                serr << "No triangles attached to vertex " << closestVertex << sendl;
+                which = (minEdge <= minTriangle) ? 1 : 2;
+            }
+            else
+            {
+                triangleID = trianglesAroundVertex[0];
+                listBaseTriangles[i] = triangleID;
+
+                // Computes barycentric coordinates within the triangle
+                computeBaryCoefs(vertexBaryCoord, outVertices[i],
+                    inVertices[ inTriangles[triangleID][0] ],
+                    inVertices[ inTriangles[triangleID][1] ],
+                    inVertices[ inTriangles[triangleID][2] ]);
+
+                // Adds the barycentric coordinates to the list
+                barycentricCoordinates[i] = vertexBaryCoord;
+            }
+        }
+
+        if (which == 1)
+        {
             // If it is an edge, consider one of the triangles attached to it
             TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge(closestEdge);
-            triangleID = trianglesAroundEdge[0];
-            listBaseTriangles[i] = triangleID;
+            if (trianglesAroundEdge.size() <= 0)
+            {
+                serr << "No triangles attached to edge " << closestEdge << sendl;
+                which = 3;
+            }
+            else
+            {
+                triangleID = trianglesAroundEdge[0];
+                listBaseTriangles[i] = triangleID;
 
-            // Computes barycentric coordinates within the triangle
-            computeBaryCoefs(vertexBaryCoord, outVertices[i],
-                inVertices[ inTriangles[triangleID][0] ],
-                inVertices[ inTriangles[triangleID][1] ],
-                inVertices[ inTriangles[triangleID][2] ]);
+                // Computes barycentric coordinates within the triangle
+                computeBaryCoefs(vertexBaryCoord, outVertices[i],
+                    inVertices[ inTriangles[triangleID][0] ],
+                    inVertices[ inTriangles[triangleID][1] ],
+                    inVertices[ inTriangles[triangleID][2] ]);
 
-            // Adds the barycentric coordinates to the list
-            barycentricCoordinates[i] = vertexBaryCoord;
-
+                // Adds the barycentric coordinates to the list
+                barycentricCoordinates[i] = vertexBaryCoord;
+            }
         }
-        else
+        
+        if (which == 2)
         {
             // If it is a triangle, consider it
             listBaseTriangles[i] = closestTriangle;
@@ -575,7 +613,6 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::computeBaryCoefs(Vec3 &baryCoef
     baryCoefs[2] = coef_c;
 }
 
-
 // Updates positions of the visual mesh from mechanical vertices
 template <class TIn, class TOut>
 void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParams * /*mparams*/, Data<OutVecCoord>& dOut, const Data<InVecCoord>& dIn)
@@ -627,7 +664,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
 
 #define BN(i, p, seg) do { \
     tinfo.bezierNodes[(i)] = tinfo.bezierNodes[(p)] + \
-        q[(p)].rotate(tinfo.seg/3.0); \
+        q[(p)].rotate(tinfo.seg); \
 } while (0)
 
         BN(3, 0, P0_P1);
@@ -641,9 +678,9 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
 
         // Center
         tinfo.bezierNodes[9] =
-            (tinfo.bezierNodes[0] + q[0].rotate( (tinfo.P0_P1 + tinfo.P0_P2)/3.0 ))/3.0 +
-            (tinfo.bezierNodes[1] + q[1].rotate( (tinfo.P1_P0 + tinfo.P1_P2)/3.0 ))/3.0 +
-            (tinfo.bezierNodes[2] + q[2].rotate( (tinfo.P2_P0 + tinfo.P2_P1)/3.0 ))/3.0;
+            (tinfo.bezierNodes[0] + q[0].rotate( tinfo.P0_P1 + tinfo.P0_P2 ))/3.0 +
+            (tinfo.bezierNodes[1] + q[1].rotate( tinfo.P1_P0 + tinfo.P1_P2 ))/3.0 +
+            (tinfo.bezierNodes[2] + q[2].rotate( tinfo.P2_P0 + tinfo.P2_P1 ))/3.0;
     }
 
     for (unsigned int i=0; i<out.size(); i++)
@@ -1090,9 +1127,10 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw()
             }
             glEnd();
         }
+    }
 
-#if 0
-        // TODO: make this optional
+    if(this->getContext()->getShowMechanicalMappings())
+    {
         // Render nodes of the Bézier triangles
         glPointSize(8);
         glDisable(GL_LIGHTING);
@@ -1102,15 +1140,30 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw()
             sofa::helper::fixed_array<Vec3,10> &bn = triangleInfo[i].bezierNodes;
             for (int j=0; j<10; j++)
             {
-                glColor4f(0.0, 0.5, 0.3, 1.0);
+                //glColor4f(0.0, 0.5, 0.3, 1.0);
+                glColor4f(0.5, 1.0, 0.5, 1.0);
                 glVertex3f(bn[j][0], bn[j][1], bn[j][2]);
             }
-        } 
+        }
         glEnd();
         glPointSize(1);
-        // TODO: visualise the mesh
-#endif
 
+        for (unsigned int i=0; i<inputTopo->getTriangles().size(); i++)
+        {
+            sofa::helper::fixed_array<Vec3,10> &bn = triangleInfo[i].bezierNodes;
+            Quaternion triFrame;
+            Vec3 c = (bn[0]+bn[1]+bn[2])/3.0;
+            sofa::component::forcefield::BezierTriangularBendingFEMForceField<TIn>::computeFrame(triFrame, bn[0], bn[1], bn[2]);
+            Real size = 0.5 * cross(bn[1] - bn[0], bn[2] - bn[0]).norm()/20; // Size by element area
+            //sout << "tri: " << bn[0] << ", " << bn[1] << ", " << bn[2]
+            //    << " center: " << c
+            //    << " frame: " << triFrame << sendl;
+            sofa::simulation::getSimulation()->DrawUtility().drawFrame(
+                c,
+                triFrame,
+                Vec3(size, size, size));
+        }
+        // TODO: visualise the mesh
     }
 }
 
