@@ -685,8 +685,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
     //sout << "QFrame: " << tinfo->frame.getOrientation() << sendl;
     for (int i = 0; i < 10; i++) {
         tinfo->pts[i] = tinfo->frame.getOrientation().inverseRotate(tinfo->bezierNodes[i] - tinfo->frame.getCenter());
-        sout << "bn[" << i << "]=" << tinfo->bezierNodes[i]
-            << " pt[" << i << "]=" << tinfo->pts[i] << sendl;
+    //    sout << "bn[" << i << "]=" << tinfo->bezierNodes[i]
+    //        << " pt[" << i << "]=" << tinfo->pts[i] << sendl;
     }
 
 
@@ -1256,7 +1256,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ )
 {
-    sout << "addForce" << sendl;
     VecDeriv& f        = *(dataF.beginEdit());
     const VecCoord& p  =   dataX.getValue()  ;
 
@@ -1285,7 +1284,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core:
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core::MechanicalParams* mparams, DataVecDeriv& datadF, const DataVecDeriv& datadX )
 {
-    sout << "addDForce" << sendl;
     VecDeriv& df        = *(datadF.beginEdit());
     const VecDeriv& dp  =   datadX.getValue()  ;
 
@@ -1322,7 +1320,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
     K_18x18.clear();
     unsigned int ig, jg;
 
-    // Copy the stiffness matrix by block 2x2 into 18x18 matrix (the new index of each bloc into global matrix is a combination of 0, 6 and 12 in indices)
+    // Copy the stiffness matrix into 18x18 matrix (the new index of each bloc into global matrix is a combination of 0, 6 and 12 in indices)
     for (unsigned int bx=0; bx<3; bx++)
     {
         // Global row index
@@ -1333,29 +1331,20 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
             // Global column index
             jg = 6*by;
 
+            // linear X
+            K_18x18[ig+0][jg+0] = K[3*bx+0][3*by+0]; // linear X
+            K_18x18[ig+0][jg+1] = K[3*bx+0][3*by+1]; // linear Y
+            K_18x18[ig+0][jg+5] = K[3*bx+0][3*by+2]; // angular Z
 
-            // Iterates over the linear x and y
-            /* The loop is unrolled below
-            for (unsigned int i=0; i<2; i++)
-            {
-                K_18x18[ig+i][jg+0] = K[2*bx+i][2*by+0]; // linear X
-                K_18x18[ig+i][jg+1] = K[2*bx+i][2*by+1]; // linear Y
-                K_18x18[ig+i][jg+5] = K[2*bx+i][2*by+2]; // angular Z
-            }
-            */
-
-            K_18x18[ig+0][jg+0] = K[2*bx+0][2*by+0]; // linear X
-            K_18x18[ig+0][jg+1] = K[2*bx+0][2*by+1]; // linear Y
-            K_18x18[ig+0][jg+5] = K[2*bx+0][2*by+2]; // angular Z
-
-            K_18x18[ig+1][jg+0] = K[2*bx+1][2*by+0]; // linear X
-            K_18x18[ig+1][jg+1] = K[2*bx+1][2*by+1]; // linear Y
-            K_18x18[ig+1][jg+5] = K[2*bx+1][2*by+2]; // angular Z
+            // linear Y
+            K_18x18[ig+1][jg+0] = K[3*bx+1][3*by+0]; // linear X
+            K_18x18[ig+1][jg+1] = K[3*bx+1][3*by+1]; // linear Y
+            K_18x18[ig+1][jg+5] = K[3*bx+1][3*by+2]; // angular Z
 
             // angular Z
-            K_18x18[ig+5][jg+0] = K[2*bx+2][2*by+0]; // linear X
-            K_18x18[ig+5][jg+1] = K[2*bx+2][2*by+1]; // linear Y
-            K_18x18[ig+5][jg+5] = K[2*bx+2][2*by+2]; // angular Z
+            K_18x18[ig+5][jg+0] = K[3*bx+2][3*by+0]; // linear X
+            K_18x18[ig+5][jg+1] = K[3*bx+2][3*by+1]; // linear Y
+            K_18x18[ig+5][jg+5] = K[3*bx+2][3*by+2]; // angular Z
         }
     }
 
@@ -1374,7 +1363,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
             // Global column index
             jg = 6*by+2;
 
-            // Iterates over the indices of the bloc 3x3
+            // Iterates over the indices of the 3x3 block
             for (unsigned int i=0; i<3; i++)
             {
                 for (unsigned int j=0; j<3; j++)
@@ -1388,7 +1377,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
 
     // Extend rotation matrix and its transpose
     Transformation R, Rt;
-    tinfo->frame.getOrientation().toMatrix(R);
+    tinfo->frame.getOrientation().inverse().toMatrix(R);
     Rt.transpose(R);
 
     StiffnessMatrixGlobalSpace R18x18, Rt18x18;
@@ -1415,8 +1404,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
 template<class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix)
 {
-    // TODO: this still does not seem to work properly
-    sout << "addKToMatrix" << sendl;
     StiffnessMatrixGlobalSpace K_gs;
 
     // Build Matrix Block for this ForceField
