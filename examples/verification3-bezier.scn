@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<!--
+
+Scordelis-Lo roof
+
+    80deg piece of cylinder
+    Radius      = 25
+    Lenght      = 50
+    Thickness   = 0.25
+    E           = 4.32e8
+    v           = 0.0
+    q           = 90 (per unit area)
+    u_x, u_z    = 0 on curved edges
+
+Theoretical solution:
+
+    midside vertical displacement: 0.3086 (but most finite element methods
+    converge to 0.3024)
+
+-->
+
+<Node name="root" dt="0.01" gravity="0 0 0"
+    showBehaviorModels="0" showCollisionModels="0" showMechanicalMappings="1" showForceFields="0" showBoundingTree="0" showVisualModels="1" showWireFrame="1" showNormals="0" >
+    <CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <CollisionResponse response="default" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+    <CollisionGroup />
+
+    <Node name="Mesh">
+        <MeshObjLoader name="mesh" filename="../mesh/roof6.obj"/>
+        <Vertex2Frame name="frames" template="Rigid" vertices="@mesh.vertices" normals="@mesh.normals" invertNormals="false"/>
+        <MechanicalObject name="meshPoints" template="Rigid"
+                          rest_position="@frames.frames"
+                          showIndices="false" showIndicesScale="0.0001"/>
+
+        <BoxROI name="boxMidside" box="24.999 -16.069 19.151 25.001 -16.070 19.152" drawSize="0"/>
+    </Node>
+
+
+
+    <Node name="Roof">
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
+
+        <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
+        <!--
+        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
+        <CGLinearSolver iterations="20" tolerance="1e-15" threshold="1e-15"/>
+        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+        <SparseLUSolver name="SparseLUL Solver" printLog="false" />
+        -->
+
+        <TriangleSetTopologyContainer name="baseTopo"
+                                      position="@/Mesh/mesh.position"
+                                      triangles="@/Mesh/mesh.triangles"
+                                      />
+
+        <MechanicalObject name="basePoints" template="Rigid"
+                          rest_position="@/Mesh/frames.frames"
+                          showIndices="false" showIndicesScale="0.0001"/>
+
+        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="1" totalmass="0.00012" />
+
+        <BoxROI name="box1" box="-0.001 -60 -60 0.001 60 60" drawSize="0"/>
+        <PartialFixedConstraint indices="@box1.indices" fixedDirections="1 0 1 0 0 0" drawSize="0"/>
+        <!--<FixedConstraint indices="@box1.indices" drawSize="0"/>-->
+
+        <BoxROI name="box2" box="49.999 -60 -60 50.001 60 60" drawSize="0"/>
+        <PartialFixedConstraint indices="@box2.indices" fixedDirections="1 0 1 0 0 0" drawSize="0"/>
+        <!--<FixedConstraint indices="@box2.indices" drawSize="0"/>-->
+
+
+        <BoxROI name="boxAll" box="-60 -60 -60 60 60 60" drawSize="0"/>
+        <ConstantForceField points="@boxAll.indices" totalForce="0 0 157079.6 0 0 0"/>
+
+        <BezierTriangularBendingFEMForceField name="FEM"
+            youngModulus="4.32e8" poissonRatio="0.0" thickness="0.25" printLog="false" />
+
+        <OglModel name="Visual" color="green"/>
+        <IdentityMapping object1="basePoints" object2="Visual"/>
+
+        <Node name="Measurement">
+            <MechanicalObject template="Rigid" name="MO1" />
+            <MechanicalObject template="Rigid" name="MO2" />
+            <SubsetMapping template="Mapping&lt;Rigid,Rigid&gt;" input="@../../Mesh/meshPoints" output="@MO1" indices="@../../Mesh/boxMidside.indices" />
+            <SubsetMapping template="Mapping&lt;Rigid,Rigid&gt;" input="@../basePoints" output="@MO2" indices="@../../Mesh/boxMidside.indices" />
+            <EvalPointsDistance template="Rigid" name="epd"  printLog="true" listening="1"  period="1.0" object1="@MO1" object2="@MO2" />
+        </Node>
+
+        <!--
+        <Node name="SubTriangles">
+            <TriangleSetTopologyContainer name="subTrianglesTopo"/>
+            <TriangleSubdivisionTopologicalMapping object1="baseTopo" object2="subTrianglesTopo" subdivisions="2"/>
+            <MechanicalObject name="subPoints" />
+            <BezierTriangleMechanicalMapping input="@../basePoints" output="@subPoints" />
+            <Node name="visual">
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping object1="subPoints" object2="Visual"/>
+            </Node>
+        </Node>
+        -->
+
+    </Node>
+
+</Node>
