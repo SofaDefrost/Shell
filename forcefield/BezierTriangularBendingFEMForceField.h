@@ -142,18 +142,17 @@ public:
                 helper::fixed_array<Vec3, 10> bezierNodes;  // ... in global frame
                 helper::fixed_array<Vec3, 10> pts;          // ... in local frame
 
-                /// material stiffness matrices of each tetrahedron
-                MaterialStiffness materialMatrix;
-
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacement strainDisplacementMatrix1;
                 StrainDisplacement strainDisplacementMatrix2;
                 StrainDisplacement strainDisplacementMatrix3;
+                StrainDisplacement strainDisplacementMatrix4;
 
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacementBending strainDisplacementMatrixB1;
                 StrainDisplacementBending strainDisplacementMatrixB2;
                 StrainDisplacementBending strainDisplacementMatrixB3;
+                StrainDisplacementBending strainDisplacementMatrixB4;
 
                 // Stiffness matrix K = J * M * Jt
                 StiffnessMatrix stiffnessMatrix;
@@ -211,6 +210,10 @@ protected :
 
         TriangleData<TriangleInformation> triangleInfo;
 
+        /// Material stiffness matrices for plane stress and bending
+        MaterialStiffness materialMatrix;
+        MaterialStiffness materialMatrixBending;
+
 
         void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
 
@@ -232,7 +235,7 @@ protected :
 
         /// f += Kx where K is the stiffness matrix and x a displacement
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
-        virtual void computeMaterialStiffness(const int i);
+        virtual void computeMaterialMatrix();
 
         void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
         void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);

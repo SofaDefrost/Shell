@@ -53,6 +53,7 @@
 #include <windows.h>
 #endif
 
+#define GAUSS4
 
 namespace sofa
 {
@@ -75,7 +76,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFuncti
     if (ff)
     {
         ff->initTriangle(triangleIndex, t[0], t[1], t[2]);
-        ff->computeMaterialStiffness(triangleIndex);
     }
 }
 
@@ -352,6 +352,9 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
     triangleInfo.setDestroyParameter( (void *) this );
 
     triangleInfo.endEdit();
+
+    // Compute the material matrices
+    computeMaterialMatrix();
 }
 
 
@@ -763,7 +766,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacements( Disp
     Disp[6] = dX2[0];
     Disp[7] = dX2[1];
 
-    // inPlane => translation along Z
+    // bending => translation along Z
     BDisp[0] = dX0[2];
     BDisp[3] = dX1[2];
     BDisp[6] = dX2[2];
@@ -776,6 +779,7 @@ template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrix(TriangleInformation &tinfo)
 {
     // Calculation of the 3 Gauss points
+#ifndef GAUSS4
     Vec3 gaussPoint1 = tinfo.pts[0]*(2.0/3.0) + tinfo.pts[1]/6.0 + tinfo.pts[2]/6.0;
     Vec3 gaussPoint2 = tinfo.pts[0]/6.0 + tinfo.pts[1]*(2.0/3.0) + tinfo.pts[2]/6.0;
     Vec3 gaussPoint3 = tinfo.pts[0]/6.0 + tinfo.pts[1]/6.0 + tinfo.pts[2]*(2.0/3.0);
@@ -783,6 +787,12 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementM
     matrixSD(tinfo.strainDisplacementMatrix1, gaussPoint1, tinfo);
     matrixSD(tinfo.strainDisplacementMatrix2, gaussPoint2, tinfo);
     matrixSD(tinfo.strainDisplacementMatrix3, gaussPoint3, tinfo);
+#else
+    matrixSD(tinfo.strainDisplacementMatrix1, Vec3(0.211324865, 0.166666667, 0), tinfo);
+    matrixSD(tinfo.strainDisplacementMatrix2, Vec3(0.211324865, 0.622008467, 0), tinfo);
+    matrixSD(tinfo.strainDisplacementMatrix3, Vec3(0.788675134, 0.044658198, 0), tinfo);
+    matrixSD(tinfo.strainDisplacementMatrix4, Vec3(0.788675134, 0.166666667, 0), tinfo);
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -803,13 +813,16 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     Vec3 P10P2 = tinfo.pts[9] - tinfo.pts[1];
     Vec3 P10P3 = tinfo.pts[9] - tinfo.pts[2];
 
+#ifndef GAUSS4
     Vec3 P(1, GP[0], GP[1]);
 
     Vec3 p; // Barycentric coordinates of the point GP
     p[0] = tinfo.interpol.line(0)*P;
     p[1] = tinfo.interpol.line(1)*P;
     p[2] = tinfo.interpol.line(2)*P;
-
+#else
+    Vec3 p(GP[0], GP[1], 1-GP[0]-GP[1]);
+#endif
     
     Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
 
@@ -849,26 +862,26 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
     Real du_dy_U3= DPhi3n3_y + 3.0*p2[2]*c1 + 3.0*DPhi3n2_y*p[0] + 3.0*p2[2]*c2 + 3.0*DPhi3n2_y*p[1] + 2.0*DPhi123_y;
 
 
-    // Derivatives of Theta1..3.0
-    Real dux_dx_T1=-3.0*DPhi1n2_x*p[1]*P4P1[1] - 3.0*p2[0]*b2*P4P1[1] - 3.0*DPhi1n2_x*p[2]*P5P1[1] - 3.0*p2[0]*b3*P5P1[1] - 2.0*DPhi123_x*P10P1[1];
-    Real duy_dx_T1= 3.0*DPhi1n2_x*p[1]*P4P1[0] + 3.0*p2[0]*b2*P4P1[0] + 3.0*DPhi1n2_x*p[2]*P5P1[0] + 3.0*p2[0]*b3*P5P1[0] + 2.0*DPhi123_x*P10P1[0];
+    // Derivatives of Theta1..3 parts (with respect to x and y)
+    Real dux_dx_T1= 3.0*DPhi1n2_x*p[1]*P4P1[1] + 3.0*p2[0]*b2*P4P1[1] + 3.0*DPhi1n2_x*p[2]*P5P1[1] + 3.0*p2[0]*b3*P5P1[1] + 2.0*DPhi123_x*P10P1[1];
+    Real duy_dx_T1=-3.0*DPhi1n2_x*p[1]*P4P1[0] - 3.0*p2[0]*b2*P4P1[0] - 3.0*DPhi1n2_x*p[2]*P5P1[0] - 3.0*p2[0]*b3*P5P1[0] - 2.0*DPhi123_x*P10P1[0];
 
-    Real dux_dy_T1=-3.0*DPhi1n2_y*p[1]*P4P1[1] - 3.0*p2[0]*c2*P4P1[1] - 3.0*DPhi1n2_y*p[2]*P5P1[1] - 3.0*p2[0]*c3*P5P1[1] - 2.0*DPhi123_y*P10P1[1];
-    Real duy_dy_T1= 3.0*DPhi1n2_y*p[1]*P4P1[0] + 3.0*p2[0]*c2*P4P1[0] + 3.0*DPhi1n2_y*p[2]*P5P1[0] + 3.0*p2[0]*c3*P5P1[0] + 2.0*DPhi123_y*P10P1[0];
-
-
-    Real dux_dx_T2=-3.0*DPhi2n2_x*p[2]*P6P2[1] - 3.0*p2[1]*b3*P6P2[1] - 3.0*DPhi2n2_x*p[0]*P7P2[1] - 3.0*p2[1]*b1*P7P2[1] - 2.0*DPhi123_x*P10P2[1];
-    Real duy_dx_T2= 3.0*DPhi2n2_x*p[2]*P6P2[0] + 3.0*p2[1]*b3*P6P2[0] + 3.0*DPhi2n2_x*p[0]*P7P2[0] + 3.0*p2[1]*b1*P7P2[0] + 2.0*DPhi123_x*P10P2[0];
-
-    Real dux_dy_T2=-3.0*DPhi2n2_y*p[2]*P6P2[1] - 3.0*p2[1]*c3*P6P2[1] - 3.0*DPhi2n2_y*p[0]*P7P2[1] - 3.0*p2[1]*c1*P7P2[1] - 2.0*DPhi123_y*P10P2[1];
-    Real duy_dy_T2= 3.0*DPhi2n2_y*p[2]*P6P2[0] + 3.0*p2[1]*c3*P6P2[0] + 3.0*DPhi2n2_y*p[0]*P7P2[0] + 3.0*p2[1]*c1*P7P2[0] + 2.0*DPhi123_y*P10P2[0];
+    Real dux_dy_T1= 3.0*DPhi1n2_y*p[1]*P4P1[1] + 3.0*p2[0]*c2*P4P1[1] + 3.0*DPhi1n2_y*p[2]*P5P1[1] + 3.0*p2[0]*c3*P5P1[1] + 2.0*DPhi123_y*P10P1[1];
+    Real duy_dy_T1=-3.0*DPhi1n2_y*p[1]*P4P1[0] - 3.0*p2[0]*c2*P4P1[0] - 3.0*DPhi1n2_y*p[2]*P5P1[0] - 3.0*p2[0]*c3*P5P1[0] - 2.0*DPhi123_y*P10P1[0];
 
 
-    Real dux_dx_T3=-3.0*DPhi3n2_x*p[0]*P8P3[1] - 3.0*p2[2]*b1*P8P3[1] - 3.0*DPhi3n2_x*p[1]*P9P3[1] - 3.0*p2[2]*b2*P9P3[1] - 2.0*DPhi123_x*P10P3[1];
-    Real duy_dx_T3= 3.0*DPhi3n2_x*p[0]*P8P3[0] + 3.0*p2[2]*b1*P8P3[0] + 3.0*DPhi3n2_x*p[1]*P9P3[0] + 3.0*p2[2]*b2*P9P3[0] + 2.0*DPhi123_x*P10P3[0];
+    Real dux_dx_T2= 3.0*DPhi2n2_x*p[2]*P6P2[1] + 3.0*p2[1]*b3*P6P2[1] + 3.0*DPhi2n2_x*p[0]*P7P2[1] + 3.0*p2[1]*b1*P7P2[1] + 2.0*DPhi123_x*P10P2[1];
+    Real duy_dx_T2=-3.0*DPhi2n2_x*p[2]*P6P2[0] - 3.0*p2[1]*b3*P6P2[0] - 3.0*DPhi2n2_x*p[0]*P7P2[0] - 3.0*p2[1]*b1*P7P2[0] - 2.0*DPhi123_x*P10P2[0];
 
-    Real dux_dy_T3=-3.0*DPhi3n2_y*p[0]*P8P3[1] - 3.0*p2[2]*c1*P8P3[1] - 3.0*DPhi3n2_y*p[1]*P9P3[1] - 3.0*p2[2]*c2*P9P3[1] - 2.0*DPhi123_y*P10P3[1];
-    Real duy_dy_T3= 3.0*DPhi3n2_y*p[0]*P8P3[0] + 3.0*p2[2]*c1*P8P3[0] + 3.0*DPhi3n2_y*p[1]*P9P3[0] + 3.0*p2[2]*c2*P9P3[0] + 2.0*DPhi123_y*P10P3[0];
+    Real dux_dy_T2= 3.0*DPhi2n2_y*p[2]*P6P2[1] + 3.0*p2[1]*c3*P6P2[1] + 3.0*DPhi2n2_y*p[0]*P7P2[1] + 3.0*p2[1]*c1*P7P2[1] + 2.0*DPhi123_y*P10P2[1];
+    Real duy_dy_T2=-3.0*DPhi2n2_y*p[2]*P6P2[0] - 3.0*p2[1]*c3*P6P2[0] - 3.0*DPhi2n2_y*p[0]*P7P2[0] - 3.0*p2[1]*c1*P7P2[0] - 2.0*DPhi123_y*P10P2[0];
+
+
+    Real dux_dx_T3= 3.0*DPhi3n2_x*p[0]*P8P3[1] + 3.0*p2[2]*b1*P8P3[1] + 3.0*DPhi3n2_x*p[1]*P9P3[1] + 3.0*p2[2]*b2*P9P3[1] + 2.0*DPhi123_x*P10P3[1];
+    Real duy_dx_T3=-3.0*DPhi3n2_x*p[0]*P8P3[0] + 3.0*p2[2]*b1*P8P3[0] + 3.0*DPhi3n2_x*p[1]*P9P3[0] + 3.0*p2[2]*b2*P9P3[0] + 2.0*DPhi123_x*P10P3[0];
+
+    Real dux_dy_T3= 3.0*DPhi3n2_y*p[0]*P8P3[1] + 3.0*p2[2]*c1*P8P3[1] + 3.0*DPhi3n2_y*p[1]*P9P3[1] + 3.0*p2[2]*c2*P9P3[1] + 2.0*DPhi123_y*P10P3[1];
+    Real duy_dy_T3=-3.0*DPhi3n2_y*p[0]*P8P3[0] - 3.0*p2[2]*c1*P8P3[0] - 3.0*DPhi3n2_y*p[1]*P9P3[0] - 3.0*p2[2]*c2*P9P3[0] - 2.0*DPhi123_y*P10P3[0];
 
 
     J[0][0] = du_dx_U1;
@@ -913,6 +926,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrixBending(TriangleInformation &tinfo)
 {
+#ifndef GAUSS4
     // Calculation of the 3 Gauss points
     // TODO: we already did that in computeStrainDisplacementMatrix(), reuse it
     Vec3 gaussPoint1 = tinfo.pts[0]*(2.0/3.0) + tinfo.pts[1]/6.0 + tinfo.pts[2]/6.0;
@@ -922,6 +936,12 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementM
     matrixSDB(tinfo.strainDisplacementMatrixB1, gaussPoint1, tinfo);
     matrixSDB(tinfo.strainDisplacementMatrixB2, gaussPoint2, tinfo);
     matrixSDB(tinfo.strainDisplacementMatrixB3, gaussPoint3, tinfo);
+#else
+    matrixSDB(tinfo.strainDisplacementMatrixB1, Vec3(0.211324865, 0.166666667, 0), tinfo);
+    matrixSDB(tinfo.strainDisplacementMatrixB2, Vec3(0.211324865, 0.622008467, 0), tinfo);
+    matrixSDB(tinfo.strainDisplacementMatrixB3, Vec3(0.788675134, 0.044658198, 0), tinfo);
+    matrixSDB(tinfo.strainDisplacementMatrixB4, Vec3(0.788675134, 0.166666667, 0), tinfo);
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -943,14 +963,16 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Vec3 P10P3 = tinfo.pts[2] - tinfo.pts[9] ;
 
 
+#ifndef GAUSS4
     Vec3 P(1, GP[0], GP[1]);
-
 
     Vec3 p; // Barycentric coordinates of the point GP
     p[0] = tinfo.interpol.line(0)*P;
     p[1] = tinfo.interpol.line(1)*P;
     p[2] = tinfo.interpol.line(2)*P;
-
+#else
+    Vec3 p(GP[0], GP[1], 1-GP[0]-GP[1]);
+#endif
 
     
     //Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
@@ -1002,7 +1024,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Real D2Phi3n2Phi1_xy = 2.0*b3*c3*p[0]+ 2.0*b3*p[2]*c1 + 2.0*p[2]*c3*b1;
     Real D2Phi3n2Phi2_xy = 2.0*b3*c3*p[1]+ 2.0*b3*p[2]*c2 + 2.0*p[2]*c3*b2;
 
-    // Derivees with respect to translations
+    // Second derivatives of uz (with respect to x and y) -- translation parts
     Real d2uz_dxx_dU1 = D2Phi1n3_xx + 3.0*D2Phi1n2Phi2_xx + 3.0*D2Phi1n2Phi3_xx + 2.0*D2Phi123_xx;
     Real d2uz_dxy_dU1 = D2Phi1n3_xy + 3.0*D2Phi1n2Phi2_xy + 3.0*D2Phi1n2Phi3_xy + 2.0*D2Phi123_xy;
     Real d2uz_dyy_dU1 = D2Phi1n3_yy + 3.0*D2Phi1n2Phi2_yy + 3.0*D2Phi1n2Phi3_yy + 2.0*D2Phi123_yy;
@@ -1023,7 +1045,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     CROSS_VEC(P10P1); CROSS_VEC(P10P2); CROSS_VEC(P10P3);
 #undef CROSS_VEC
 
-    // Derivatives with respect to rotations
+    // Second derivatives with of uz (with respect to x and y) -- rotation parts
     Vec2 d2uz_dxx_dT1 = cvP4P1*3.0*D2Phi1n2Phi2_xx + cvP5P1*3.0*D2Phi1n2Phi3_xx + cvP10P1*2.0*D2Phi123_xx;
     Vec2 d2uz_dxy_dT1 = cvP4P1*3.0*D2Phi1n2Phi2_xy + cvP5P1*3.0*D2Phi1n2Phi3_xy + cvP10P1*2.0*D2Phi123_xy;
     Vec2 d2uz_dyy_dT1 = cvP4P1*3.0*D2Phi1n2Phi2_yy + cvP5P1*3.0*D2Phi1n2Phi3_yy + cvP10P1*2.0*D2Phi123_yy;
@@ -1067,8 +1089,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     J[2][7] = -2.0*d2uz_dxy_dT3[0];
     J[2][8] = -2.0*d2uz_dxy_dT3[1];
 
-    J *= f_thickness.getValue();
-
     if (this->f_printLog.getValue())
         sout<<" matrix J (bending) : \n"<< J <<sendl;
 }
@@ -1078,7 +1098,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
 
 // -----------------------------------------------------------------------------
 // --- Compute the stiffness matrix K = J * M * Jt where J is the
-// --- strain-displacement matrix and M the material matrix
+// --- strain-displacement matrix and M the material matrix. Uses Gaussian
+// --- quadrature for integration over the shell area.
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrix(
@@ -1089,17 +1110,27 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrix(
     Jt2.transpose(tinfo.strainDisplacementMatrix2);
     Jt3.transpose(tinfo.strainDisplacementMatrix3);
 
-    K = Jt1 * tinfo.materialMatrix * tinfo.strainDisplacementMatrix1 +
-        Jt2 * tinfo.materialMatrix * tinfo.strainDisplacementMatrix2 +
-        Jt3 * tinfo.materialMatrix * tinfo.strainDisplacementMatrix3;
-
-    K *= f_thickness.getValue() * tinfo.area/3.0;
+#ifndef GAUSS4
+    K = Jt1 * materialMatrix * tinfo.strainDisplacementMatrix1 +
+        Jt2 * materialMatrix * tinfo.strainDisplacementMatrix2 +
+        Jt3 * materialMatrix * tinfo.strainDisplacementMatrix3;
+    K /= 3.0;
+#else
+    Mat<9, 3, Real> Jt4;
+    Jt4.transpose(tinfo.strainDisplacementMatrix4);
+    K = Jt1 * materialMatrix * tinfo.strainDisplacementMatrix1*0.197168783 +
+        Jt2 * materialMatrix * tinfo.strainDisplacementMatrix2*0.197168783 +
+        Jt3 * materialMatrix * tinfo.strainDisplacementMatrix3*0.052831216 +
+        Jt4 * materialMatrix * tinfo.strainDisplacementMatrix4*0.052831216;
+#endif
 }
 
 
-// ----------------------------------------------------------------------------------------------------------------------
-// --- Compute the stiffness matrix for bending K = J * M * Jt where J is the strain-displacement matrix and M the material matrix
-// ----------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// --- Compute the stiffness matrix for bending K = J * M * Jt where J is the
+// --- strain-displacement matrix and M the material matrix. Uses Gaussian
+// --- quadrature for integration over the shell area.
+// -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMatrixBending &K, const TriangleInformation &tinfo)
 {
@@ -1108,38 +1139,48 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBend
     J2t.transpose(tinfo.strainDisplacementMatrixB2);
     J3t.transpose(tinfo.strainDisplacementMatrixB3);
 
-    K = J1t * tinfo.materialMatrix * tinfo.strainDisplacementMatrixB1 +
-        J2t * tinfo.materialMatrix * tinfo.strainDisplacementMatrixB2 +
-        J3t * tinfo.materialMatrix * tinfo.strainDisplacementMatrixB3;
-
-    K *= f_thickness.getValue()*tinfo.area/3.0;
+#ifndef GAUSS4
+    K = J1t * materialMatrixBending * tinfo.strainDisplacementMatrixB1 +
+        J2t * materialMatrixBending * tinfo.strainDisplacementMatrixB2 +
+        J3t * materialMatrixBending * tinfo.strainDisplacementMatrixB3;
+    K /= 3.0;
+#else
+    Mat<9, 3, Real> J4t;
+    K =  J1t * materialMatrixBending * tinfo.strainDisplacementMatrixB1*0.197168783 +
+         J2t * materialMatrixBending * tinfo.strainDisplacementMatrixB2*0.197168783 +
+         J3t * materialMatrixBending * tinfo.strainDisplacementMatrixB3*0.052831216 +
+         J4t * materialMatrixBending * tinfo.strainDisplacementMatrixB4*0.052831216;
+#endif
+    //K *= (2 * tinfo.area);
 }
 
 // -----------------------------------------------------------------------------
-// ---  Compute material stiffness (Hooke's law)
+// ---  Compute material matrix for plan stress and bending (Hooke's law)
+// ---  NOTE: These are alraedy integrated over the thickness of the shell.
 // -----------------------------------------------------------------------------
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(
-    const int i)
+void BezierTriangularBendingFEMForceField<DataTypes>::computeMaterialMatrix()
 {
-    // XXX: The matrix is same for ALL triangles!
+    Real t = f_thickness.getValue();
 
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    // Material matrix for plain stress
+    materialMatrix[0][0] = 1;
+    materialMatrix[0][1] = f_poisson.getValue();
+    materialMatrix[0][2] = 0;
+    materialMatrix[1][0] = f_poisson.getValue();
+    materialMatrix[1][1] = 1;
+    materialMatrix[1][2] = 0;
+    materialMatrix[2][0] = 0;
+    materialMatrix[2][1] = 0;
+    materialMatrix[2][2] = 0.5 * (1 - f_poisson.getValue());
 
-    TriangleInformation *tinfo = &triangleInf[i];
-
-    tinfo->materialMatrix[0][0] = 1;
-    tinfo->materialMatrix[0][1] = f_poisson.getValue();
-    tinfo->materialMatrix[0][2] = 0;
-    tinfo->materialMatrix[1][0] = f_poisson.getValue();
-    tinfo->materialMatrix[1][1] = 1;
-    tinfo->materialMatrix[1][2] = 0;
-    tinfo->materialMatrix[2][0] = 0;
-    tinfo->materialMatrix[2][1] = 0;
-    tinfo->materialMatrix[2][2] = 0.5 * (1 - f_poisson.getValue());
-
-    tinfo->materialMatrix *= f_young.getValue() / (
+    materialMatrix *= f_young.getValue() / (
         1 - f_poisson.getValue() * f_poisson.getValue());
+
+    materialMatrix *= t; // consider the thickness
+
+    // Material matrix for plane bending (a.k.a. flextural rigidity/bending stiffness)
+    materialMatrixBending = materialMatrix * t*t / 12;
 
     triangleInfo.endEdit();
 }
@@ -1230,7 +1271,13 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 
     // Compute bending forces on this element (in the co-rotational space)
     DisplacementBending F_bending;
-    computeForceBending(F_bending, D_bending, elementIndex);
+    //computeForceBending(F_bending, D_bending, elementIndex);
+
+    std::cout << "E: " << elementIndex << "\tu: " << D << "\tf: " << F << "\n";
+    //std::cout << "E: " << elementIndex << "\tuB: " << D_bending
+    //    << "\tfB: " << F_bending << "\n";
+    std::cout << "   [ " << a << "/" << b << "/" << c << " - "
+        << x[a] << ", " << x[b] << ", " << x[c] << "\n";
 
     // Transform forces back into global reference frame
     Vec3 fa1 = tinfo->frame.getOrientation().rotate(Vec3(F[0], F[1], F_bending[0]));
@@ -1256,6 +1303,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ )
 {
+    std::cout << "addForce\n";
+
     VecDeriv& f        = *(dataF.beginEdit());
     const VecCoord& p  =   dataX.getValue()  ;
 
@@ -1272,6 +1321,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core:
         accumulateForce(f, p, i);
     }
 
+        std::cout << f << std::endl;
     dataF.endEdit();
 
 //    stop = timer.getTime();
@@ -1284,6 +1334,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core:
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core::MechanicalParams* mparams, DataVecDeriv& datadF, const DataVecDeriv& datadX )
 {
+//    std::cout << "addDForce\n";
+
     VecDeriv& df        = *(datadF.beginEdit());
     const VecDeriv& dp  =   datadX.getValue()  ;
 
@@ -1302,6 +1354,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core
         applyStiffness(df, dp, i, kFactor);
     }
 
+//    std::cout << df << std::endl;
     datadF.endEdit();
 
 //    stop = timer.getTime();
