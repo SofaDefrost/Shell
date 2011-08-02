@@ -108,7 +108,7 @@ public:
 
     void init();
     void reinit();
-    virtual void draw();
+    virtual void draw(const core::visual::VisualParams* vparams);
 
 
     void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in);

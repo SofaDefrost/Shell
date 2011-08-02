@@ -29,7 +29,7 @@ Theoretical solution:
 
     <Node name="Mesh">
         <MeshObjLoader name="mesh" filename="../mesh/roof7.obj"/>
-        <Vertex2Frame name="frames" template="Rigid" vertices="@mesh.vertices" normals="@mesh.normals" invertNormals="false"/>
+        <Vertex2Frame name="frames" template="Rigid" position="@mesh.vertices" normals="@mesh.normals" invertNormals="false"/>
         <MechanicalObject name="meshPoints" template="Rigid"
                           rest_position="@frames.frames"
                           showIndices="false" showIndicesScale="0.0001"/>

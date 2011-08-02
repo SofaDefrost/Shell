@@ -8,7 +8,7 @@
 
     <Node name="CoarseMesh">
         <MeshLoader name="coarseMesh" filename="applications/plugins/shells/mesh/aneurysm200.obj"/>
-        <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid" vertices="@coarseMesh.vertices" normals="@coarseMesh.normals" invertNormals="false"/>
+        <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid" position="@coarseMesh.vertices" normals="@coarseMesh.normals" invertNormals="false"/>
 
     </Node>
 

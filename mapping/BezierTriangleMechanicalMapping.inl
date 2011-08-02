@@ -1015,7 +1015,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintP
 
 
 template <class TIn, class TOut>
-void BezierTriangleMechanicalMapping<TIn, TOut>::draw()
+void BezierTriangleMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualParams* vparams)
 {
     if (!inputTopo || !outputTopo)
     {
@@ -1158,7 +1158,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw()
             //sout << "tri: " << bn[0] << ", " << bn[1] << ", " << bn[2]
             //    << " center: " << c
             //    << " frame: " << triFrame << sendl;
-            sofa::simulation::getSimulation()->DrawUtility().drawFrame(
+            vparams->drawTool()->drawFrame(
                 c,
                 triFrame,
                 Vec3(size, size, size));

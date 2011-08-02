@@ -28,7 +28,6 @@
 #include "BezierTriangularBendingFEMForceField.h"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/helper/gl/template.h>
-#include <sofa/helper/gl/DrawManager.h>
 #include <sofa/component/topology/TriangleData.inl>
 #include <sofa/component/topology/EdgeData.inl>
 #include <sofa/component/topology/PointData.inl>
@@ -36,14 +35,10 @@
 #include <sofa/helper/system/gl.h>
 #include <sofa/helper/gl/template.h>
 #include <sofa/helper/system/thread/debug.h>
-#include <fstream> // for reading the file
 #include <iostream> //for debugging
 #include <vector>
-#include <algorithm>
 #include <sofa/defaulttype/Vec3Types.h>
-#include <assert.h>
-#include <map>
-#include <utility>
+//#include <assert.h>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 
 #include <sofa/simulation/common/Simulation.h>
@@ -823,7 +818,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSD(
 #else
     Vec3 p(GP[0], GP[1], 1-GP[0]-GP[1]);
 #endif
-    
+
     Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
 
     Real b1 = tinfo.interpol(0,1);
@@ -974,7 +969,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     Vec3 p(GP[0], GP[1], 1-GP[0]-GP[1]);
 #endif
 
-    
     //Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
 
     Real b1 = tinfo.interpol(0,1);
@@ -1571,7 +1565,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::default
 }
 
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::draw()
+void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
     if(this->getContext()->getShowForceFields())
     {
@@ -1609,7 +1603,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw()
 
             Vec3 P1P2= x0[tinfo->b].getCenter() - x0[tinfo->a].getCenter();
 
-            sofa::simulation::getSimulation()->DrawUtility().drawFrame(
+            vparams->drawTool()->drawFrame(
                 tinfo->frame.getCenter(),
                 tinfo->frame.getOrientation(),
                 Vec3(P1P2.norm()/3.0, P1P2.norm()/3.0, P1P2.norm()/3.0));

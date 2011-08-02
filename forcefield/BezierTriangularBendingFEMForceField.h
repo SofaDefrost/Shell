@@ -190,7 +190,7 @@ public:
         //virtual double getPotentialEnergy(const VecCoord& x) const;
         virtual void handleTopologyChange();
 
-        virtual void draw();
+        virtual void draw(const core::visual::VisualParams* vparams);
 
         static void computeFrame(Quat& Qframe, const Vec3 &a, const Vec3 &b, const Vec3 &c);
 
