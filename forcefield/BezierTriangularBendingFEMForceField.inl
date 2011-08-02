@@ -1146,6 +1146,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBend
     K /= 3.0;
 #else
     Mat<9, 3, Real> J4t;
+    J4t.transpose(tinfo.strainDisplacementMatrixB4);
     K =  J1t * materialMatrixBending * tinfo.strainDisplacementMatrixB1*0.197168783 +
          J2t * materialMatrixBending * tinfo.strainDisplacementMatrixB2*0.197168783 +
          J3t * materialMatrixBending * tinfo.strainDisplacementMatrixB3*0.052831216 +
@@ -1271,13 +1272,13 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 
     // Compute bending forces on this element (in the co-rotational space)
     DisplacementBending F_bending;
-    //computeForceBending(F_bending, D_bending, elementIndex);
+    computeForceBending(F_bending, D_bending, elementIndex);
 
-    std::cout << "E: " << elementIndex << "\tu: " << D << "\tf: " << F << "\n";
+    //std::cout << "E: " << elementIndex << "\tu: " << D << "\tf: " << F << "\n";
     //std::cout << "E: " << elementIndex << "\tuB: " << D_bending
     //    << "\tfB: " << F_bending << "\n";
-    std::cout << "   [ " << a << "/" << b << "/" << c << " - "
-        << x[a] << ", " << x[b] << ", " << x[c] << "\n";
+    //std::cout << "   [ " << a << "/" << b << "/" << c << " - "
+    //    << x[a] << ", " << x[b] << ", " << x[c] << "\n";
 
     // Transform forces back into global reference frame
     Vec3 fa1 = tinfo->frame.getOrientation().rotate(Vec3(F[0], F[1], F_bending[0]));
@@ -1303,7 +1304,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ )
 {
-    std::cout << "addForce\n";
+//    std::cout << "addForce\n";
 
     VecDeriv& f        = *(dataF.beginEdit());
     const VecCoord& p  =   dataX.getValue()  ;
@@ -1321,7 +1322,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core:
         accumulateForce(f, p, i);
     }
 
-        std::cout << f << std::endl;
     dataF.endEdit();
 
 //    stop = timer.getTime();
