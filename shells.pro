@@ -23,6 +23,7 @@ LIBS += $$SOFA_EXT_LIBS
 INCLUDEPATH += $$SOFA_DIR/extlibs
 
 SOURCES = 	forcefield/TriangularBendingFEMForceField.cpp \
+			forcefield/TriangularShellForceField.cpp \
 			forcefield/BezierTriangularBendingFEMForceField.cpp \
 			mapping/BendingPlateMechanicalMapping.cpp \
 			mapping/BezierTriangleMechanicalMapping.cpp \
@@ -30,6 +31,8 @@ SOURCES = 	forcefield/TriangularBendingFEMForceField.cpp \
 
 HEADERS = 	forcefield/TriangularBendingFEMForceField.h \
 			forcefield/TriangularBendingFEMForceField.inl \
+			forcefield/TriangularShellForceField.h \
+			forcefield/TriangularShellForceField.inl \
 			forcefield/BezierTriangularBendingFEMForceField.h \
 			forcefield/BezierTriangularBendingFEMForceField.inl \
 			mapping/BendingPlateMechanicalMapping.h \
