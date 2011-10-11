@@ -28,7 +28,7 @@
 #include "TriangularBendingFEMForceField.h"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/helper/gl/template.h>
-#include <sofa/helper/gl/DrawManager.h>
+//#include <sofa/helper/gl/DrawManager.h>
 #include <sofa/component/topology/TriangleData.inl>
 #include <sofa/component/topology/EdgeData.inl>
 #include <sofa/component/topology/PointData.inl>
