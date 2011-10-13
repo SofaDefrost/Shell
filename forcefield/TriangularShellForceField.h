@@ -137,12 +137,12 @@ public:
                 StiffnessMatrix stiffnessMatrixMembrane;
                 StiffnessMatrix stiffnessMatrixBending;
 
-                // Surface
+                // The following are in rest shape
+                // - element area
                 Real area;
-
-                // Directional vectors: 1-2, 2-3, 3-1
+                // - directional vectors: 1-2, 2-3, 3-1
                 helper::fixed_array <Vec2, 3> d;
-                // Squared lengths of 'd'
+                // - squared lengths of 'd'
                 helper::fixed_array <Real, 3> l2;
 
                 /// Output stream

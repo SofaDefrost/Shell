@@ -92,7 +92,8 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
 , f_membraneElement(initData(&f_membraneElement, "membraneElement", "The membrane element to use"))
 , f_bendingElement(initData(&f_bendingElement, "bendingElement", "The bending plate element to use"))
 {
-    f_membraneElement.beginEdit()->setNames(6,
+    f_membraneElement.beginEdit()->setNames(7,
+        "None",     // No membrane element
         "CST",      // Constant strain triangle
         // ANDES templates
         "ALL-3I",   // Allman 88 element integrated by 3-point interior rule
@@ -150,7 +151,9 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     computeMaterialStiffness();
 
     // Decode the selected elements to use
-    if (f_membraneElement.getValue().getSelectedItem() == "CST") {
+    if (f_membraneElement.getValue().getSelectedItem() == "None") {
+        csMembrane = NULL;
+    } else if (f_membraneElement.getValue().getSelectedItem() == "CST") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixCST;
     } else if (f_membraneElement.getValue().getSelectedItem() == "ALL-3I") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixAll3I;
@@ -255,7 +258,7 @@ void TriangularShellForceField<DataTypes>::addDForce(const sofa::core::Mechanica
 //    std::cout << "time addDForce = " << stop-start << std::endl;
 }
 
-#define PRINT
+//#define PRINT
 
 template<class DataTypes>
 void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix)
@@ -271,8 +274,8 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
 
     double kFactor = mparams->kFactor();
 
-    r.matrix->clear();
     #ifdef PRINT
+    r.matrix->clear();
     std::cout << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" <<
         " kFactor=" << kFactor << std::endl;
     for (unsigned int i=0; i<r.matrix->rowSize(); i++)
@@ -312,8 +315,8 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
                                     {
                                             COLUMN = r.offset+6*node2+j;
                                             column = 6*n2+j;
-                                            //r.matrix->add(ROW, COLUMN, - K_gs[row][column] * kFactor);
-                                            r.matrix->add(ROW, COLUMN, K_gs[row][column]);
+                                            r.matrix->add(ROW, COLUMN, - K_gs[row][column] * kFactor);
+                                            //r.matrix->add(ROW, COLUMN, K_gs[row][column]);
                                     }
                             }
                     }
@@ -377,6 +380,29 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     tinfo->restOrientations[0] = x0[a].getOrientation();
     tinfo->restOrientations[1] = x0[b].getOrientation();
     tinfo->restOrientations[2] = x0[c].getOrientation();
+
+    // Do some precomputations
+    // - directional vectors
+    tinfo->d[0] = tinfo->restPositions[0] - tinfo->restPositions[1];
+    tinfo->d[1] = tinfo->restPositions[1] - tinfo->restPositions[2];
+    tinfo->d[2] = tinfo->restPositions[2] - tinfo->restPositions[0];
+
+    // - squared lengths
+    tinfo->l2[0] = tinfo->d[0][0]*tinfo->d[0][0] + tinfo->d[0][1]*tinfo->d[0][1];
+    tinfo->l2[1] = tinfo->d[1][0]*tinfo->d[1][0] + tinfo->d[1][1]*tinfo->d[1][1];
+    tinfo->l2[2] = tinfo->d[2][0]*tinfo->d[2][0] + tinfo->d[2][1]*tinfo->d[2][1];
+
+    // - triangle area
+    tinfo->area = helper::rabs(tinfo->d[2][0]*(-tinfo->d[0][1]) - (-tinfo->d[0][0])*tinfo->d[2][1])/2;
+
+    // Compute stiffness matrix for membrane element
+    computeStiffnessMatrixMembrane(tinfo->stiffnessMatrixMembrane, *tinfo);
+    //std::cout << "Km^e=" << tinfo->stiffnessMatrixMembrane << std::endl;
+
+    // Compute stiffness matrix for bending plate elemnt
+    computeStiffnessMatrixBending(tinfo->stiffnessMatrixBending, *tinfo);
+    //std::cout << "Kb^e=" << tinfo->stiffnessMatrixBending << std::endl;
+
 
     triangleInfo.endEdit();
 }
@@ -530,14 +556,14 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
     computeForce(Fm, Dm, Fb, Db, elementIndex);
 
     
-    std::cout << tinfo->restPositions << std::endl;
-    std::cout << tinfo->deformedPositions << std::endl;
-    std::cout << "X=" << x[a] << x[b] << x[c] << std::endl;
-    std::cout << "Dm=" << Dm << std::endl;
-    std::cout << "Fm=" << Fm << std::endl;
-    std::cout << "Db=" << Db << std::endl;
-    std::cout << "Fb=" << Fb << std::endl;
-    std::cout << "---" << std::endl;
+    //std::cout << tinfo->restPositions << std::endl;
+    //std::cout << tinfo->deformedPositions << std::endl;
+    //std::cout << "X=" << x[a] << x[b] << x[c] << std::endl;
+    //std::cout << "Dm=" << Dm << std::endl;
+    //std::cout << "Fm=" << Fm << std::endl;
+    //std::cout << "Db=" << Db << std::endl;
+    //std::cout << "Fb=" << Fb << std::endl;
+    //std::cout << "---" << std::endl;
 
     // Transform forces back into global frame
     getVCenter(f[a]) -= tinfo->Rt * Vec3(Fm[0], Fm[1], Fb[0]);
@@ -558,20 +584,6 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeStiffnessMatrixMembrane(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
-    // Do some precomputations
-    // - directional vectors
-    tinfo.d[0] = tinfo.restPositions[0] - tinfo.restPositions[1];
-    tinfo.d[1] = tinfo.restPositions[1] - tinfo.restPositions[2];
-    tinfo.d[2] = tinfo.restPositions[2] - tinfo.restPositions[0];
-
-    // - squared lengths
-    tinfo.l2[0] = tinfo.d[0][0]*tinfo.d[0][0] + tinfo.d[0][1]*tinfo.d[0][1];
-    tinfo.l2[1] = tinfo.d[1][0]*tinfo.d[1][0] + tinfo.d[1][1]*tinfo.d[1][1];
-    tinfo.l2[2] = tinfo.d[2][0]*tinfo.d[2][0] + tinfo.d[2][1]*tinfo.d[2][1];
-
-    // - triangle area
-    tinfo.area = helper::rabs(tinfo.d[2][0]*(-tinfo.d[0][1]) - (-tinfo.d[0][0])*tinfo.d[2][1])/2;
-
     if (csMembrane == NULL)
         return;
 
@@ -599,13 +611,6 @@ void TriangularShellForceField<DataTypes>::computeForce(Displacement &Fm, const 
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation &tinfo = triangleInf[elementIndex];
-
-    // Compute stiffness matrix for membrane element
-    computeStiffnessMatrixMembrane(tinfo.stiffnessMatrixMembrane, tinfo);
-
-    // Compute stiffness matrix for bending plate elemnt
-    computeStiffnessMatrixBending(tinfo.stiffnessMatrixBending, tinfo);
-    std::cout << "Km^e=" << tinfo.stiffnessMatrixBending << std::endl;
 
     // Compute forces
     Fm = tinfo.stiffnessMatrixMembrane * Dm;
@@ -695,33 +700,33 @@ void TriangularShellForceField<DataTypes>::convertStiffnessMatrixToGlobalSpace(S
 
 
     // Copy the stiffness matrix into 18x18 matrix (the new index of each block in global matrix is a combination of 0, 6 and 12 in indices)
-    //const StiffnessMatrix &K = tinfo.stiffnessMatrixMembrane;
-    //for (unsigned int bx=0; bx<3; bx++)
-    //{
-    //    // Global row index
-    //    ig = 6*bx;
+    const StiffnessMatrix &K = tinfo.stiffnessMatrixMembrane;
+    for (unsigned int bx=0; bx<3; bx++)
+    {
+        // Global row index
+        ig = 6*bx;
 
-    //    for (unsigned int by=0; by<3; by++)
-    //    {
-    //        // Global column index
-    //        jg = 6*by;
+        for (unsigned int by=0; by<3; by++)
+        {
+            // Global column index
+            jg = 6*by;
 
-    //        // linear X
-    //        K_18x18[ig+0][jg+0] = K[3*bx+0][3*by+0]; // linear X
-    //        K_18x18[ig+0][jg+1] = K[3*bx+0][3*by+1]; // linear Y
-    //        K_18x18[ig+0][jg+5] = K[3*bx+0][3*by+2]; // angular Z
+            // linear X
+            K_18x18[ig+0][jg+0] = K[3*bx+0][3*by+0]; // linear X
+            K_18x18[ig+0][jg+1] = K[3*bx+0][3*by+1]; // linear Y
+            K_18x18[ig+0][jg+5] = K[3*bx+0][3*by+2]; // angular Z
 
-    //        // linear Y
-    //        K_18x18[ig+1][jg+0] = K[3*bx+1][3*by+0]; // linear X
-    //        K_18x18[ig+1][jg+1] = K[3*bx+1][3*by+1]; // linear Y
-    //        K_18x18[ig+1][jg+5] = K[3*bx+1][3*by+2]; // angular Z
+            // linear Y
+            K_18x18[ig+1][jg+0] = K[3*bx+1][3*by+0]; // linear X
+            K_18x18[ig+1][jg+1] = K[3*bx+1][3*by+1]; // linear Y
+            K_18x18[ig+1][jg+5] = K[3*bx+1][3*by+2]; // angular Z
 
-    //        // angular Z
-    //        K_18x18[ig+5][jg+0] = K[3*bx+2][3*by+0]; // linear X
-    //        K_18x18[ig+5][jg+1] = K[3*bx+2][3*by+1]; // linear Y
-    //        K_18x18[ig+5][jg+5] = K[3*bx+2][3*by+2]; // angular Z
-    //    }
-    //}
+            // angular Z
+            K_18x18[ig+5][jg+0] = K[3*bx+2][3*by+0]; // linear X
+            K_18x18[ig+5][jg+1] = K[3*bx+2][3*by+1]; // linear Y
+            K_18x18[ig+5][jg+5] = K[3*bx+2][3*by+2]; // angular Z
+        }
+    }
 
 
     // Copy the stiffness matrix by block 3x3 into global matrix (the new index of each bloc into global matrix is a combination of 2, 8 and 15 in indices)
@@ -989,13 +994,17 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT(StiffnessMa
 
     // Integrage over triangle area
     K.clear();
+    //std::cout << "B=\n";
     for (int i=0; i<4; i++) {
         StrainDisplacement B;
         Mat<9,3, Real> Bt;
         dktSD(B, tinfo, gx[i], gy[i]);  // Compute strain-displacement matrix
+        //std::cout << "  " << B << std::endl;
         Bt.transpose(B);
         K += gw[i] * Bt * materialMatrixBending * B;
     }
+    //std::cout << std::endl;
+    K *= 2*tinfo.area;
 }
 
 template <class DataTypes>
