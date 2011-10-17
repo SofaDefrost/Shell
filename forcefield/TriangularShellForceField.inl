@@ -366,28 +366,35 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     // Gets vertices of rest positions
     const VecCoord& x0 = *this->mstate->getX0();
 
-    // Rotation from triangle to world at rest positions
+    // Rotation from global to local frame
     Transformation R0;
-    computeRotation(R0, x0, a, b, c);
-    tinfo->R = R0;
-    tinfo->Rt.transpose(R0);
 
     //std::cout << R0 << " -- " << R << std::endl;
 
-    // The positions of each point is expressed into the local frame at rest position
-    tinfo->restPositions[0] = R0 * x0[a].getCenter();
-    tinfo->restPositions[1] = R0 * x0[b].getCenter();
-    tinfo->restPositions[2] = R0 * x0[c].getCenter();
+    // Rest positions expressed in the local frame
+    tinfo->restPositions[0] = x0[a].getCenter();
+    tinfo->restPositions[1] = x0[b].getCenter();
+    tinfo->restPositions[2] = x0[c].getCenter();
 
-    //if (f_corotated.getValue()) {
-    //    Vec3 center = (tinfo->restPositions[0] + tinfo->restPositions[1] +
-    //        tinfo->restPositions[2])/3;
+    if (f_corotated.getValue()) {
+        // Center the element
+        Vec3 center = (tinfo->restPositions[0] + tinfo->restPositions[1] +
+            tinfo->restPositions[2])/3;
 
-    //    tinfo->restPositions[0] -= center;
-    //    tinfo->restPositions[1] -= center;
-    //    tinfo->restPositions[2] -= center;
-    //}
+        tinfo->restPositions[0] -= center;
+        tinfo->restPositions[1] -= center;
+        tinfo->restPositions[2] -= center;
+    }
 
+    computeRotation(R0, tinfo->restPositions);
+    tinfo->R = R0;
+    tinfo->Rt.transpose(R0);
+
+    tinfo->restPositions[0] = R0 * tinfo->restPositions[0];
+    tinfo->restPositions[1] = R0 * tinfo->restPositions[1];
+    tinfo->restPositions[2] = R0 * tinfo->restPositions[2];
+
+    // Rest orientations
     tinfo->restOrientations[0] = x0[a].getOrientation();
     tinfo->restOrientations[1] = x0[b].getOrientation();
     tinfo->restOrientations[2] = x0[c].getOrientation();
@@ -452,6 +459,34 @@ void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, co
     //Qframe.fromMatrix(Transformation(edgex, edgey, edgez));
 }
 
+template <class DataTypes>
+void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, const helper::fixed_array<Vec3, 3> &x)
+{
+    if (!f_corotated.getValue()) {
+        // Return identity matrix
+        R = Transformation(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,1));
+        return;
+    }
+    
+    // First vector on first edge
+    // Second vector in the plane of the two first edges
+    // Third vector orthogonal to first and second
+
+    Vec3 edgex = x[1] - x[0];
+    Vec3 edgey = x[2] - x[0];
+
+    Vec3 edgez = cross(edgex, edgey);
+
+    edgey = cross(edgez, edgex);
+
+    edgex.normalize();
+    edgey.normalize();
+    edgez.normalize();
+
+    R = Transformation(edgex, edgey, edgez);
+    //Qframe.fromMatrix(Transformation(edgex, edgey, edgez));
+}
+
 
 // --------------------------------------------------------------------------------------
 // ---  Compute material stiffness
@@ -496,28 +531,34 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     Index b = tinfo->b;
     Index c = tinfo->c;
 
-    // Compute rotation to in-plane frame
-    //computeRotation(tinfo->R, x, a, b, c);
-    //tinfo->Rt.transpose(tinfo->R);
+    // Compute local (in-plane) postions
+    tinfo->deformedPositions[0] = x[a].getCenter();
+    tinfo->deformedPositions[1] = x[b].getCenter();
+    tinfo->deformedPositions[2] = x[c].getCenter();
+
+    if (f_corotated.getValue()) {
+        Vec3 center = (tinfo->deformedPositions[0] + tinfo->deformedPositions[1] +
+            tinfo->deformedPositions[2])/3;
+
+        tinfo->deformedPositions[0] -= center;
+        tinfo->deformedPositions[1] -= center;
+        tinfo->deformedPositions[2] -= center;
+    }
+
+    // Compute rotation to local (in-plane) frame
+    computeRotation(tinfo->R, tinfo->deformedPositions);
+    tinfo->Rt.transpose(tinfo->R);
 
     // Compute local (in-plane) postions
-    tinfo->deformedPositions[0] = tinfo->R * x[a].getCenter();
-    tinfo->deformedPositions[1] = tinfo->R * x[b].getCenter();
-    tinfo->deformedPositions[2] = tinfo->R * x[c].getCenter();
-
-    //if (f_corotated.getValue()) {
-    //    Vec3 center = (tinfo->deformedPositions[0] + tinfo->deformedPositions[1] +
-    //        tinfo->deformedPositions[2])/3;
-
-    //    tinfo->deformedPositions[0] -= center;
-    //    tinfo->deformedPositions[1] -= center;
-    //    tinfo->deformedPositions[2] -= center;
-    //}
+    tinfo->deformedPositions[0] = tinfo->R * tinfo->deformedPositions[0];
+    tinfo->deformedPositions[1] = tinfo->R * tinfo->deformedPositions[1];
+    tinfo->deformedPositions[2] = tinfo->R * tinfo->deformedPositions[2];
 
     // Displacements
     Vec3 uA = tinfo->deformedPositions[0] - tinfo->restPositions[0];
     Vec3 uB = tinfo->deformedPositions[1] - tinfo->restPositions[1];
     Vec3 uC = tinfo->deformedPositions[2] - tinfo->restPositions[2];
+
     // Rotations
     Quat qA = x[a].getOrientation() * tinfo->restOrientations[0].inverse();
     Quat qB = x[b].getOrientation() * tinfo->restOrientations[1].inverse();

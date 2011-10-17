@@ -196,6 +196,7 @@ protected :
         static void TriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
         void computeRotation(Transformation& R, const VecCoord &x, const Index &a, const Index &b, const Index &c);
+        void computeRotation(Transformation& R, const helper::fixed_array<Vec3, 3> &x);
         void computeMaterialStiffness();
 
         void computeDisplacement(Displacement &Dm, Displacement &Db, const VecCoord &x, const Index elementIndex);
