@@ -179,6 +179,7 @@ public:
         Data <Real> f_thickness;
         Data <sofa::helper::OptionsGroup> f_membraneElement;
         Data <sofa::helper::OptionsGroup> f_bendingElement;
+        Data<bool> f_corotated;
 
 protected :
 

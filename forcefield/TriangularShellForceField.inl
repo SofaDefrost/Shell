@@ -91,6 +91,7 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
 , f_membraneElement(initData(&f_membraneElement, "membraneElement", "The membrane element to use"))
 , f_bendingElement(initData(&f_bendingElement, "bendingElement", "The bending plate element to use"))
+, f_corotated(initData(&f_corotated, true, "corotated", "Compute forces in corotational frame"))
 {
     f_membraneElement.beginEdit()->setNames(7,
         "None",     // No membrane element
@@ -354,7 +355,6 @@ void TriangularShellForceField<DataTypes>::addBToMatrix(sofa::defaulttype::BaseM
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index&a, const Index&b, const Index&c)
 {
-    //std::cout << "--initTriangle" << std::endl;
     helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &ti[i];
 
@@ -367,8 +367,10 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     const VecCoord& x0 = *this->mstate->getX0();
 
     // Rotation from triangle to world at rest positions
-    Transformation R, R0;
+    Transformation R0;
     computeRotation(R0, x0, a, b, c);
+    tinfo->R = R0;
+    tinfo->Rt.transpose(R0);
 
     //std::cout << R0 << " -- " << R << std::endl;
 
@@ -376,6 +378,15 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     tinfo->restPositions[0] = R0 * x0[a].getCenter();
     tinfo->restPositions[1] = R0 * x0[b].getCenter();
     tinfo->restPositions[2] = R0 * x0[c].getCenter();
+
+    //if (f_corotated.getValue()) {
+    //    Vec3 center = (tinfo->restPositions[0] + tinfo->restPositions[1] +
+    //        tinfo->restPositions[2])/3;
+
+    //    tinfo->restPositions[0] -= center;
+    //    tinfo->restPositions[1] -= center;
+    //    tinfo->restPositions[2] -= center;
+    //}
 
     tinfo->restOrientations[0] = x0[a].getOrientation();
     tinfo->restOrientations[1] = x0[b].getOrientation();
@@ -409,14 +420,17 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
 
 
 // --------------------------------------------------------------------------------------
-// Computes the quaternion that embodies the rotation from triangle to world
+// Computes the rotation from global frame to local triangle frame
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, const VecCoord &x, const Index &a, const Index &b, const Index &c)
 {
 
-    R = Transformation(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,1));
-    return;
+    if (!f_corotated.getValue()) {
+        // Return identity matrix
+        R = Transformation(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,1));
+        return;
+    }
     
     // First vector on first edge
     // Second vector in the plane of the two first edges
@@ -483,13 +497,22 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     Index c = tinfo->c;
 
     // Compute rotation to in-plane frame
-    computeRotation(tinfo->R, x, a, b, c);
-    tinfo->Rt.transpose(tinfo->R);
+    //computeRotation(tinfo->R, x, a, b, c);
+    //tinfo->Rt.transpose(tinfo->R);
 
     // Compute local (in-plane) postions
     tinfo->deformedPositions[0] = tinfo->R * x[a].getCenter();
     tinfo->deformedPositions[1] = tinfo->R * x[b].getCenter();
     tinfo->deformedPositions[2] = tinfo->R * x[c].getCenter();
+
+    //if (f_corotated.getValue()) {
+    //    Vec3 center = (tinfo->deformedPositions[0] + tinfo->deformedPositions[1] +
+    //        tinfo->deformedPositions[2])/3;
+
+    //    tinfo->deformedPositions[0] -= center;
+    //    tinfo->deformedPositions[1] -= center;
+    //    tinfo->deformedPositions[2] -= center;
+    //}
 
     // Displacements
     Vec3 uA = tinfo->deformedPositions[0] - tinfo->restPositions[0];
@@ -556,8 +579,8 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
     computeForce(Fm, Dm, Fb, Db, elementIndex);
 
     
-    //std::cout << tinfo->restPositions << std::endl;
-    //std::cout << tinfo->deformedPositions << std::endl;
+    //std::cout << "rest: " << tinfo->restPositions << std::endl;
+    //std::cout << "defo: " << tinfo->deformedPositions << std::endl;
     //std::cout << "X=" << x[a] << x[b] << x[c] << std::endl;
     //std::cout << "Dm=" << Dm << std::endl;
     //std::cout << "Fm=" << Fm << std::endl;
