@@ -369,8 +369,6 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     // Rotation from global to local frame
     Transformation R0;
 
-    //std::cout << R0 << " -- " << R << std::endl;
-
     // Rest positions expressed in the local frame
     tinfo->restPositions[0] = x0[a].getCenter();
     tinfo->restPositions[1] = x0[b].getCenter();
@@ -389,15 +387,16 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     computeRotation(R0, tinfo->restPositions);
     tinfo->R = R0;
     tinfo->Rt.transpose(R0);
+    tinfo->Q.fromMatrix(tinfo->R);
 
     tinfo->restPositions[0] = R0 * tinfo->restPositions[0];
     tinfo->restPositions[1] = R0 * tinfo->restPositions[1];
     tinfo->restPositions[2] = R0 * tinfo->restPositions[2];
 
-    // Rest orientations
-    tinfo->restOrientations[0] = x0[a].getOrientation();
-    tinfo->restOrientations[1] = x0[b].getOrientation();
-    tinfo->restOrientations[2] = x0[c].getOrientation();
+    // Rest orientations -- inverted (!)
+    tinfo->restOrientationsInv[0] = (tinfo->Q * x0[a].getOrientation()).inverse();
+    tinfo->restOrientationsInv[1] = (tinfo->Q * x0[b].getOrientation()).inverse();
+    tinfo->restOrientationsInv[2] = (tinfo->Q * x0[c].getOrientation()).inverse();
 
     // Do some precomputations
     // - directional vectors
@@ -548,6 +547,7 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     // Compute rotation to local (in-plane) frame
     computeRotation(tinfo->R, tinfo->deformedPositions);
     tinfo->Rt.transpose(tinfo->R);
+    tinfo->Q.fromMatrix(tinfo->R);
 
     // Compute local (in-plane) postions
     tinfo->deformedPositions[0] = tinfo->R * tinfo->deformedPositions[0];
@@ -560,12 +560,13 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     Vec3 uC = tinfo->deformedPositions[2] - tinfo->restPositions[2];
 
     // Rotations
-    Quat qA = x[a].getOrientation() * tinfo->restOrientations[0].inverse();
-    Quat qB = x[b].getOrientation() * tinfo->restOrientations[1].inverse();
-    Quat qC = x[c].getOrientation() * tinfo->restOrientations[2].inverse();
-    Vec3 rA = tinfo->R * qA.toEulerVector();
-    Vec3 rB = tinfo->R * qB.toEulerVector();
-    Vec3 rC = tinfo->R * qC.toEulerVector();
+    Quat qA = tinfo->restOrientationsInv[0] * (tinfo->Q * x[a].getOrientation());
+    Quat qB = tinfo->restOrientationsInv[1] * (tinfo->Q * x[b].getOrientation());
+    Quat qC = tinfo->restOrientationsInv[2] * (tinfo->Q * x[c].getOrientation());
+    Vec3 rA = qA.toEulerVector();
+    Vec3 rB = qB.toEulerVector();
+    Vec3 rC = qC.toEulerVector();
+    //std::cout << "Θ: " << rA << " | " << rB << " | " << rC << std::endl;
 
     // Membrane
     Dm[0] = uA[0];

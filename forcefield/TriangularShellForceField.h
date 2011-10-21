@@ -120,14 +120,14 @@ public:
 
                 // Rest position in local (in-plane) coordinates
                 helper::fixed_array <Vec3, 3> restPositions;
-                helper::fixed_array <Quat, 3> restOrientations;
+                helper::fixed_array <Quat, 3> restOrientationsInv;
 
                 // Deformed position in local (in-plane) coordinates
                 helper::fixed_array <Vec3, 3> deformedPositions;
 
-                // Transformation rotation
+                // Frame rotation as matrix and quaternion
                 Transformation R, Rt;
-                //Quat Qframe;
+                Quat Q;
 
                 // The strain-displacement matrices at Gauss points
                 StrainDisplacement strainDisplacementMatrixMembrane[4];
