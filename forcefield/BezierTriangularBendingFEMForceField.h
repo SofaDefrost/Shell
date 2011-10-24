@@ -161,7 +161,7 @@ public:
                 StiffnessMatrixBending stiffnessMatrixBending;
 
                 // Surface
-                Real area;
+                Real area2;
 
                 TriangleInformation() { }
 
@@ -220,15 +220,15 @@ protected :
         void computeLocalTriangle(const VecCoord &x, const Index elementIndex);
 
         void computeDisplacements( Displacement &Disp, DisplacementBending &BDisp, const VecCoord &x, TriangleInformation *tinfo);
-        void computeStrainDisplacementMatrix(TriangleInformation &tinfo);
+        void computeStrainDisplacementMatrixMembrane(TriangleInformation &tinfo);
         void computeStrainDisplacementMatrixBending(TriangleInformation &tinfo);
-        void computeStiffnessMatrix(StiffnessMatrix &K, const TriangleInformation &tinfo);
+        void computeStiffnessMatrixMembrane(StiffnessMatrix &K, const TriangleInformation &tinfo);
         void computeStiffnessMatrixBending(StiffnessMatrixBending &K, const TriangleInformation &tinfo);
-        void computeForce(Displacement &F, const Displacement& D, const Index elementIndex);
+        void computeForceMembrane(Displacement &F, const Displacement& D, const Index elementIndex);
         void computeForceBending(DisplacementBending &F, const DisplacementBending& D, const Index elementIndex);
 
         // Strain-displacement matrices
-        void matrixSD(StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo);
+        void matrixSDM(StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo);
         void matrixSDB(StrainDisplacementBending &J, const Vec3 &GP, const TriangleInformation& tinfo);
 
         static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
