@@ -65,25 +65,25 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         return;
     }
 
-    const OutVecCoord &outVertices = *this->toModel->getX();
+        const OutVecCoord &outVertices = *this->toModel->getX();
 
-    listBaseTriangles.clear();
-    barycentricCoordinates.clear();
-    listBaseTriangles.resize(outVertices.size());
-    barycentricCoordinates.resize(outVertices.size());
+        listBaseTriangles.clear();
+        barycentricCoordinates.clear();
+        listBaseTriangles.resize(outVertices.size());
+        barycentricCoordinates.resize(outVertices.size());
 
-    // Retrieves 'in' vertices and triangles
-    const InVecCoord &inVerticesRigid = *this->fromModel->getX();
+        // Retrieves 'in' vertices and triangles
+        const InVecCoord &inVerticesRigid = *this->fromModel->getX();
     const InVecCoord &inVerticesRigid0 = *this->fromModel->getX0();
 
-    // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
-    OutVecCoord inVertices;
-    for (unsigned int i=0; i<inVerticesRigid.size(); i++)
-    {
-        inVertices.push_back(inVerticesRigid[i].getCenter());
-    }
-    const SeqEdges &inEdges = inputTopo->getEdges();
-    const SeqTriangles &inTriangles = inputTopo->getTriangles();
+        // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
+        OutVecCoord inVertices;
+        for (unsigned int i=0; i<inVerticesRigid.size(); i++)
+        {
+            inVertices.push_back(inVerticesRigid[i].getCenter());
+        }
+        const SeqEdges &inEdges = inputTopo->getEdges();
+        const SeqTriangles &inTriangles = inputTopo->getTriangles();
 
     // Iterates over 'in' triangles
     triangleInfo.resize(inTriangles.size());
@@ -123,21 +123,21 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         // the oposite node
     }
 
-    // Iterates over 'out' vertices
-    for (unsigned int i=0; i<outVertices.size(); i++)
-    {
+        // Iterates over 'out' vertices
+        for (unsigned int i=0; i<outVertices.size(); i++)
+        {
         unsigned int closestVertex, closestEdge, closestTriangle;
         Real minVertex, minEdge, minTriangle;
         int triangleID;
         Vec3 vertexBaryCoord;
 
-        // Iterates over 'in' vertices
+            // Iterates over 'in' vertices
         minVertex = FindClosestPoint(closestVertex, outVertices[i], inVertices);
 
-        // Iterates over 'in' edges
+            // Iterates over 'in' edges
         minEdge = FindClosestEdge(closestEdge, outVertices[i], inVertices, inEdges);
 
-        // Iterates over 'in' triangles
+            // Iterates over 'in' triangles
         minTriangle = FindClosestTriangle(closestTriangle, outVertices[i], inVertices, inTriangles);
 
         int which = 2; /* 0 vertex, 1 edge, 2 triangle */
@@ -152,16 +152,16 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         }
 
         if (which == 0)
-        {
+            {
             // If it is a vertex, consider one of the triangles attached to it
             TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex(closestVertex);
             if (trianglesAroundVertex.size() <= 0)
-            {
+                    {
                 serr << "No triangles attached to vertex " << closestVertex << sendl;
                 which = (minEdge <= minTriangle) ? 1 : 2;
             }
             else
-            {
+                        {
                 triangleID = trianglesAroundVertex[0];
                 listBaseTriangles[i] = triangleID;
 
@@ -171,17 +171,17 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
                     inVertices[ inTriangles[triangleID][1] ],
                     inVertices[ inTriangles[triangleID][2] ]);
 
-                // Adds the barycentric coordinates to the list
+                            // Adds the barycentric coordinates to the list
                 barycentricCoordinates[i] = vertexBaryCoord;
-            }
-        }
+                        }
+                    }
 
         if (which == 1)
-        {
+                    {
             // If it is an edge, consider one of the triangles attached to it
             TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge(closestEdge);
             if (trianglesAroundEdge.size() <= 0)
-            {
+                        {
                 serr << "No triangles attached to edge " << closestEdge << sendl;
                 which = 3;
             }
@@ -196,31 +196,31 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
                     inVertices[ inTriangles[triangleID][1] ],
                     inVertices[ inTriangles[triangleID][2] ]);
 
-                // Adds the barycentric coordinates to the list
+                            // Adds the barycentric coordinates to the list
                 barycentricCoordinates[i] = vertexBaryCoord;
-            }
-        }
-        
+                         }
+                    }
+
         if (which == 2)
-        {
+                    {
             // If it is a triangle, consider it
             listBaseTriangles[i] = closestTriangle;
 
-            // Computes barycentric coordinates within each triangles
+                        // Computes barycentric coordinates within each triangles
             computeBaryCoefs(vertexBaryCoord, outVertices[i],
                 inVertices[ inTriangles[closestTriangle][0] ],
                 inVertices[ inTriangles[closestTriangle][1] ],
                 inVertices[ inTriangles[closestTriangle][2] ]);
 
-            // Adds the barycentric coordinates to the list
+                        // Adds the barycentric coordinates to the list
             barycentricCoordinates[i] = vertexBaryCoord;
-        }
-    }
+                    }
+            }
 
 
     // Retrieves topological mapping to get list of edges  (for contour rendering)
     triangleSubdivisionTopologicalMapping = NULL;
-    //this->getContext()->get(triangleSubdivisionTopologicalMapping, nameHighTopology.getValue(), sofa::core::objectmodel::BaseContext::SearchRoot);
+//    this->getContext()->get(triangleSubdivisionTopologicalMapping, nameHighTopology.getValue(), sofa::core::objectmodel::BaseContext::SearchRoot);
     this->getContext()->get(triangleSubdivisionTopologicalMapping);
     if (!triangleSubdivisionTopologicalMapping)
     {
@@ -237,57 +237,57 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         coloursPerVertex.push_back(Vec3(0.56, 0.14, 0.6));    // purple
     }
 
-    // Measure the error between the two meshes using Hausdorff distance
-    if (measureError.getValue())
+    // If we want to measure the error between the two meshes using Hausdorff distance
+    //if (measureError.getValue())
+    //{
+    //    // List of colours to create a colour map
+    //    Vec3 colour;
+    //    Real incr = (float)2.0/3.0/240; // (2.0/3.0) is chosen stop the gradient to blue
+    //    for (int i=0; i<240; i++)
+    //    {
+    //        HSL2RGB(colour, (float)2.0/3.0-i*incr, 0.8, 0.5);
+    //        colourMapping.push_back(colour);
+    //    }
+
+    // List of colours to create a colour map
+    Vec3 colour;
+    Real incr = (float)2/3/240; // (2/3) is chosen stop the gradient to blue
+    for (int i=0; i<240; i++)
     {
-        if (!this->f_printLog.getValue()) {
-            // Enable the log so user can see the numbers (see MeasureError()).
-            // We're not spamming too much, so it shouldn't be too "impolite".
-            this->f_printLog.setValue(true);
-            sout << "Auto-enabling output log since measureError is enabled" << sendl;
-        }
-
-        // List of colours to create a colour map
-        Vec3 colour;
-        Real incr = (float)2/3/240; // (2/3) is chosen stop the gradient to blue
-        for (int i=0; i<240; i++)
-        {
-            HSL2RGB(colour, (float)2/3-i*incr, 0.8, 0.5);
-            colourMapping.push_back(colour);
-        }
-
-        // Retrieves high resolution mesh topology
-        const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
-        topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
-        if (topologyTarget == NULL)
-        {
-            serr << "Target mesh " << nameTargetTopology.getValue() << " was not found" << sendl;
-            return;
-        }
-
-        // Computes two-sided Hausdorff distance
-        MeasureError();
-
-        // Overwrites colour for each vertex based on the error and colour map
-        Real maximum = 0;
-        // Normalises the error
-        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
-        {
-            if (fabs(vectorErrorCoarse[i])>maximum)
-            {
-                maximum = fabs(vectorErrorCoarse[i]);
-            }
-        }
-        Real correctedError;
-        for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
-        {
-            correctedError = fabs(vectorErrorCoarse[i])*5;
-            if (correctedError > maximum)
-                correctedError = maximum;
-            coloursPerVertex[i] = colourMapping[ (int)((correctedError/maximum)*239) ];
-        }
+        HSL2RGB(colour, (float)2/3-i*incr, 0.8, 0.5);
+        colourMapping.push_back(colour);
     }
 
+    // Retrieves high resolution mesh topology
+    const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
+    topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
+    if (topologyTarget == NULL)
+    {
+        serr << "Target mesh " << nameTargetTopology.getValue() << " was not found" << sendl;
+        return;
+    }
+
+    // Computes two-sided Hausdorff distance
+    MeasureError();
+
+    // Overwrites colour for each vertex based on the error and colour map
+    Real maximum = 0;
+    // Normalises the error
+    for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+    {
+        if (fabs(vectorErrorCoarse[i])>maximum)
+        {
+            maximum = fabs(vectorErrorCoarse[i]);
+        }
+    }
+    Real correctedError;
+    for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
+    {
+        correctedError = fabs(vectorErrorCoarse[i])*5;
+        if (correctedError > maximum)
+            correctedError = maximum;
+        coloursPerVertex[i] = colourMapping[ (int)((correctedError/maximum)*239) ];
+    }
 }
 
 
@@ -465,7 +465,7 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
             // Updates the minimum's value
             minimumDistance = distance;
         }
-    }
+        }
 
     return minimumDistance;
 }
@@ -510,8 +510,8 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
                 // Updates the minimum's value
                 minimumDistance = distance;
             }
+            }
         }
-    }
 
     return minimumDistance;
 }
@@ -573,8 +573,8 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
                 // Updates the minimum's value
                 minimumDistance = distance;
             }
+            }
         }
-    }
 
     return minimumDistance;
 }
@@ -734,12 +734,12 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
     helper::WriteAccessor< Data<OutVecDeriv> > out = dOut;
     helper::ReadAccessor< Data<InVecDeriv> > in = dIn;
 
-    //std::cout << "---------------- ApplyJ ----------------------------" << std::endl;
+//    std::cout << "---------------- ApplyJ ----------------------------" << std::endl;
 
-    //sofa::helper::system::thread::ctime_t start, stop;
-    //sofa::helper::system::thread::CTime timer;
-    //
-    //start = timer.getTime();
+//    sofa::helper::system::thread::ctime_t start, stop;
+//    sofa::helper::system::thread::CTime timer;
+//
+//    start = timer.getTime();
 
     if (!inputTopo || !outputTopo)
     {
@@ -883,8 +883,8 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
     //}
     //std::cout << std::endl;
 
-    //stop = timer.getTime();
-    //std::cout << "time applyJ = " << stop-start << std::endl;
+//    stop = timer.getTime();
+//    std::cout << "time applyJ = " << stop-start << std::endl;
 }
 
 
@@ -1035,7 +1035,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw(const core::visual::Visual
 
     const OutVecCoord &outVertices = *this->toModel->getX();
 
-    if(this->getContext()->getShowVisualModels())
+    if(vparams->displayFlags().getShowVisualModels())
     {
         glDisable(GL_LIGHTING);
 
@@ -1045,7 +1045,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw(const core::visual::Visual
         glEnable(GL_DEPTH_TEST);
         glPolygonOffset(1.0, 1.0);
 
-        if(this->getContext()->getShowWireFrame())
+        if(vparams->displayFlags().getShowWireFrame())
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glEnable(GL_POLYGON_OFFSET_LINE);
@@ -1114,22 +1114,22 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw(const core::visual::Visual
         {
             const SeqEdges &outEdges = triangleSubdivisionTopologicalMapping->getSubEdges();
             //const SeqEdges &outEdges = outputTopo->getEdges();
-            glColor4f(1.0, 1.0, 1.0, 1.0);
-            glLineWidth(0.5);
-            glBegin(GL_LINES);
-            for (unsigned int i=0; i<outEdges.size(); i++)
-            {
-                index = outEdges[i][0];
-                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+        glLineWidth(0.5);
+        glBegin(GL_LINES);
+        for (unsigned int i=0; i<outEdges.size(); i++)
+        {
+            index = outEdges[i][0];
+            glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
 
-                index = outEdges[i][1];
-                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
-            }
-            glEnd();
+            index = outEdges[i][1];
+            glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+        }
+        glEnd();
         }
     }
 
-    if(this->getContext()->getShowMechanicalMappings())
+    if(vparams->displayFlags().getShowMechanicalMappings())
     {
         // Render nodes of the Bézier triangles
         glPointSize(8);
@@ -1144,7 +1144,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw(const core::visual::Visual
                 glColor4f(0.5, 1.0, 0.5, 1.0);
                 glVertex3f(bn[j][0], bn[j][1], bn[j][2]);
             }
-        }
+        } 
         glEnd();
         glPointSize(1);
 
@@ -1162,9 +1162,9 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw(const core::visual::Visual
                 c,
                 triFrame,
                 Vec3(size, size, size));
-        }
-        // TODO: visualise the mesh
     }
+        // TODO: visualise the mesh
+}
 }
 
 

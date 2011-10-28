@@ -195,7 +195,6 @@ public:
         static void computeFrame(Quat& Qframe, const Vec3 &a, const Vec3 &b, const Vec3 &c);
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
-        TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}
 
         Data<Real> f_poisson;
         Data<Real> f_young;
@@ -208,7 +207,7 @@ public:
 
 protected :
 
-        TriangleData<TriangleInformation> triangleInfo;
+        TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
 
         /// Material stiffness matrices for plane stress and bending
         MaterialStiffness materialMatrix;
@@ -231,7 +230,7 @@ protected :
         void matrixSDM(StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo);
         void matrixSDB(StrainDisplacementBending &J, const Vec3 &GP, const TriangleInformation& tinfo);
 
-        static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
+        static void TRQSTriangleCreationFunction (unsigned int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
         /// f += Kx where K is the stiffness matrix and x a displacement
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);

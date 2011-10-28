@@ -66,6 +66,8 @@
         <OglModel name="Visual" />
         <IdentityMapping object1="tri" object2="Visual"/>
         -->
+		
+		<!--
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subTrianglesTopo"/>
@@ -78,7 +80,7 @@
                 <IdentityMapping input="@../subPoints" output="@Visual"/>
             </Node>
         </Node>
-
+-->
         
     </Node>
 </Node>

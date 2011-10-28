@@ -1,48 +1,44 @@
+load(sofa/pre)
+defineAsPlugin(shells)
 
-######  GENERAL PLUGIN CONFIGURATION, you shouldn't have to modify it
-
-SOFA_DIR=../../..
 TEMPLATE = lib
+TARGET = shells
 
-include($${SOFA_DIR}/sofa.cfg)
 
-DESTDIR = $$SOFA_DIR/lib/sofa-plugins
+contains (DEFINES, SOFA_QT4) {
+	CONFIG += qt
+	QT += opengl qt3support xml
+}
+else {
+	CONFIG += qt
+	QT += opengl
+}
 
-#set configuration to dynamic library
-CONFIG += $$CONFIGLIBRARIES
-CONFIG -= staticlib
-CONFIG += dll
 
-###### SPECIFIC PLUGIN CONFIGURATION, you should modify it to configure your plugin
-
-TARGET = PluginShells$$LIBSUFFIX
 DEFINES += SOFA_BUILD_SHELLS
 
-LIBS += $$SOFA_LIBS
-LIBS += $$SOFA_EXT_LIBS
-INCLUDEPATH += $$SOFA_DIR/extlibs
-
-SOURCES = 	forcefield/TriangularBendingFEMForceField.cpp \
-			forcefield/TriangularShellForceField.cpp \
-			forcefield/BezierTriangularBendingFEMForceField.cpp \
-			mapping/BendingPlateMechanicalMapping.cpp \
+SOURCES = 	forcefield/BezierTriangularBendingFEMForceField.cpp \
+                #forcefield/TriangularBendingFEMForceField.cpp \
+                #	forcefield/TriangularShellForceField.cpp \
+                #	mapping/BendingPlateMechanicalMapping.cpp \
 			mapping/BezierTriangleMechanicalMapping.cpp \
-			initPluginShells.cpp
+                        initPluginShells.cpp
 
-HEADERS = 	forcefield/TriangularBendingFEMForceField.h \
-			forcefield/TriangularBendingFEMForceField.inl \
-			forcefield/TriangularShellForceField.h \
-			forcefield/TriangularShellForceField.inl \
+HEADERS =       initPluginShells.h \
 			forcefield/BezierTriangularBendingFEMForceField.h \
 			forcefield/BezierTriangularBendingFEMForceField.inl \
-			mapping/BendingPlateMechanicalMapping.h \
-			mapping/BendingPlateMechanicalMapping.inl \
-			mapping/BezierTriangleMechanicalMapping.h \
+                #	mapping/BendingPlateMechanicalMapping.h \
+                #	mapping/BendingPlateMechanicalMapping.inl \
+                        mapping/BezierTriangleMechanicalMapping.h \
 			mapping/BezierTriangleMechanicalMapping.inl
+                #forcefield/TriangularBendingFEMForceField.h \
+                #	forcefield/TriangularBendingFEMForceField.inl \
+                #	forcefield/TriangularShellForceField.h \
+                #	forcefield/TriangularShellForceField.inl \
 		  
-README_FILE = PluginShells.txt
+README_FILE = shells.txt
 
-unix : QMAKE_POST_LINK = cp $$README_FILE $$DESTDIR 
-win32 : QMAKE_POST_LINK = copy \"$$README_FILE\" \"$$SOFA_DIR/lib/sofa-plugins\"
+unix : QMAKE_POST_LINK = cp $$SRC_DIR/$$README_FILE $$LIB_DESTDIR
+win32 : QMAKE_POST_LINK = copy \"$$toWindowsPath($$SRC_DIR/$$README_FILE)\" \"$$LIB_DESTDIR"
 
-
+load(sofa/post)

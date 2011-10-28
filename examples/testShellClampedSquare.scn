@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- Simulation of plate bending under clamped boundary conditions
 Theoretical results are: alpha = zmax / (qL^4/D) = 0.00126
 This can also be expressed as: zmax = 0.126 * [(qL^4) / 100*D]
@@ -38,6 +39,8 @@ Results with bending only and a 9x9 grid:
     <CollisionGroup />
 
 
+<!--
+
     <Node name="pointA">
        <MechanicalObject template="Rigid" name="fixedPoint" position="-0.005 -0.002 0 0 0 0 1"/>
     </Node>
@@ -63,96 +66,37 @@ Results with bending only and a 9x9 grid:
     </Node>
 
 
-    <Node name="Square1" activated="false">
-        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
-        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
-<!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
-        <TriangleSetTopologyContainer name="trianglesTopo" filename="../mesh/rectangularBoard.obj"/>
-        <MechanicalObject name="tri" template="Rigid" />
-
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.1" />
-
-<!--        <BoxROI name="box1" box="-0.0051 -0.0051 -0.0001 0.0051 -0.0049 0.0001" drawSize="0"/>-->
-<!--        <FixedConstraint indices="@box1.indices" drawSize="0"/>-->
-<!--        <BoxROI name="box2" box="-0.0051 0.0049 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>-->
-<!--        <FixedConstraint indices="@box2.indices" drawSize="0"/>-->
-<!--        <BoxROI name="box3" box="-0.0051 -0.0051 -0.0001 -0.0049 0.0051 0.0001" drawSize="0"/>-->
-<!--        <FixedConstraint indices="@box3.indices" drawSize="0"/>-->
-<!--        <BoxROI name="box4" box="0.0049 -0.0051 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>-->
-<!--        <FixedConstraint indices="@box4.indices" drawSize="0"/>-->
-
-<!--        <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="true" />-->
-        <AttachConstraint name="Constraint" object2="tri" object1="pointB/fixedPoint" indices1="0" indices2="7" freeRotations="true" />
-<!--        <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="14" freeRotations="true" />-->
-<!--        <AttachConstraint name="Constraint" object2="tri" object1="pointD/fixedPoint" indices1="0" indices2="6" freeRotations="true" />-->
-        <AttachConstraint name="Constraint" object2="tri" object1="pointE/fixedPoint" indices1="0" indices2="13" freeRotations="true" />
-<!--        <AttachConstraint name="Constraint" object2="tri" object1="pointF/fixedPoint" indices1="0" indices2="20" freeRotations="true" />-->
-
-
-<!--        <FixedConstraint indices="10"/>-->
-        <FixedRotationConstraint FixedZRotation="true"/>
-        <ConstantForceField points="7" forces="0 0 0 10 0 0"/>
-        <ConstantForceField points="13" forces="0 0 0 -10 0 0"/>
-
-        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e5" poissonRatio="0.42" thickness="0.1" />
-
-<!--        <Node>-->
-<!--            <MechanicalObject name="basePointsVec3" template="Vec3d"/>-->
-<!--            <IdentityMapping/>-->
-<!--            <Node name="VisualBasePoints">-->
-<!--                <OglModel name="Visual" color="green"/>-->
-<!--                <IdentityMapping object1="basePointsVec3" object2="Visual"/>-->
-<!--            </Node>-->
-<!--        </Node>-->
-
-        <Node name="SubTriangles">
-            <TriangleSetTopologyContainer name="subTrianglesTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="4"/>
-            <MechanicalObject name="subPoints" />
-            <BendingPlateMechanicalMapping />
-            <Triangle/>
-            <Node name="visual">
-                <OglModel name="Visual" color="red"/>
-                <IdentityMapping object1="subPoints" object2="Visual"/>
-            </Node>
-        </Node>
-
-    </Node>
-
-
-
-
+-->
 
 
 
     <Node name="Square2" activated="true">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
-<!--        <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>-->
+        <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
 <!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
 <!--        <RegularGrid name="gridTopo" min="-0.005 -0.002 0" max="0.005 0.002 0" nx="7" ny="3" nz="1" />-->
         <RegularGrid name="gridTopo" min="-5 -5 0" max="5 5 0" nx="3" ny="3" nz="1" />
-        <MechanicalObject template="Rigid" />
+    
 
         <Node>
             <TriangleSetTopologyContainer name="trianglesTopo"/>
             <TriangleSetTopologyModifier name="Modifier" />
             <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
-<!--            <MechanicalObject name="basePoints" template="Rigid"/>-->
-<!--            <IdentityMapping />-->
+            <MechanicalObject name="basePoints" template="Rigid" />
+            <IdentityMapping />
 
-            <OglModel/>
+     
 
-            <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.00012" />
+            <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="1" totalmass="0.00012" />
 
-            <BoxROI name="box1" box="-0.0051 -0.0051 -0.0001 0.0051 -0.0049 0.0001" drawSize="0"/>
+            <BoxROI name="box1" box="-5.1 -5.1 -0.1 5.1 -4.9 0.1" drawSize="0"/>
             <FixedConstraint indices="@box1.indices" drawSize="0"/>
-            <BoxROI name="box2" box="-0.0051 0.0049 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>
+            <BoxROI name="box2" box="-5.1 4.9 -0.1 5.1 5.1 0.1" drawSize="0"/>
             <FixedConstraint indices="@box2.indices" drawSize="0"/>
-            <BoxROI name="box3" box="-0.0051 -0.0051 -0.0001 -0.0049 0.0051 0.0001" drawSize="0"/>
+            <BoxROI name="box3" box="-5.1 -5.1 -0.1 -4.9 5.1 0.1" drawSize="0"/>
             <FixedConstraint indices="@box3.indices" drawSize="0"/>
-            <BoxROI name="box4" box="0.0049 -0.0051 -0.0001 0.0051 0.0051 0.0001" drawSize="0"/>
+            <BoxROI name="box4" box="4.9 -5.1 -0.1 5.1 5.1 0.1" drawSize="0"/>
 
             <FixedConstraint indices="@box4.indices" drawSize="0"/>
             <ConstantForceField points="0-8" forces="0 0 0.001 0 0 0"/>
@@ -160,16 +104,19 @@ Results with bending only and a 9x9 grid:
 
             <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.001" />
             
-<!--            <Node name="SubTriangles">-->
-<!--                <TriangleSetTopologyContainer name="subTrianglesTopo"/>-->
-<!--                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>-->
-<!--                <MechanicalObject name="subPoints" />-->
-<!--                <BendingPlateMechanicalMapping />-->
-<!--                <Node name="visual">-->
-<!--                    <OglModel name="Visual" color="green"/>-->
-<!--                    <IdentityMapping object1="subPoints" object2="Visual"/>-->
-<!--                </Node>-->
-<!--            </Node>-->
+            <Node name="SubTriangles">
+                <TriangleSetTopologyContainer name="subTrianglesTopo"/>
+                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>
+                <MechanicalObject name="subPoints" />
+                <BendingPlateMechanicalMapping input="@../basePoints" output="@subPoints" />
+				<Triangle />
+				
+                <Node name="visual">
+                    <OglModel name="Visual" color="green"/>
+                    <IdentityMapping object1="subPoints" object2="Visual"/>
+                </Node>
+            </Node>
+			
         </Node>
     </Node>
 

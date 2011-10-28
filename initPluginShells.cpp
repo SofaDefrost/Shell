@@ -25,12 +25,13 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #include <sofa/helper/system/config.h>
-
+#include "initPluginShells.h"
+#include <cstring>
+#include <string>
 
 #ifndef WIN32
 	#define SOFA_EXPORT_DYNAMIC_LIBRARY 
 	#define SOFA_IMPORT_DYNAMIC_LIBRARY 
-	#define SOFA_PLUGINSHELLS_API
 #else
 	#ifdef SOFA_BUILD_PLUGINSHELLS
 		#define SOFA_EXPORT_DYNAMIC_LIBRARY __declspec( dllexport )
@@ -50,21 +51,19 @@ namespace component
 
 	//Here are just several convenient functions to help user to know what contains the plugin
 
-	extern "C" {
-		SOFA_PLUGINSHELLS_API void initExternalModule();
-		SOFA_PLUGINSHELLS_API const char* getModuleName();
-		SOFA_PLUGINSHELLS_API const char* getModuleVersion();
-		SOFA_PLUGINSHELLS_API const char* getModuleDescription();
-		SOFA_PLUGINSHELLS_API const char* getModuleComponentList();
-	}
 	
-	void initExternalModule()
+        SOFA_SHELLS_API void initExternalModule()
 	{
 		static bool first = true;
 		if (first)
 		{
 			first = false;
 		}
+	}
+	
+	const char* getModuleLicense()
+	{
+		return "copyright INRIA";
 	}
 
 	const char* getModuleName()
@@ -84,7 +83,14 @@ namespace component
 
 	const char* getModuleComponentList()
 	{
-		return "TriangularBendingFEMForceField, BendingPlateMechanicalMapping";
+		std::string commonentlist;
+		
+		//commonentlist += " TriangularBendingFEMForceField"  ;
+		//commonentlist += " BendingPlateMechanicalMapping"  ;		
+		commonentlist += " BezierTriangleMechanicalMapping"  ;
+		commonentlist += " BezierTriangularBendingFEMForceField"  ;
+		//commonentlist += "";
+		return commonentlist.c_str();
 	}
 
 
@@ -94,6 +100,8 @@ namespace component
 } 
 
 
-SOFA_LINK_CLASS(TriangularBendingFEMForceField)
-SOFA_LINK_CLASS(BendingPlateMechanicalMapping)
+//SOFA_LINK_CLASS(TriangularBendingFEMForceField)
+//SOFA_LINK_CLASS(BendingPlateMechanicalMapping)
+SOFA_LINK_CLASS(BezierTriangularBendingFEMForceField)
+SOFA_LINK_CLASS(BezierTriangleMechanicalMapping)
 
