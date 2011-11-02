@@ -1,0 +1,5 @@
+includeOnce($$_FILE_) {
+	declare(shells, applications/plugins/shells, sofa_component_base sofahelper sofa_misc_topology_dev)
+	
+	enable(shells)
+}

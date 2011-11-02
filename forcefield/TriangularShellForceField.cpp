@@ -23,6 +23,7 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #define SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_CPP
+#include "initPluginShells.h"
 #include "TriangularShellForceField.inl"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/RigidTypes.h>
@@ -57,10 +58,10 @@ int TriangularShellForceFieldClass = core::RegisterObject("Triangular finite ele
 ;
 
 #ifndef SOFA_FLOAT
-template class SOFA_COMPONENT_FORCEFIELD_API TriangularShellForceField<Rigid3dTypes>;
+template class SOFA_SHELLS_API TriangularShellForceField<Rigid3dTypes>;
 #endif
 #ifndef SOFA_DOUBLE
-template class SOFA_COMPONENT_FORCEFIELD_API TriangularShellForceField<Rigid3fTypes>;
+template class SOFA_SHELLS_API TriangularShellForceField<Rigid3fTypes>;
 #endif
 
 

@@ -18,23 +18,23 @@ else {
 DEFINES += SOFA_BUILD_SHELLS
 
 SOURCES = 	forcefield/BezierTriangularBendingFEMForceField.cpp \
-                #forcefield/TriangularBendingFEMForceField.cpp \
-                #	forcefield/TriangularShellForceField.cpp \
-                #	mapping/BendingPlateMechanicalMapping.cpp \
+			#forcefield/TriangularBendingFEMForceField.cpp \
+			forcefield/TriangularShellForceField.cpp \
+			mapping/BendingPlateMechanicalMapping.cpp \
 			mapping/BezierTriangleMechanicalMapping.cpp \
-                        initPluginShells.cpp
+			initPluginShells.cpp
 
-HEADERS =       initPluginShells.h \
+HEADERS =   initPluginShells.h \
 			forcefield/BezierTriangularBendingFEMForceField.h \
 			forcefield/BezierTriangularBendingFEMForceField.inl \
-                #	mapping/BendingPlateMechanicalMapping.h \
-                #	mapping/BendingPlateMechanicalMapping.inl \
-                        mapping/BezierTriangleMechanicalMapping.h \
+			#forcefield/TriangularBendingFEMForceField.h \
+			#forcefield/TriangularBendingFEMForceField.inl \
+			forcefield/TriangularShellForceField.h \
+			forcefield/TriangularShellForceField.inl \
+			mapping/BendingPlateMechanicalMapping.h \
+			mapping/BendingPlateMechanicalMapping.inl \
+			mapping/BezierTriangleMechanicalMapping.h \
 			mapping/BezierTriangleMechanicalMapping.inl
-                #forcefield/TriangularBendingFEMForceField.h \
-                #	forcefield/TriangularBendingFEMForceField.inl \
-                #	forcefield/TriangularShellForceField.h \
-                #	forcefield/TriangularShellForceField.inl \
 		  
 README_FILE = shells.txt
 

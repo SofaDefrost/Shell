@@ -29,20 +29,6 @@
 #include <cstring>
 #include <string>
 
-#ifndef WIN32
-	#define SOFA_EXPORT_DYNAMIC_LIBRARY 
-	#define SOFA_IMPORT_DYNAMIC_LIBRARY 
-#else
-	#ifdef SOFA_BUILD_PLUGINSHELLS
-		#define SOFA_EXPORT_DYNAMIC_LIBRARY __declspec( dllexport )
-		#define SOFA_PLUGINSHELLS_API SOFA_EXPORT_DYNAMIC_LIBRARY
-	#else
-		#define SOFA_IMPORT_DYNAMIC_LIBRARY __declspec( dllimport )
-		#define SOFA_PLUGINSHELLS_API SOFA_IMPORT_DYNAMIC_LIBRARY
-	#endif
-#endif
-
-
 namespace sofa
 {
 
@@ -51,8 +37,17 @@ namespace component
 
 	//Here are just several convenient functions to help user to know what contains the plugin
 
-	
-        SOFA_SHELLS_API void initExternalModule()
+	extern "C" {
+		SOFA_SHELLS_API void initExternalModule();
+		SOFA_SHELLS_API const char* getModuleName();
+		SOFA_SHELLS_API const char* getModuleVersion();
+		SOFA_SHELLS_API const char* getModuleLicense();
+		SOFA_SHELLS_API const char* getModuleDescription();
+		SOFA_SHELLS_API const char* getModuleComponentList();
+	}
+
+
+	void initExternalModule()
 	{
 		static bool first = true;
 		if (first)

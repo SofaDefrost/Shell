@@ -169,7 +169,7 @@ public:
         virtual void addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/);
         ////virtual void handleTopologyChange();
 
-        virtual void draw();
+        virtual void draw(const core::visual::VisualParams* vparams);
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
         //TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}
@@ -189,11 +189,11 @@ protected :
 
         /// Material stiffness matrix
         MaterialStiffness materialMatrixMembrane, materialMatrixBending;
-        TriangleData<TriangleInformation> triangleInfo;
+        TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
 
         void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
 
-        static void TriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
+        static void TriangleCreationFunction (unsigned int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
         void computeRotation(Transformation& R, const VecCoord &x, const Index &a, const Index &b, const Index &c);
         void computeRotation(Transformation& R, const helper::fixed_array<Vec3, 3> &x);

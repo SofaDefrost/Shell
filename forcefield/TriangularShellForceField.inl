@@ -67,7 +67,7 @@ namespace sofa
 // ---
 // --------------------------------------------------------------------------------------
 template< class DataTypes>
-void TriangularShellForceField<DataTypes>::TriangleCreationFunction(int triangleIndex, void* param, TriangleInformation &/*tinfo*/, const Triangle& t, const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&)
+void TriangularShellForceField<DataTypes>::TriangleCreationFunction (unsigned int triangleIndex, void* param, TriangleInformation &/*tinfo*/, const Triangle& t, const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&)
 {
     TriangularShellForceField<DataTypes> *ff= (TriangularShellForceField<DataTypes> *)param;
     if (ff)
@@ -1155,9 +1155,9 @@ void TriangularShellForceField<DataTypes>::dktSD(StrainDisplacement &B, const Tr
 
 // TODO
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::draw()
+void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
-    if(this->getContext()->getShowInteractionForceFields())
+    if(vparams->displayFlags().getShowInteractionForceFields())
     {
         glDisable(GL_LIGHTING);
 
