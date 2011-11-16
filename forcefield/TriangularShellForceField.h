@@ -42,6 +42,10 @@
 #include <sofa/core/objectmodel/ObjectRef.h>
 
 
+// Uncomment the following to use matrices instead of quaternions for
+// rotations. It is numericaly little bit more accurate, and there seems to be no
+// significant difference in speed.
+//#define CRMATRIX
 
 namespace sofa
 {
@@ -120,7 +124,11 @@ public:
 
                 // Rest position in local (in-plane) coordinates
                 helper::fixed_array <Vec3, 3> restPositions;
+#ifdef CRMATRIX
+                helper::fixed_array <Transformation, 3> restOrientationsInv;
+#else
                 helper::fixed_array <Quat, 3> restOrientationsInv;
+#endif
 
                 // Deformed position in local (in-plane) coordinates
                 helper::fixed_array <Vec3, 3> deformedPositions;

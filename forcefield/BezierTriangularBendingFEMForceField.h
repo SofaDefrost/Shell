@@ -119,7 +119,8 @@ public:
             public:
 
                 helper::fixed_array <Vec3, 3> restLocalPositions;
-                helper::fixed_array <Quat, 3> restLocalOrientations;
+                helper::fixed_array <Quat, 3> restLocalOrientationsInv;
+                Transformation R, Rt;
 
                 // Indices of each vertex
                 Index a, b, c;
@@ -160,7 +161,7 @@ public:
                 // Stiffness matrix for bending K = Jt * M * J
                 StiffnessMatrixBending stiffnessMatrixBending;
 
-                // Surface
+                // Surface Area * 2
                 Real area2;
 
                 TriangleInformation() { }
@@ -239,7 +240,7 @@ protected :
         void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
         void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
         void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
-        void interpolateRefFrame( const TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints );
+        void interpolateRefFrame( TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints );
 
 
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);

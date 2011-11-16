@@ -394,9 +394,19 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     tinfo->restPositions[2] = R0 * tinfo->restPositions[2];
 
     // Rest orientations -- inverted (!)
+#ifndef CRMATRIX
     tinfo->restOrientationsInv[0] = (tinfo->Q * x0[a].getOrientation()).inverse();
     tinfo->restOrientationsInv[1] = (tinfo->Q * x0[b].getOrientation()).inverse();
     tinfo->restOrientationsInv[2] = (tinfo->Q * x0[c].getOrientation()).inverse();
+#else
+    x0[a].getOrientation().toMatrix(tinfo->restOrientationsInv[0]);
+    x0[b].getOrientation().toMatrix(tinfo->restOrientationsInv[1]);
+    x0[c].getOrientation().toMatrix(tinfo->restOrientationsInv[2]);
+
+    tinfo->restOrientationsInv[0].transpose( tinfo->R * tinfo->restOrientationsInv[0] );
+    tinfo->restOrientationsInv[1].transpose( tinfo->R * tinfo->restOrientationsInv[1] );
+    tinfo->restOrientationsInv[2].transpose( tinfo->R * tinfo->restOrientationsInv[2] );
+#endif
 
     // Do some precomputations
     // - directional vectors
@@ -560,9 +570,20 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     Vec3 uC = tinfo->deformedPositions[2] - tinfo->restPositions[2];
 
     // Rotations
-    Quat qA = tinfo->restOrientationsInv[0] * (tinfo->Q * x[a].getOrientation());
-    Quat qB = tinfo->restOrientationsInv[1] * (tinfo->Q * x[b].getOrientation());
-    Quat qC = tinfo->restOrientationsInv[2] * (tinfo->Q * x[c].getOrientation());
+#ifndef CRMATRIX
+    Quat qA = (tinfo->Q * x[a].getOrientation()) * tinfo->restOrientationsInv[0];
+    Quat qB = (tinfo->Q * x[b].getOrientation()) * tinfo->restOrientationsInv[1];
+    Quat qC = (tinfo->Q * x[c].getOrientation()) * tinfo->restOrientationsInv[2];
+#else
+    Transformation tmpA, tmpB, tmpC;
+    x[a].getOrientation().toMatrix(tmpA);
+    x[b].getOrientation().toMatrix(tmpB);
+    x[c].getOrientation().toMatrix(tmpC);
+
+    Quat qA; qA.fromMatrix( tinfo->R * tmpA * tinfo->restOrientationsInv[0] );
+    Quat qB; qB.fromMatrix( tinfo->R * tmpB * tinfo->restOrientationsInv[1] );
+    Quat qC; qC.fromMatrix( tinfo->R * tmpC * tinfo->restOrientationsInv[2] );
+#endif
     Vec3 rA = qA.toEulerVector();
     Vec3 rB = qB.toEulerVector();
     Vec3 rC = qC.toEulerVector();
@@ -620,15 +641,18 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
     Displacement Fm, Fb;
     computeForce(Fm, Dm, Fb, Db, elementIndex);
 
-    
-    //std::cout << "rest: " << tinfo->restPositions << std::endl;
-    //std::cout << "defo: " << tinfo->deformedPositions << std::endl;
-    //std::cout << "X=" << x[a] << x[b] << x[c] << std::endl;
-    //std::cout << "Dm=" << Dm << std::endl;
-    //std::cout << "Fm=" << Fm << std::endl;
-    //std::cout << "Db=" << Db << std::endl;
-    //std::cout << "Fb=" << Fb << std::endl;
-    //std::cout << "---" << std::endl;
+    if (this->f_printLog.getValue()) {
+        std::cout << "E: " << elementIndex << "\tu: " << Dm << "\tf: " << Fm << "\n";
+        std::cout << "E: " << elementIndex << "\tuB: " << Db << "\tfB: " << Fb << "\n";
+        std::cout << "   xg [ " << a << "/" << b << "/" << c << " - "
+            << x[a] << ", " << x[b] << ", " << x[c] << "\n";
+        std::cout << "   xl [ " << tinfo->deformedPositions[0] << ", " << tinfo->deformedPositions[1] << ", " << tinfo->deformedPositions[2] << "\n";
+        std::cout << "   fg: " <<
+            tinfo->Rt * Vec3(Fm[0], Fm[1], Fb[0]) << " " << tinfo->R * Vec3(Fb[1], Fb[2], Fm[2]) << " | " <<
+            tinfo->Rt * Vec3(Fm[3], Fm[4], Fb[3]) << " " << tinfo->R * Vec3(Fb[4], Fb[5], Fm[5]) << " | " <<
+            tinfo->Rt * Vec3(Fm[6], Fm[7], Fb[6]) << " " << tinfo->R * Vec3(Fb[7], Fb[8], Fm[8]) << std::endl;
+
+    }
 
     // Transform forces back into global frame
     getVCenter(f[a]) -= tinfo->Rt * Vec3(Fm[0], Fm[1], Fb[0]);
@@ -741,6 +765,15 @@ void TriangularShellForceField<DataTypes>::applyStiffness(VecDeriv& v, const Vec
     Displacement dFm, dFb;
     dFm = tinfo.stiffnessMatrixMembrane * Dm;
     dFb = tinfo.stiffnessMatrixBending * Db;
+
+    if (this->f_printLog.getValue()) {
+        std::cout << "E: " << elementIndex << "\tdu: " << Dm << "\tdf: " << dFm << "\n";
+        std::cout << "E: " << elementIndex << "\tduB: " << Db << "\tdfB: " << dFb << "\n";
+        std::cout << "   dfg: " <<
+             tinfo.Rt * Vec3(dFm[0], dFm[1], dFb[0]) * kFactor << " " << tinfo.Rt * Vec3(dFb[1], dFb[2], dFm[2]) * kFactor << " | " <<
+             tinfo.Rt * Vec3(dFm[3], dFm[4], dFb[3]) * kFactor << " " << tinfo.Rt * Vec3(dFb[4], dFb[5], dFm[5]) * kFactor << " | " <<
+             tinfo.Rt * Vec3(dFm[6], dFm[7], dFb[6]) * kFactor << " " << tinfo.Rt * Vec3(dFb[7], dFb[8], dFm[8]) * kFactor << std::endl;
+    }
 
     // Transform into global frame
     getVCenter(v[a]) -= tinfo.Rt * Vec3(dFm[0], dFm[1], dFb[0]) * kFactor;
