@@ -387,14 +387,16 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     computeRotation(R0, tinfo->restPositions);
     tinfo->R = R0;
     tinfo->Rt.transpose(R0);
+#ifdef CRQUAT
     tinfo->Q.fromMatrix(tinfo->R);
+#endif
 
     tinfo->restPositions[0] = R0 * tinfo->restPositions[0];
     tinfo->restPositions[1] = R0 * tinfo->restPositions[1];
     tinfo->restPositions[2] = R0 * tinfo->restPositions[2];
 
     // Rest orientations -- inverted (!)
-#ifndef CRMATRIX
+#ifdef CRQUAT
     tinfo->restOrientationsInv[0] = (tinfo->Q * x0[a].getOrientation()).inverse();
     tinfo->restOrientationsInv[1] = (tinfo->Q * x0[b].getOrientation()).inverse();
     tinfo->restOrientationsInv[2] = (tinfo->Q * x0[c].getOrientation()).inverse();
@@ -557,7 +559,9 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     // Compute rotation to local (in-plane) frame
     computeRotation(tinfo->R, tinfo->deformedPositions);
     tinfo->Rt.transpose(tinfo->R);
+#ifdef CRQUAT
     tinfo->Q.fromMatrix(tinfo->R);
+#endif
 
     // Compute local (in-plane) postions
     tinfo->deformedPositions[0] = tinfo->R * tinfo->deformedPositions[0];
@@ -570,7 +574,7 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     Vec3 uC = tinfo->deformedPositions[2] - tinfo->restPositions[2];
 
     // Rotations
-#ifndef CRMATRIX
+#ifdef CRQUAT
     Quat qA = (tinfo->Q * x[a].getOrientation()) * tinfo->restOrientationsInv[0];
     Quat qB = (tinfo->Q * x[b].getOrientation()) * tinfo->restOrientationsInv[1];
     Quat qC = (tinfo->Q * x[c].getOrientation()) * tinfo->restOrientationsInv[2];
@@ -583,6 +587,7 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     Quat qA; qA.fromMatrix( tinfo->R * tmpA * tinfo->restOrientationsInv[0] );
     Quat qB; qB.fromMatrix( tinfo->R * tmpB * tinfo->restOrientationsInv[1] );
     Quat qC; qC.fromMatrix( tinfo->R * tmpC * tinfo->restOrientationsInv[2] );
+    // TODO: can we do this without the quaternions?
 #endif
     Vec3 rA = qA.toEulerVector();
     Vec3 rB = qB.toEulerVector();

@@ -41,6 +41,11 @@
 #include <sofa/core/objectmodel/ObjectRef.h>
 
 
+// Uncomment the following to use quaternions instead of matrices for
+// rotations. Quaternions are slightly faster but numericaly much, much *less*
+// stable. I don't recommend that!
+//#define CRQUAT
+
 
 namespace sofa
 {
@@ -82,6 +87,8 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         typedef Vec<3,Real> Vec3;
         typedef Vec<2,Real> Vec2;
 
+        typedef helper::Quater<Real> Quat;
+
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
 
@@ -119,14 +126,22 @@ public:
             public:
 
                 helper::fixed_array <Vec3, 3> restLocalPositions;
+#ifdef CRQUAT
                 helper::fixed_array <Quat, 3> restLocalOrientationsInv;
-                Transformation R, Rt;
+#else
+                helper::fixed_array <Transformation, 3> restLocalOrientationsInv;
+#endif
 
                 // Indices of each vertex
                 Index a, b, c;
 
-                // Transformation rotation;
-                Coord frame;
+                // Corotational frame
+                Vec3 frameCenter;
+                Transformation frameOrientation;    // frame orientation
+                Transformation frameOrientationInv; // it's inverse (transposition)
+#ifdef CRQUAT
+                Quat frameOrientationQ;             // representation as quaternion
+#endif
 
                 // Matrix of interpolation functions
                 Mat<3,3> interpol;
@@ -240,7 +255,7 @@ protected :
         void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
         void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
         void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
-        void interpolateRefFrame( TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, Coord& interpolatedFrame, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints );
+        void interpolateRefFrame( TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints );
 
 
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);

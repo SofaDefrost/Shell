@@ -42,10 +42,11 @@
 #include <sofa/core/objectmodel/ObjectRef.h>
 
 
-// Uncomment the following to use matrices instead of quaternions for
-// rotations. It is numericaly little bit more accurate, and there seems to be no
-// significant difference in speed.
-//#define CRMATRIX
+// Uncomment the following to use quaternions instead of matrices for
+// rotations. Quaternions are slightly faster but numericaly quite unstable
+// (and in my oppinion unusable). I don't recommend that!
+//#define CRQUAT
+
 
 namespace sofa
 {
@@ -88,6 +89,8 @@ class TriangularShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Vec<3,Real> Vec3;
         typedef Vec<9,Real> Vec9;
 
+        typedef helper::Quater<Real> Quat;
+
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
 
@@ -124,10 +127,10 @@ public:
 
                 // Rest position in local (in-plane) coordinates
                 helper::fixed_array <Vec3, 3> restPositions;
-#ifdef CRMATRIX
-                helper::fixed_array <Transformation, 3> restOrientationsInv;
-#else
+#ifdef CRQUAT
                 helper::fixed_array <Quat, 3> restOrientationsInv;
+#else
+                helper::fixed_array <Transformation, 3> restOrientationsInv;
 #endif
 
                 // Deformed position in local (in-plane) coordinates
@@ -135,7 +138,9 @@ public:
 
                 // Frame rotation as matrix and quaternion
                 Transformation R, Rt;
+#ifdef CRQUAT
                 Quat Q;
+#endif
 
                 // The strain-displacement matrices at Gauss points
                 StrainDisplacement strainDisplacementMatrixMembrane[4];
