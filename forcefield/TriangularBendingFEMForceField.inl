@@ -115,7 +115,7 @@ inline Quat qDiffZ(const Quat& vertex, const Quat& Qframe)
 // ---
 // --------------------------------------------------------------------------------------
 template< class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFunction(int triangleIndex, void* param, TriangleInformation &/*tinfo*/, const Triangle& t, const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&)
+void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFunction(unsigned int triangleIndex, void* param, TriangleInformation &/*tinfo*/, const Triangle& t, const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&)
 {
     TriangularBendingFEMForceField<DataTypes> *ff= (TriangularBendingFEMForceField<DataTypes> *)param;
     if (ff)
@@ -1309,6 +1309,7 @@ void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
 //    std::cout << " " << std::endl;
 }
 
+#if 0
 // Computes principal curvatures for the shell at the given point
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeCurvature(Vec3 pt, Vec<9, Real> const &coefficients, Vec2 &curvature)
@@ -1350,11 +1351,12 @@ void TriangularBendingFEMForceField<DataTypes>::computeCurvature(Vec3 pt, Vec<9,
     curvature[0] = (a+d-Dr)/2;
     curvature[1] = (a+d+Dr)/2;
 }
+#endif
 
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::draw()
+void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
-    if(this->getContext()->getShowInteractionForceFields())
+    if(vparams->displayFlags().getShowInteractionForceFields())
     {
         glDisable(GL_LIGHTING);
 
@@ -1443,6 +1445,7 @@ void TriangularBendingFEMForceField<DataTypes>::draw()
 
 }
 
+#if 0
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
@@ -1563,6 +1566,7 @@ const std::string TriangularBendingFEMForceField<DataTypes>::getExpFilename()
     oss << ".shell";
     return oss.str();
 }
+#endif
 
 } // namespace forcefield
 

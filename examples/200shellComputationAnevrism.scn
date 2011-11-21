@@ -1,5 +1,8 @@
 <?xml version="1.0" ?>
-<Node name="root" dt="0.04" showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 -10 0">
+<Node name="root" dt="0.04" gravity="0 -10 0">
+
+    <VisualStyle displayFlags="showForceFields showVisualModels" />
+
 <!--    <CollisionPipeline verbose="0" />-->
 <!--    <BruteForceDetection name="N2" />-->
 <!--    <CollisionResponse response="default" />-->
@@ -7,14 +10,14 @@
 <!--    <CollisionGroup />-->
 
     <Node name="CoarseMesh">
-        <MeshLoader name="coarseMesh" filename="applications/plugins/shells/mesh/aneurysm200.obj"/>
+        <MeshObjLoader name="coarseMesh" filename="../mesh/aneurysm200.obj"/>
         <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid" position="@coarseMesh.vertices" normals="@coarseMesh.normals" invertNormals="false"/>
 
     </Node>
 
 	
     <Node name="TargetMesh">
-        <MeshLoader name="targetMesh" filename="applications/plugins/shells/mesh/aneurysmHighRes.obj"/>
+        <MeshObjLoader name="targetMesh" filename="../mesh/aneurysmHighRes.obj"/>
         <TriangleSetTopologyContainer name="targetTopo"/>
         <MechanicalObject name="targetMesh_MO" template="Vec3d"/>
     </Node>
@@ -23,9 +26,16 @@
 
     <Node name="Shell">
         <EulerImplicitSolver />
-		<!--<SparseLDLSolver />-->
+        <CGLinearSolver iterations="20" tolerance="0.05" threshold="1e-20"/>
+        <!--
         <CGLinearSolver iterations="1000" tolerance="0.05" threshold="1e-20"/>
-        <TriangleSetTopologyContainer name="coarseTopo" filename="applications/plugins/shells/mesh/aneurysm200.obj" />
+        <SparseLDLSolver />
+        -->
+
+        <TriangleSetTopologyContainer name="coarseTopo"
+            position="@/CoarseMesh/coarseMesh.position"
+            edges="@/CoarseMesh/coarseMesh.edges"
+            triangles="@/CoarseMesh/coarseMesh.triangles" />
         <MechanicalObject name="coarseMesh_MO" template="Rigid" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
 
         <UniformMass mass="0.3 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.03"  compute_mapping_inertia="0" />
@@ -55,5 +65,29 @@
         </Node>
         -->
         
+        <!--
+        <TriangularShellForceField name="FEM"
+        <BezierTriangularBendingFEMForceField name="FEM"
+        -->
+        <TriangularBendingFEMForceField name="FEM" bending="true"
+            youngModulus="5000000" poissonRatio="0.45" thickness="0.05" />
+
+        <Node name="SubTriangles">
+
+            <TriangleSubdivisionTopologicalMapping name="subMapping"
+                input="@../coarseTopo" output="@../coarseTopo"
+                inputPositions="@../coarseMesh_MO.position" inputTriangles="@../coarseTopo.triangles"
+                subdivisions="3" />
+            <TriangleSetTopologyContainer  name="subTrianglesTopo"
+                position="@subMapping.outputPositions" triangles="@subMapping.outputTriangles" />
+            <MechanicalObject name="subCoarse_MO" rest_position="@subMapping.outputPositions" />
+            <BendingPlateMechanicalMapping printLog="1" object1="coarseMesh_MO" object2="subCoarse_MO" name="MappingShells" isMechanical="false"/>
+
+            <Node>
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping object1="subCoarse_MO" object2="Visual"/>
+            </Node>
+        </Node>
+
     </Node>
 </Node>

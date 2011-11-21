@@ -173,10 +173,10 @@ public:
         virtual double getPotentialEnergy(const VecCoord& x) const;
         virtual void handleTopologyChange();
 
-        virtual void draw();
+        virtual void draw(const core::visual::VisualParams* vparams);
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
-        TriangleData<TriangleInformation>& getTriangleInfo() {return triangleInfo;}
+        TriangleData< sofa::helper::vector<TriangleInformation> >& getTriangleInfo() {return triangleInfo;}
 
         Data<Real> f_poisson;
         Data<Real> f_young;
@@ -198,7 +198,7 @@ public:
 
 protected :
 
-        TriangleData<TriangleInformation> triangleInfo;
+        TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
 
         void computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex);
         void computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, const Index elementIndex);
@@ -210,7 +210,7 @@ protected :
         void computeForce(Displacement &F, const Displacement& D, const Index elementIndex);
         void computeForceBending(DisplacementBending &F, const DisplacementBending& D, const Index elementIndex);
 
-        static void TRQSTriangleCreationFunction (int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
+        static void TRQSTriangleCreationFunction (unsigned int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
 
         /// f += Kx where K is the stiffness matrix and x a displacement
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
@@ -230,14 +230,14 @@ protected :
         void movePoint(Vec3& pointToMove);
         void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
 
-        void computeCurvature(Vec3 pt, Vec<9, Real> const &coefficients, Vec2 &curvature);
+        //void computeCurvature(Vec3 pt, Vec<9, Real> const &coefficients, Vec2 &curvature);
 
-        void handleEvent(sofa::core::objectmodel::Event *event);
-        void bwdInit();
-        void cleanup();
+        //void handleEvent(sofa::core::objectmodel::Event *event);
+        //void bwdInit();
+        //void cleanup();
 
-        const std::string getExpFilename();
-        void writeCoeffs();
+        //const std::string getExpFilename();
+        //void writeCoeffs();
 };
 
 

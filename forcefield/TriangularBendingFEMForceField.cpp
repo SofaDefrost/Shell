@@ -28,6 +28,7 @@
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/component/container/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
+#include "initPluginShells.h"
 
 
 namespace sofa
@@ -57,10 +58,10 @@ int TriangularBendingFEMForceFieldClass = core::RegisterObject("Triangular finit
 ;
 
 #ifndef SOFA_FLOAT
-template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<Rigid3dTypes>;
+template class SOFA_SHELLS_API TriangularBendingFEMForceField<Rigid3dTypes>;
 #endif
 #ifndef SOFA_DOUBLE
-template class SOFA_COMPONENT_FORCEFIELD_API TriangularBendingFEMForceField<Rigid3fTypes>;
+template class SOFA_SHELLS_API TriangularBendingFEMForceField<Rigid3fTypes>;
 #endif
 
 

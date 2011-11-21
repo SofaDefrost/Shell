@@ -80,10 +80,11 @@ namespace component
 	{
 		std::string commonentlist;
 		
-		//commonentlist += " TriangularBendingFEMForceField"  ;
-		//commonentlist += " BendingPlateMechanicalMapping"  ;		
-		commonentlist += " BezierTriangleMechanicalMapping"  ;
-		commonentlist += " BezierTriangularBendingFEMForceField"  ;
+		commonentlist += " TriangularBendingFEMForceField";
+		commonentlist += " BendingPlateMechanicalMapping";
+		commonentlist += " BezierTriangleMechanicalMapping";
+		commonentlist += " BezierTriangularBendingFEMForceField";
+		commonentlist += " TriangularShellForceField";
 		//commonentlist += "";
 		return commonentlist.c_str();
 	}

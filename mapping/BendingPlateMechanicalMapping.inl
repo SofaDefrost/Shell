@@ -280,10 +280,10 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
                 correctedError = maximum;
             coloursPerVertex[i] = colourMapping[ (int)((correctedError/maximum)*239) ];
         }
-    }
 
-    // Initialises shader
-    shader.InitShaders("applications/plugins/shells/shaders/errorMap.vert", "applications/plugins/shells/shaders/errorMap.frag");
+        // Initialises shader
+        shader.InitShaders("shaders/errorMap.vert", "shaders/errorMap.frag");
+    }
 
 }
 
@@ -973,15 +973,19 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintPar
 
 
 template <class TIn, class TOut>
-void BendingPlateMechanicalMapping<TIn, TOut>::draw()
+void BendingPlateMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualParams* vparams)
 {
     const OutVecCoord &outVertices = *this->toModel->getX();
 
-    shader.TurnOn();
+    bool bHaveShader = measureError.getValue();
+    if (bHaveShader)
+        shader.TurnOn();
 
-    if(this->getContext()->getShowVisualModels())
+    if(vparams->displayFlags().getShowVisualModels())
     {
         glDisable(GL_LIGHTING);
+
+        if (!triangleSubdivisionTopologicalMapping) return;
 
         const SeqEdges &outEdges = triangleSubdivisionTopologicalMapping->getSubEdges();
 //        const SeqEdges &outEdges = outputTopo->getEdges();
@@ -991,7 +995,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::draw()
         glEnable(GL_DEPTH_TEST);
         glPolygonOffset(1.0, 1.0);
 
-        if(this->getContext()->getShowWireFrame())
+        if(vparams->displayFlags().getShowWireFrame())
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glEnable(GL_POLYGON_OFFSET_LINE);
@@ -1052,7 +1056,8 @@ void BendingPlateMechanicalMapping<TIn, TOut>::draw()
 
     }
 
-    shader.TurnOff();
+    if (bHaveShader)
+        shader.TurnOff();
 }
 
 
