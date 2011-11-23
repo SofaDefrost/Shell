@@ -48,6 +48,7 @@
 #include <windows.h>
 #endif
 
+// Use 4-point Gaussian quadrature to integrate over the triangle
 #define GAUSS4
 
 namespace sofa
@@ -482,9 +483,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(
     X_bezierPoints[8] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( tinfo->P2_P1_inFrame2 );
 
         // (9) use a kind of skinning function (average of the position obtained when attached respectively to 0, 1 and 2)
-    X_bezierPoints[9] = (x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( tinfo->P0_P1_inFrame0 + tinfo->P0_P2_inFrame0 ))/3.0 +
-                        (x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( tinfo->P1_P2_inFrame1 + tinfo->P1_P0_inFrame1 ))/3.0 +
-                        (x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( tinfo->P2_P0_inFrame2 + tinfo->P2_P1_inFrame2 ))/3.0;
+    X_bezierPoints[9] = (x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( (tinfo->P0_P1_inFrame0 + tinfo->P0_P2_inFrame0)/2.0 ))/3.0 +
+                        (x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( (tinfo->P1_P2_inFrame1 + tinfo->P1_P0_inFrame1)/2.0 ))/3.0 +
+                        (x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( (tinfo->P2_P0_inFrame2 + tinfo->P2_P1_inFrame2)/2.0 ))/3.0;
 }
 
 
@@ -617,8 +618,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v
     DisplacementBending Disp_bending;
     Vec3 x, o;
 
-    //std::cout << dx[a] << " || " << dx[b] << " || " << dx[c] << std::endl;
-
     x = tinfo->frameOrientation * getVCenter(dx[a]);
     o = tinfo->frameOrientation * getVOrientation(dx[a]);
     Disp[0] = x[0];
@@ -689,7 +688,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
 
     //// Rotate the already computed nodes
     //sout << "QFrame: " << tinfo->frame.getOrientation() << sendl;
-    for (int i = 0; i < 3/*10*/; i++) {
+    for (int i = 0; i < 10; i++) {
         pts[i] = tinfo->frameOrientation * (tinfo->bezierNodes[i] - tinfo->frameCenter);
     }
 
@@ -920,7 +919,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDM(
 
 
     Real dux_dx_T3= 3.0*DPhi3n2_x*p[0]*P8P3[1] + 3.0*p2[2]*b1*P8P3[1] + 3.0*DPhi3n2_x*p[1]*P9P3[1] + 3.0*p2[2]*b2*P9P3[1] + 2.0*DPhi123_x*P10P3[1];
-    Real duy_dx_T3=-3.0*DPhi3n2_x*p[0]*P8P3[0] + 3.0*p2[2]*b1*P8P3[0] + 3.0*DPhi3n2_x*p[1]*P9P3[0] + 3.0*p2[2]*b2*P9P3[0] + 2.0*DPhi123_x*P10P3[0];
+    Real duy_dx_T3=-3.0*DPhi3n2_x*p[0]*P8P3[0] - 3.0*p2[2]*b1*P8P3[0] - 3.0*DPhi3n2_x*p[1]*P9P3[0] - 3.0*p2[2]*b2*P9P3[0] - 2.0*DPhi123_x*P10P3[0];
 
     Real dux_dy_T3= 3.0*DPhi3n2_y*p[0]*P8P3[1] + 3.0*p2[2]*c1*P8P3[1] + 3.0*DPhi3n2_y*p[1]*P9P3[1] + 3.0*p2[2]*c2*P9P3[1] + 2.0*DPhi123_y*P10P3[1];
     Real duy_dy_T3=-3.0*DPhi3n2_y*p[0]*P8P3[0] - 3.0*p2[2]*c1*P8P3[0] - 3.0*DPhi3n2_y*p[1]*P9P3[0] - 3.0*p2[2]*c2*P9P3[0] - 2.0*DPhi123_y*P10P3[0];
@@ -928,37 +927,33 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDM(
 
     J[0][0] = du_dx_U1;
     J[0][1] = 0;
-    J[0][2] = dux_dx_T1;
+    J[0][2] = -dux_dx_T1;
     J[0][3] = du_dx_U2;
     J[0][4] = 0;
-    J[0][5] = dux_dx_T2;
+    J[0][5] = -dux_dx_T2;
     J[0][6] = du_dx_U3;
     J[0][7] = 0;
-    J[0][8] = dux_dx_T3;
+    J[0][8] = -dux_dx_T3;
 
     J[1][0] = 0;
     J[1][1] = du_dy_U1;
-    J[1][2] = duy_dy_T1;
+    J[1][2] = -duy_dy_T1;
     J[1][3] = 0;
     J[1][4] = du_dy_U2;
-    J[1][5] = duy_dy_T2;
+    J[1][5] = -duy_dy_T2;
     J[1][6] = 0;
     J[1][7] = du_dy_U3;
-    J[1][8] = duy_dy_T3;
+    J[1][8] = -duy_dy_T3;
 
     J[2][0] = du_dy_U1;
     J[2][1] = du_dx_U1;
-    J[2][2] = dux_dy_T1 + duy_dx_T1;
+    J[2][2] = -dux_dy_T1 - duy_dx_T1;
     J[2][3] = du_dy_U2;
     J[2][4] = du_dx_U2;
-    J[2][5] = duy_dx_T2 + dux_dy_T2;
+    J[2][5] = -duy_dx_T2 - dux_dy_T2;
     J[2][6] = du_dy_U3;
     J[2][7] = du_dx_U3;
-    J[2][8] = duy_dx_T3 + dux_dy_T3;
-
-
-    if (this->f_printLog.getValue())
-        sout<<" matrix J (inplane) : \n"<< J <<sendl;
+    J[2][8] = -duy_dx_T3 - dux_dy_T3;
 }
 
 
@@ -983,6 +978,16 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementM
     matrixSDB(tinfo.strainDisplacementMatrixB3, Vec3(0.788675134, 0.044658198, 0), tinfo);
     matrixSDB(tinfo.strainDisplacementMatrixB4, Vec3(0.788675134, 0.166666667, 0), tinfo);
 #endif
+
+    if (this->f_printLog.getValue()) {
+        sout << "Bb: " << tinfo.strainDisplacementMatrixB1 <<
+            "\n    " << tinfo.strainDisplacementMatrixB2 <<
+            "\n    " << tinfo.strainDisplacementMatrixB3 <<
+#ifdef GAUSS4
+            "\n    " << tinfo.strainDisplacementMatrixB4 <<
+#endif
+            "\n";
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1127,9 +1132,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDB(
     J[2][6] = -2.0*d2uz_dxy_dU3;
     J[2][7] = -2.0*d2uz_dxy_dT3[0];
     J[2][8] = -2.0*d2uz_dxy_dT3[1];
-
-    if (this->f_printLog.getValue())
-        sout<<" matrix J (bending) : \n"<< J <<sendl;
 }
 
 
@@ -1167,11 +1169,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixMemb
 
     if (this->f_printLog.getValue())
     {
-        std::cout << "Area = " << tinfo.area2 << std::endl;
+        sout << "2*Area = " << tinfo.area2 << std::endl;
         sout << "Km = " << K << sendl;
         Displacement u = Vec<9,Real>(1, -5, 0, 1, -5, 0, 1, -5, 0);
-        sout << "-- Disp test Km (u=" << u << ")\n" <<
-            "1 : " << K * u << "\n";
+        sout << "-- Disp test Km (u=" << u << ")" <<
+            " : " << K * u << " ... should be zero" << sendl;
     }
 }
 
@@ -1255,11 +1257,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForceMembrane(
     // Compute forces
     F = tinfo.stiffnessMatrix * D;
 
-    if (this->f_printLog.getValue())
-    {
-        sout<<"-----> In-plane stiffness matrix for element "<<elementIndex<< " is :\n "<<tinfo.stiffnessMatrix<<sendl;
-    }
-
     triangleInfo.endEdit();
 }
 
@@ -1275,11 +1272,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForceBending(Displa
 
     // Compute forces
     F_bending = tinfo.stiffnessMatrixBending * D_bending;
-
-    if (this->f_printLog.getValue())
-    {
-        sout<<"-----> Bending stiffness matrix for element "<<elementIndex<< "is :\n "<<tinfo.stiffnessMatrixBending<<sendl;
-    }
 
     triangleInfo.endEdit();
 }
@@ -1328,11 +1320,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
     Vec3 fc2 = tinfo->frameOrientationInv * Vec3(F_bending[7], F_bending[8], F[8]);
 
     if (this->f_printLog.getValue()) {
-        std::cout << "E: " << elementIndex << "\tu: " << D << "\tf: " << F << "\n";
+        std::cout << "E: " << elementIndex << "\tu: " << D << "\n\tf: " << F << "\n";
         std::cout << "E: " << elementIndex << "\tuB: " << D_bending
-            << "\tfB: " << F_bending << "\n";
+            << "\n\tfB: " << F_bending << "\n";
         std::cout << "   xg [ " << a << "/" << b << "/" << c << " - "
-            << x[a] << ", " << x[b] << ", " << x[c] << "\n";
+            << x[a] << " || " << x[b] << " || " << x[c] << "\n";
         std::cout << "   xl [ " << tinfo->pts[0] << ", " << tinfo->pts[1] << ", " << tinfo->pts[2] << "\n";
         std::cout << "   fg: " << Deriv(-fa1, -fa2) << " | " << Deriv(-fb1, -fb2) << " | " << Deriv(-fc1, -fc2) << std::endl;
     }
@@ -1654,7 +1646,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
             Vec3 P1P2= x0[tinfo->b].getCenter() - x0[tinfo->a].getCenter();
 
 #ifdef CRQUAT
-            Quat qFrame = tinfo->frameOrientationQ;
+            Quat qFrame = tinfo->frameOrientationQ.inverse();
 #else
             Quat qFrame;
             qFrame.fromMatrix(tinfo->frameOrientationInv);
@@ -1669,6 +1661,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
         triangleInfo.endEdit();
     } // if(getShowForceFields())
 
+#if 0
     if(vparams->displayFlags().getShowInteractionForceFields())
     {
         glDisable(GL_LIGHTING);
@@ -1755,6 +1748,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
         }
 
    } // if(getShowInteractionForceFields())
+#endif
 
 }
 
