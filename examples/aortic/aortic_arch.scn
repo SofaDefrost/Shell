@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<Node name="Root Node" dt="0.05">
+
+	<LightManager/>
+	<DirectionalLight direction="1 0 -1" color="1 0.25 0.25"/>
+	<DirectionalLight direction="1 0 1" color="0.25 0.25 1"/>
+	<DirectionalLight direction="-1 0 0" color="0.5 0.5 0.5"/>
+	
+	<CollisionPipeline name="Collision Pipeline" verbose="0"/>
+	<BruteForceDetection name="Brute Force Detection"/>
+	<CollisionResponse name="Collision Response" response="default"/>
+	<MinProximityIntersection name="Min Proximity Intersection" alarmDistance="0.8" contactDistance="0.5"/>
+	<CollisionGroup name="Collision Group"/>
+	
+	<Node name="Aortic Arch">
+	
+		<EulerImplicit name="Euler Implicit"/>
+        <!--
+		<CGLinearSolver name="CG Linear Solver" iterations="200" tolerance="1.0e-9" threshold="1.0e-9"/>
+        -->
+        <SparseLDLSolver />
+	
+		<MeshGmshLoader name="Mesh Loader" filename="aortic_arch_low.msh"/>
+        <Vertex2Frame name="frames" template="Rigid"
+                      position="@Mesh Loader.position" normals="@Mesh Loader.normals"
+                      invertNormals="false"/>
+
+
+		<MechanicalObject name="Mechanical Object" template="Rigid" position="@frames.frames" />
+		
+		<TriangleSetTopologyContainer name="Triangle Set Topology Container" src="@Mesh Loader"/>
+		<TriangleSetTopologyModifier name="Triangle Set Topology Modifier"/>
+		<TriangleSetTopologyAlgorithms name="Triangle Set Topology Algorithms" />
+        <!--
+		<TriangleSetGeometryAlgorithms name="Triangle Set Geometry Algorithms" template="Vec3d"/>
+		<TriangleSet name="Triangle Set"/>
+        -->
+		
+        <!--
+		<DiagonalMass name="Diagonal Mass" massDensity="0" />
+        -->
+        <UniformMass showAxisSizeFactor="3" totalMass="1" />
+		
+        <!--
+		<TriangularFEMForceField name="Triangular FEM Force Field" youngModulus="1e5" poissonRatio="0.6" method="large"/>
+		<TriangularBendingSprings name="Triangular Bending Springs" stiffness="100" damping="0.1"/>
+        -->
+        <TriangularBendingFEMForceField name="FEM" bending="true"
+            youngModulus="1e6" poissonRatio="0.45" thickness="1" />
+		
+		<OglModel name="Visual Model"/>
+		<IdentityMapping name="Visual Mapping" object1=".." object2="Visual Model"/>
+
+		<FixedConstraint indices="212 957 1853 1713 165 583 1394 1017 1474 1025 342 1630 895 1627 11 1099 1130 791 1400 1508 1014 573 1491 1074 388 870 1269 1597 164"/>
+		<FixedConstraint indices="248 882 414 944 786 941 1644 973 1920 101 1144 36 1321 1635 62 284 99 898 1512 1748 1215"/>
+		<FixedConstraint indices="262 1857 1636 1082 272 888 353 868 897 737 139 1093 1125 624 478 785 1865 1239 1240 833 1903"/>
+		<FixedConstraint indices="255 830 1606 1259 1134 582 840 58 1416 993 593 1285"/>
+		<FixedConstraint indices="326 1343 1753 397 1483 1232 12 533 1912 1835 1060 702 1521"/>
+		
+	</Node>
+	
+</Node>
