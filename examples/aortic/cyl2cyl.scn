@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<Node name="Root Node" dt="0.01">
+
+    <VisualStyle displayFlags="showVisual showBehavior" />
+
+    <!--
+	<CollisionPipeline name="Collision Pipeline" verbose="0"/>
+	<BruteForceDetection name="Brute Force Detection"/>
+	<CollisionResponse name="Collision Response" response="default"/>
+	<MinProximityIntersection name="Min Proximity Intersection" alarmDistance="0.8" contactDistance="0.5"/>
+	<CollisionGroup name="Collision Group"/>
+    -->
+
+    <Node name="Mesh">
+        <MeshObjLoader name="loader" filename="cylinder_low.obj"/>
+        <Vertex2Frame name="frames" template="Rigid"
+            position="@loader.position" normals="@loader.normals"
+            invertNormals="false"/>
+
+    </Node>
+
+
+    <EulerImplicit name="Euler Implicit"/>
+    <!--
+    <CGLinearSolver name="CG Linear Solver" iterations="200" tolerance="1.0e-9" threshold="1.0e-9"/>
+    -->
+    <SparseLDLSolver />
+
+    <StiffSpringForceField />
+
+	<Node name="Cylinder">
+	
+        <TriangleSetTopologyContainer name="coarseTopo" src="@/Mesh/loader"/>
+        <MechanicalObject name="MO" template="Rigid" position="@/Mesh/frames.frames" />
+		
+        <BoxROI name="fixed1" box="-1 3.8 -1   1 4 1" drawBoxes="true" />
+        <FixedConstraint indices="@fixed1.indices" />
+        <BoxROI name="fixed2" box="-1 -0.1 -1   1 0.1 1" drawBoxes="true" />
+        <FixedConstraint indices="@fixed2.indices" />
+
+        <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+		
+        <!--
+        <FixedRotationConstraint FixedZRotation="true" />
+        <ConstantForceField points="40" forces="-1000 0 0 0 0 0" />
+        -->
+        <TriangularBendingFEMForceField name="FEM" bending="true"
+            youngModulus="5000" poissonRatio="0.33" thickness="0.1" />
+		
+	</Node>
+	
+
+	<Node name="Cylinder2">
+	
+        <TriangleSetTopologyContainer name="coarseTopo" src="@/Mesh/loader"/>
+        <MechanicalObject name="MO" template="Rigid" position="@/Mesh/frames.frames" translation="0 5 0" />
+		
+        <!--
+        <BoxROI name="fixed1" box="-1 3.8 -1   1 4 1" drawBoxes="true" />
+        <FixedConstraint indices="@fixed1.indices" />
+        <BoxROI name="fixed2" box="-1 -0.1 -1   1 0.1 1" drawBoxes="true" />
+        <FixedConstraint indices="@fixed2.indices" />
+-->
+
+        <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+		
+        <!--
+        <FixedRotationConstraint FixedZRotation="true" />
+        <ConstantForceField points="40" forces="-1000 0 0 0 0 0" />
+        -->
+        <TriangularBendingFEMForceField name="FEM" bending="true"
+            youngModulus="5000" poissonRatio="0.33" thickness="0.1" />
+		
+	</Node>
+</Node>
