@@ -104,6 +104,7 @@ class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTyp
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
 
         sofa::core::topology::BaseMeshTopology* _topology;
+        //sofa::component::topology::TriangleSetTopologyContainer* _topologyOriginal;
         sofa::core::topology::BaseMeshTopology* _topologyTarget;
 
 //        TriangularBendingFEMForceFieldInternalData<DataTypes> data;
@@ -190,6 +191,17 @@ public:
         VecCoordHigh targetVertices;
         SeqTriangles targetTriangles;
 
+        Data<bool> joinEdges;
+        Data<VecCoord> originalNodes;
+        Data<SeqTriangles> originalTriangles;
+        Data<sofa::helper::vector<Index> > edge1;
+        Data<sofa::helper::vector<Index> > edge2;
+        Data<sofa::helper::vector<Index> > edgeCombined;
+        Data<sofa::helper::vector<Index> > nodeMap;
+        Data<Real> convergenceRatio;
+        Real fakeStep;      // State of the fake positions between 0 and 1 (0 joined, 1 original)
+
+
         sofa::core::objectmodel::DataFileName exportFilename;
         Data<unsigned int> exportEveryNbSteps;
         Data<bool> exportAtBegin;
@@ -197,6 +209,8 @@ public:
         unsigned int stepCounter;
 
 protected :
+
+        VecCoord x0fake;   // Virtual values of the rest positions in unmerged topology
 
         TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
 
@@ -229,6 +243,8 @@ protected :
         void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
         void movePoint(Vec3& pointToMove);
         void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
+
+        void computeFakeStep();
 
         //void computeCurvature(Vec3 pt, Vec<9, Real> const &coefficients, Vec2 &curvature);
 

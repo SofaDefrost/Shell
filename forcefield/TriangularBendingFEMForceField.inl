@@ -28,11 +28,9 @@
 #include "TriangularBendingFEMForceField.h"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/helper/gl/template.h>
-//#include <sofa/helper/gl/DrawManager.h>
 #include <sofa/component/topology/TriangleData.inl>
 #include <sofa/component/topology/EdgeData.inl>
 #include <sofa/component/topology/PointData.inl>
-#include <sofa/helper/rmath.h>
 #include <sofa/helper/system/gl.h>
 #include <sofa/helper/gl/template.h>
 #include <sofa/helper/system/thread/debug.h>
@@ -144,6 +142,15 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
 , iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
 , nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
+, joinEdges(initData(&joinEdges, false, "joinEdges", "Join two edges into one"))
+, originalNodes(initData(&originalNodes, "originalNodes", "Positions of original nodes (prior to join)"))
+, originalTriangles(initData(&originalTriangles, "originalTriangles", "Original triangles (prior to join)"))
+, edge1(initData(&edge1, "edge1", "Indices of the first edge to join")) 
+, edge2(initData(&edge2, "edge2", "Indices of the second edge to join")) 
+, edgeCombined(initData(&edgeCombined, "edgeCombined", "Indices after the join")) 
+, nodeMap(initData(&nodeMap, "nodeMap", "Map from combined dones to original nodes")) 
+, convergenceRatio(initData(&convergenceRatio, (Real)0.01, "convergenceRatio", "The ration at which the simulation converges to the original rest shape")) 
+, fakeStep(0)
 , exportFilename(initData(&exportFilename, "exportFilename", "file name to export coefficients into"))
 , exportEveryNbSteps(initData(&exportEveryNbSteps, (unsigned int)0, "exportEveryNumberOfSteps", "export file only at specified number of steps (0=disable)"))
 , exportAtBegin(initData(&exportAtBegin, false, "exportAtBegin", "export file at the initialization"))
@@ -185,6 +192,62 @@ void TriangularBendingFEMForceField<DataTypes>::init()
     {
             serr << "TriangularBendingFEMForceField: object must have a Triangular Set Topology."<<sendl;
             return;
+    }
+
+    if (joinEdges.getValue()) {
+
+        x0fake = originalNodes.getValue();
+        computeFakeStep();
+
+#if 0
+        const core::objectmodel::ObjectRef& origTopo = nameOriginalTopology.getValue();
+        _topologyOriginal = origTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
+        if (_topologyOriginal == NULL) {
+            serr << "Topology '" << nameOriginalTopology.getValue() <<
+                "' in nameOriginalTopology not found!" << sendl;
+            return;
+        }
+
+        x0fake = _topologyOriginal->getPointDataArray().getValue();
+        computeFakeStep();
+
+        TriangleSetTopologyModifier* tsmod;
+        this->getContext()->get(tsmod);
+        if (tsmod == NULL) {
+            serr << "TriangleSetTopologyModifier required if joinEdges is enabled" << sendl;
+            joinEdges.setValue(false);
+            //return;
+        }
+
+        if ((edge1.getValue().size == 0) || (edge2.getValue().size == 0)) {
+            serr << "edge1 and edge2 have to be non-empty if joinEdges is enabled" << sendl;
+            joinEdges.setValue(false);
+            //return
+        }
+
+        if (edge1.getValue().size != edge2.getValue().size) {
+            serr << "edge1 and edge2 have to be of the same size" << sendl;
+            joinEdges.setValue(false);
+            //return
+        }
+
+        // Change the target topology by merging appropriate nodes together.
+        // We remove all nodes from edge2 and use edge1 nodes in their place.
+        TriangleID nextTri = _topology->getNbTriangles();
+        sofa::helper::vector< Triangle > newTriangles;
+        sofa::helper::vector< TriangleID > newTrianglesId;
+        sofa::helper::vector< TriangleID > removedTriangles;
+        sofa::helper::vector< sofa::helper::vector< TriangleID > >  triangles_ancestors;
+        sofa::helper::vector< sofa::helper::vector< double > >  triangles_barycoefs;
+
+        for (TriangleID i=0; i<_topology->getNbTriangles(); ++i) {
+
+        }
+
+TODO: do this later, for now do it manualy and use edgeCombined
+#endif
+
+
     }
 
     reinit();
@@ -484,19 +547,34 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
     tinfo->b = b;
     tinfo->c = c;
 
+    Index a0=a, b0=b, c0=c;
+    if (joinEdges.getValue()) {
+        const sofa::helper::vector<Index>& nMap = nodeMap.getValue();
+        a0 = nMap[a];
+        b0 = nMap[b];
+        c0 = nMap[c];
+        // Translate the indices to match original topology 
+        const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
+        for(unsigned int inode=0; inode < eC.size(); inode++) {
+            if (eC[inode] == a) a0 = originalTriangles.getValue()[i][0]; 
+            if (eC[inode] == b) b0 = originalTriangles.getValue()[i][1]; 
+            if (eC[inode] == c) c0 = originalTriangles.getValue()[i][2]; 
+        }
+    }
+
     // Gets vertices of rest and initial positions respectively
-    const VecCoord& x0 = *this->mstate->getX0();
+    const VecCoord& x0 = (joinEdges.getValue()) ? x0fake : *this->mstate->getX0();
     const VecCoord& x = *this->mstate->getX();
 
     // Rotation from triangle to world at rest and initial positions (respectively)
     Quat Qframe0, Qframe;
-    computeRotation(Qframe0, x0, a, b, c );
+    computeRotation(Qframe0, x0, a0, b0, c0 );
     computeRotation(Qframe, x, a, b, c );
     tinfo->Qframe = Qframe;
 
     // The positions of each point is expressed into the local frame at rest position
-    tinfo->restLocalPositions[0] = Qframe0.rotate(x0[b].getCenter() - x0[a].getCenter());
-    tinfo->restLocalPositions[1] = Qframe0.rotate(x0[c].getCenter() - x0[a].getCenter());
+    tinfo->restLocalPositions[0] = Qframe0.rotate(x0[b0].getCenter() - x0[a0].getCenter());
+    tinfo->restLocalPositions[1] = Qframe0.rotate(x0[c0].getCenter() - x0[a0].getCenter());
 
     if (f_bending.getValue())
     {
@@ -510,9 +588,9 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
         computeStrainDisplacementMatrix(J, i, tinfo->localB, tinfo->localC);
 
         // Local rest orientations (Evaluates the difference between the rest position and the flat position to allow the use of a deformed rest shape)
-        tinfo->restLocalOrientations[0] = qDiffZ(x0[a].getOrientation(), Qframe0);
-        tinfo->restLocalOrientations[1] = qDiffZ(x0[b].getOrientation(), Qframe0);
-        tinfo->restLocalOrientations[2] = qDiffZ(x0[c].getOrientation(), Qframe0);
+        tinfo->restLocalOrientations[0] = qDiffZ(x0[a0].getOrientation(), Qframe0);
+        tinfo->restLocalOrientations[1] = qDiffZ(x0[b0].getOrientation(), Qframe0);
+        tinfo->restLocalOrientations[2] = qDiffZ(x0[c0].getOrientation(), Qframe0);
 
         // Creates a vector u_rest matching the difference between rest and flat positions
         tinfo->u_rest.clear();
@@ -528,9 +606,75 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
         computeDisplacementBending(Disp_bending, x, i);
 
     }
+
+    //std::cout << "e" << i << " area=" << tinfo->area << " " << a0 << "/" << a << " " << b0 << "/" << b << " " << c0 << "/" << c << " " 
+    //    "x0: " << x0[a0] << "   " << x0[b0] << "   " << x0[c0] << " || " <<
+    //    "x: " << x[a] << "   " << x[b] << "   " << x[c] << 
+    //    "\n";
+
     triangleInfo.endEdit();
 }
 
+// Update the rest shape
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::computeFakeStep()
+{
+    const sofa::helper::vector<Index>& e1 = edge1.getValue();
+    const sofa::helper::vector<Index>& e2 = edge2.getValue();
+    const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
+
+    if (fakeStep > 1.0) {
+        fakeStep = 1.0;
+        //return;
+    }
+
+    //std::cout << "Fake step=" << fakeStep << "\n";
+
+    // Sanit checks
+    if ((e1.size() == 0) || (e2.size() == 0)) {
+        serr << "edge1 and edge2 have to be non-empty if joinEdges is enabled" << sendl;
+        return;
+    }
+
+    if (e1.size() != e2.size()) {
+        serr << "edge1 and edge2  have to be of the same size" << sendl;
+        return;
+    }
+
+    if (eC.size() != e1.size()) {
+        serr << "edgeCombined has to be of the same size as edge1 and edge2 " << sendl;
+        return;
+    }
+
+    const VecCoord& x0 = *this->mstate->getX0();
+    const VecCoord& x0o = originalNodes.getValue();
+
+    for (unsigned int i=0; i< eC.size(); i++) {
+
+        if (e1[i] >= x0o.size()) {
+            serr << "Index " << e1[i] << " in edge1 out of bounds" << sendl;
+            continue;
+        }
+
+        if (e2[i] >= x0o.size()) {
+            serr << "Index " << e2[i] << " in edge2 out of bounds" << sendl;
+            continue;
+        }
+
+        if (eC[i] >= x0.size()) {
+            serr << "Index " << eC[i] << " in edgeCombined out of bounds" << sendl;
+            continue;
+        }
+
+        x0fake[ e1[i] ].getCenter() = x0o[ e1[i] ].getCenter() * fakeStep + x0[ eC[i] ].getCenter() * (1-fakeStep);
+        x0fake[ e2[i] ].getCenter() = x0o[ e2[i] ].getCenter() * fakeStep + x0[ eC[i] ].getCenter() * (1-fakeStep);
+
+        //x0fake[ e1[i] ].getOrientation() = x0[ eC[i] ].getOrientation();
+        //x0fake[ e2[i] ].getOrientation() = x0[ eC[i] ].getOrientation();
+        x0fake[ e1[i] ].getOrientation().slerp(x0[ eC[i] ].getOrientation(), x0o[ e1[i] ].getOrientation(), fakeStep, false);
+        x0fake[ e2[i] ].getOrientation().slerp(x0[ eC[i] ].getOrientation(), x0o[ e2[i] ].getOrientation(), fakeStep, false);
+    }
+}
 
 // --------------------------------------------------------------------------------------
 // ---
@@ -1025,6 +1169,18 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::Mecha
     int nbTriangles=_topology->getNbTriangles();
     f.resize(p.size());
 
+    if (joinEdges.getValue()) {
+        // Update the rest shape and rest positions
+        fakeStep += convergenceRatio.getValue();
+        computeFakeStep();
+        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+        for (int i=0; i<nbTriangles; i++) {
+            const TriangleInformation &tinfo = triangleInf[i];
+            initTriangle(i, tinfo.a, tinfo.b, tinfo.c);
+        }
+        triangleInfo.endEdit();
+    }
+
     for (int i=0; i<nbTriangles; i++)
     {
         accumulateForce(f, p, i);
@@ -1356,93 +1512,27 @@ void TriangularBendingFEMForceField<DataTypes>::computeCurvature(Vec3 pt, Vec<9,
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
-    if(vparams->displayFlags().getShowInteractionForceFields())
-    {
-        glDisable(GL_LIGHTING);
+    if (joinEdges.getValue() && vparams->displayFlags().getShowForceFields()) {
+        const sofa::helper::vector<Index>& e1 = edge1.getValue();
+        const sofa::helper::vector<Index>& e2 = edge2.getValue();
 
-        // First part of path
-
-        Vec3 A(0.00328595, 0.00211686, 0.00159519);
-        Vec3 B(-0.0061308, 0.00170378, -0.000246);
-
-        Vec3 direction = B - A;
-//        direction.normalize();
-//        std::cout << "direction injector: " << direction << std::endl;
-        direction /= 20;
-
-        Vec3 anchor(-0.00149125, 0.00142054, 0.000518047);
-        glColor4f(1.0, 0.65, 0.0, 1.0);
-
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<10; i++)
-        {
-            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
-            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
+        for (unsigned int i=0; i< e1.size(); i++) {
+            vparams->drawTool()->drawFrame(
+                x0fake[e1[i]].getCenter(),
+                x0fake[e1[i]].getOrientation(),
+                Vec3(1,1,1)/10);
+            vparams->drawTool()->drawFrame(
+                x0fake[e2[i]].getCenter(),
+                x0fake[e2[i]].getOrientation(),
+                Vec3(1,1,1)/10);
         }
-        glEnd();
-
-//        const std::vector<Vec3> vecAnchors;
-//        vecAnchors.push_back(anchor);
-//        const Vec<4, float> colour(1.0, 0.65, 0.0, 1.0);
-//        helper::gl::DrawManager::drawSpheres(vecAnchors, 0.00005, colour);
-
-        Vec3 centre;
-        for (unsigned int i=0; i<10; i++)
-        {
-            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-//            std::cout << centre - anchor << std::endl;
-//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
-        }
-
-        // Second part
-        anchor = centre;
-        Vec3 target(-0.009175, 0.000368, -0.0022945);
-        direction = target - anchor;
-        direction /= 10;
-
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<10; i++)
-        {
-            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
-            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-        }
-        glEnd();
-
-
-//        helper::gl::DrawManager::drawSpheres(anchor, 0.00005, colour);
-        for (unsigned int i=0; i<10; i++)
-        {
-            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-//            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
-//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
-        }
-
-
-        // Relaxation in the centre
-        anchor = centre;
-        target = Vec3(-0.008167, -0.000547, -0.0015375);
-        direction = target - anchor;
-        direction /= 5;
-
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<5; i++)
-        {
-            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
-            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-        }
-        glEnd();
-
-
-//        helper::gl::DrawManager::drawSpheres(anchor, 0.00005, colour);
-        for (unsigned int i=0; i<5; i++)
-        {
-            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-//            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
-//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
-        }
-
-   }
-
+        //for (unsigned int i=0; i< x0fake.size(); i++) {
+        //    vparams->drawTool()->drawFrame(
+        //        x0fake[i].getCenter(),
+        //        x0fake[i].getOrientation(),
+        //        Vec3(1,1,1)/10);
+        //}
+    }
 }
 
 #if 0
