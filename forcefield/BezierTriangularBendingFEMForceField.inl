@@ -79,6 +79,7 @@ BezierTriangularBendingFEMForceField<DataTypes>::BezierTriangularBendingFEMForce
 , f_young(initData(&f_young,(Real)3000.,"youngModulus","Young's modulus in Hooke's law"))
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
+, normals(initData(&normals, "normals","Node normals at the rest shape"))
 {
     triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
 }
@@ -109,6 +110,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
 {
     this->Inherited::init();
 
+    if (this->mstate == NULL) {
+        serr << "Mechanical state is required!" << sendl;
+        return;
+    }
+
     _topology = this->getContext()->getMeshTopology();
 
     if (_topology->getNbTriangles()==0)
@@ -116,6 +122,13 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
             serr << "BezierTriangularBendingFEMForceField: object must have a Triangular Set Topology."<<sendl;
             return;
     }
+
+    if (normals.getValue().size() == 0) {
+        serr << "No normals defined, assuming flat triangles" << sendl;
+    } else if (normals.getValue().size() != this->mstate->getX0()->size()) {
+        serr << "Normals count doesn't correspond with nodes count" << sendl;
+        return;
+    } 
 
     // Create specific handler for TriangleData
     triangleInfo.createTopologicalEngine(_topology, triangleHandler);
@@ -160,25 +173,31 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
     tinfo->b = b;
     tinfo->c = c;
 
+    if (this->mstate == NULL) {
+        serr << "Missing mechanical state" << sendl;
+        return;
+    }
+
     // Gets vertices of rest positions
     const VecCoord& x0 = *this->mstate->getX0();
+    const helper::vector<Vec3>& norms = normals.getValue();
 
-    // Compute orientation of the triangle
-    //Quaternion triFrame;
-    //computeFrame(triFrame, x0[a].getCenter(), x0[b].getCenter(), x0[c].getCenter());
+    // Compute initial bezier points at the edges 
+    computeEdgeBezierPoints(a, b, c, x0, norms, tinfo->bezierNodes);
 
-    // get the segment position in the reference frames of the rest-shape
-    tinfo->P0_P1_inFrame0 = x0[a].getOrientation().inverseRotate /*triFrame.inverseRotate*/( x0[b].getCenter() - x0[a].getCenter() )/3.0;
-    tinfo->P0_P2_inFrame0 = x0[a].getOrientation().inverseRotate /*triFrame.inverseRotate*/( x0[c].getCenter() - x0[a].getCenter() )/3.0;
+    // Get the segments' position in the reference frames of the rest-shape
+    tinfo->P0_P1_inFrame0 = x0[a].getOrientation().inverseRotate( tinfo->bezierNodes[3] );
+    tinfo->P0_P2_inFrame0 = x0[a].getOrientation().inverseRotate( tinfo->bezierNodes[4] );
 
-    tinfo->P1_P2_inFrame1 = x0[b].getOrientation().inverseRotate /*triFrame.inverseRotate*/( x0[c].getCenter() - x0[b].getCenter() )/3.0;
-    tinfo->P1_P0_inFrame1 = x0[b].getOrientation().inverseRotate /*triFrame.inverseRotate*/( x0[a].getCenter() - x0[b].getCenter() )/3.0;
+    tinfo->P1_P2_inFrame1 = x0[b].getOrientation().inverseRotate( tinfo->bezierNodes[5] );
+    tinfo->P1_P0_inFrame1 = x0[b].getOrientation().inverseRotate( tinfo->bezierNodes[6] );
 
-    tinfo->P2_P0_inFrame2 = x0[c].getOrientation().inverseRotate /*triFrame.inverseRotate*/( x0[a].getCenter() - x0[c].getCenter() )/3.0;
-    tinfo->P2_P1_inFrame2 = x0[c].getOrientation().inverseRotate /*triFrame.inverseRotate*/( x0[b].getCenter() - x0[c].getCenter() )/3.0;
+    tinfo->P2_P1_inFrame2 = x0[c].getOrientation().inverseRotate( tinfo->bezierNodes[7] );
+    tinfo->P2_P0_inFrame2 = x0[c].getOrientation().inverseRotate( tinfo->bezierNodes[8] );
 
 
-    // compute the initial position and rotation of the reference frame
+
+    // Compute the initial position and rotation of the reference frame
     this->interpolateRefFrame(tinfo, Vec2(1.0/3.0,1.0/3.0), x0, tinfo->bezierNodes);
 
     // Compute positions in local frame
@@ -215,33 +234,109 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
     triangleInfo.endEdit();
 }
 
+// ------------------------
+// --- Compute the position of the Bézier points situated at the edges based on
+// --- the normals at triangle nodes.
+// --- 
+// --- NOTE: While the output vector contains 10 nodes only nodes at index 3-8
+// --- are filled in.
+// ---
+// --- We do that by computing the actual bezier nodes and then computing
+// --- rotation relative to the node orientation:
+// ---
+// --- To maintain C^0 continuity the nodes have to satisfy a few conditions.
+// --- We use the conditions outlined in [Ubach and Oñate 2010]. The node has
+// --- to lie on the:
+// ---
+// --- (1) plane perpendicular to the normal at the normal at triangle node
+// --- (2) plane that contains the curve of triangle's contour
+// ---     - we us the plane defined by the edge (director between nodes of the
+// ---     flat triangle) and the average between normals at the triangle nodes
+// ---     connected by the edge
+// --- (3) plane perpendicular to the edge of the flat triangle placed at 1/3
+// ---     of it's length
+// ---
+// --- TODO: check the books if this also means C^1 continuity, IMO it should.
+// ------------------------
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::computeFrame(Quat& Qframe, const Vec3 &a, const Vec3 &b, const Vec3 &c)
+void BezierTriangularBendingFEMForceField<DataTypes>::computeEdgeBezierPoints(
+    const Index& a, const Index& b, const Index& c,
+    const VecCoord& x,
+    const helper::vector<Vec3>& norms,
+    helper::fixed_array<Vec3,10> &bezierPoints)
 {
-    //
-    // WARNING: The frame computed by this function is not the same as the one computed by interpolateRefFrame() !!!
-    //          This is not a problem as long as both frames are used carefully and are not interchanged.
-    //
+    if (norms.size() == 0) {
+        // No normals, assume flat triangles
 
-    Vec3 xAxis, yAxis, zAxis;
+        // Edge A-B
+        bezierPoints[3] = (x[b].getCenter() - x[a].getCenter())/3.0;
+        bezierPoints[6] = (x[a].getCenter() - x[b].getCenter())/3.0;
 
-    zAxis = cross(b-a, c-a);
-    zAxis.normalize();
+        // Edge B-C
+        bezierPoints[5] = (x[c].getCenter() - x[b].getCenter())/3.0;
+        bezierPoints[7] = (x[b].getCenter() - x[c].getCenter())/3.0;
 
-    // The following is based on the algorithm in Vertex2Frame and must be kept in sync with it
-    // XXX: must? oh, really?
-    yAxis = Vec3(1.0, 0.0, 0.0);
-    if ( fabs(dot(yAxis, zAxis)) > 0.7) {
-        yAxis = Vector3(0.0, 0.0, 1.0);
+        // Edge C-A
+        bezierPoints[8] = (x[a].getCenter() - x[c].getCenter())/3.0;
+        bezierPoints[4] = (x[c].getCenter() - x[a].getCenter())/3.0;
+
+        return;
     }
 
-    xAxis = yAxis.cross(zAxis);
-    xAxis.normalize();
+    // Edge A-B
+    Vec3 n = (norms[a] + norms[b]) / 2.0;
+    n.normalize();
 
-    yAxis = zAxis.cross(xAxis);
-    yAxis.normalize();
+    Vec3 e = x[b].getCenter() - x[a].getCenter();
+    Real elen = e.norm()/3.0;
+    e.normalize();
 
-    Qframe = Quat::createQuaterFromFrame(xAxis, yAxis, zAxis);
+    Mat33 M, MI;
+    
+    //        (1)       (2)         (3)
+    M = Mat33(norms[a], cross(e,n), e);
+
+    // Solve M*x = (0, 0, |e|/3)
+    MI.invert(M);
+    bezierPoints[3] = MI * Vec3(0, 0, elen);
+
+    M = Mat33(norms[b], cross(-e,n), -e);
+    MI.invert(M);
+    bezierPoints[6] = MI * Vec3(0, 0, elen);
+
+
+    // Edge B-C
+    n = (norms[b] + norms[c]) / 2.0;
+    n.normalize();
+
+    e = x[c].getCenter() - x[b].getCenter();
+    elen = e.norm()/3.0;
+    e.normalize();
+
+    M = Mat33(norms[b], cross(e,n), e);
+    MI.invert(M);
+    bezierPoints[5] = MI * Vec3(0, 0, elen);
+
+    M = Mat33(norms[c], cross(-e,n), -e);
+    MI.invert(M);
+    bezierPoints[7] = MI * Vec3(0, 0, elen);
+
+
+    // Edge C-A
+    n = (norms[c] + norms[a]) / 2.0;
+    n.normalize();
+
+    e = x[a].getCenter() - x[c].getCenter();
+    elen = e.norm()/3.0;
+    e.normalize();
+
+    M = Mat33(norms[c], cross(e,n), e);
+    MI.invert(M);
+    bezierPoints[8] = MI * Vec3(0, 0, elen);
+
+    M = Mat33(norms[a], cross(-e,n), -e);
+    MI.invert(M);
+    bezierPoints[4] = MI * Vec3(0, 0, elen);
 }
 
 // ------------------------
@@ -253,10 +348,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(
     const VecCoord& x, /*const VecCoord& x0,*/
     sofa::helper::fixed_array<Vec3,10> &X_bezierPoints)
 {
-    // Compute orientation of the triangle
-    //Quaternion triFrame;
-    //computeFrame(triFrame, x[tinfo->a].getCenter(), x[tinfo->b].getCenter(), x[tinfo->c].getCenter());
-
     // 3 points corresponding to the node position
     X_bezierPoints[0] = x[tinfo->a].getCenter();
     X_bezierPoints[1] = x[tinfo->b].getCenter();
@@ -277,9 +368,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(
     X_bezierPoints[8] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( tinfo->P2_P1_inFrame2 );
 
         // (9) use a kind of skinning function (average of the position obtained when attached respectively to 0, 1 and 2)
-    X_bezierPoints[9] = (x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( (tinfo->P0_P1_inFrame0 + tinfo->P0_P2_inFrame0)/2.0 ))/3.0 +
-                        (x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( (tinfo->P1_P2_inFrame1 + tinfo->P1_P0_inFrame1)/2.0 ))/3.0 +
-                        (x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( (tinfo->P2_P0_inFrame2 + tinfo->P2_P1_inFrame2)/2.0 ))/3.0;
+    X_bezierPoints[9] = (x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( (tinfo->P0_P1_inFrame0 + tinfo->P0_P2_inFrame0) ))/3.0 +
+                        (x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( (tinfo->P1_P2_inFrame1 + tinfo->P1_P0_inFrame1) ))/3.0 +
+                        (x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( (tinfo->P2_P0_inFrame2 + tinfo->P2_P1_inFrame2) ))/3.0;
 }
 
 
@@ -355,21 +446,16 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(Triang
 
 #endif
 
-    //
-    // WARNING: The frame computed by this function is not the same as the one computed by computeFrame() !!!
-    //          This is not a problem as long as both frames are used carefully and are not interchanged.
-    //
-
     // compute the orthogonal frame directions
     Vec3 Y,Z;
-    if (X1.norm() > 1e-20 && Y1.norm() > 1e-20 /*&& fabs(dot(X1,Y1)) >1e-20*/ ) ///TODO: what's with the third condition?
+    if (X1.norm() > 1e-20 && Y1.norm() > 1e-20 && fabs(1-dot(X1,Y1)) >1e-20 )
     {
         X1.normalize();
-        Y1.normalize();
+        //Y1.normalize();
         Z=cross(X1,Y1);
         Z.normalize();
         Y=cross(Z,X1);
-        Y.normalize();
+        //Y.normalize();
     }
     else
     {
@@ -1402,7 +1488,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::default
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
-
     if(vparams->displayFlags().getShowForceFields())
     {
         // Gets vertices of rest and initial positions respectively
@@ -1419,7 +1504,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
         {
             TriangleInformation *tinfo = &triangleInf[i];
 
-            for (int j=0; j<10; j++)
+            for (int j=0; j<9; j++)
             {
                 glColor4f(0.0, 0.7, 0.0, 1.0);
                 glVertex3f(
@@ -1427,6 +1512,13 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
                     tinfo->bezierNodes[j][1],
                     tinfo->bezierNodes[j][2]);
             }
+
+            // Central node in lighter color
+            glColor4f(0.0, 1.0, 0.0, 1.0);
+            glVertex3f(
+                tinfo->bezierNodes[9][0],
+                tinfo->bezierNodes[9][1],
+                tinfo->bezierNodes[9][2]);
         }
 
         glEnd();
@@ -1448,7 +1540,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
             vparams->drawTool()->drawFrame(
                 tinfo->frameCenter,
                 qFrame,
-                Vec3(P1P2.norm()/3.0, P1P2.norm()/3.0, P1P2.norm()/3.0));
+                Vec3(tinfo->area2, tinfo->area2, tinfo->area2)/4);
 
         }
 

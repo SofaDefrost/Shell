@@ -86,6 +86,8 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         typedef Vec<3,Real> Vec3;
         typedef Vec<2,Real> Vec2;
 
+        typedef Mat<3,3,Real> Mat33;
+
         typedef helper::Quater<Real> Quat;
 
         typedef Data<VecCoord>                              DataVecCoord;
@@ -221,14 +223,16 @@ public:
 
         virtual void draw(const core::visual::VisualParams* vparams);
 
-        static void computeFrame(Quat& Qframe, const Vec3 &a, const Vec3 &b, const Vec3 &c);
-
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
 
         Data<Real> f_poisson;
         Data<Real> f_young;
         Data <Real> f_thickness;
+        Data< helper::vector<Vec3> > normals;
 
+        static void computeEdgeBezierPoints(const Index& a, const Index& b, const Index& c,
+            const VecCoord& x, const helper::vector<Vec3>& norms,
+            helper::fixed_array<Vec3,10> &bezierPoints);
 
 protected :
 
