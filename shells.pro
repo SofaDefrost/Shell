@@ -21,7 +21,7 @@ SOURCES = 	forcefield/BezierTriangularBendingFEMForceField.cpp \
 			forcefield/TriangularBendingFEMForceField.cpp \
 			forcefield/TriangularShellForceField.cpp \
 			mapping/BendingPlateMechanicalMapping.cpp \
-			mapping/BezierTriangleMechanicalMapping.cpp \
+			#mapping/BezierTriangleMechanicalMapping.cpp \
 			initPluginShells.cpp
 
 HEADERS =   initPluginShells.h \
@@ -33,8 +33,8 @@ HEADERS =   initPluginShells.h \
 			forcefield/TriangularShellForceField.inl \
 			mapping/BendingPlateMechanicalMapping.h \
 			mapping/BendingPlateMechanicalMapping.inl \
-			mapping/BezierTriangleMechanicalMapping.h \
-			mapping/BezierTriangleMechanicalMapping.inl
+			#mapping/BezierTriangleMechanicalMapping.h \
+			#mapping/BezierTriangleMechanicalMapping.inl
 		  
 README_FILE = shells.txt
 

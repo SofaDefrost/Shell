@@ -27,11 +27,8 @@
 
 #include "TriangularShellForceField.h"
 #include <sofa/core/behavior/ForceField.inl>
+#include <sofa/component/topology/TopologyData.inl>
 #include <sofa/helper/gl/template.h>
-//#include <sofa/helper/gl/DrawManager.h>
-#include <sofa/component/topology/TriangleData.inl>
-#include <sofa/component/topology/EdgeData.inl>
-#include <sofa/component/topology/PointData.inl>
 #include <sofa/helper/rmath.h>
 #include <sofa/helper/system/gl.h>
 #include <sofa/helper/gl/template.h>
@@ -44,10 +41,6 @@
 #include <assert.h>
 #include <map>
 #include <utility>
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
-
-#include <sofa/simulation/common/Simulation.h>
-#include <sofa/simulation/common/AnimateEndEvent.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -64,25 +57,20 @@ namespace sofa
 			using namespace	sofa::component::topology;
 
 // --------------------------------------------------------------------------------------
-// ---
+// ---  Topology Creation/Destruction functions
 // --------------------------------------------------------------------------------------
 template< class DataTypes>
-void TriangularShellForceField<DataTypes>::TriangleCreationFunction (unsigned int triangleIndex, void* param, TriangleInformation &/*tinfo*/, const Triangle& t, const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&)
+void TriangularShellForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
 {
-    TriangularShellForceField<DataTypes> *ff= (TriangularShellForceField<DataTypes> *)param;
     if (ff)
     {
-        Index a = t[0];
-        Index b = t[1];
-        Index c = t[2];
-
-        ff->initTriangle(triangleIndex, a, b, c);
+        ff->initTriangle(triangleIndex, t[0], t[1], t[2]);
     }
 }
 
 
 // --------------------------------------------------------------------------------------
-// ---
+// --- Constructor
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 TriangularShellForceField<DataTypes>::TriangularShellForceField()
@@ -92,6 +80,7 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
 , f_membraneElement(initData(&f_membraneElement, "membraneElement", "The membrane element to use"))
 , f_bendingElement(initData(&f_bendingElement, "bendingElement", "The bending plate element to use"))
 , f_corotated(initData(&f_corotated, true, "corotated", "Compute forces in corotational frame"))
+, triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
     f_membraneElement.beginEdit()->setNames(7,
         "None",     // No membrane element
@@ -112,15 +101,18 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
         );
     f_bendingElement.beginEdit()->setSelectedItem("DKT");
     f_bendingElement.endEdit();
+
+    triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
 }
 
 
 // --------------------------------------------------------------------------------------
-// ---
+// --- Destructor
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 TriangularShellForceField<DataTypes>::~TriangularShellForceField()
 {
+    if(triangleHandler) delete triangleHandler;
 }
 
 // --------------------------------------------------------------------------------------
@@ -138,6 +130,10 @@ void TriangularShellForceField<DataTypes>::init()
             serr << "TriangularShellForceField: object must have a Triangular Set Topology."<<sendl;
             return;
     }
+
+    // Create specific handler for TriangleData
+    triangleInfo.createTopologicalEngine(_topology, triangleHandler);
+    triangleInfo.registerTopologicalData();
 
     reinit();
 }
@@ -187,13 +183,10 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
 
     for (int i=0; i<_topology->getNbTriangles(); ++i)
     {
-        TriangleCreationFunction(i, (void*) this, ti[i], _topology->getTriangle(i),
-            (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
-    }
 
-    triangleInfo.setCreateFunction(TriangleCreationFunction);
-    triangleInfo.setCreateParameter( (void *) this );
-    triangleInfo.setDestroyParameter( (void *) this );
+        triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
+            (const sofa::helper::vector< unsigned int >)0, (const sofa::helper::vector< double >)0);
+    }
 
     triangleInfo.endEdit();
 }
@@ -1189,99 +1182,6 @@ void TriangularShellForceField<DataTypes>::dktSD(StrainDisplacement &B, const Tr
         );
 
     B /= 2*tinfo.area;
-}
-
-// TODO
-template <class DataTypes>
-void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
-{
-    if(vparams->displayFlags().getShowInteractionForceFields())
-    {
-        glDisable(GL_LIGHTING);
-
-        // First part of path
-
-        Vec3 A(0.00328595, 0.00211686, 0.00159519);
-        Vec3 B(-0.0061308, 0.00170378, -0.000246);
-
-        Vec3 direction = B - A;
-//        direction.normalize();
-//        std::cout << "direction injector: " << direction << std::endl;
-        direction /= 20;
-
-        Vec3 anchor(-0.00149125, 0.00142054, 0.000518047);
-        glColor4f(1.0, 0.65, 0.0, 1.0);
-
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<10; i++)
-        {
-            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
-            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-        }
-        glEnd();
-
-//        const std::vector<Vec3> vecAnchors;
-//        vecAnchors.push_back(anchor);
-//        const Vec<4, float> colour(1.0, 0.65, 0.0, 1.0);
-//        helper::gl::DrawManager::drawSpheres(vecAnchors, 0.00005, colour);
-
-        Vec3 centre;
-        for (unsigned int i=0; i<10; i++)
-        {
-            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-//            std::cout << centre - anchor << std::endl;
-//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
-        }
-
-        // Second part
-        anchor = centre;
-        Vec3 target(-0.009175, 0.000368, -0.0022945);
-        direction = target - anchor;
-        direction /= 10;
-
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<10; i++)
-        {
-            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
-            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-        }
-        glEnd();
-
-
-//        helper::gl::DrawManager::drawSpheres(anchor, 0.00005, colour);
-        for (unsigned int i=0; i<10; i++)
-        {
-            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-//            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
-//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
-        }
-
-
-        // Relaxation in the centre
-        anchor = centre;
-        target = Vec3(-0.008167, -0.000547, -0.0015375);
-        direction = target - anchor;
-        direction /= 5;
-
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<5; i++)
-        {
-            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
-            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-        }
-        glEnd();
-
-
-//        helper::gl::DrawManager::drawSpheres(anchor, 0.00005, colour);
-        for (unsigned int i=0; i<5; i++)
-        {
-            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-//            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
-//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
-        }
-
-   }
-
 }
 
 } // namespace forcefield

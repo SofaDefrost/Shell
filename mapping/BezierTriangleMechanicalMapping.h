@@ -96,7 +96,7 @@ public:
     , inputTopo(NULL)
     , outputTopo(NULL)
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
-    , nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
+    , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
     , verticesTarget(OutVecCoord()) // dummy initialization
     , trianglesTarget(SeqTriangles()) // dummy initialization
     {
@@ -117,6 +117,17 @@ public:
     void applyJT(const core::ConstraintParams *cparams, Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in);
 
 protected:
+
+    BezierTriangleMechanicalMapping()
+    : Inherit()
+    , inputTopo(NULL)
+    , outputTopo(NULL)
+    , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
+    , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
+    , verticesTarget(OutVecCoord()) // dummy initialization
+    , trianglesTarget(SeqTriangles()) // dummy initialization
+    {
+    }
 
     typedef struct {
 
@@ -140,7 +151,9 @@ protected:
         BaseMeshTopology* outputTopo;
 
         Data<bool> measureError;
-        core::objectmodel::DataObjectRef nameTargetTopology;
+        SingleLink<BezierTriangleMechanicalMapping<TIn, TOut>,
+            sofa::core::topology::BaseMeshTopology,
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
 
         TriangleSetTopologyContainer* topologyTarget;
         const OutVecCoord& verticesTarget;

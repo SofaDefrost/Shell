@@ -82,7 +82,7 @@ namespace component
 		
 		commonentlist += " TriangularBendingFEMForceField";
 		commonentlist += " BendingPlateMechanicalMapping";
-		commonentlist += " BezierTriangleMechanicalMapping";
+		//commonentlist += " BezierTriangleMechanicalMapping";
 		commonentlist += " BezierTriangularBendingFEMForceField";
 		commonentlist += " TriangularShellForceField";
 		//commonentlist += "";
@@ -96,8 +96,9 @@ namespace component
 } 
 
 
-//SOFA_LINK_CLASS(TriangularBendingFEMForceField)
-//SOFA_LINK_CLASS(BendingPlateMechanicalMapping)
+SOFA_LINK_CLASS(TriangularBendingFEMForceField)
+SOFA_LINK_CLASS(BendingPlateMechanicalMapping)
 SOFA_LINK_CLASS(BezierTriangularBendingFEMForceField)
-SOFA_LINK_CLASS(BezierTriangleMechanicalMapping)
+//SOFA_LINK_CLASS(BezierTriangleMechanicalMapping)
+SOFA_LINK_CLASS(TriangularShellForceField)
 

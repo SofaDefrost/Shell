@@ -37,9 +37,7 @@
 #include <sofa/component/component.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TriangleData.h>
-#include <sofa/core/objectmodel/ObjectRef.h>
-
+#include <sofa/component/topology/TopologyData.h>
 
 
 namespace sofa
@@ -105,7 +103,6 @@ class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTyp
 
         sofa::core::topology::BaseMeshTopology* _topology;
         //sofa::component::topology::TriangleSetTopologyContainer* _topologyOriginal;
-        sofa::core::topology::BaseMeshTopology* _topologyTarget;
 
 //        TriangularBendingFEMForceFieldInternalData<DataTypes> data;
 //        friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
@@ -162,6 +159,20 @@ public:
                 }
         };
 
+        class TRQSTriangleHandler : public TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >
+        {
+            public:
+                TRQSTriangleHandler(TriangularBendingFEMForceField<DataTypes>* _ff, TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >(_data), ff(_ff) {}
+
+                void applyCreateFunction(unsigned int triangleIndex, TriangleInformation& ,
+                    const Triangle & t,
+                    const sofa::helper::vector< unsigned int > &,
+                    const sofa::helper::vector< double > &);
+
+            protected:
+                TriangularBendingFEMForceField<DataTypes>* ff;
+        };
+
         TriangularBendingFEMForceField();
 
         virtual ~TriangularBendingFEMForceField();
@@ -187,7 +198,9 @@ public:
         Data <Real> f_bendingRatio;
         Data<bool> refineMesh;
         Data<int> iterations;
-        core::objectmodel::DataObjectRef nameTargetTopology;
+        SingleLink<TriangularBendingFEMForceField<DataTypes>,
+            sofa::core::topology::BaseMeshTopology,
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
         VecCoordHigh targetVertices;
         SeqTriangles targetTriangles;
 
@@ -207,6 +220,8 @@ public:
         Data<bool> exportAtBegin;
         Data<bool> exportAtEnd;
         unsigned int stepCounter;
+
+        TRQSTriangleHandler* triangleHandler;
 
 protected :
 

@@ -28,9 +28,6 @@
 #include "BezierTriangularBendingFEMForceField.h"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/helper/gl/template.h>
-#include <sofa/component/topology/TriangleData.inl>
-#include <sofa/component/topology/EdgeData.inl>
-#include <sofa/component/topology/PointData.inl>
 #include <sofa/helper/rmath.h>
 #include <sofa/helper/system/gl.h>
 #include <sofa/helper/gl/template.h>
@@ -39,10 +36,9 @@
 #include <vector>
 #include <sofa/defaulttype/Vec3Types.h>
 //#include <assert.h>
+#include <sofa/component/topology/TopologyData.inl>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
-
-#include <sofa/simulation/common/Simulation.h>
-#include <sofa/simulation/common/AnimateEndEvent.h>
+#include <sofa/simulation/common/Simulation.h> // for draw()
 
 #ifdef _WIN32
 #include <windows.h>
@@ -63,14 +59,12 @@ namespace sofa
 
 
 // --------------------------------------------------------------------------------------
-// ---
+// ---  Topology Creation/Destruction functions
 // --------------------------------------------------------------------------------------
-template< class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFunction(unsigned int triangleIndex, void* param, TriangleInformation &/*tinfo*/, const Triangle& t, const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&)
+template<class DataTypes>
+void BezierTriangularBendingFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
 {
-    BezierTriangularBendingFEMForceField<DataTypes> *ff= (BezierTriangularBendingFEMForceField<DataTypes> *)param;
-    if (ff)
-    {
+    if (ff) {
         ff->initTriangle(triangleIndex, t[0], t[1], t[2]);
     }
 }
@@ -84,10 +78,9 @@ BezierTriangularBendingFEMForceField<DataTypes>::BezierTriangularBendingFEMForce
 : f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson's ratio in Hooke's law"))
 , f_young(initData(&f_young,(Real)3000.,"youngModulus","Young's modulus in Hooke's law"))
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
-, refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
-, iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
-, nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
+, triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
+    triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
 }
 
 // --------------------------------------------------------------------------------------
@@ -105,6 +98,7 @@ template <class DataTypes> void BezierTriangularBendingFEMForceField<DataTypes>:
 template <class DataTypes>
 BezierTriangularBendingFEMForceField<DataTypes>::~BezierTriangularBendingFEMForceField()
 {
+    if(triangleHandler) delete triangleHandler;
 }
 
 // --------------------------------------------------------------------------------------
@@ -123,208 +117,12 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
             return;
     }
 
+    // Create specific handler for TriangleData
+    triangleInfo.createTopologicalEngine(_topology, triangleHandler);
+    triangleInfo.registerTopologicalData();
+
     reinit();
-
-    if (refineMesh.getValue())
-    {
-        _topologyTarget = NULL;
-        const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
-        _topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
-
-        if (_topologyTarget)
-        {
-            MechanicalState<Vec3Types>* mStateTarget = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyTarget->getContext()->getMechanicalState());
-            if (mStateTarget)
-            {
-                targetTriangles = _topologyTarget->getTriangles();
-                targetVertices = *mStateTarget->getX();
-            }
-            else
-            {
-                serr << "No mechanical state for target high resolution topology" << sendl;
-                return;
-            }
-        }
-        else
-        {
-            serr << "No target high resolution mesh found" << sendl;
-            return;
-        }
-
-        // Run procedure for shell remeshing
-        refineCoarseMeshToTarget();
-    }
 }
-
-
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
-{
-    sout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << targetTriangles.size() << " triangles" << sendl;
-
-    // List of vertices
-    const VecCoord& x = *this->mstate->getX();
-    // List of triangles
-    const SeqTriangles triangles = _topology->getTriangles();
-
-    // Creates new mesh
-    sofa::helper::vector<Vec3> subVertices;
-    SeqTriangles subTriangles;
-
-    // Initialises list of subvertices and triangles
-    for (unsigned int i=0; i<x.size(); i++)
-    {
-        subVertices.push_back(x[i].getCenter());
-    }
-    for (unsigned int t=0; t<triangles.size(); t++)
-    {
-        subTriangles.push_back(triangles[t]);
-    }
-
-    // Adjusts position of each subvertex to get closer to actual surface before iterating again
-    for (unsigned int i=0; i<subVertices.size(); i++)
-    {
-        movePoint(subVertices[i]);
-    }
-
-
-    // Refines mesh
-    for (int n=0; n<iterations.getValue(); n++)
-    {
-        // Subdivides each triangle into 4 smaller ones
-        subTriangles.clear();
-        for (unsigned int t=0; t<triangles.size(); t++)
-        {
-            Vec3 a = subVertices[(int)triangles[t][0]];
-            Vec3 b = subVertices[(int)triangles[t][1]];
-            Vec3 c = subVertices[(int)triangles[t][2]];
-
-            subdivide(a, b, c, subVertices, subTriangles);
-        }
-
-        // Adjusts position of each subvertex to get closer to actual surface before iterating again
-        for (unsigned int i=0; i<subVertices.size(); i++)
-        {
-            movePoint(subVertices[i]);
-        }
-    }
-
-
-    sout << "Number of vertices of the resulting mesh = " << subVertices.size() << sendl;
-    sout << "Number of shells of the resulting mesh   = " << subTriangles.size() << sendl;
-
-    // Writes in Gmsh format
-    std::ofstream myfile;
-    myfile.open ("mesh_refined.obj");
-    for (unsigned int vertex=0; vertex<subVertices.size(); vertex++)
-    {
-        myfile << "v " << subVertices[vertex] << "\n";
-    }
-    for (unsigned int element=0; element<subTriangles.size(); element++)
-    {
-        myfile << "f " << subTriangles[element][0]+1 << " " << subTriangles[element][1]+1 << " " << subTriangles[element][2]+1 << "\n";
-    }
-    myfile.close();
-    sout << "Mesh written in mesh_refined.obj" << sendl;
-}
-
-// --------------------------------------------------------------------------------------
-// Subdivides each triangle into 4 by taking the middle of each edge
-// --------------------------------------------------------------------------------------
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::helper::vector<Vec3> &subVertices, SeqTriangles &subTriangles)
-{
-    // Global coordinates
-    Vec3 mAB, mAC, mBC;
-    mAB = (a+b)/2.0;
-    mAC = (a+c)/2.0;
-    mBC = (b+c)/2.0;
-
-    // Adds vertex if we deal with a new point
-    int indexAB, indexAC, indexBC;
-    addVertexAndFindIndex(subVertices, mAB, indexAB);
-    addVertexAndFindIndex(subVertices, mAC, indexAC);
-    addVertexAndFindIndex(subVertices, mBC, indexBC);
-
-    // Finds index of the 3 original vertices
-    int indexA, indexB, indexC;
-    addVertexAndFindIndex(subVertices, a, indexA);
-    addVertexAndFindIndex(subVertices, b, indexB);
-    addVertexAndFindIndex(subVertices, c, indexC);
-
-    // Adds the 4 subdivided triangles to the list
-    subTriangles.push_back(Triangle(indexA, indexAB, indexAC));
-    subTriangles.push_back(Triangle(indexAB, indexB, indexBC));
-    subTriangles.push_back(Triangle(indexAC, indexBC, indexC));
-    subTriangles.push_back(Triangle(indexBC, indexAC, indexAB));
-}
-
-
-// --------------------------------------------------------------------------------------
-// Adds a vertex if it is not already in the list
-// --------------------------------------------------------------------------------------
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index)
-{
-    for (unsigned int v=0; v<subVertices.size(); v++)
-    {
-        if ( (subVertices[v]-vertex).norm() < 0.0000001)
-        {
-            index = v;
-            return;
-        }
-    }
-        subVertices.push_back(vertex);
-        index = (int)subVertices.size()-1;
-    }
-
-
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::movePoint(Vec3& pointToMove)
-{
-    sofa::helper::vector<Vec3> listClosestPoints;
-    FindClosestGravityPoints(pointToMove, listClosestPoints);
-    pointToMove = (listClosestPoints[0]+listClosestPoints[1]+listClosestPoints[2])/3.0;
-}
-
-
-// --------------------------------------------------------------------------------------
-// Finds the list of the 3 closest gravity points of targeted surface
-// --------------------------------------------------------------------------------------
-template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints)
-{
-    std::multimap<Real, Vec3> closestTrianglesData;
-
-    for (unsigned int t=0; t<targetTriangles.size(); t++)
-    {
-        Vec3 pointTriangle1 = targetVertices[ targetTriangles[t][0] ];
-        Vec3 pointTriangle2 = targetVertices[ targetTriangles[t][1] ];
-        Vec3 pointTriangle3 = targetVertices[ targetTriangles[t][2] ];
-
-        Vec3 G = (pointTriangle1+pointTriangle2+pointTriangle3)/3.0;
-
-        // Distance between the point and current triangle
-        Real distance = (G-point).norm2();
-
-        // Stores distances (automatically sorted)
-        closestTrianglesData.insert( std::make_pair<Real,Vec3>(distance,G));
-    }
-
-    // Returns the 3 closest points
-    int count = 0;
-    typename std::multimap<Real,Vec3>::iterator it;
-    for (it = closestTrianglesData.begin(); it!=closestTrianglesData.end(); it++)
-    {
-        if (count < 3)
-        {
-            listClosestPoints.push_back((*it).second);
-        }
-        count++;
-    }
-
-}
-
 
 // --------------------------------------------------------------------------------------
 // --- Re-initialization (called when we change a parameter through the GUI)
@@ -341,12 +139,8 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
 
     for (int i=0; i<_topology->getNbTriangles(); ++i)
     {
-        TRQSTriangleCreationFunction(i, (void*) this, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
+        triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
     }
-
-    triangleInfo.setCreateFunction(TRQSTriangleCreationFunction);
-    triangleInfo.setCreateParameter( (void *) this );
-    triangleInfo.setDestroyParameter( (void *) this );
 
     triangleInfo.endEdit();
 }
@@ -873,7 +667,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::matrixSDM(
     Real c3 = tinfo.interpol(2,2);
 
     Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
-    
+
     // Derivatives of powers of p (by x and y)
     Real DPhi1n3_x= 3.0 * b1 * p2[0];
     Real DPhi1n2_x= 2.0 * b1 * p[0];
@@ -1660,96 +1454,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
 
         triangleInfo.endEdit();
     } // if(getShowForceFields())
-
-#if 0
-    if(vparams->displayFlags().getShowInteractionForceFields())
-    {
-        glDisable(GL_LIGHTING);
-
-        // First part of path
-
-        Vec3 A(0.00328595, 0.00211686, 0.00159519);
-        Vec3 B(-0.0061308, 0.00170378, -0.000246);
-
-        Vec3 direction = B - A;
-//        direction.normalize();
-//        std::cout << "direction injector: " << direction << std::endl;
-        direction /= 20;
-
-        Vec3 anchor(-0.00149125, 0.00142054, 0.000518047);
-        glColor4f(1.0, 0.65, 0.0, 1.0);
-
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<10; i++)
-        {
-            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
-            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-        }
-        glEnd();
-
-//        const std::vector<Vec3> vecAnchors;
-//        vecAnchors.push_back(anchor);
-//        const Vec<4, float> colour(1.0, 0.65, 0.0, 1.0);
-//        helper::gl::DrawManager::drawSpheres(vecAnchors, 0.00005, colour);
-
-        Vec3 centre;
-        for (unsigned int i=0; i<10; i++)
-        {
-            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-//            std::cout << centre - anchor << std::endl;
-//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
-        }
-
-        // Second part
-        anchor = centre;
-        Vec3 target(-0.009175, 0.000368, -0.0022945);
-        direction = target - anchor;
-        direction /= 10;
-
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<10; i++)
-        {
-            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
-            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-        }
-        glEnd();
-
-
-//        helper::gl::DrawManager::drawSpheres(anchor, 0.00005, colour);
-        for (unsigned int i=0; i<10; i++)
-        {
-            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-//            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
-//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
-        }
-
-
-        // Relaxation in the centre
-        anchor = centre;
-        target = Vec3(-0.008167, -0.000547, -0.0015375);
-        direction = target - anchor;
-        direction /= 5;
-
-        glBegin(GL_LINES);
-        for (unsigned int i=0; i<5; i++)
-        {
-            glVertex3f(anchor[0]+i*direction[0], anchor[1]+i*direction[1], anchor[2]+i*direction[2]);
-            glVertex3f(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-        }
-        glEnd();
-
-
-//        helper::gl::DrawManager::drawSpheres(anchor, 0.00005, colour);
-        for (unsigned int i=0; i<5; i++)
-        {
-            centre = Vec3(anchor[0]+(i+1)*direction[0], anchor[1]+(i+1)*direction[1], anchor[2]+(i+1)*direction[2]);
-//            std::cout << centre - Vec3(-0.00149125, 0.00142054, 0.000518047) << std::endl;
-//            helper::gl::DrawManager::drawSpheres(centre, 0.00005, colour);
-        }
-
-   } // if(getShowInteractionForceFields())
-#endif
-
 }
 
 } // namespace forcefield

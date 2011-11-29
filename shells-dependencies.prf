@@ -1,5 +1,10 @@
 includeOnce($$_FILE_) {
-	declare(shells, applications/plugins/shells, sofa_component_base sofahelper sofa_misc_topology_dev)
+
+    #contains(DEFINES, SOFA_DEV) {
+    #    declare(shells, applications/plugins/shells, sofa_component_base sofahelper sofa_base_topology sofa_misc_topology_dev)
+    #} else {
+        declare(shells, applications/plugins/shells, sofa_component_base sofahelper sofa_base_topology)
+    #}
 	
 	enable(shells)
 }

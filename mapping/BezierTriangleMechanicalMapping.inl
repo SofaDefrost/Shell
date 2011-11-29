@@ -258,17 +258,12 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         colourMapping.push_back(colour);
     }
 
-    // Retrieves high resolution mesh topology
-    const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
-    topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
-    if (topologyTarget == NULL)
-    {
-        serr << "Target mesh " << nameTargetTopology.getValue() << " was not found" << sendl;
-        return;
+    if (targetTopology.get() == NULL) {
+        serr << "Missing target topology" << sendl;
+    } else {
+        // Computes two-sided Hausdorff distance
+        MeasureError();
     }
-
-    // Computes two-sided Hausdorff distance
-    MeasureError();
 
     // Overwrites colour for each vertex based on the error and colour map
     Real maximum = 0;
@@ -373,7 +368,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::MeasureError()
 {
     Real distance1;
     sout << "Computing Hausdorff distance high res->coarse" << sendl;
-    distance1 = DistanceHausdorff(topologyTarget, outputTopo, vectorErrorTarget);
+    distance1 = DistanceHausdorff(targetTopology.get(), outputTopo, vectorErrorTarget);
     sout << "Hausdorff distance between high res mesh and coarse mesh = " << distance1 << sendl;
 
     Real average = 0;
@@ -387,7 +382,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::MeasureError()
 
     Real distance2;
     sout << "Computing Hausdorff distance coarse->high res" << sendl;
-    distance2 = DistanceHausdorff(outputTopo, topologyTarget, vectorErrorCoarse);
+    distance2 = DistanceHausdorff(outputTopo, targetTopology.get(), vectorErrorCoarse);
     sout << "Hausdorff distance between coarse mesh and high res mesh = " << distance2 << sendl;
 
     average = 0;

@@ -35,7 +35,6 @@
 
 
 #include <sofa/helper/gl/GLSLShader.h>
-//#include <sofa/core/VisualModel.h>
 
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 
@@ -103,7 +102,7 @@ public:
     , inputTopo(NULL)
     , outputTopo(NULL)
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
-    , nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
+    , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
     {
     }
 
@@ -123,13 +122,24 @@ public:
 
 protected:
 
+    BendingPlateMechanicalMapping()
+    : Inherit()
+    , inputTopo(NULL)
+    , outputTopo(NULL)
+    , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
+    , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
+    {
+    }
+
         helper::gl::GLSLShader shader;
 
         BaseMeshTopology* inputTopo;
         BaseMeshTopology* outputTopo;
 
         Data<bool> measureError;
-        core::objectmodel::DataObjectRef nameTargetTopology;
+        SingleLink<BendingPlateMechanicalMapping<TIn, TOut>,
+            sofa::core::topology::BaseMeshTopology,
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
 
         TriangleSetTopologyContainer* topologyTarget;
         OutVecCoord verticesTarget;
@@ -144,7 +154,8 @@ protected:
         TriangularBendingFEMForceField<In>* triangularBendingForcefield;
 
         // Pointer on the topological mapping to retrieve the list of edges
-        TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
+        // XXX: The edges are no longer there!!!
+        //TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
 
         void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
         void MeasureError();

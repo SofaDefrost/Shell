@@ -223,6 +223,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
         return;
     }
 
+#if 0
     // Retrieves topological mapping to retrieve list of edges (to render in wireframe mode)
     triangleSubdivisionTopologicalMapping = NULL;
 //    this->getContext()->get(triangleSubdivisionTopologicalMapping, nameHighTopology.getValue(), sofa::core::objectmodel::BaseContext::SearchRoot);
@@ -232,6 +233,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
         serr << "WARNING(BendingPlateMechanicalMapping): triangleSubdivisionTopologicalMapping was not found" << sendl;
         return;
     }
+#endif
 
     // Call of apply() and applyJ()
     this->Inherit::init();
@@ -256,11 +258,12 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
         }
 
         // Retrieves high resolution mesh topology
-        const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
-        topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
-
-        // Computes two-sided Hausdorff distance
-        MeasureError();
+        if (targetTopology.get() == NULL) {
+            serr << "Missing target topology" << sendl;
+        } else {
+            // Computes two-sided Hausdorff distance
+            MeasureError();
+        }
 
         // Overwrites colour for each vertex based on the error and colour map
         Real maximum = 0;
@@ -370,7 +373,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::MeasureError()
 {
     Real distance1;
     std::cout << "Computing Hausdorff distance high res->coarse" << std::endl;
-    distance1 = DistanceHausdorff(topologyTarget, outputTopo, vectorErrorTarget);
+    distance1 = DistanceHausdorff(targetTopology.get(), outputTopo, vectorErrorTarget);
     std::cout << "Hausdorff distance between high res mesh and coarse mesh = " << distance1 << std::endl;
 
     Real average = 0;
@@ -384,7 +387,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::MeasureError()
 
     Real distance2;
     std::cout << "Computing Hausdorff distance coarse->high res" << std::endl;
-    distance2 = DistanceHausdorff(outputTopo, topologyTarget, vectorErrorCoarse);
+    distance2 = DistanceHausdorff(outputTopo, targetTopology.get(), vectorErrorCoarse);
     std::cout << "Hausdorff distance between coarse mesh and high res mesh = " << distance2 << std::endl;
 
     average = 0;
@@ -985,10 +988,12 @@ void BendingPlateMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualPa
     {
         glDisable(GL_LIGHTING);
 
+#if 0
         if (!triangleSubdivisionTopologicalMapping) return;
 
         const SeqEdges &outEdges = triangleSubdivisionTopologicalMapping->getSubEdges();
 //        const SeqEdges &outEdges = outputTopo->getEdges();
+#endif
         const SeqTriangles &outTriangles = outputTopo->getTriangles();
         unsigned int index;
 
@@ -1039,6 +1044,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualPa
             glDisable(GL_POLYGON_OFFSET_FILL);
         }
 
+#if 0
         // Render shells' contours (subdivision of edges)
         glColor4f(1.0, 1.0, 1.0, 1.0);
 //        glColor4f(0.0, 0.0, 0.0, 1.0);
@@ -1053,6 +1059,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualPa
             glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
         }
         glEnd();
+#endif
 
     }
 

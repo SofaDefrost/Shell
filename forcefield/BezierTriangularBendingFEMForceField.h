@@ -37,8 +37,7 @@
 #include <sofa/component/component.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TriangleData.h>
-#include <sofa/core/objectmodel/ObjectRef.h>
+#include <sofa/component/topology/TopologyData.h>
 
 
 // Uncomment the following to use quaternions instead of matrices for
@@ -194,6 +193,20 @@ public:
                 }
         };
 
+        class TRQSTriangleHandler : public topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> >
+        {
+            public:
+                TRQSTriangleHandler(BezierTriangularBendingFEMForceField<DataTypes>* _ff, TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >(_data), ff(_ff) {}
+
+                void applyCreateFunction(unsigned int triangleIndex, TriangleInformation& ,
+                    const Triangle & t,
+                    const sofa::helper::vector< unsigned int > &,
+                    const sofa::helper::vector< double > &);
+
+            protected:
+                BezierTriangularBendingFEMForceField<DataTypes>* ff;
+        };
+
         BezierTriangularBendingFEMForceField();
 
         virtual ~BezierTriangularBendingFEMForceField();
@@ -215,15 +228,12 @@ public:
         Data<Real> f_poisson;
         Data<Real> f_young;
         Data <Real> f_thickness;
-        Data<bool> refineMesh;
-        Data<int> iterations;
-        core::objectmodel::DataObjectRef nameTargetTopology;
-        VecCoordHigh targetVertices;
-        SeqTriangles targetTriangles;
+
 
 protected :
 
         TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
+        TRQSTriangleHandler* triangleHandler;
 
         /// Material stiffness matrices for plane stress and bending
         MaterialStiffness materialMatrix;
@@ -246,8 +256,6 @@ protected :
         void matrixSDM(StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo);
         void matrixSDB(StrainDisplacementBending &J, const Vec3 &GP, const TriangleInformation& tinfo);
 
-        static void TRQSTriangleCreationFunction (unsigned int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
-
         /// f += Kx where K is the stiffness matrix and x a displacement
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
         virtual void computeMaterialMatrix();
@@ -261,13 +269,6 @@ protected :
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
 
         void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixGlobalSpace &K_gs, TriangleInformation *tinfo);
-
-        // Mesh refinement
-        void refineCoarseMeshToTarget(void);
-        void subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::helper::vector<Vec3> &subVertices, SeqTriangles &subTriangles);
-        void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
-        void movePoint(Vec3& pointToMove);
-        void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
 };
 
 

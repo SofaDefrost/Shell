@@ -28,9 +28,6 @@
 #include "TriangularBendingFEMForceField.h"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/helper/gl/template.h>
-#include <sofa/component/topology/TriangleData.inl>
-#include <sofa/component/topology/EdgeData.inl>
-#include <sofa/component/topology/PointData.inl>
 #include <sofa/helper/system/gl.h>
 #include <sofa/helper/gl/template.h>
 #include <sofa/helper/system/thread/debug.h>
@@ -42,6 +39,7 @@
 #include <assert.h>
 #include <map>
 #include <utility>
+#include <sofa/component/topology/TopologyData.inl>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 
 #include <sofa/simulation/common/Simulation.h>
@@ -110,19 +108,14 @@ inline Quat qDiffZ(const Quat& vertex, const Quat& Qframe)
 }
 
 // --------------------------------------------------------------------------------------
-// ---
+// ---  Topology Creation/Destruction functions
 // --------------------------------------------------------------------------------------
-template< class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleCreationFunction(unsigned int triangleIndex, void* param, TriangleInformation &/*tinfo*/, const Triangle& t, const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&)
+template<class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
 {
-    TriangularBendingFEMForceField<DataTypes> *ff= (TriangularBendingFEMForceField<DataTypes> *)param;
     if (ff)
     {
-        Index a = t[0];
-        Index b = t[1];
-        Index c = t[2];
-
-        ff->initTriangle(triangleIndex, a, b, c);
+        ff->initTriangle(triangleIndex, t[0], t[1], t[2]);
         ff->computeMaterialStiffness(triangleIndex);
     }
 }
@@ -141,7 +134,7 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , f_bendingRatio(initData(&f_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
 , refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
 , iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
-, nameTargetTopology(initData(&nameTargetTopology, "targetTopology","Targeted high resolution topology"))
+, targetTopology(initLink("targetTopology","Targeted high resolution topology"))
 , joinEdges(initData(&joinEdges, false, "joinEdges", "Join two edges into one"))
 , originalNodes(initData(&originalNodes, "originalNodes", "Positions of original nodes (prior to join)"))
 , originalTriangles(initData(&originalTriangles, "originalTriangles", "Original triangles (prior to join)"))
@@ -156,7 +149,9 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , exportAtBegin(initData(&exportAtBegin, false, "exportAtBegin", "export file at the initialization"))
 , exportAtEnd(initData(&exportAtEnd, false, "exportAtEnd", "export file when the simulation is finished"))
 , stepCounter(0)
+, triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
+    triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
 }
 
 // --------------------------------------------------------------------------------------
@@ -176,6 +171,7 @@ template <class DataTypes> void TriangularBendingFEMForceField<DataTypes>::handl
 template <class DataTypes>
 TriangularBendingFEMForceField<DataTypes>::~TriangularBendingFEMForceField()
 {
+    if(triangleHandler) delete triangleHandler;
 }
 
 // --------------------------------------------------------------------------------------
@@ -193,6 +189,10 @@ void TriangularBendingFEMForceField<DataTypes>::init()
             serr << "TriangularBendingFEMForceField: object must have a Triangular Set Topology."<<sendl;
             return;
     }
+
+    // Create specific handler for TriangleData
+    triangleInfo.createTopologicalEngine(_topology, triangleHandler);
+    triangleInfo.registerTopologicalData();
 
     if (joinEdges.getValue()) {
 
@@ -254,9 +254,7 @@ TODO: do this later, for now do it manualy and use edgeCombined
 
     if (refineMesh.getValue())
     {
-        _topologyTarget = NULL;
-        const core::objectmodel::ObjectRef& refTopo = nameTargetTopology.getValue();
-        _topologyTarget = refTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
+        sofa::core::topology::BaseMeshTopology* _topologyTarget = targetTopology.get();
 
         if (_topologyTarget)
         {
@@ -470,15 +468,10 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 
     for (int i=0; i<_topology->getNbTriangles(); ++i)
     {
-        TRQSTriangleCreationFunction(i, (void*) this, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
+        triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
     }
 
-    triangleInfo.setCreateFunction(TRQSTriangleCreationFunction);
-    triangleInfo.setCreateParameter( (void *) this );
-    triangleInfo.setDestroyParameter( (void *) this );
-
     triangleInfo.endEdit();
-
 
 //    testAddDforce();
 }
