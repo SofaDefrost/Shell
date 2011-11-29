@@ -28,7 +28,7 @@
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/component/container/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
-#include "initPluginShells.h"
+#include "../initPluginShells.h"
 
 
 namespace sofa

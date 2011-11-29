@@ -39,7 +39,7 @@
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 
 #include "../forcefield/TriangularBendingFEMForceField.h"
-#include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
+//#include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 
