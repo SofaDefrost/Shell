@@ -141,7 +141,7 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , edge1(initData(&edge1, "edge1", "Indices of the first edge to join")) 
 , edge2(initData(&edge2, "edge2", "Indices of the second edge to join")) 
 , edgeCombined(initData(&edgeCombined, "edgeCombined", "Indices after the join")) 
-, nodeMap(initData(&nodeMap, "nodeMap", "Map from combined dones to original nodes")) 
+, nodeMap(initData(&nodeMap, "nodeMap", "Map from combined dones to original nodes (usually not necessary)")) 
 , convergenceRatio(initData(&convergenceRatio, (Real)0.01, "convergenceRatio", "The ration at which the simulation converges to the original rest shape")) 
 , fakeStep(0)
 , exportFilename(initData(&exportFilename, "exportFilename", "file name to export coefficients into"))
@@ -196,6 +196,47 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
     if (joinEdges.getValue()) {
 
+        // Find the mapping between vertices
+        if (nodeMap.getValue().size() == 0) {
+            sofa::helper::vector<Index>& nmap = *nodeMap.beginEdit();
+            const VecCoord& x0 = *this->mstate->getX0();
+            const VecCoord& x0o = originalNodes.getValue();
+
+            for (unsigned int i=0; i<x0.size(); i++) {
+                bool bFound = false;
+                unsigned int j;
+                for (j=0; j<x0o.size(); j++) {
+                    if ((x0[i] - x0o[j]).norm() < 1e-10) {
+                        bFound = true;
+                        break;
+                    }
+                }
+                if (bFound) {
+                    nmap.push_back(j);
+                } else {
+                    // Node not found, try to look it up in edgeCombined
+                    const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
+                    sofa::helper::vector<Index>::const_iterator it = eC.begin();
+                    for (; it != eC.end(); it++) {
+                        if (*it == i) {
+                            nmap.push_back(0); // The value is not important, it is never used
+                            break;
+                        }
+                    }
+
+                    if (it == eC.end()) {
+                        serr << "Unable to find corresponding node in original mesh for node " <<
+                            i << "! You have to specify nodeMap manualy." << sendl;
+                        nodeMap.endEdit();
+                        return;
+                    }
+                }
+            }
+            nodeMap.endEdit();
+        }
+
+
+        // Initialize the fake rest shape
         x0fake = originalNodes.getValue();
         computeFakeStep();
 

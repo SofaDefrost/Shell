@@ -65,10 +65,12 @@
             youngModulus="5000" poissonRatio="0.33" thickness="0.1"
             joinEdges="true" convergenceRatio="0.001"
             edge1="0-7" edge2="48-55" edgeCombined="0-7"
-            nodeMap="0-47 56-80"
             originalNodes="@/MeshOriginal/frames.frames"
             originalTriangles="@/MeshOriginal/originalTopo.triangles"
             />
+        <!--
+            nodeMap="0-47 56-80"
+            -->
         <!--
              values for square.obj/squareJ.obj
             edge1="2 3" edge2="4 5" edgeCombined="2 3"
