@@ -137,8 +137,6 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
 , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
 , joinEdges(initData(&joinEdges, false, "joinEdges", "Join two edges into one"))
-//, originalNodes(initData(&originalNodes, "originalNodes", "Positions of original nodes (prior to join)"))
-//, originalTriangles(initData(&originalTriangles, "originalTriangles", "Original triangles (prior to join)"))
 , originalTopology(initLink("originalTopology","Topology of the original mesh (prior to join)"))
 , edge1(initData(&edge1, "edge1", "Indices of the first edge to join")) 
 , edge2(initData(&edge2, "edge2", "Indices of the second edge to join")) 
@@ -223,7 +221,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
                 bool bFound = false;
                 unsigned int j;
                 for (j=0; j<originalNodes.size(); j++) {
-                    if ((x0[i] - originalNodes[j]).norm() < 1e-10) {
+                    if ((x0[i] - originalNodes[j]).norm() < 1e-5) {
                         bFound = true;
                         break;
                     }
@@ -1634,9 +1632,8 @@ void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualP
         //        x0fake[i].getOrientation(),
         //        Vec3(1,1,1)/10);
         //}
-    }
-    if (joinEdges.getValue() && vparams->displayFlags().getShowForceFields()) {
 
+        // Draw lines to visualize the mapping between original and joined mesh
         const sofa::helper::vector<Index>& nMap = nodeMap.getValue();
         const VecCoord& x = *this->mstate->getX();
         const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
@@ -1649,13 +1646,13 @@ void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualP
             for (; it != eC.end(); it++) {
                 if (*it == i) break;
             }
-            if (it != eC.end()) break; // Found it!
+            if (it != eC.end()) continue; // Found it!
 
             // Draw a line
-            //if ((x[i].getCenter() - originalNodes[nMap[i]].getCenter()).norm() > 1e-8) {
+            if ((x[i].getCenter() - originalNodes[nMap[i]].getCenter()).norm() > 1e-8) {
                 points.push_back(x[i].getCenter());
                 points.push_back(originalNodes[nMap[i]].getCenter());
-            //}
+            }
         }
         if (points.size() > 0)
             vparams->drawTool()->drawLines(points, 1.0f, Vec4f(0.7, 0.0, 0.7, 1.0));
