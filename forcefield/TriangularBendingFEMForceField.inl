@@ -115,7 +115,8 @@ void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreate
 {
     if (ff)
     {
-        ff->initTriangle(triangleIndex, t[0], t[1], t[2]);
+        ff->initTriangleOnce(triangleIndex, t[0], t[1], t[2]);
+        ff->initTriangle(triangleIndex);
         ff->computeMaterialStiffness(triangleIndex);
     }
 }
@@ -136,8 +137,9 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
 , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
 , joinEdges(initData(&joinEdges, false, "joinEdges", "Join two edges into one"))
-, originalNodes(initData(&originalNodes, "originalNodes", "Positions of original nodes (prior to join)"))
-, originalTriangles(initData(&originalTriangles, "originalTriangles", "Original triangles (prior to join)"))
+//, originalNodes(initData(&originalNodes, "originalNodes", "Positions of original nodes (prior to join)"))
+//, originalTriangles(initData(&originalTriangles, "originalTriangles", "Original triangles (prior to join)"))
+, originalTopology(initLink("originalTopology","Topology of the original mesh (prior to join)"))
 , edge1(initData(&edge1, "edge1", "Indices of the first edge to join")) 
 , edge2(initData(&edge2, "edge2", "Indices of the second edge to join")) 
 , edgeCombined(initData(&edgeCombined, "edgeCombined", "Indices after the join")) 
@@ -196,17 +198,32 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
     if (joinEdges.getValue()) {
 
+        sofa::core::topology::BaseMeshTopology* otopo = originalTopology.get();
+        if (otopo == NULL || otopo->getNbTriangles() == 0)
+        {
+            serr << "originalTopology must be a Triangular Set Topology." << sendl;
+            return;
+        }
+
+        MechanicalState<DataTypes>* oMS = dynamic_cast<MechanicalState<DataTypes>*> (otopo->getContext()->getMechanicalState());
+        if (oMS == NULL) {
+            serr << "Cannot find Mechanical State for originalTopology" << sendl;
+            return;
+        }
+
+        const VecCoord& ox0 = *oMS->getX0();
+        originalNodes = ox0;
+
         // Find the mapping between vertices
         if (nodeMap.getValue().size() == 0) {
             sofa::helper::vector<Index>& nmap = *nodeMap.beginEdit();
             const VecCoord& x0 = *this->mstate->getX0();
-            const VecCoord& x0o = originalNodes.getValue();
 
             for (unsigned int i=0; i<x0.size(); i++) {
                 bool bFound = false;
                 unsigned int j;
-                for (j=0; j<x0o.size(); j++) {
-                    if ((x0[i] - x0o[j]).norm() < 1e-10) {
+                for (j=0; j<originalNodes.size(); j++) {
+                    if ((x0[i] - originalNodes[j]).norm() < 1e-10) {
                         bFound = true;
                         break;
                     }
@@ -235,9 +252,8 @@ void TriangularBendingFEMForceField<DataTypes>::init()
             nodeMap.endEdit();
         }
 
-
         // Initialize the fake rest shape
-        x0fake = originalNodes.getValue();
+        x0fake = originalNodes;
         computeFakeStep();
 
 #if 0
@@ -568,11 +584,12 @@ void TriangularBendingFEMForceField<DataTypes>::computeRotation(Quat& Qframe, co
 
 
 // --------------------------------------------------------------------------------------
-// --- Store the initial position of the nodes
+// --- Initialization of a triangle, is called *only* once
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const Index&a, const Index&b, const Index&c)
+void TriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int i, const Index&a, const Index&b, const Index&c)
 {
+
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
 
@@ -584,17 +601,72 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const 
     Index a0=a, b0=b, c0=c;
     if (joinEdges.getValue()) {
         const sofa::helper::vector<Index>& nMap = nodeMap.getValue();
+
+        const sofa::helper::vector<Index>& e1 = edge1.getValue();
+        const sofa::helper::vector<Index>& e2 = edge2.getValue();
+        const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
+
         a0 = nMap[a];
         b0 = nMap[b];
         c0 = nMap[c];
-        // Translate the indices to match original topology 
-        const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
+
+        // If the element lies on the joined edge, find the mapping between
+        // elements of combined and uncombined mesh
+        bool onEdge[3] = { false, false, false};
+        Index onEdgeIdx[3] = {0, 0, 0};
         for(unsigned int inode=0; inode < eC.size(); inode++) {
-            if (eC[inode] == a) a0 = originalTriangles.getValue()[i][0]; 
-            if (eC[inode] == b) b0 = originalTriangles.getValue()[i][1]; 
-            if (eC[inode] == c) c0 = originalTriangles.getValue()[i][2]; 
+            if (eC[inode] == a) { onEdge[0] = true; onEdgeIdx[0] = inode; }
+            if (eC[inode] == b) { onEdge[1] = true; onEdgeIdx[1] = inode; }
+            if (eC[inode] == c) { onEdge[2] = true; onEdgeIdx[2] = inode; }
+        }
+
+        if (onEdge[0] || onEdge[1] || onEdge[2]) {
+            // Element is on on the edge
+            sofa::core::topology::BaseMeshTopology* otopo = originalTopology.get();
+            if (otopo != NULL) {
+                // First try indices from edge1
+                if (onEdge[0]) a0 = e1[onEdgeIdx[0]]; 
+                if (onEdge[1]) b0 = e1[onEdgeIdx[1]]; 
+                if (onEdge[2]) c0 = e1[onEdgeIdx[2]]; 
+
+                if (otopo->getTriangleIndex(a0, b0, c0) == -1) {
+                    // Now try indices from edge2
+                    if (onEdge[0]) a0 = e2[onEdgeIdx[0]]; 
+                    if (onEdge[1]) b0 = e2[onEdgeIdx[1]]; 
+                    if (onEdge[2]) c0 = e2[onEdgeIdx[2]]; 
+
+                    if (otopo->getTriangleIndex(a0, b0, c0) == -1) {
+                        // Nothing found
+                        serr << "Cannot find a corresponding triangle in originalTopology for triangle " << i << sendl;
+                    }
+                }
+            }
         }
     }
+
+    tinfo->a0 = a0;
+    tinfo->b0 = b0;
+    tinfo->c0 = c0;
+
+    triangleInfo.endEdit();
+}
+
+// --------------------------------------------------------------------------------------
+// --- Initialization of a triangle, can be called more than once if joinEdges is true
+// --------------------------------------------------------------------------------------
+template <class DataTypes>
+void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
+{
+    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    TriangleInformation *tinfo = &triangleInf[i];
+
+    const Index a = tinfo->a;
+    const Index b = tinfo->b;
+    const Index c = tinfo->c;
+
+    const Index a0 = tinfo->a0;
+    const Index b0 = tinfo->b0;
+    const Index c0 = tinfo->c0;
 
     // Gets vertices of rest and initial positions respectively
     const VecCoord& x0 = (joinEdges.getValue()) ? x0fake : *this->mstate->getX0();
@@ -681,16 +753,15 @@ void TriangularBendingFEMForceField<DataTypes>::computeFakeStep()
     }
 
     const VecCoord& x0 = *this->mstate->getX0();
-    const VecCoord& x0o = originalNodes.getValue();
 
     for (unsigned int i=0; i< eC.size(); i++) {
 
-        if (e1[i] >= x0o.size()) {
+        if (e1[i] >= originalNodes.size()) {
             serr << "Index " << e1[i] << " in edge1 out of bounds" << sendl;
             continue;
         }
 
-        if (e2[i] >= x0o.size()) {
+        if (e2[i] >= originalNodes.size()) {
             serr << "Index " << e2[i] << " in edge2 out of bounds" << sendl;
             continue;
         }
@@ -700,13 +771,13 @@ void TriangularBendingFEMForceField<DataTypes>::computeFakeStep()
             continue;
         }
 
-        x0fake[ e1[i] ].getCenter() = x0o[ e1[i] ].getCenter() * fakeStep + x0[ eC[i] ].getCenter() * (1-fakeStep);
-        x0fake[ e2[i] ].getCenter() = x0o[ e2[i] ].getCenter() * fakeStep + x0[ eC[i] ].getCenter() * (1-fakeStep);
+        x0fake[ e1[i] ].getCenter() = originalNodes[ e1[i] ].getCenter() * fakeStep + x0[ eC[i] ].getCenter() * (1-fakeStep);
+        x0fake[ e2[i] ].getCenter() = originalNodes[ e2[i] ].getCenter() * fakeStep + x0[ eC[i] ].getCenter() * (1-fakeStep);
 
         //x0fake[ e1[i] ].getOrientation() = x0[ eC[i] ].getOrientation();
         //x0fake[ e2[i] ].getOrientation() = x0[ eC[i] ].getOrientation();
-        x0fake[ e1[i] ].getOrientation().slerp(x0[ eC[i] ].getOrientation(), x0o[ e1[i] ].getOrientation(), fakeStep, false);
-        x0fake[ e2[i] ].getOrientation().slerp(x0[ eC[i] ].getOrientation(), x0o[ e2[i] ].getOrientation(), fakeStep, false);
+        x0fake[ e1[i] ].getOrientation().slerp(x0[ eC[i] ].getOrientation(), originalNodes[ e1[i] ].getOrientation(), fakeStep, false);
+        x0fake[ e2[i] ].getOrientation().slerp(x0[ eC[i] ].getOrientation(), originalNodes[ e2[i] ].getOrientation(), fakeStep, false);
     }
 }
 
@@ -1207,12 +1278,9 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::Mecha
         // Update the rest shape and rest positions
         fakeStep += convergenceRatio.getValue();
         computeFakeStep();
-        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
         for (int i=0; i<nbTriangles; i++) {
-            const TriangleInformation &tinfo = triangleInf[i];
-            initTriangle(i, tinfo.a, tinfo.b, tinfo.c);
+            initTriangle(i);
         }
-        triangleInfo.endEdit();
     }
 
     for (int i=0; i<nbTriangles; i++)
@@ -1566,6 +1634,31 @@ void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualP
         //        x0fake[i].getOrientation(),
         //        Vec3(1,1,1)/10);
         //}
+    }
+    if (joinEdges.getValue() && vparams->displayFlags().getShowForceFields()) {
+
+        const sofa::helper::vector<Index>& nMap = nodeMap.getValue();
+        const VecCoord& x = *this->mstate->getX();
+        const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
+
+        std::vector<Vec<3,double> > points;
+
+        for (Index i=0; i<x.size(); i++) {
+            // First Try to look it up in edgeCombined
+            sofa::helper::vector<Index>::const_iterator it = eC.begin();
+            for (; it != eC.end(); it++) {
+                if (*it == i) break;
+            }
+            if (it != eC.end()) break; // Found it!
+
+            // Draw a line
+            //if ((x[i].getCenter() - originalNodes[nMap[i]].getCenter()).norm() > 1e-8) {
+                points.push_back(x[i].getCenter());
+                points.push_back(originalNodes[nMap[i]].getCenter());
+            //}
+        }
+        if (points.size() > 0)
+            vparams->drawTool()->drawLines(points, 1.0f, Vec4f(0.7, 0.0, 0.7, 1.0));
     }
 }
 

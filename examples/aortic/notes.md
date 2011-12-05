@@ -8,11 +8,6 @@ position.
 
  - same number of vertices 
 
-Second mesh
-
- - same triangle order
-    
-
   Scene
 ================================================================================
 
@@ -94,8 +89,6 @@ Also note that if the code to join meshes is used:
   * The *TriangleSetTopologyContainer* in the same node as
     *TriangularBendingFEMForceField* should hold the topology of the final
     mesh and *MechanicalObject* the nodes of the final mesh
-  * For now the order of the triangles in the final mesh has to be same as
-    in the original mesh.
 
 
 vim: ft=markdown tw=75
