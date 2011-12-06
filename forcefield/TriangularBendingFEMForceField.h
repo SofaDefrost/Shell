@@ -211,8 +211,9 @@ public:
         SingleLink<TriangularBendingFEMForceField<DataTypes>,
             sofa::core::topology::BaseMeshTopology,
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> originalTopology;
-        Data<sofa::helper::vector<Index> > edge1;
-        Data<sofa::helper::vector<Index> > edge2;
+        Data<sofa::helper::vector<int> > edge1;
+        Data<sofa::helper::vector<int> > edge2;
+        Data<sofa::helper::vector<int> > edge3;
         Data<sofa::helper::vector<Index> > edgeCombined;
         Data<sofa::helper::vector<Index> > nodeMap;
         Data<Real> convergenceRatio;
