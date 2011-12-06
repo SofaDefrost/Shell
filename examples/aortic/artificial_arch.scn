@@ -45,11 +45,11 @@
 	<Node name="Cylinder">
 
         <EulerImplicit />
-        <!--
+        
         <CGLinearSolver name="CG Linear Solver" iterations="20" tolerance="1.0e-9" threshold="1.0e-9"/>
-        -->
+        <!--
         <SparseLDLSolver />
-
+		-->
 	
         <TriangleSetTopologyContainer name="coarseTopo" src="@/Mesh/loader"/>
         <MechanicalObject name="MO" template="Rigid" position="@/Mesh/frames.frames" />

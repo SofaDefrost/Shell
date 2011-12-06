@@ -24,13 +24,12 @@
 		<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
         <TriangularBendingFEMForceField
 			bending="true"
-			convergenceRatio="0.1"
+			convergenceRatio="0.01"
 			edge1="0-7"
 			edge2="48-55"
 			edgeCombined="0-7"
 			joinEdges="true"			
-			originalNodes="@/splitMesh/frames.frames"
-			originalTriangles="@/splitMesh/topology.triangles"
+			originalTopology="@/splitMesh/topology"
 			poissonRatio="0.5"
 			thickness="0.1"
 			youngModulus="10000" />
