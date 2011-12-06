@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!--
+     Example scene to show how to connect RestShapeSpringsForceField to a mesh.
+-->
+<Node gravity="0 0 0">
+    <VisualStyle displayFlags="showVisual showBehavior" />
+
+    <Node name="splitMesh">
+        <VisualStyle displayFlags="showWireframe" />
+        <MeshObjLoader name="loader" filename="splitMesh.obj" />
+        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <TriangleSetTopologyContainer name="topology" src="@loader" />
+        <MechanicalObject template="Rigid" position="@frames.frames" />
+		<OglModel name="visual" color="0.75 0 0" />
+		<IdentityMapping input="@." output="@visual" />
+    </Node>
+
+    <Node name="joinedMesh">
+        <MeshObjLoader name="loader" filename="joinedMesh.obj"/>
+        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <MechanicalObject name="mechanicalObject" template="Rigid" position="@frames.frames" />
+    </Node>
+
+    <Node name="FixedPoints">
+        <!--
+             NOTE: You can use a combination of mesh loader & Vertex2Frame to
+             load the positions from a file instead of specifying them here. In
+             that case the file has to contain also the vertex normal for each
+             vertex So that Vertex2Frame can construct the frame properly.
+             Another option is not having the normals (and Vertex2Frame) and
+             specifying zero angular stiffness for the springs.
+             -->
+        <MechanicalObject
+            template="Rigid" name="points"
+            position="
+             0.707106 5.000000 -0.707107     0.653281  0.653282  0.270598  0.270598
+             1.000000 5.000000 -0.000001     0.533098  0.533098  0.46455   0.46455
+             0.707107 5.000000  0.707106     0.314743  0.314743  0.633196  0.633195
+            -0.000000 5.000000  1.000000    -0.048471  0.048471 -0.705444  0.705444
+            -0.707107 5.000000  0.707106     0.270598 -0.270598 -0.653281  0.653281
+            -1.000000 5.000000 -0.000001     0.533098 -0.533098 -0.46455   0.46455
+            -0.707106 5.000000 -0.707108     0.670294  0.670294 -0.22518  -0.22518
+             0.000001 5.000000 -1.000000     0.705444  0.705444  0.048471  0.048471
+             "
+             showObject="true" showObjectScale="0.1" />
+        <FixedConstraint indices="0-7" />
+    </Node>
+
+	<Node name="simulation">
+        <EulerImplicit />
+        <CGLinearSolver iterations="20" tolerance="1e-9" threshold="1e-9" />
+        <TriangleSetTopologyContainer src="@/joinedMesh/loader" />
+        <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
+		<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+
+        <!--
+             NOTE: You have to specify as many values for stiffness and
+             angularStiffness as there are points!
+             -->
+        <RestShapeSpringsForceField
+            template="Rigid" name="Springs"
+            external_rest_shape="/FixedPoints/points"
+            points="8-15"
+            external_points="0-7"
+            stiffness="5000 5000 5000 5000 5000 5000 5000 5000"
+            angularStiffness="5000 5000 5000 5000 5000 5000 5000 5000" />
+
+        <TriangularBendingFEMForceField
+			bending="true"
+			convergenceRatio="0.01"
+			edge1="0-7"
+			edge2="48-55"
+			edgeCombined="0-7"
+			joinEdges="true"			
+			originalTopology="@/splitMesh/topology"
+			poissonRatio="0.5"
+			thickness="0.1"
+			youngModulus="100000" />
+		<FixedConstraint indices="40-47" />
+		<OglModel name="visual" color="1 0.5 0.5" />
+		<IdentityMapping input="@." output="@visual" />
+	</Node>
+</Node>
