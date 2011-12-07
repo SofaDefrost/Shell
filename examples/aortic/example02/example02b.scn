@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<Node gravity="0 0 0">
+    <Node name="splitMesh">
+        <VisualStyle displayFlags="showWireframe" />
+        <MeshObjLoader name="loader" filename="splitMesh.obj" />
+        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <TriangleSetTopologyContainer name="topology" src="@loader" />
+        <MechanicalObject template="Rigid" position="@frames.frames" />
+		<OglModel name="visual" color="0.75 0 0" />
+		<IdentityMapping input="@." output="@visual" />
+    </Node>
+
+    <Node name="joinedMesh">
+        <MeshObjLoader name="loader" filename="joinedMesh.obj"/>
+        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <MechanicalObject name="mechanicalObject" template="Rigid" position="@frames.frames" />
+    </Node>
+	
+	<Node name="fixedPoints">
+		<VisualStyle displayFlags="showBehavior" />
+		<MechanicalObject
+			name="mechanicalObject"
+			position="
+				 0.000000 -0.500000 -1.000000 0 0 0 1
+				 0.382683 -0.500000 -0.923880 0 0 0 1
+				 0.707107 -0.500000 -0.707107 0 0 0 1
+				 0.923880 -0.500000 -0.382683 0 0 0 1
+				 1.000000 -0.500000  0.000000 0 0 0 1
+				 0.923880 -0.500000  0.382684 0 0 0 1
+				 0.707107 -0.500000  0.707107 0 0 0 1
+				 0.382683 -0.500000  0.923880 0 0 0 1
+				 0.000000 -0.500000  1.000000 0 0 0 1
+				-0.382683 -0.500000  0.923880 0 0 0 1
+				-0.707107 -0.500000  0.707107 0 0 0 1
+				-0.923880 -0.500000  0.382684 0 0 0 1
+				-1.000000 -0.500000 -0.000000 0 0 0 1
+				-0.923879 -0.500000 -0.382684 0 0 0 1
+				-0.707107 -0.500000 -0.707107 0 0 0 1
+				-0.382683 -0.500000 -0.923880 0 0 0 1
+				-0.382684  6.012416 -0.923880 0 0 0 1
+				-0.000001  6.012416 -1.000000 0 0 0 1
+				 0.382683  6.012416 -0.923880 0 0 0 1
+				 0.707106  6.012416 -0.707107 0 0 0 1
+				 0.923879  6.012416 -0.382684 0 0 0 1
+				 0.999999  6.012416 -0.000001 0 0 0 1
+				 0.923879  6.012416  0.382683 0 0 0 1
+				 0.707106  6.012416  0.707106 0 0 0 1
+				 0.382683  6.012416  0.923879 0 0 0 1
+				-0.000000  6.012416  0.999999 0 0 0 1
+				-0.382684  6.012416  0.923879 0 0 0 1
+				-0.707107  6.012416  0.707107 0 0 0 1
+				-0.923880  6.012416  0.382683 0 0 0 1
+				-1.000001  6.012416 -0.000001 0 0 0 1
+				-0.923880  6.012416 -0.382684 0 0 0 1
+				-0.707107  6.012416 -0.707107 0 0 0 1"
+			template="Rigid" />
+		<FixedConstraint indices="0-31" />
+	</Node>
+
+	<Node name="simulation">
+        <EulerImplicit />
+        <CGLinearSolver iterations="20" tolerance="1e-9" threshold="1e-9" />
+        <TriangleSetTopologyContainer src="@/joinedMesh/loader" />
+        <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
+		<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+		<RestShapeSpringsForceField
+			angularStiffness="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+			external_points="0-31"
+			external_rest_shape="/fixedPoints/mechanicalObject"
+			points="5-20 159-174"
+			stiffness="5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000"
+			template="Rigid" />
+		<Node>
+			<VisualStyle displayFlags="showBehavior" />
+			<TriangularBendingFEMForceField
+				bending="true"
+				convergenceRatio="0.01"
+				edge1="211 218 265 261 75 82 132"
+				edge2="230 219 252 102 94 83 117"
+				edgeCombined="224 213 258 254 92 81 128"
+				joinEdges="true"			
+				originalTopology="@/splitMesh/topology"
+				poissonRatio="0.5"
+				thickness="0.1"
+				youngModulus="10000" />
+		</Node>
+		<OglModel name="visual" color="1 0.5 0.5" />
+		<IdentityMapping input="@." output="@visual" />
+	</Node>
+</Node>
