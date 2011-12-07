@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Node>
+<Node gravity=" 0 0 0">
     <Node name="splitMesh">
         <VisualStyle displayFlags="showWireframe" />
         <MeshObjLoader name="loader" filename="splitMesh.obj" />
@@ -22,28 +22,31 @@
         <TriangleSetTopologyContainer src="@/joinedMesh/loader" />
         <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
 		<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
-        <TriangularBendingFEMForceField
-			bending="true"
-			convergenceRatio="0.01"
-			edge1="211 218 265 261 75 82 132"
-			edge2="230 219 252 102 94 83 117"
-			edgeCombined="224 213 258 254 92 81 128"
-			joinEdges="true"			
-			originalTopology="@/splitMesh/topology"
-			poissonRatio="0.5"
-			thickness="0.1"
-			youngModulus="10000" />
-		<!--<TriangularBendingFEMForceField
-			bending="true"
-			convergenceRatio="0.01"
-			edge1="145 211 218 265 261 75 82 132 126"
-			edge2="145 230 219 252 102 94 83 117 126"
-			edgeCombined="141 224 213 258 254 92 81 128 122"
-			joinEdges="true"			
-			originalTopology="@/splitMesh/topology"
-			poissonRatio="0.5"
-			thickness="0.1"
-			youngModulus="10000" />-->
+		<Node>
+			<VisualStyle displayFlags="showBehavior" />
+			<TriangularBendingFEMForceField
+				bending="true"
+				convergenceRatio="0.01"
+				edge1="211 218 265 261 75 82 132"
+				edge2="230 219 252 102 94 83 117"
+				edgeCombined="224 213 258 254 92 81 128"
+				joinEdges="true"			
+				originalTopology="@/splitMesh/topology"
+				poissonRatio="0.5"
+				thickness="0.1"
+				youngModulus="10000" />
+			<!--<TriangularBendingFEMForceField
+					bending="true"
+					convergenceRatio="0.01"
+					edge1="145 211 218 265 261 75 82 132 126"
+					edge2="145 230 219 252 102 94 83 117 126"
+					edgeCombined="141 224 213 258 254 92 81 128 122"
+					joinEdges="true"			
+					originalTopology="@/splitMesh/topology"
+					poissonRatio="0.5"
+					thickness="0.1"
+					youngModulus="10000" />-->
+		</Node>
 		<FixedConstraint indices="5-20 159-174" />
 		<OglModel name="visual" color="1 0.5 0.5" />
 		<IdentityMapping input="@." output="@visual" />

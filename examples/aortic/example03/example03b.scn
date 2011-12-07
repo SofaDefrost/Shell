@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Node>
+<Node gravity=" 0 0 0">
     <Node name="splitMesh">
         <VisualStyle displayFlags="showWireframe" />
         <MeshObjLoader name="loader" filename="splitMesh.obj" />
@@ -22,18 +22,21 @@
         <TriangleSetTopologyContainer src="@/joinedMesh/loader" />
         <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
 		<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
-        <TriangularBendingFEMForceField
-			bending="true"
-			convergenceRatio="0.01"
-			edge1       ="140  95  84 104  97  80 108 100 111 101  91  88 107 106 143 142 103 139 138 137"
-			edge2       ="141  75  83 105  98  79 109  72  77 102  92  87 145 146 148 149 151 152 154 155"
-			edge3       ="150  -1  -1 147  -1  -1 144  -1  -1 153  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1"
-			edgeCombined="126  88  79 123  90  76 120  92  94 129  85  82 121 122 124 125 127 128 130 131"
-			joinEdges="true"			
-			originalTopology="@/splitMesh/topology"
-			poissonRatio="0.5"
-			thickness="0.1"
-			youngModulus="10000" />
+		<Node>
+			<VisualStyle displayFlags="showBehavior" />
+			<TriangularBendingFEMForceField
+				bending="true"
+				convergenceRatio="0.01"
+				edge1       ="140  95  84 104  97  80 108 100 111 101  91  88 107 106 143 142 103 139 138 137"
+				edge2       ="141  75  83 105  98  79 109  72  77 102  92  87 145 146 148 149 151 152 154 155"
+				edge3       ="150  -1  -1 147  -1  -1 144  -1  -1 153  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1"
+				edgeCombined="126  88  79 123  90  76 120  92  94 129  85  82 121 122 124 125 127 128 130 131"
+				joinEdges="true"			
+				originalTopology="@/splitMesh/topology"
+				poissonRatio="0.5"
+				thickness="0.1"
+				youngModulus="10000" />
+		</Node>
 		<FixedConstraint indices="5-20 188-199" />
 		<OglModel name="visual" color="0 0 1" />
 		<IdentityMapping input="@." output="@visual" />

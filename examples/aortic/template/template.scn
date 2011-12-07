@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Node>
+<Node gravity=" 0 0 0">
     <Node name="splitMesh">
         <VisualStyle displayFlags="showWireframe" />
         <MeshObjLoader name="loader" filename="splitMesh.obj" />
@@ -22,17 +22,20 @@
         <TriangleSetTopologyContainer src="@/joinedMesh/loader" />
         <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
 		<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
-        <TriangularBendingFEMForceField
-			bending="true"
-			convergenceRatio="0.01"
-			edge1="0-7"
-			edge2="48-55"
-			edgeCombined="0-7"
-			joinEdges="true"			
-			originalTopology="@/splitMesh/topology"
-			poissonRatio="0.5"
-			thickness="0.1"
-			youngModulus="10000" />
+        <Node>
+			<VisualStyle displayFlags="showBehavior" />
+			<TriangularBendingFEMForceField
+				bending="true"
+				convergenceRatio="0.01"
+				edge1="0-7"
+				edge2="48-55"
+				edgeCombined="0-7"
+				joinEdges="true"			
+				originalTopology="@/splitMesh/topology"
+				poissonRatio="0.5"
+				thickness="0.1"
+				youngModulus="10000" />
+		</Node>
 		<FixedConstraint indices="8-15 40-47" />
 		<OglModel name="visual" color="1 0.5 0.5" />
 		<IdentityMapping input="@." output="@visual" />
