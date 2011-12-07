@@ -18,8 +18,8 @@
 	
     <Node name="TargetMesh">
         <MeshObjLoader name="targetMesh" filename="../mesh/aneurysmHighRes.obj"/>
-        <TriangleSetTopologyContainer name="targetTopo"/>
-        <MechanicalObject name="targetMesh_MO" template="Vec3d"/>
+        <TriangleSetTopologyContainer name="targetTopo" src="@targetMesh" />
+        <!-- <MechanicalObject name="targetMesh_MO" template="Vec3d"/> -->
     </Node>
 
 
@@ -69,11 +69,18 @@
         <TriangularShellForceField name="FEM"
         <BezierTriangularBendingFEMForceField name="FEM"
         -->
+        <FixedRotationConstraint FixedZRotation="true" />
         <TriangularBendingFEMForceField name="FEM" bending="true"
             youngModulus="5000000" poissonRatio="0.45" thickness="0.05" />
 
+        <!--
+        <OglModel name="Visual" color="green"/>
+        <IdentityMapping input="@coarseMesh_MO" output="@Visual"/>
+        -->
+
         <Node name="SubTriangles">
 
+            <!--
             <TriangleSubdivisionTopologicalMapping name="subMapping"
                 input="@../coarseTopo" output="@../coarseTopo"
                 inputPositions="@../coarseMesh_MO.position" inputTriangles="@../coarseTopo.triangles"
@@ -81,6 +88,11 @@
             <TriangleSetTopologyContainer  name="subTrianglesTopo"
                 position="@subMapping.outputPositions" triangles="@subMapping.outputTriangles" />
             <MechanicalObject name="subCoarse_MO" rest_position="@subMapping.outputPositions" />
+                -->
+
+            <TriangleSetTopologyContainer  name="subTrianglesTopo"
+                position="@/TargetMesh/targetTopo.position" triangles="@/TargetMesh/targetTopo.triangles" />
+            <MechanicalObject name="subCoarse_MO" rest_position="@/TargetMesh/targetTopo.position" />
             <BendingPlateMechanicalMapping printLog="1" object1="coarseMesh_MO" object2="subCoarse_MO" name="MappingShells" isMechanical="false"/>
 
             <Node>
