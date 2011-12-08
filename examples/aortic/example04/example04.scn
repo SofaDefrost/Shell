@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<Node gravity=" 0 0 0">
+    <Node name="splitMesh">
+        <VisualStyle displayFlags="showWireframe" />
+        <MeshObjLoader name="loader" filename="splitMesh.obj" />
+        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <TriangleSetTopologyContainer name="topology" src="@loader" />
+        <MechanicalObject template="Rigid" position="@frames.frames" />
+		<OglModel name="visual" color="0.75 0 0" />
+		<IdentityMapping input="@." output="@visual" />
+    </Node>
+
+    <Node name="joinedMesh">
+        <MeshObjLoader name="loader" filename="joinedMesh.obj"/>
+        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <MechanicalObject name="mechanicalObject" template="Rigid" position="@frames.frames" />
+    </Node>
+
+	<Node name="simulation">
+        <EulerImplicit />
+        <CGLinearSolver iterations="20" tolerance="1e-9" threshold="1e-9" />
+        <TriangleSetTopologyContainer src="@/joinedMesh/loader" />
+        <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
+		<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+        <Node>
+			<VisualStyle displayFlags="showBehavior" />
+			<TriangularBendingFEMForceField
+				bending="true"
+				convergenceRatio="0.01"
+				edge1="0-7"
+				edge2="63 62 61 60 59 58 57 56"
+				edgeCombined="52 44 38 30 24 16 10 2"
+				joinEdges="true"
+				nodeMap="40 55  0  8 23 24 39
+				         25 22  9  0 54 41 38
+						 42 53  0 10 21 26 37
+						 27 20 11  0 52 43 36
+						 44 51  0 12 19 28 35
+						 29 18 13  0 50 45 34
+						 46 49  0 14 17 30 33
+						 31 16 15  0 48 47 32"
+				originalTopology="@/splitMesh/topology"
+				poissonRatio="0.5"
+				thickness="0.1"
+				youngModulus="10000" />
+		</Node>
+		<OglModel name="visual" color="1 0.5 0.5" />
+		<IdentityMapping input="@." output="@visual" />
+	</Node>
+</Node>
