@@ -44,6 +44,7 @@
 				thickness="0.1"
 				youngModulus="10000" />
 		</Node>
+		<FixedConstraint indices="2 52" />
 		<OglModel name="visual" color="1 0.5 0.5" />
 		<IdentityMapping input="@." output="@visual" />
 	</Node>
