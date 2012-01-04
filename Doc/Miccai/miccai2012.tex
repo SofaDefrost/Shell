@@ -1,0 +1,104 @@
+
+%%%%%%%%%%%%%%%%%%%%%%% file typeinst.tex %%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This is the LaTeX source for the instructions to authors using
+% the LaTeX document class 'llncs.cls' for contributions to
+% the Lecture Notes in Computer Sciences series.
+% http://www.springer.com/lncs       Springer Heidelberg 2006/05/04
+%
+% It may be used as a template for your own input - copy it
+% to a new file with a new name and use it as the basis
+% for your article.
+%
+% NB: the document class 'llncs' has its own and detailed documentation, see
+% ftp://ftp.springer.de/data/pubftp/pub/tex/latex/llncs/latex2e/llncsdoc.pdf
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\documentclass[runningheads,a4paper]{llncs}
+
+\usepackage[colorlinks=true,linkcolor=black,citecolor=black,pdfnewwindow=true,urlcolor=blue,filecolor=blue,baseurl=./]{hyperref}
+\usepackage{url}
+
+% \newcommand{\mycite}[2]{\url{#1}{\cite{#2}}}
+% \newcommand{\mycite}[2]{\url{#1}:\cite{#2}}
+% \newcommand{\mycite}[2]{\href{http://twitter.com/home}{Twitter}.}
+%\newcommand{\mycite}[2]{\href{./refs/#1}{\cite{#2}}}
+\newcommand{\mycite}[2]{\cite{#2}}
+%\newcommand{\myciteurl}[2]{\href{#1}{\cite{#2}}}
+
+
+\usepackage{amssymb}
+\setcounter{tocdepth}{3}
+\usepackage{graphicx}
+
+\usepackage{url}
+%\urldef{\mailsa}\path|{alfred.hofmann, ursula.barth, ingrid.haas, frank.holzwarth,|
+%\urldef{\mailsb}\path|anna.kramer, leonie.kunz, christine.reiss, nicole.sator,|
+%\urldef{\mailsc}\path|erika.siebert-cole, peter.strasser, lncs}@springer.com|    
+%\newcommand{\keywords}[1]{\par\addvspace\baselineskip
+%\noindent\keywordname\enspace\ignorespaces#1}
+
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage[tight]{subfigure}
+\usepackage{listings}
+\definecolor{darkgray}{rgb}{0.2,0.2,0.2}
+
+\lstset{language=c++,basicstyle=\scriptsize\sffamily,tabsize=2,framexleftmargin=5mm, frame=shadowbox, framesep=3pt,rulesepcolor=\color{darkgray},rulesep=.100pt,keywordstyle=\bf\color{blue},commentstyle=\color{magenta},stringstyle=\color{red},numbers=left,numberstyle=\tiny,numbersep=10pt,breaklines=true,showstringspaces=false,columns=flexible}
+
+\newcommand{\tomas}[1]{{\color{red}{\textbf{Tom: #1}}}}
+\newcommand{\stefan}[1]{{\color{magenta}{\textbf{St: #1}}}}
+\newcommand{\christian}[1]{{\color{green}{\textbf{Ch: #1}}}}
+\newcommand{\tobias}[1]{{\color{bleu}{\textbf{Tob: #1}}}}
+
+
+\newcommand{\myvec}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\mymat}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\Vx}{\myvec{x}} % position vector
+\newcommand{\Vv}{\myvec{v}} % velocity vector
+\newcommand{\Va}{\myvec{a}} % acceleration vector
+\newcommand{\Vdv}{\myvec{dv}} % change of velocity vector (unknown in implicit CG, and used in constraint solver
+
+
+
+
+
+% \newcommand{\mysubsection}[1]{\noindent \textbf{#1: }}
+\newcommand{\mysubsection}[1]{\textbf{#1: }}
+% \newcommand{\mysubsection}[1]{\subsection{#1}}
+
+%\usepackage{miseenpage}
+
+\begin{document}
+
+\mainmatter            % start of your contributions
+
+\title{Towards planning of infantile cardiac surgery based on simulation}
+
+\author{PaperID:}
+
+\maketitle
+
+\begin{abstract}
+In this paper...
+\end{abstract}
+
+\section{Introduction}
+
+\christian{We can put any comment...}
+\tomas{People have different colors}
+
+Position vector: $\Vx$
+
+Matrices are written as $\mymat{M}$
+
+
+
+
+\bibliographystyle{abbrv}
+\bibliography{miccai2012}
+
+\end{document}
+
