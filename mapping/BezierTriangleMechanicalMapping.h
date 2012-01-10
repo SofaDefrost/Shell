@@ -36,14 +36,22 @@
 
 #include <sofa/helper/gl/GLSLShader.h>
 
+#include <sofa/component/linearsolver/CompressedRowSparseMatrix.h>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
-#include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
+//#include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
+#include <sofa/simulation/common/AnimateBeginEvent.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 
 #include <sofa/helper/system/thread/CTime.h>
 
 #include "../forcefield/BezierTriangularBendingFEMForceField.h"
+
+// Use quaternions for rotations
+//#define ROTQ
+// We have own code to check the getJ() because checkJacobian sucks (at this
+// point in time).
+//#define CHECK_J
 
 namespace sofa
 {
@@ -55,7 +63,6 @@ namespace mapping
 {
 
 using namespace sofa::defaulttype;
-//using namespace sofa::component::forcefield;
 using namespace sofa::component::topology;
 using namespace sofa::helper::system::thread;
 using namespace core::topology;
@@ -75,30 +82,45 @@ public:
     typedef typename In::Coord                  InCoord;
     typedef typename In::Deriv                  InDeriv;
     typedef typename In::MatrixDeriv            InMatrixDeriv;
+    typedef typename In::Real                   InReal;
 
     typedef typename Out::VecCoord              OutVecCoord;
     typedef typename Out::VecDeriv              OutVecDeriv;
     typedef typename Out::Coord                 OutCoord;
     typedef typename Out::Deriv                 OutDeriv;
     typedef typename Out::MatrixDeriv           OutMatrixDeriv;
-    typedef typename Out::Real                  Real;
+    typedef typename Out::Real                  OutReal;
+
+    typedef InReal Real;
 
     typedef Vec<3, Real> Vec3;
+    typedef Mat<3, 3, Real> Mat33;
 
+    typedef helper::Quater<Real> Quat;
+
+
+    typedef sofa::core::topology::BaseMeshTopology::index_type Index;
     //typedef BaseMeshTopology::Edge              Edge;
     typedef BaseMeshTopology::SeqEdges          SeqEdges;
     typedef BaseMeshTopology::Triangle          Triangle;
     typedef BaseMeshTopology::SeqTriangles      SeqTriangles;
 
+    enum { NIn = sofa::defaulttype::DataTypeInfo<InDeriv>::Size };
+    enum { NOut = sofa::defaulttype::DataTypeInfo<OutDeriv>::Size };
+    typedef defaulttype::Mat<NOut, NIn, Real> MBloc;
+    typedef sofa::component::linearsolver::CompressedRowSparseMatrix<MBloc> MatrixType;
 
     BezierTriangleMechanicalMapping(core::State<In>* from, core::State<Out>* to)
     : Inherit(from, to)
     , inputTopo(NULL)
     , outputTopo(NULL)
+    , normals(initData(&normals, "normals","Node normals at the rest shape"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
     , verticesTarget(OutVecCoord()) // dummy initialization
     , trianglesTarget(SeqTriangles()) // dummy initialization
+    , matrixJ()
+    , updateJ(false)
     {
     }
 
@@ -112,9 +134,51 @@ public:
 
 
     void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in);
+    const sofa::defaulttype::BaseMatrix* getJ(const core::MechanicalParams * mparams);
     void applyJ(const core::MechanicalParams *mparams, Data<OutVecDeriv>& out, const Data<InVecDeriv>& in);
     void applyJT(const core::MechanicalParams *mparams, Data<InVecDeriv>& out, const Data<OutVecDeriv>& in);
     void applyJT(const core::ConstraintParams *cparams, Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in);
+
+
+#if 0
+    /// For checkJacobian and to hide some deprecation warnings
+    const sofa::defaulttype::BaseMatrix* getJ() { return getJ(NULL); }
+    void applyJ(Data<OutVecDeriv>& out, const Data<InVecDeriv>& in)
+    { applyJ(NULL, out, in); }
+    void applyJ( OutVecDeriv& out, const InVecDeriv& in)
+    {
+        Data<OutVecDeriv> dout;
+        Data<InVecDeriv> din;
+        *din.beginEdit() = in;
+        din.endEdit();
+        dout.beginEdit()->resize(out.size());
+        dout.endEdit();
+        applyJ(NULL, dout, din);
+        out = dout.getValue();
+    }
+    void applyJT(InVecDeriv& out, const OutVecDeriv& in)
+    {
+        Data<OutVecDeriv> din;
+        Data<InVecDeriv> dout;
+        *din.beginEdit() = in;
+        din.endEdit();
+        dout.beginEdit()->resize(out.size());
+        dout.endEdit();
+        applyJT(NULL, dout, din);
+        out = dout.getValue();
+    }
+    ///
+#endif
+
+
+    void handleEvent(sofa::core::objectmodel::Event *event) {
+        if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
+        {
+            //std::cout << "begin\n";
+            // We have to update the matrix at every step
+            updateJ = true;
+        }
+    }
 
 protected:
 
@@ -122,10 +186,13 @@ protected:
     : Inherit()
     , inputTopo(NULL)
     , outputTopo(NULL)
+    , normals(initData(&normals, "normals","Node normals at the rest shape"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
     , verticesTarget(OutVecCoord()) // dummy initialization
     , trianglesTarget(SeqTriangles()) // dummy initialization
+    , matrixJ()
+    , updateJ(false)
     {
     }
 
@@ -143,6 +210,9 @@ protected:
         Vec3 P2_P0;
         Vec3 P2_P1;
 
+        // Contains the list of poinst connected to this triangle
+        sofa::helper::vector<int> attachedPoints;
+
     } TriangleInformation;
 
         helper::gl::GLSLShader shader;
@@ -150,6 +220,7 @@ protected:
         BaseMeshTopology* inputTopo;
         BaseMeshTopology* outputTopo;
 
+        Data< helper::vector<Vec3> > normals;
         Data<bool> measureError;
         SingleLink<BezierTriangleMechanicalMapping<TIn, TOut>,
             sofa::core::topology::BaseMeshTopology,
@@ -166,8 +237,12 @@ protected:
 
         helper::vector<TriangleInformation> triangleInfo;
 
+        std::auto_ptr<MatrixType> matrixJ;
+        bool updateJ;
+
         // Pointer on the topological mapping to retrieve the list of edges
-        TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
+        // XXX: The edges are no longer there!!!
+        //TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
 
         void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
         void MeasureError();
@@ -176,15 +251,14 @@ protected:
         void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals);
 
         // Computes the barycentric coordinates of a vertex within a triangle
-        void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c);
+        void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c, bool bConstraint = true);
 
+        // NOTE: The following funcitons return *square* of the distance!
         Real FindClosestPoint(unsigned int& closestVerticex, const Vec3& point, const OutVecCoord &inVertices);
         Real FindClosestEdge(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges);
         Real FindClosestTriangle(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
 
-        // Contains the list of base triangles a vertex belongs to
-        sofa::helper::vector<int> listBaseTriangles;
-        // Contains the barycentric coordinates of the same vertex within all base triangles
+        // Contains the barycentric coordinates of the point within a triangle
         sofa::helper::vector<Vec3> barycentricCoordinates;
 };
 
