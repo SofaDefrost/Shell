@@ -78,8 +78,8 @@ BezierTriangularBendingFEMForceField<DataTypes>::BezierTriangularBendingFEMForce
 : f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson's ratio in Hooke's law"))
 , f_young(initData(&f_young,(Real)3000.,"youngModulus","Young's modulus in Hooke's law"))
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
-, triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 , normals(initData(&normals, "normals","Node normals at the rest shape"))
+, triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
     triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
 }
@@ -128,7 +128,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
     } else if (normals.getValue().size() != this->mstate->getX0()->size()) {
         serr << "Normals count doesn't correspond with nodes count" << sendl;
         return;
-    } 
+    }
 
     // Create specific handler for TriangleData
     triangleInfo.createTopologicalEngine(_topology, triangleHandler);
@@ -448,7 +448,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(Triang
 
     // compute the orthogonal frame directions
     Vec3 Y,Z;
-    if (X1.norm() > 1e-20 && Y1.norm() > 1e-20 && fabs(1-dot(X1,Y1)) >1e-20 )
+    Real X1n = X1.norm(), Y1n = Y1.norm();
+    if (X1n > 1e-20 && Y1n > 1e-20 && fabs(1-dot(X1,Y1)/(X1n*Y1n)) >1e-20 )
     {
         X1.normalize();
         //Y1.normalize();
