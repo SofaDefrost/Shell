@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Node name="root" dt="0.02" gravity="0 0 0">
 
-    <VisualStyle displayFlags="showVisual showBehaviorModels" />
+    <VisualStyle displayFlags="showVisual" />
 
     <CollisionPipeline verbose="0"/>
     <BruteForceDetection name="N2"/>
@@ -10,7 +10,16 @@
     <CollisionGroup/>
 
     <Node name="Mesh">
-        <MeshObjLoader name="mesh" filename="../mesh/sphere10.obj"/>
+        <MeshObjLoader name="mesh" filename="../mesh/sphere10.obj" flipNormals="false"/>
+        <!--
+        <Vertex2Frame name="vertex2Frame" template="Rigid"
+                      vertices="@coarseMesh.vertices" normals="@coarseMesh.normals"
+                      invertNormals="false"/>
+                      -->
+    </Node>
+
+    <Node name="MeshFine">
+        <MeshObjLoader name="mesh" filename="../mesh/sphere40.obj" flipNormals="false"/>
         <!--
         <Vertex2Frame name="vertex2Frame" template="Rigid"
                       vertices="@coarseMesh.vertices" normals="@coarseMesh.normals"
@@ -38,31 +47,54 @@
 
         <UniformMass showAxisSizeFactor="0.1" totalmass="1"/>
 
-        <FixedConstraint indices="0 1" />
+        <FixedConstraint indices="0" />
 
         <!--
         <TriangularBendingFEMForceField name="FEM" bending="true"
         <TriangularShellForceField name="FEM"
         -->
-        <BezierTriangularBendingFEMForceField name="FEM"
+        <BezierTriangularBendingFEMForceField name="FEM" normals="@/Mesh/mesh.normalsList"
             youngModulus="1.092e6" poissonRatio="0.33" thickness="0.1"/>
 
-        <OglModel name="Visual" color="green"/>
-        <IdentityMapping input="@." output="@Visual"/>
-
         <!--
+        <Node>
+            <OglModel name="Visual" color="green"/>
+            <TriangleSetTopologyContainer name="baseTriangles"
+                position="@/Mesh/mesh.position"
+                edges="@/Mesh/mesh.edges"
+                triangles="@/Mesh/mesh.triangles" />
+
+            <MechanicalObject name="MO" template="Vec3d" rest_position="@/Mesh/mesh.position" />
+
+            <TriangleSetGeometryAlgorithms name="GeomAlgo" template="Vec3d" drawEdges="1" drawColorEdges="0.2 1 0.2" />
+            <IdentityMapping input="@.." output="@MO"/>
+        </Node>
+        -->
+
+        
         <Node name="SubTriangles">
-            <TriangleSetTopologyContainer name="subTriangles"/>
-            <TriangleSubdivisionTopologicalMapping
-                object1="baseTriangles" object2="subTriangles" subdivisions="4"/>
-            <MechanicalObject name="subPoints" showIndices="false" showIndicesScale="0.0003"/>
+            <!--
+            <TriangleSubdivisionTopologicalMapping name="subMapping"
+                input="@../baseTriangles" output="@../baseTriangles"
+                inputPositions="@../sphere.position" inputTriangles="@../baseTriangles.triangles"
+                subdivisions="3"/>
+            <TriangleSetTopologyContainer  name="subTrianglesTopo"
+                position="@subMapping.outputPositions" triangles="@subMapping.outputTriangles" />
+                -->
+            <TriangleSetTopologyContainer name="subTrianglesTopo" src="@/MeshFine/mesh" />
+            <MechanicalObject name="subPoints" rest_position="@subTrianglesTopo.position" />
+
+            <!--
             <BendingPlateMechanicalMapping input="@.." output="@." />
+            -->
+            <BezierTriangleMechanicalMapping input="@.." output="@." normals="@/Mesh/mesh.normalsList"
+                checkJacobian="false" printLog="true" />
+            <!--<TriangleSetGeometryAlgorithms name="GeomAlgo" template="Vec3d" drawEdges="1" drawColorEdges="1 0.2 0.2" />-->
             <Node>
                 <OglModel name="Visual" color="red"/>
                 <IdentityMapping input="@../subPoints" output="@Visual"/>
             </Node>
         </Node>
-        -->
 
     </Node>
 </Node>
