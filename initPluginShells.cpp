@@ -78,15 +78,15 @@ namespace component
 
 	const char* getModuleComponentList()
 	{
-		std::string commonentlist;
+		std::string componentlist;
 		
-		commonentlist += " TriangularBendingFEMForceField";
-		commonentlist += " BendingPlateMechanicalMapping";
-		//commonentlist += " BezierTriangleMechanicalMapping";
-		commonentlist += " BezierTriangularBendingFEMForceField";
-		commonentlist += " TriangularShellForceField";
-		//commonentlist += "";
-		return commonentlist.c_str();
+		componentlist += " TriangularBendingFEMForceField";
+		componentlist += " BendingPlateMechanicalMapping";
+		componentlist += " BezierTriangleMechanicalMapping";
+		componentlist += " BezierTriangularBendingFEMForceField";
+		componentlist += " TriangularShellForceField";
+		//componentlist += "";
+		return componentlist.c_str();
 	}
 
 
