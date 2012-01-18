@@ -1,4 +1,3 @@
-
 %%%%%%%%%%%%%%%%%%%%%%% file typeinst.tex %%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % This is the LaTeX source for the instructions to authors using
@@ -59,7 +58,7 @@
 \newcommand{\Vx}{\myvec{x}} % position vector
 \newcommand{\Vv}{\myvec{v}} % velocity vector
 \newcommand{\Va}{\myvec{a}} % acceleration vector
-\newcommand{\Vdv}{\myvec{dv}} % change of velocity vector (unknown in implicit CG, and used in constraint solver
+\newcommand{\Vdv}{\myvec{dv}} % change of velocity vector (unknown in implicit CG, and used in constraint solver)
 
 
 
@@ -77,24 +76,108 @@
 
 \title{Towards planning of infantile cardiac surgery based on simulation}
 
-\author{PaperID:}
+\author{PaperID:} % TODO
 
 \maketitle
 
 \begin{abstract}
+% TODO
 In this paper...
 \end{abstract}
 
-\section{Introduction}
+\section{Introduction} % {{{
 
-\christian{We can put any comment...}
-\tomas{People have different colors}
+%%%%%%
+%
+%\christian{We can put any comment...}
+%\tomas{People have different colors}
+%
+%Position vector: $\Vx$
+%
+%Matrices are written as $\mymat{M}$
+%
+%%%%%%
 
-Position vector: $\Vx$
+The congenital heart diseases have become quite common \tomas{\ldots}.
+While they are very much treatable there are a lot of difficulties involved
+with the process. There is rarely only a single flaw, the lesions usually
+appear in multiples. Since most of the lesions would be fatal if untreated
+the first surgery has to be performed shortly after the birth, often
+followed with several other surgeries before the age of one year. At such
+young age the heart and blood vessels are very small which requires skills
+of the surgeon. Further more many of the critical decisions cannot be
+concluded from the CT scan or artificial model and have to be done on site
+(e.g. how exactly perform the cut and stitching). This is however in direct
+contrast with the requirement on the speed at which the operation has to be
+performed. During the surgery the blood flow has to be sustained by other
+means (\tomas{pig's heart?}) which puts overall pressure on the organism
+and thus cannot be kept for too long.
 
-Matrices are written as $\mymat{M}$
+\tomas{interesting ref. \cite{Barron2012}}
+
+\tomas{Stefan, please review this. It is just the notion that I have got
+about the problem and might not be completely correct}
+
+For these reasons there is a demand for tools helping with the
+process of pre-operative planning.
+
+\tomas{Are there other approaches to this or similar problem? My search
+did not reveal anything interesting.}
+
+Some of the most common actions in the procedure are
+
+\begin{itemize}
+    \item cutting out a piece of a blood vessel to remove an obstruction or
+    unwanted junction,
+    \item opening a narrow vessel by a cut and closing the hole by an
+    artificial material.
+    \item \tomas{more ideas?}
+\end{itemize}
+
+\tomas{add images}
+
+Both procedures are complicated from the surgeons point of view. In the
+first case the surgeon has to make an educated guess how to perform a cut
+so that after stitching the rest together the blood flow is not obstructed
+and the blood pressure at the seam is not too large so as to tear open the
+vessel. In the second case the surgeon has no prior idea about the shape
+and size of the patch he will need until he performs the cut. Therefor the
+patch has to be cut on site and cannot be prepared in advance.
+
+We are proposing new approach to pre-operative planning of cardiac surgery.
+Using shell elements to model deformations of the blood vessel we help with
+the decision making.
+
+% }}}
+
+\tomas{What to describe? -- shell elements/FEM/mechanics?}
+\tomas{shortly mention: rest shape}
+
+\section{Method Description}                          
+
+Outline:
+
+\begin{itemize}
+    
+    \item we use shell elements to model blood vessels, dynamic system
+        (implicit integration), in Sofa framework \tomas{cite Olivier
+        \cite{Comas2010b,Comas2010c} -- shells in corotational environment}
+    \item using springs to connect the objects is not good --> generates
+        excessive amount of energy
+    \item to eliminate this we use one mesh for the simulation and
+        different mesh to describe the rest shape and we leave the dynamic
+        system to stabilize
+    \item to reduce more the generation of excessive energies in the system
+        at the beginning of the simulation we repetitively change the rest
+        shape (linear interpolation)
+\end{itemize}
 
 
+\section{Conclusion}
+\subsection{Verification}
+
+Verification is difficult -- limited or no knowledge of real state after
+the surgery (can't put the child under CT/MRI again). \ldots
 
 
 \bibliographystyle{abbrv}
@@ -102,3 +185,6 @@ Matrices are written as $\mymat{M}$
 
 \end{document}
 
+% Some Vim setup. If it interferes with anyones work feel free to remove
+% that.
+% vim: et tw=75 fdm=marker spell
