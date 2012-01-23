@@ -16,8 +16,11 @@ The process can be separated into two components:
    *Note*: Maybe mapping is not the right term in Sofa. All it will do is
    just translate node indices from one topology to another.
 
+You are right.. It is a modification of the topology: you add nodes and change the triangle and segment indices
+
    *Note*: There may be some other implicit limitations that I can't see
    right now.
+
 
 2) Linear interpolator that would interpolate the node positions between
    two meshes with the same topology.
@@ -28,6 +31,7 @@ Slight complication is that now we will need three meshes instead of two:
 1) one with the combined topology (used for simulation and display)
 2) one with the uncombined topology whose node positions will match those
    in the mesh with combined toplogy
+I am not sure I get this one
 3) one with the uncombined topology describing the initial state
 
 The new one is the second one which is now assumed implicitly and
@@ -75,6 +79,8 @@ We have two options, I'm not sure which one is better:
 1) Store result in ``positions`` and ``triangles`` arguments
 2) Link to some ``TriangleSetTopolgyContainer`` and change this one
 
+I think the 1) is maybe more "generic" (you could also add an output to update the segments)
+
 
 Process Description
 ====================
@@ -103,6 +109,8 @@ getInterpolationVar()
 
 
 
+
+
 --------------------------------------------------------------------------------
   Topological Mapping component
 --------------------------------------------------------------------------------
@@ -111,6 +119,8 @@ Performs (unidirectional) mapping (node translation) between two topologies
 (source and target) with the same number of elements. One node of the
 source topology can be mapped to one or more nodes of the target topology
 (but not vice versa).
+
+
 
 
 Input Parameters
