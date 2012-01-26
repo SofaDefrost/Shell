@@ -1,10 +1,9 @@
 #ifndef SOFA_COMPONENT_ENGINE_JOINMESHPOINTS_H
-#define SOFA_COMPONENT_ENGINE_JOINMESHSPOINTS_H
+#define SOFA_COMPONENT_ENGINE_JOINMESHPOINTS_H
 
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/core/DataEngine.h>
 #include <sofa/core/objectmodel/BaseObject.h>
-#include <sofa/core/loader/MeshLoader.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/component/component.h>
@@ -25,7 +24,8 @@ public:
     SOFA_CLASS(SOFA_TEMPLATE(JoinMeshPoints,DataTypes),core::DataEngine);
 
     typedef typename DataTypes::VecCoord VecCoord;
-    typedef helper::vector<unsigned int> VecIndex;
+
+    typedef unsigned int Index;
 
 protected:
     JoinMeshPoints();
@@ -48,31 +48,33 @@ public:
     void reinit();
     void update();
 
+    // TODO: add methods to find out the mappings
+
     // Data
 
-    Data< helper::vector< helper::fixed_array <unsigned int,2> > > f_input_joinPoints;
+    Data< helper::vector< helper::fixed_array<Index,2> > > f_input_joinPoints;
 
     Data<VecCoord> f_input_positions;
-    Data< helper::vector< helper::fixed_array <unsigned int,2> > > f_input_edges;
-    Data< helper::vector< helper::fixed_array <unsigned int,3> > > f_input_triangles;
-    Data< helper::vector< helper::fixed_array <unsigned int,4> > > f_input_quads;
-    Data< helper::vector< helper::fixed_array<unsigned int,4> > > f_input_tetrahedra;
-    Data< helper::vector< helper::fixed_array<unsigned int,8> > > f_input_hexahedra;
+    Data< helper::vector< helper::fixed_array<Index,2> > > f_input_edges;
+    Data< helper::vector< helper::fixed_array<Index,3> > > f_input_triangles;
+    Data< helper::vector< helper::fixed_array<Index,4> > > f_input_quads;
+    Data< helper::vector< helper::fixed_array<Index,4> > > f_input_tetrahedra;
+    Data< helper::vector< helper::fixed_array<Index,8> > > f_input_hexahedra;
 
     Data<VecCoord> f_output_positions;
-    Data< helper::vector< helper::fixed_array <unsigned int,2> > > f_output_edges;
-    Data< helper::vector< helper::fixed_array <unsigned int,3> > > f_output_triangles;
-    Data< helper::vector< helper::fixed_array <unsigned int,4> > > f_output_quads;
-    Data< helper::vector< helper::fixed_array<unsigned int,4> > > f_output_tetrahedra;
-    Data< helper::vector< helper::fixed_array<unsigned int,8> > > f_output_hexahedra;
+    Data< helper::vector< helper::fixed_array<Index,2> > > f_output_edges;
+    Data< helper::vector< helper::fixed_array<Index,3> > > f_output_triangles;
+    Data< helper::vector< helper::fixed_array<Index,4> > > f_output_quads;
+    Data< helper::vector< helper::fixed_array<Index,4> > > f_output_tetrahedra;
+    Data< helper::vector< helper::fixed_array<Index,8> > > f_output_hexahedra;
 
 private:
 
     template<unsigned int N> void createElements(
-        std::map<unsigned int, unsigned int> mapInIn,
-        helper::vector<unsigned int> mapInOut,
-        const Data< helper::vector< helper::fixed_array<unsigned int,N> > > &inElements,
-        Data< helper::vector< helper::fixed_array<unsigned int,N> > > &outElements);
+        std::map<Index, Index> mapInIn,
+        helper::vector<Index> mapInOut,
+        const Data< helper::vector< helper::fixed_array<Index,N> > > &inElements,
+        Data< helper::vector< helper::fixed_array<Index,N> > > &outElements);
 
 };
 

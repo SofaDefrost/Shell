@@ -2,8 +2,6 @@
 #define SOFA_COMPONENT_ENGINE_JOINMESHPOINTS_INL
 
 #include <engine/JoinMeshPoints.h>
-//#include <sofa/core/visual/VisualParams.h>
-//#include <sofa/helper/gl/template.h>
 
 namespace sofa
 {
@@ -74,7 +72,7 @@ void JoinMeshPoints<DataTypes>::update()
 {
     cleanDirty();
 
-    const helper::vector< helper::fixed_array <unsigned int,2> >& inJP = f_input_joinPoints.getValue();
+    const helper::vector< helper::fixed_array <Index,2> >& inJP = f_input_joinPoints.getValue();
 	const VecCoord& inPt = f_input_positions.getValue();
 
 	VecCoord& outPt = *f_output_positions.beginEdit();
@@ -83,14 +81,14 @@ void JoinMeshPoints<DataTypes>::update()
 
     // Map analogy to the value of f_input_joinPoints. It maps index of a node
     // from input array to index into output array.
-    std::map<unsigned int, unsigned int> mapInIn;
+    std::map<Index, Index> mapInIn;
 
-    for (unsigned int i=0; i<inJP.size(); i++) {
+    for (Index i=0; i<inJP.size(); i++) {
         if (inJP[i][0] == inJP[i][1]) continue;
-        unsigned int end = inJP[i][1];
+        Index end = inJP[i][1];
         // Traverse the map to find the real index
         do {
-            std::map<unsigned int, unsigned int>::const_iterator iter =
+            std::map<Index, Index>::const_iterator iter =
                 mapInIn.find(end);
             if (iter != mapInIn.end()) {
                 end = iter->second;
@@ -103,14 +101,14 @@ void JoinMeshPoints<DataTypes>::update()
 
     // Order the values so they are allways mapped from larger to smaller.
     // I.e: if i maps to j then i > j.
-    for (std::map<unsigned int, unsigned int>::iterator iter = mapInIn.begin();
+    for (std::map<Index, Index>::iterator iter = mapInIn.begin();
         iter != mapInIn.end(); iter++) {
 
         if (iter->first < iter->second) {
             // Invert the mapping
             mapInIn[iter->second] = iter->first;
 
-            std::map<unsigned int, unsigned int>::iterator tmp = iter;
+            std::map<Index, Index>::iterator tmp = iter;
             iter++; // This is safe since iter != mapInIn.end()
             mapInIn.erase(tmp);
             iter--;
@@ -118,11 +116,11 @@ void JoinMeshPoints<DataTypes>::update()
     }
 
     // Create output list
-    helper::vector<unsigned int> mapInOut;
+    helper::vector<Index> mapInOut;
     mapInOut.resize(inPt.size());
 
-    for (unsigned int i=0, newId=0; i<inPt.size(); i++) {
-        std::map<unsigned int, unsigned int>::const_iterator iter =
+    for (Index i=0, newId=0; i<inPt.size(); i++) {
+        std::map<Index, Index>::const_iterator iter =
             mapInIn.find(i);
         if (iter == mapInIn.end()) {
             outPt.push_back(inPt[i]);
@@ -144,21 +142,21 @@ void JoinMeshPoints<DataTypes>::update()
 template <class DataTypes>
 template<unsigned int N>
 void JoinMeshPoints<DataTypes>::createElements(
-        std::map<unsigned int, unsigned int> mapInIn,
-        helper::vector<unsigned int> mapInOut,
-        const Data< helper::vector< helper::fixed_array<unsigned int,N> > > &inElements,
-        Data< helper::vector< helper::fixed_array<unsigned int,N> > > &outElements)
+        std::map<Index, Index> mapInIn,
+        helper::vector<Index> mapInOut,
+        const Data< helper::vector< helper::fixed_array<Index,N> > > &inElements,
+        Data< helper::vector< helper::fixed_array<Index,N> > > &outElements)
 {
-	const helper::vector< helper::fixed_array <unsigned int, N> >& inEle = inElements.getValue();
+	const helper::vector< helper::fixed_array <Index, N> >& inEle = inElements.getValue();
 
-	helper::vector< helper::fixed_array <unsigned int, N> >& outEle = *outElements.beginEdit();
+	helper::vector< helper::fixed_array <Index, N> >& outEle = *outElements.beginEdit();
     outEle.resize(inEle.size());
 
-    for (unsigned int i= 0; i<inEle.size(); i++) {
-        helper::fixed_array <unsigned int, N>& out = outEle[i];
-        for (unsigned int j=0; j<N; j++) {
-            unsigned int id = inEle[i][j];
-            std::map<unsigned int, unsigned int>::const_iterator iter =
+    for (Index i= 0; i<inEle.size(); i++) {
+        helper::fixed_array <Index, N>& out = outEle[i];
+        for (Index j=0; j<N; j++) {
+            Index id = inEle[i][j];
+            std::map<Index, Index>::const_iterator iter =
                 mapInIn.find(id);
 
             // In -> In mapping (joining nodes)
