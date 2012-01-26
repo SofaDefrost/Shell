@@ -19,6 +19,7 @@ DEFINES += SOFA_BUILD_SHELLS
 
 SOURCES =   initPluginShells.cpp \
             engine/JoinMeshPoints.cpp \
+            engine/FindClosePoints.cpp \
             forcefield/BezierTriangularBendingFEMForceField.cpp \
 			forcefield/TriangularBendingFEMForceField.cpp \
 			forcefield/TriangularShellForceField.cpp \
@@ -28,6 +29,8 @@ SOURCES =   initPluginShells.cpp \
 HEADERS =   initPluginShells.h \
             engine/JoinMeshPoints.h \
             engine/JoinMeshPoints.inl \
+            engine/FindClosePoints.h \
+            engine/FindClosePoints.inl \
 			forcefield/BezierTriangularBendingFEMForceField.h \
 			forcefield/BezierTriangularBendingFEMForceField.inl \
 			forcefield/TriangularBendingFEMForceField.h \
