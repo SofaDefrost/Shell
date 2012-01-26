@@ -85,6 +85,7 @@ namespace component
 		componentlist += " BezierTriangleMechanicalMapping";
 		componentlist += " BezierTriangularBendingFEMForceField";
 		componentlist += " TriangularShellForceField";
+		componentlist += " JoinMeshPoints";
 		//componentlist += "";
 		return componentlist.c_str();
 	}
@@ -99,6 +100,6 @@ namespace component
 SOFA_LINK_CLASS(TriangularBendingFEMForceField)
 SOFA_LINK_CLASS(BendingPlateMechanicalMapping)
 SOFA_LINK_CLASS(BezierTriangularBendingFEMForceField)
-//SOFA_LINK_CLASS(BezierTriangleMechanicalMapping)
+SOFA_LINK_CLASS(BezierTriangleMechanicalMapping)
 SOFA_LINK_CLASS(TriangularShellForceField)
-
+SOFA_LINK_CLASS(JoinMeshPoints)

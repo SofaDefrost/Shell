@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<Node>
+    <Node>
+        <MeshObjLoader name="loader" filename="aortic/example01/splitMesh.obj" />
+        <JoinMeshPoints template="Vec3d" name="join" src="@loader" joinPoints="
+            278 102
+            256 251
+            268 216
+            267 217
+            264 228
+            272 143
+            273 141
+            265 218
+            271 215
+            263 245
+            257 246
+            281 88 
+            288 86 
+            277 114
+            274 116
+            290 52 
+            291 41 
+            275 115
+            285 87 
+            289 76 
+            " />
+
+        <Node>
+            <TriangleSetTopologyContainer
+                position="@../join.joinedPosition"
+                edges="@../join.joinedEdges"
+                triangles="@../join.joinedTriangles"
+                />
+            <MechanicalObject template="Vec3d" name="MO" />
+            <Node>
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping input="@.." output="@Visual"/>
+            </Node>
+        </Node>
+    </Node>
+</Node>

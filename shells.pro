@@ -17,14 +17,17 @@ else {
 
 DEFINES += SOFA_BUILD_SHELLS
 
-SOURCES = 	forcefield/BezierTriangularBendingFEMForceField.cpp \
+SOURCES =   initPluginShells.cpp \
+            engine/JoinMeshPoints.cpp \
+            forcefield/BezierTriangularBendingFEMForceField.cpp \
 			forcefield/TriangularBendingFEMForceField.cpp \
 			forcefield/TriangularShellForceField.cpp \
 			mapping/BendingPlateMechanicalMapping.cpp \
-			mapping/BezierTriangleMechanicalMapping.cpp \
-			initPluginShells.cpp
+			mapping/BezierTriangleMechanicalMapping.cpp
 
 HEADERS =   initPluginShells.h \
+            engine/JoinMeshPoints.h \
+            engine/JoinMeshPoints.inl \
 			forcefield/BezierTriangularBendingFEMForceField.h \
 			forcefield/BezierTriangularBendingFEMForceField.inl \
 			forcefield/TriangularBendingFEMForceField.h \
