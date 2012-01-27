@@ -33,7 +33,7 @@ public:
 protected:
     FindClosePoints();
 
-    ~FindClosePoints();
+    virtual ~FindClosePoints();
 
 public:
 

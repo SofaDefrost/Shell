@@ -30,7 +30,7 @@ public:
 protected:
     JoinMeshPoints();
 
-    ~JoinMeshPoints();
+    virtual ~JoinMeshPoints();
 
 public:
 
