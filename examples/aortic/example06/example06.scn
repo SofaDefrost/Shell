@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<Node gravity=" 0 0 0">
+    <Node name="splitMesh">
+        <VisualStyle displayFlags="showWireframe" />
+        <MeshObjLoader name="loader" filename="splitMesh.obj" />
+        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <TriangleSetTopologyContainer name="topology" src="@loader" />
+        <MechanicalObject template="Rigid" position="@frames.frames" />
+    <OglModel name="visual" color="0.75 0 0" />
+    <IdentityMapping input="@." output="@visual" />
+    </Node>
+
+    <Node name="joinedMesh">
+        <MeshObjLoader name="loader" filename="joinedMesh.obj" />
+        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <MechanicalObject name="mechanicalObject" template="Rigid" position="@frames.frames" />
+    </Node>
+
+    <Node name="obstructionMesh">
+        <MeshObjLoader name="loader" filename="obstructionMesh.obj" />
+        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <MechanicalObject name="mechanicalObject" template="Rigid" position="@frames.frames" />
+    </Node>
+
+    <Node name="obstruction">
+        <TriangleSetTopologyContainer src="@/obstructionMesh/loader" />
+        <MechanicalObject template="Rigid" position="@/obstructionMesh/frames.frames" />
+        <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+        <OglModel name="visual" color="0.5 0.5 1" />
+        <IdentityMapping input="@." output="@visual" />
+        <Node>
+          <VisualStyle displayFlags="showBehavior" />
+          <FixedConstraint indices="57-68 97-108" />
+        </Node>
+    </Node>
+
+    <Node name="simulation">
+        <EulerImplicit />
+        <CGLinearSolver iterations="20" tolerance="1e-9" threshold="1e-9" />
+        <TriangleSetTopologyContainer src="@/joinedMesh/loader" />
+        <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
+        <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+        <Node>
+            <VisualStyle displayFlags="showBehavior" />
+            <FixedConstraint indices="44-55 84-95" />
+            <TriangularBendingFEMForceField
+                bending="true"
+                convergenceRatio="0.01"
+                edge1="1 10 0 6 5 4 14 3 2 13 12 11"
+                edge2="153 154 155 156 150 166 165 164 163 162 151 152"
+                edgeCombined="141 142 143 144 138 154 153 152 151 150 139 140"
+                joinEdges="true"
+                originalTopology="@/splitMesh/topology"
+                poissonRatio="0.5"
+                thickness="0.2"
+                youngModulus="10000" />
+        </Node>
+        <OglModel name="visual" color="1 0.5 0.5" />
+        <IdentityMapping input="@." output="@visual" />
+    </Node>
+</Node>
