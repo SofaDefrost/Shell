@@ -1,43 +1,87 @@
 <?xml version="1.0"?>
-<Node gravity=" 0 0 0">
+<Node gravity="0 0 0">
+    <VisualStyle displayFlags="showVisual showBehavior" />
+
+    <!-- This example show how to use JoinMeshPoints if you have two starting meshes and no node map -->
+
+    <!-- Original mesh -->
     <Node name="splitMesh">
         <VisualStyle displayFlags="showWireframe" />
         <MeshObjLoader name="loader" filename="splitMesh.obj" />
         <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <!-- Visualisation
+        -->
         <TriangleSetTopologyContainer name="topology" src="@loader" />
         <MechanicalObject template="Rigid" position="@frames.frames" />
-		<OglModel name="visual" color="0.75 0 0" />
-		<IdentityMapping input="@." output="@visual" />
+        <OglModel name="visual" color="0.75 0 0" />
+        <IdentityMapping input="@." output="@visual" />
     </Node>
 
-    <Node name="joinedMesh">
-        <MeshObjLoader name="loader" filename="joinedMesh.obj"/>
+    <!-- This mesh has nodes that should share the same position *but* still unconnected -->
+    <Node name="splitMesh2">
+        <MeshObjLoader name="loader" filename="splitMesh2.obj" />
         <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
-        <MechanicalObject name="mechanicalObject" template="Rigid" position="@frames.frames" />
+        <FindClosePoints name="close" position="@loader.position" />
     </Node>
 
-	<Node name="simulation">
-        <EulerImplicit />
-        <CGLinearSolver iterations="200" tolerance="1e-9" threshold="1e-9" />
-        <TriangleSetTopologyContainer src="@/joinedMesh/loader" />
-        <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
-		<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
-		<Node>
-			<VisualStyle displayFlags="showBehavior" />
-			<TriangularBendingFEMForceField
-				bending="true"
-				convergenceRatio="0.01"
-				edge1="102 251 216 217 228 143 141 218 215 245 246 88 86 114 116 52 41 115 87 76"
-				edge2="278 256 268 267 264 272 273 265 271 263 257 281 288 277 274 290 291 275 285 289"
-				edgeCombined="109 267 226 227 239 151 149 229 223 256 262 93 86 121 124 52 41 123 89 76"
-				joinEdges="true"
-				originalTopology="@/splitMesh/topology"
-				poissonRatio="0.5"
-				thickness="0.1"
-				youngModulus="10000" />
-		</Node>
-		<FixedConstraint indices="5-20 164-179" />
-		<OglModel name="visual" color="1 0.5 0.5" />
-		<IdentityMapping input="@." output="@visual" />
-	</Node>
+    <!-- We use the engine to combine the nodes with the same position -->
+    <Node name="joinedMesh">
+        <JoinMeshPoints template="Rigid" name="join" src="@/splitMesh2/loader" joinPoints="@/splitMesh2/close.closePoints" />
+        <Vertex2Frame name="frames" template="Rigid" position="@join.joinedPosition" normals="@join.joinedNormals" />
+        <!-- Visualisation
+        <TriangleSetTopologyContainer name="topology" src="@/splitMesh2/loader" />
+        <MechanicalObject template="Rigid" position="@frames.frames" />
+        <OglModel name="visual" color="0 0.75 0" />
+        <IdentityMapping input="@." output="@visual" />
+        -->
+    </Node>
+
+    <Node>
+        <!-- Rest shape interpolation -->
+        <MeshInterpolator template="Rigid" name="interp"
+            startPosition="@/splitMesh2/frames.frames"
+            endPosition="@/splitMesh/frames.frames"
+            nbSteps="10"
+            increment="0.05" />
+
+        <!-- Visualisation
+        <TriangleSetTopologyContainer name="topology" position="@interp.position" triangles="@/splitMesh/loader.triangles" />
+        <MechanicalObject template="Rigid" position="@interp.position" />
+        <OglModel name="visual" color="0 0.75 0" />
+        <IdentityMapping input="@." output="@visual" />
+        -->
+
+        <!-- Simulation -->
+        <Node name="simulation">
+            <EulerImplicit />
+            <CGLinearSolver iterations="200" tolerance="1e-9" threshold="1e-9" />
+
+            <TriangleSetTopologyContainer position="@/joinedMesh/frames.frames" triangles="@/joinedMesh/join.joinedTriangles" />
+            <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
+            <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+
+            <BoxROI name="Side1" box="-2.75 -1.1 -1.1  -2.76 1.1 1.1" drawSize="0"/>
+            <FixedConstraint indices="@Side1.indices" drawSize="0"/>
+            <BoxROI name="Side2" box="2.75 -1.1 -1.1  2.76 1.1 1.1" drawSize="0"/>
+            <FixedConstraint indices="@Side2.indices" />
+
+            <TriangularBendingFEMForceField
+                bending="true"
+                poissonRatio="0.5"
+                thickness="0.1"
+                youngModulus="10000"
+
+                restShape="@../interp"
+                topologyMapper="@/joinedMesh/join"
+                />
+
+            <Node>
+                <OglModel name="visual" color="1 0.5 0.5" />
+                <IdentityMapping input="@.." output="@visual" />
+            </Node>
+
+        </Node>
+
+    </Node>
+
 </Node>

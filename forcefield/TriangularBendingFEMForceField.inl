@@ -45,6 +45,8 @@
 #include <sofa/simulation/common/Simulation.h>
 #include <sofa/simulation/common/AnimateEndEvent.h>
 
+#include "../controller/MeshChangedEvent.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -136,15 +138,9 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 , refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
 , iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
 , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
-, joinEdges(initData(&joinEdges, false, "joinEdges", "Join two edges into one"))
-, originalTopology(initLink("originalTopology","Topology of the original mesh (prior to join)"))
-, edge1(initData(&edge1, "edge1", "Indices of the first edge to join")) 
-, edge2(initData(&edge2, "edge2", "Indices of the second edge to join")) 
-, edge3(initData(&edge3, "edge3", "Indices of the third edge to join")) 
-, edgeCombined(initData(&edgeCombined, "edgeCombined", "Indices after the join")) 
-, nodeMap(initData(&nodeMap, "nodeMap", "Map from combined dones to original nodes (usually not necessary)")) 
-, convergenceRatio(initData(&convergenceRatio, (Real)0.01, "convergenceRatio", "The ration at which the simulation converges to the original rest shape")) 
-, fakeStep(0)
+, restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
+, mapTopology(false)
+, topologyMapper(initLink("topologyMapper","Component supplying different topology for the rest shape"))
 , exportFilename(initData(&exportFilename, "exportFilename", "file name to export coefficients into"))
 , exportEveryNbSteps(initData(&exportEveryNbSteps, (unsigned int)0, "exportEveryNumberOfSteps", "export file only at specified number of steps (0=disable)"))
 , exportAtBegin(initData(&exportAtBegin, false, "exportAtBegin", "export file at the initialization"))
@@ -194,117 +190,6 @@ void TriangularBendingFEMForceField<DataTypes>::init()
     // Create specific handler for TriangleData
     triangleInfo.createTopologicalEngine(_topology, triangleHandler);
     triangleInfo.registerTopologicalData();
-
-    if (joinEdges.getValue()) {
-
-        sofa::core::topology::BaseMeshTopology* otopo = originalTopology.get();
-        if (otopo == NULL || otopo->getNbTriangles() == 0)
-        {
-            serr << "originalTopology must be a Triangular Set Topology." << sendl;
-            return;
-        }
-
-        MechanicalState<DataTypes>* oMS = dynamic_cast<MechanicalState<DataTypes>*> (otopo->getContext()->getMechanicalState());
-        if (oMS == NULL) {
-            serr << "Cannot find Mechanical State for originalTopology" << sendl;
-            return;
-        }
-
-        const VecCoord& ox0 = *oMS->getX0();
-        originalNodes = ox0;
-
-        // Find the mapping between vertices
-        if (nodeMap.getValue().size() == 0) {
-            sofa::helper::vector<Index>& nmap = *nodeMap.beginEdit();
-            const VecCoord& x0 = *this->mstate->getX0();
-
-            for (unsigned int i=0; i<x0.size(); i++) {
-                bool bFound = false;
-                unsigned int j;
-                for (j=0; j<originalNodes.size(); j++) {
-                    if ((x0[i] - originalNodes[j]).norm() < 1e-5) {
-                        bFound = true;
-                        break;
-                    }
-                }
-                if (bFound) {
-                    nmap.push_back(j);
-                } else {
-                    // Node not found, try to look it up in edgeCombined
-                    const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
-                    sofa::helper::vector<Index>::const_iterator it = eC.begin();
-                    for (; it != eC.end(); it++) {
-                        if (*it == i) {
-                            nmap.push_back(0); // The value is not important, it is never used
-                            break;
-                        }
-                    }
-
-                    if (it == eC.end()) {
-                        serr << "Unable to find corresponding node in original mesh for node " <<
-                            i << "! You have to specify nodeMap manualy." << sendl;
-                        nodeMap.endEdit();
-                        return;
-                    }
-                }
-            }
-            nodeMap.endEdit();
-        }
-
-        // Initialize the fake rest shape
-        x0fake = originalNodes;
-        computeFakeStep();
-
-#if 0
-        const core::objectmodel::ObjectRef& origTopo = nameOriginalTopology.getValue();
-        _topologyOriginal = origTopo.getObject<TriangleSetTopologyContainer>(this->getContext());
-        if (_topologyOriginal == NULL) {
-            serr << "Topology '" << nameOriginalTopology.getValue() <<
-                "' in nameOriginalTopology not found!" << sendl;
-            return;
-        }
-
-        x0fake = _topologyOriginal->getPointDataArray().getValue();
-        computeFakeStep();
-
-        TriangleSetTopologyModifier* tsmod;
-        this->getContext()->get(tsmod);
-        if (tsmod == NULL) {
-            serr << "TriangleSetTopologyModifier required if joinEdges is enabled" << sendl;
-            joinEdges.setValue(false);
-            //return;
-        }
-
-        if ((edge1.getValue().size == 0) || (edge2.getValue().size == 0)) {
-            serr << "edge1 and edge2 have to be non-empty if joinEdges is enabled" << sendl;
-            joinEdges.setValue(false);
-            //return
-        }
-
-        if (edge1.getValue().size != edge2.getValue().size) {
-            serr << "edge1 and edge2 have to be of the same size" << sendl;
-            joinEdges.setValue(false);
-            //return
-        }
-
-        // Change the target topology by merging appropriate nodes together.
-        // We remove all nodes from edge2 and use edge1 nodes in their place.
-        TriangleID nextTri = _topology->getNbTriangles();
-        sofa::helper::vector< Triangle > newTriangles;
-        sofa::helper::vector< TriangleID > newTrianglesId;
-        sofa::helper::vector< TriangleID > removedTriangles;
-        sofa::helper::vector< sofa::helper::vector< TriangleID > >  triangles_ancestors;
-        sofa::helper::vector< sofa::helper::vector< double > >  triangles_barycoefs;
-
-        for (TriangleID i=0; i<_topology->getNbTriangles(); ++i) {
-
-        }
-
-TODO: do this later, for now do it manualy and use edgeCombined
-#endif
-
-
-    }
 
     reinit();
 
@@ -519,6 +404,34 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
+    if (topologyMapper.get() != NULL) {
+
+        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
+        if (jmp->f_output_triangles.getValue().size() == 0)
+        {
+            serr << "Mapped topology must be a triangular! No triangles found." << sendl;
+        } else {
+            mapTopology = true;
+        }
+    }
+
+    if (restShape.get() != NULL) {
+        // Listen for MeshChangedEvent
+        *this->f_listening.beginEdit() = true;
+        this->f_listening.endEdit();
+
+        // Check if there is same number of nodes
+        if (!mapTopology) {
+            if (restShape.get()->f_position.getValue().size() != 
+                this->mstate->getX0()->size()) {
+                serr << "Different number of nodes in rest shape and mechanical state!" << sendl;
+            }
+        } else if (restShape.get()->f_position.getValue().size() != 
+            topologyMapper.get()->f_input_position.getValue().size()) {
+            serr << "Different number of nodes in rest shape and (original) mapped topology!" << sendl;
+        }
+    }
+
     /// Prepare to store info in the triangle array
     triangleInf.resize(_topology->getNbTriangles());
 
@@ -537,7 +450,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 // ---
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-    double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
+double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
 {
     serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
     return 0;
@@ -598,60 +511,13 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int i, co
     tinfo->c = c;
 
     Index a0=a, b0=b, c0=c;
-    if (joinEdges.getValue()) {
-        const sofa::helper::vector<Index>& nMap = nodeMap.getValue();
+    if (mapTopology) {
+        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
 
-        const sofa::helper::vector<int>* e[3] = {
-            &edge1.getValue(),
-            &edge2.getValue(),
-            &edge3.getValue() };
-        const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
-
-        a0 = nMap[a];
-        b0 = nMap[b];
-        c0 = nMap[c];
-
-        // If the element lies on the joined edge, find the mapping between
-        // elements of combined and uncombined mesh
-        bool onEdge[3] = { false, false, false};
-        Index onEdgeIdx[3] = {0, 0, 0};
-        for(unsigned int inode=0; inode < eC.size(); inode++) {
-            if (eC[inode] == a) { onEdge[0] = true; onEdgeIdx[0] = inode; }
-            if (eC[inode] == b) { onEdge[1] = true; onEdgeIdx[1] = inode; }
-            if (eC[inode] == c) { onEdge[2] = true; onEdgeIdx[2] = inode; }
-        }
-
-        if (onEdge[0] || onEdge[1] || onEdge[2]) {
-            // Element is on on the edge
-            sofa::core::topology::BaseMeshTopology* otopo = originalTopology.get();
-            if (otopo != NULL) {
-                // Try indices from edge1, edge2 and edge3
-                bool bFound = false;
-                for (int j=0; j<3; j++) {
-                    a0 = nMap[a];
-                    b0 = nMap[b];
-                    c0 = nMap[c];
-
-                    if (onEdge[0] && ((*e[j])[onEdgeIdx[0]] >= 0))
-                        a0 = (*e[j])[onEdgeIdx[0]]; 
-                    if (onEdge[1] && ((*e[j])[onEdgeIdx[1]] >= 0))
-                        b0 = (*e[j])[onEdgeIdx[1]]; 
-                    if (onEdge[2] && ((*e[j])[onEdgeIdx[2]] >= 0))
-                        c0 = (*e[j])[onEdgeIdx[2]]; 
-
-                    if (otopo->getTriangleIndex(a0, b0, c0) != -1) {
-                        bFound = true;
-                        break;
-                    }
-                }
-
-                if (!bFound) {
-                    // Nothing found
-                    serr << "Cannot find a corresponding triangle in"
-                        " originalTopology for triangle " << i << sendl;
-                }
-            }
-        }
+        // Get indices in original topology
+        a0 = jmp->getSrcNodeFromTri(i, a0);
+        b0 = jmp->getSrcNodeFromTri(i, b0);
+        c0 = jmp->getSrcNodeFromTri(i, c0);
     }
 
     tinfo->a0 = a0;
@@ -662,7 +528,8 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int i, co
 }
 
 // --------------------------------------------------------------------------------------
-// --- Initialization of a triangle, can be called more than once if joinEdges is true
+// --- Initialization of a triangle. Can be called more than once if there is a
+// --- changing rest shape.
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
@@ -679,7 +546,15 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
     const Index c0 = tinfo->c0;
 
     // Gets vertices of rest and initial positions respectively
-    const VecCoord& x0 = (joinEdges.getValue()) ? x0fake : *this->mstate->getX0();
+    const VecCoord& x0 = (restShape.get() != NULL)
+        ? restShape.get()->f_position.getValue()
+        // if having changing rest shape take it
+        : (mapTopology
+            // if rest shape is fixed but we have mapped topology use it
+            ? topologyMapper.get()->f_input_position.getValue()
+            // otherwise just take rest shape in mechanical state
+            : *this->mstate->getX0()
+          );
     const VecCoord& x = *this->mstate->getX();
 
     // Rotation from triangle to world at rest and initial positions (respectively)
@@ -729,113 +604,6 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
     //    "\n";
 
     triangleInfo.endEdit();
-}
-
-// Update the rest shape
-template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeFakeStep()
-{
-    const sofa::helper::vector<int>& e1 = edge1.getValue();
-    const sofa::helper::vector<int>& e2 = edge2.getValue();
-    const sofa::helper::vector<int>& e3 = edge3.getValue();
-    const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
-
-    if (fakeStep > 1.0) {
-        fakeStep = 1.0;
-        //return;
-    }
-
-    //std::cout << "Fake step=" << fakeStep << "\n";
-
-    // Sanit checks
-    if ((e1.size() == 0) || (e2.size() == 0)) {
-        serr << "edge1 and edge2 have to be non-empty if joinEdges is enabled"
-            << sendl;
-        return;
-    }
-
-    if (e1.size() != e2.size()) {
-        serr << "edge1 and edge2  have to be of the same size" << sendl;
-        return;
-    }
-
-    if (eC.size() != e1.size()) {
-        serr << "edgeCombined has to be of the same size as edge1 and edge2 "
-            << sendl;
-        return;
-    }
-
-    if (e3.size() == 0) {
-        // Fill with -1
-        sofa::helper::vector<int>* e3val = edge3.beginEdit();
-        e3val->resize(e1.size(), -1);
-        edge3.endEdit();
-        // XXX Is the refrence of e3 still valid?
-    }
-
-    if (e3.size() != e1.size()) {
-        serr << "edge3 has to be either empty or of the same size as edge1 and"
-            " edge2" << sendl;
-        return;
-    }
-
-    const VecCoord& x0 = *this->mstate->getX0();
-
-    for (unsigned int i=0; i< eC.size(); i++) {
-
-        if ((e1[i] >= 0) && (e1[i] >= (int)originalNodes.size())) {
-            serr << "Index " << e1[i] << " in edge1 out of bounds" << sendl;
-            continue;
-        }
-
-        if ((e2[i] >= 0) && (e2[i] >= (int)originalNodes.size())) {
-            serr << "Index " << e2[i] << " in edge2 out of bounds" << sendl;
-            continue;
-        }
-
-        if ((e3[i] >= 0) && (e3[i] >= (int)originalNodes.size())) {
-            serr << "Index " << e3[i] << " in edge3 out of bounds" << sendl;
-            continue;
-        }
-
-        if (eC[i] >= x0.size()) {
-            serr << "Index " << eC[i] << " in edgeCombined out of bounds" << sendl;
-            continue;
-        }
-
-
-        // Compute the positions and orientations
-        if (e1[i] >= 0) {
-            x0fake[ e1[i] ].getCenter() =
-                originalNodes[ e1[i] ].getCenter() * fakeStep +
-                x0[ eC[i] ].getCenter() * (1-fakeStep);
-            x0fake[ e1[i] ].getOrientation().slerp(
-                x0[ eC[i] ].getOrientation(),
-                originalNodes[ e1[i] ].getOrientation(),
-                fakeStep, false);
-        }
-
-        if (e2[i] >= 0) {
-            x0fake[ e2[i] ].getCenter() =
-                originalNodes[ e2[i] ].getCenter() * fakeStep +
-                x0[ eC[i] ].getCenter() * (1-fakeStep);
-            x0fake[ e2[i] ].getOrientation().slerp(
-                x0[ eC[i] ].getOrientation(),
-                originalNodes[ e2[i] ].getOrientation(),
-                fakeStep, false);
-        }
-
-        if (e3[i] >= 0) {
-            x0fake[ e3[i] ].getCenter() =
-                originalNodes[ e3[i] ].getCenter() * fakeStep +
-                x0[ eC[i] ].getCenter() * (1-fakeStep);
-            x0fake[ e3[i] ].getOrientation().slerp(
-                x0[ eC[i] ].getOrientation(),
-                originalNodes[ e3[i] ].getOrientation(),
-                fakeStep, false);
-        }
-
-    }
 }
 
 // --------------------------------------------------------------------------------------
@@ -1331,15 +1099,6 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::Mecha
     int nbTriangles=_topology->getNbTriangles();
     f.resize(p.size());
 
-    if (joinEdges.getValue()) {
-        // Update the rest shape and rest positions
-        fakeStep += convergenceRatio.getValue();
-        computeFakeStep();
-        for (int i=0; i<nbTriangles; i++) {
-            initTriangle(i);
-        }
-    }
-
     for (int i=0; i<nbTriangles; i++)
     {
         accumulateForce(f, p, i);
@@ -1671,65 +1430,59 @@ void TriangularBendingFEMForceField<DataTypes>::computeCurvature(Vec3 pt, Vec<9,
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
-    if (joinEdges.getValue() && vparams->displayFlags().getShowForceFields()) {
-        const sofa::helper::vector<int>& e1 = edge1.getValue();
-        const sofa::helper::vector<int>& e2 = edge2.getValue();
-        const sofa::helper::vector<int>& e3 = edge3.getValue();
+    if (mapTopology && vparams->displayFlags().getShowForceFields()) {
 
-        for (unsigned int i=0; i< e1.size(); i++) {
-            if (e1[i] >= 0) 
-                vparams->drawTool()->drawFrame(
-                    x0fake[e1[i]].getCenter(),
-                    x0fake[e1[i]].getOrientation(),
-                    Vec3(1,1,1)/10);
-            if (e2[i] >= 0)
-                vparams->drawTool()->drawFrame(
-                    x0fake[e2[i]].getCenter(),
-                    x0fake[e2[i]].getOrientation(),
-                    Vec3(1,1,1)/10);
-            if (e3[i] >= 0)
-                vparams->drawTool()->drawFrame(
-                    x0fake[e3[i]].getCenter(),
-                    x0fake[e3[i]].getOrientation(),
-                    Vec3(1,1,1)/10);
-        }
-        //for (unsigned int i=0; i< x0fake.size(); i++) {
-        //    vparams->drawTool()->drawFrame(
-        //        x0fake[i].getCenter(),
-        //        x0fake[i].getOrientation(),
-        //        Vec3(1,1,1)/10);
-        //}
-
-        // Draw lines to visualize the mapping between original and joined mesh
-        const sofa::helper::vector<Index>& nMap = nodeMap.getValue();
-        const VecCoord& x = *this->mstate->getX();
-        const sofa::helper::vector<Index>& eC = edgeCombined.getValue();
-
+        // Draw lines to visualize the mapping between nodes
         std::vector<Vec<3,double> > points;
 
-        for (Index i=0; i<x.size(); i++) {
-            // First Try to look it up in edgeCombined
-            sofa::helper::vector<Index>::const_iterator it = eC.begin();
-            for (; it != eC.end(); it++) {
-                if (*it == i) break;
-            }
-            if (it != eC.end()) continue; // Found it!
+        // Gets vertices of rest and initial positions respectively
+        const VecCoord& x0 = (restShape.get() != NULL)
+            // if having changing rest shape take it
+            ? restShape.get()->f_position.getValue()
+            : (mapTopology
+                // if rest shape is fixed but we have mapped topology use it
+                ? topologyMapper.get()->f_input_position.getValue()
+                // otherwise just take rest shape in mechanical state
+                : *this->mstate->getX0()
+              );
+        const VecCoord& x = *this->mstate->getX();
 
-            // Draw a line
-            if ((x[i].getCenter() - originalNodes[nMap[i]].getCenter()).norm() > 1e-8) {
-                points.push_back(x[i].getCenter());
-                points.push_back(originalNodes[nMap[i]].getCenter());
+        int nbTriangles=_topology->getNbTriangles();
+
+        for (int i=0; i<nbTriangles; i++) {
+            const TriangleInformation &tinfo = triangleInfo[i];
+            if ((x[tinfo.a].getCenter() - x0[tinfo.a0].getCenter()).norm() > 1e-8) {
+                points.push_back(x[tinfo.a].getCenter());
+                points.push_back(x0[tinfo.a0].getCenter());
+            }
+            if ((x[tinfo.b].getCenter() - x0[tinfo.b0].getCenter()).norm() > 1e-8) {
+                points.push_back(x[tinfo.b].getCenter());
+                points.push_back(x0[tinfo.b0].getCenter());
+            }
+            if ((x[tinfo.c].getCenter() - x0[tinfo.c0].getCenter()).norm() > 1e-8) {
+                points.push_back(x[tinfo.c].getCenter());
+                points.push_back(x0[tinfo.c0].getCenter());
             }
         }
+
         if (points.size() > 0)
-            vparams->drawTool()->drawLines(points, 1.0f, Vec4f(0.7, 0.0, 0.7, 1.0));
+            vparams->drawTool()->drawLines(points, 1.0f, Vec4f(1.0, 0.0, 1.0, 1.0));
     }
 }
 
-#if 0
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
+    if ( /*sofa::core::objectmodel::MeshChangedEvent* ev =*/ dynamic_cast<sofa::core::objectmodel::MeshChangedEvent*>(event))
+    {
+        // Update of the rest shape
+        // NOTE: the number of triangles should be the same in all topologies
+        unsigned int nbTriangles = _topology->getNbTriangles();
+        for (unsigned int i=0; i<nbTriangles; i++) {
+            initTriangle(i);
+        }
+    }
+#if 0
     if ( /*simulation::AnimateEndEvent* ev =*/  dynamic_cast<simulation::AnimateEndEvent*>(event))
     {
         unsigned int maxStep = exportEveryNbSteps.getValue();
@@ -1742,8 +1495,10 @@ void TriangularBendingFEMForceField<DataTypes>::handleEvent(sofa::core::objectmo
             writeCoeffs();
         }
     }
+#endif
 }
 
+#if 0
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::cleanup()
 {

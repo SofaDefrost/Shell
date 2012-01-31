@@ -39,6 +39,9 @@
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/component/topology/TopologyData.h>
 
+#include "../controller/MeshInterpolator.h"
+#include "../engine/JoinMeshPoints.h"
+
 
 namespace sofa
 {
@@ -127,8 +130,8 @@ public:
                 StrainDisplacementBending strainDisplacementMatrix3;
                 // Indices of each vertex
                 Index a, b, c;
-                // Indices in rest shape. Normaly is the same as a, b, c but if
-                // joinEdges is true it points to the uncombined mesh
+                // Indices in rest shape topology. Normaly is the same as a, b,
+                // c is different if topologyMapper is set.
                 Index a0, b0, c0;
                 // Local coordinates
                 Vec3 localB, localC;
@@ -207,18 +210,16 @@ public:
         VecCoordHigh targetVertices;
         SeqTriangles targetTriangles;
 
-        Data<bool> joinEdges;
+        // Allow transition between rest shapes
         SingleLink<TriangularBendingFEMForceField<DataTypes>,
-            sofa::core::topology::BaseMeshTopology,
-            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> originalTopology;
-        Data<sofa::helper::vector<int> > edge1;
-        Data<sofa::helper::vector<int> > edge2;
-        Data<sofa::helper::vector<int> > edge3;
-        Data<sofa::helper::vector<Index> > edgeCombined;
-        Data<sofa::helper::vector<Index> > nodeMap;
-        Data<Real> convergenceRatio;
-        Real fakeStep;      // State of the fake positions between 0 and 1 (0 joined, 1 original)
-        VecCoord originalNodes;
+            sofa::component::controller::MeshInterpolator<DataTypes>,
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> restShape;
+
+        // Indirect rest shape indexing (e.g. for "joining" two meshes)
+        bool mapTopology;
+        SingleLink<TriangularBendingFEMForceField<DataTypes>,
+            sofa::component::engine::JoinMeshPoints<DataTypes>,
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> topologyMapper;
 
 
         sofa::core::objectmodel::DataFileName exportFilename;
@@ -266,11 +267,9 @@ protected :
         void movePoint(Vec3& pointToMove);
         void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
 
-        void computeFakeStep();
-
         //void computeCurvature(Vec3 pt, Vec<9, Real> const &coefficients, Vec2 &curvature);
 
-        //void handleEvent(sofa::core::objectmodel::Event *event);
+        void handleEvent(sofa::core::objectmodel::Event *event);
         //void bwdInit();
         //void cleanup();
 
