@@ -44,12 +44,12 @@ The basic scene should contain at least the following:
 
 3. Visualisation node
  
-   *OglModel*: handles the rendering
-   *IdentityMapping*: provides a (one-way) mapping from *MechanicalObject*
-   to *OglModel*
+   * *OglModel*: handles the rendering
+   * *IdentityMapping*: provides a (one-way) mapping from
+     *MechanicalObject* to *OglModel*
 
-   *OglModel* can be also used on it's own to load and render a mesh from a
-   file.
+   * *OglModel* can be also used on it's own to load and render a mesh from
+     a file.
 
   Configuring TriangularBendingFEMForceField and maping the nodes
 ================================================================================
@@ -65,24 +65,7 @@ described here:
 
 
 Tese are the essential parameters that have to be specified. To simulate
-the joining of two mesh parts, the following are also necessary:
-
-  * *joinEdges*: enables the simulation of joining two mesh parts together
-  * *originalNodes*: positions and orientations of the nodes in their
-    original version
-  * *originalTriangles*: the triangles of the original mesh
-  * *edge1*, *edge2*: the indices of first and second set of nodes used in
-    joining. The indices are from the original mesh. There is one on one
-    mapping between the sets that means they have to be of the same length
-    and the order is also important.
-  * *edgeCombined*: the indices of nodes in the final mesh with joined
-    nodes. Again the length has to be same as in *edge1* and *edge2* so as
-    the order of indices.
-  * *nodeMap*: [optional, normaly is autodetected], provides a mapping from
-    indices of the final mesh to indices of the original mesh. That is on
-    the n-th position in the list should be index of the corresponding node
-    from the original mesh
-
+the joining of two mesh parts refer to the file Doc/RestShapeModifier.rst.
 
 Also note that if the code to join meshes is used:
 

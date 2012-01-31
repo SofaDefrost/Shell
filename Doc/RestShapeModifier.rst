@@ -1,162 +1,284 @@
 ================================================================================
-  Specification for modifiable rest shape refactoring
+  Specification for Modifiable Rest Shape Refactoring
 ================================================================================
+
+**NOTE**: At this point the refactoring has been finished and the following
+text should server just for the documentation purposes or as a reference.
+
+
+--------------------------------------------------------------------------------
+  Introduction
+--------------------------------------------------------------------------------
 
 In the simulation for the deformation of an aortic arch we need a way of
 altering a rest shape. The actual rest shape is a result of interpolation
 between initial (uncombined) mesh and a (combined) mesh with some of the
 nodes joined together.
 
+The process can be separated into two parts:
 
-The process can be separated into two components:
+1) Engine(s) serving a mapping between two topologies that have same number
+   of elements but different number of nodes.
 
-1) Mapping between two topologies that have same number of elements but
-   different number of nodes.
-
-   *Note*: Maybe mapping is not the right term in Sofa. All it will do is
-   just translate node indices from one topology to another.
-
-You are right.. It is a modification of the topology: you add nodes and change the triangle and segment indices
-
-   *Note*: There may be some other implicit limitations that I can't see
-   right now.
-
-
-2) Linear interpolator that would interpolate the node positions between
+2) Controller performing a linear interpolation of node positions between
    two meshes with the same topology.
 
 
-Slight complication is that now we will need three meshes instead of two:
+New Components
+==============
 
-1) one with the combined topology (used for simulation and display)
-2) one with the uncombined topology whose node positions will match those
-   in the mesh with combined toplogy
-I am not sure I get this one
-3) one with the uncombined topology describing the initial state
+Three new components were created:
 
-The new one is the second one which is now assumed implicitly and
-constructed based on the first mesh. 
+``FindClosePoints`` engine
+  In the input set of nodes find those whose mutual distance is smaller
+  than the threshold and creates list of pairs of indices on the output.
+
+``JoinMeshPoints`` engine
+  Takes nodes' positions and mesh topology on input together with pairs of
+  indices of nodes to join. Produces a new topology and nodes' positions by
+  joining the specified nodes together. Furthermore produces normals for
+  these points by averaging input normals and also produces a new set of
+  nodes' positions and normals (referred to as merged) for the original
+  topology by copying the common position/normal to all joined nodes.
+
+``MeshInterpolator`` controller
+  Performs linear interpolation between two sets of positions of the same
+  size. An event is signalled every time the interpolation step changes and
+  positions are recomputed.
+
+The input/output parameters and interface is documented below.
+
+
+Usage Overview
+==============
+
+First it is good to point out that now we will need three meshes instead of
+two:
+
+1) one with the uncombined topology describing the initial state - referred
+   to as *S1*
+2) one with the uncombined topology (i.e. same as 1)) whose node positions
+   will match those in the mesh with combined topology (i.e. 3)) - referred
+   to as *S2*
+3) one with the combined topology (used for simulation and display) -
+   referred to as *J*
+
+The new one is *S2* which was assumed implicitly and was constructed based
+on the first mesh. However, to make things simple mesh *J* is always
+constructed at the beginning of the simulation and mesh *S2* may be
+constructed also.
+
+The basic work flow for two input meshes is the following:
+
+1) Load *S1* from file.
+2) Load *S2* from file.
+3) Use ``FindClosePoints`` on nodes from *S2* to discover which points
+   should be connected.
+4) Use ``JoinMeshPoints`` to create mesh *J* from mesh *S2* (supplying the
+   list of indices discovered by ``FindClosePoints``).
+
+::
+
+ +------------+                 +------------------+
+ | MeshLoader |------S1-------->| MeshInterpolator |....
+ +------------+                 +------------------+   v
+ +------------+                   ^                  +------------+
+ | MeshLoader |------S2-------+---+  ...............>| ForceField |
+ +------------+               |      .               +------------+
+       |                      |      .
+       v                      v      .
+ +-----------------+  +----------------+       +------------------+ 
+ | FindClosePoints |->| JoinMeshPoints |---J-->| MechanicalObject |
+ +-----------------+  +----------------+       +------------------+
+
+
+The basic work flow for single mesh requires a list of nodes to join and is
+following:
+
+1) Load *S1* from file
+2) Supply your list of nodes to join to ``JoinMeshPoints`` and use it to
+   construct both *S2* and *J*. In it's output parameters the ones named
+   *merged* belong to the mesh *S2* and those named *joined* belong to mesh
+   *J*.
+
+::
+
+ +------------+                 +------------------+
+ | MeshLoader |------S1-------->| MeshInterpolator |.......
+ +------------+                 +------------------+      v
+       |                          ^                  +------------+
+       |     +------------S2------+    .............>| ForceField |
+       |     |  ........................             +------------+
+       v     |  .
+ +----------------+                            +------------------+
+ | JoinMeshPoints |-------------J------------->| MechanicalObject |
+ +----------------+                            +------------------+
+
+
+In the above diagrams dashed lines ``-->`` are links between attributes
+while dotted lines ``...>`` are links between components to provide API.
 
 
 --------------------------------------------------------------------------------
-  Shape Interpolator component
+  MeshInterpolator component
 --------------------------------------------------------------------------------
 
 Performs controlled linear interpolation between two meshes with the same
-topology. 
+topology.
 
 
 Input Parameters
 ====================
 
-``start_mesh``
-  linked from some ``TriangleSetTopolgyContainer``
+``startPosition``
+  positions of nodes at the start of interpolation
 
-``end_mesh``
-  linked from some ``TriangleSetTopolgyContainer``
+``endPosition``
+  positions of nodes at the end of interpolation
 
-``start_time``
+``startTime``
   time when to start the interpolation
 
 ``increment`` : range (0,1]
-  step with which to alter the interpolation at each step of the
-  simulation
+  step with which to alter the interpolation at each step of the simulation
 
-``update_step`` : integer greater then 0
-  update the state every ``update_step`` steps (1 means every step of the
+``nbSteps`` : integer greater then 0
+  update the state every ``nbSteps`` steps (1 means every step of the
   simulation)
 
 
-*Note*: end time = ``start_time`` + ⌈ 1/``increment`` ⌉ * dt *
-``update_step``
+*Note*: end time = ``startTime`` + ⌈ 1/``increment`` ⌉ * dt * ``nbSteps``
 
 
-Output
+Output Parameters
 ====================
 
-We have two options, I'm not sure which one is better:
-
-1) Store result in ``positions`` and ``triangles`` arguments
-2) Link to some ``TriangleSetTopolgyContainer`` and change this one
-
-I think the 1) is maybe more "generic" (you could also add an output to update the segments)
+``positions``
+  interpolated positions
 
 
 Process Description
 ====================
 
-While current simulation time is less then or equal to ``start_time`` the
-output is equal to the ``start_mesh``. After that the state is linear
-interpolation between ``start_mesh`` and ``end_mesh``. The interpolation
-variable is increased every ``update_step`` steps of the simulation by the
-amount of ``increment``. After every update all registered components are
-signaled about the change in the shame. When interpolation variable reaches
-1 then output is equal to ``end_mesh`` for the rest of the simulation.
+While current simulation time is less then or equal to ``startTime`` the
+output is equal to the ``startPosition``. After that the state is linear
+interpolation between ``startPosition`` and ``endPosition``. The
+interpolation variable is increased every ``nbSteps`` steps of the
+simulation by the amount of ``increment``. After every update the event
+``MeshChangedEvent`` is propagated to all the sibling components and child
+nodes. When interpolation variable reaches 1 the output is equal to
+``endPosition`` for the rest of the simulation.
 
 
 Interface
 ====================
-
-registerUpdateCallback(function)
-  registers a callback the controller will call after each update of the
-  shape
-
-  *Note*: maybe there is a different way of doing that than callbacks in
-  Sofa (events?)
 
 getInterpolationVar()
   returns current value of the interpolation variable (in the range [0,1]).
 
 
-
-
-
 --------------------------------------------------------------------------------
-  Topological Mapping component
+  FindClosePoints component
 --------------------------------------------------------------------------------
 
-Performs (unidirectional) mapping (node translation) between two topologies
-(source and target) with the same number of elements. One node of the
-source topology can be mapped to one or more nodes of the target topology
-(but not vice versa).
-
-
+Finds pairs of indices of nodes whose distance is smaller then specified
+threshold.
 
 
 Input Parameters
 ====================
 
-``in``
-  source topology
+``position``
+  positions of nodes
 
-``out``
-  target topology
+``threshold``
+  distances between nodes has to be smaller than or equal to this value
 
-``single_map`` : optional
-  maps one node of the ``in`` topology to one node of the ``out`` topology
 
-``multi_map`` : optional
-  maps one node of the ``in`` topology to two or more nodes of the ``out``
-  topology
+Output Parameters
+====================
+
+``closePoints``
+  pairs of indices whose distance is smaller than or equal to the
+  ``threshold``
 
 
 Process Description
 ====================
 
-First, if either of ``single_map`` or ``multi_map`` is not specified
-auto-detection is attempted. The detection will map together nodes with the
-same position.
-
-No actions are performed during the simulation except when explicitly
-requested by calling interface functions.
+Finds pairs of indices of nodes whose distance is smaller then specified
+threshold.
 
 
 Interface
 ====================
 
-getMappedNode(nodeId, elementId)
-  Id of a node in ``out`` topology based on nodeId and elementId from
-  ``in`` topology
+*None*
+
+
+--------------------------------------------------------------------------------
+  JoinMeshPoints component
+--------------------------------------------------------------------------------
+
+Produces a mesh by joining several nodes in input mesh. Contains interface
+functions to discover the inverse mapping.
+
+
+Input Parameters
+====================
+
+``joinPoints``
+  pairs of indices which nodes to join into one; 1:N mapping is allowed,
+  e.g. to join three points a, b, and c enter two pairs "a b" and "a c"
+
+``position``
+``normals``
+``edges``
+``triangles``
+``quads``
+``tetrahedra``
+``hexahedra``
+  positions, normals and topology of the input mesh
+
+``joinedPosition``
+``joinedNormals``
+``joinedEdges``
+``joinedTriangles``
+``joinedQuads``
+``joinTetrahedra``
+``joinHexahedra``
+  positions, normals and topology of the output mesh with the prescribed
+  nodes joined together (see details below)
+
+``mergedPosition``
+``mergedNormals``
+  positions and normals of the common position and normals of the joined
+  nodes (see details below)
+
+
+Process Description
+====================
+
+Based on the pairs of indices in ``joinPoints`` joins the points and
+updates the topology accordingly. The value of the joined point is set like
+this: the point with the lowest index in the set is discovered and it's
+position is taken. The normal of the joined point is set like this: an
+average of the normals of all points that are to be joined.
+
+The process of merging changes positions of all nodes affected by joining
+to reflect this process. That is, position of each node is updated to the
+value it has after the joining. The number of nodes is the same as in the
+input mesh and is applicable to it's topology.
+
+
+Interface
+====================
+
+getSrcNodeFromTri(triangleId, nodeId)
+  Id of a node in input topology based on Id of a node and triangle from from
+  output topology
+
+*TODO*: add more functions when needed
 
 
 .. vim: tw=75 et
