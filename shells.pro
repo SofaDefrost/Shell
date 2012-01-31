@@ -18,6 +18,7 @@ else {
 DEFINES += SOFA_BUILD_SHELLS
 
 SOURCES =   initPluginShells.cpp \
+            controller/MeshInterpolator.cpp \
             engine/JoinMeshPoints.cpp \
             engine/FindClosePoints.cpp \
             forcefield/BezierTriangularBendingFEMForceField.cpp \
@@ -27,6 +28,9 @@ SOURCES =   initPluginShells.cpp \
 			mapping/BezierTriangleMechanicalMapping.cpp
 
 HEADERS =   initPluginShells.h \
+            controller/MeshChangedEvent.h \
+            controller/MeshInterpolator.h \
+            controller/MeshInterpolator.inl \
             engine/JoinMeshPoints.h \
             engine/JoinMeshPoints.inl \
             engine/FindClosePoints.h \
