@@ -59,6 +59,8 @@ public:
 
     virtual void onEndAnimationStep(const double dt);
 
+    Real getInterpolationVar() { return alpha; }
+
 private:
 
     unsigned int    stepCounter;
