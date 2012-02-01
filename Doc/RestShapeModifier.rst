@@ -101,6 +101,9 @@ following:
    *merged* belong to the mesh *S2* and those named *joined* belong to mesh
    *J*.
 
+*Note*: the list of nodes to join is exactly the one that used to be in
+``edge1`` and ``edge2`` parameters of the force field.
+
 ::
 
  +------------+                 +------------------+
