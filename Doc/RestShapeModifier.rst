@@ -231,27 +231,30 @@ Input Parameters
   pairs of indices which nodes to join into one; 1:N mapping is allowed,
   e.g. to join three points a, b, and c enter two pairs "a b" and "a c"
 
-``position``
-``normals``
-``edges``
-``triangles``
-``quads``
-``tetrahedra``
-``hexahedra``
+| ``position``
+| ``normals``
+| ``edges``
+| ``triangles``
+| ``quads``
+| ``tetrahedra``
+| ``hexahedra``
+
   positions, normals and topology of the input mesh
 
-``joinedPosition``
-``joinedNormals``
-``joinedEdges``
-``joinedTriangles``
-``joinedQuads``
-``joinTetrahedra``
-``joinHexahedra``
+| ``joinedPosition``
+| ``joinedNormals``
+| ``joinedEdges``
+| ``joinedTriangles``
+| ``joinedQuads``
+| ``joinTetrahedra``
+| ``joinHexahedra``
+
   positions, normals and topology of the output mesh with the prescribed
   nodes joined together (see details below)
 
-``mergedPosition``
-``mergedNormals``
+| ``mergedPosition``
+| ``mergedNormals``
+
   positions and normals of the common position and normals of the joined
   nodes (see details below)
 
