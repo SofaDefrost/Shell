@@ -980,71 +980,74 @@ void BendingPlateMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualPa
 {
     const OutVecCoord &outVertices = *this->toModel->getX();
 
-    bool bHaveShader = measureError.getValue();
-    if (bHaveShader)
-        shader.TurnOn();
-
     if(vparams->displayFlags().getShowVisualModels())
     {
         glDisable(GL_LIGHTING);
+
+        if (measureError.getValue())
+        {
+            shader.TurnOn();
+
+
+            const SeqTriangles &outTriangles = outputTopo->getTriangles();
+            unsigned int index;
+
+            glEnable(GL_DEPTH_TEST);
+            glPolygonOffset(1.0, 1.0);
+
+            if(vparams->displayFlags().getShowWireFrame())
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glEnable(GL_POLYGON_OFFSET_LINE);
+                glColor4f(0.0, 0.0, 1.0, 1.0);
+                glBegin(GL_TRIANGLES);
+                for (unsigned int i=0; i<outTriangles.size(); i++)
+                {
+                    index = outTriangles[i][0];
+                    glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+
+                    index = outTriangles[i][1];
+                    glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+
+                    index = outTriangles[i][2];
+                    glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+                }
+                glEnd();
+                glDisable(GL_POLYGON_OFFSET_LINE);
+            }
+            else
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glEnable(GL_POLYGON_OFFSET_FILL);
+                //            glColor4f(0.0, 0.0, 0.0, 0.0);
+                glBegin(GL_TRIANGLES);
+                for (unsigned int i=0; i<outTriangles.size(); i++)
+                {
+                    index = outTriangles[i][0];
+                    glColor4f(coloursPerVertex[index][0], coloursPerVertex[index][1], coloursPerVertex[index][2], 1.0);
+                    glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+
+                    index = outTriangles[i][1];
+                    glColor4f(coloursPerVertex[index][0], coloursPerVertex[index][1], coloursPerVertex[index][2], 1.0);
+                    glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+
+                    index = outTriangles[i][2];
+                    glColor4f(coloursPerVertex[index][0], coloursPerVertex[index][1], coloursPerVertex[index][2], 1.0);
+                    glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
+                }
+                glEnd();
+                glDisable(GL_POLYGON_OFFSET_FILL);
+            }
+
+            shader.TurnOff();
+        }
 
 #if 0
         if (!triangleSubdivisionTopologicalMapping) return;
 
         const SeqEdges &outEdges = triangleSubdivisionTopologicalMapping->getSubEdges();
 //        const SeqEdges &outEdges = outputTopo->getEdges();
-#endif
-        const SeqTriangles &outTriangles = outputTopo->getTriangles();
-        unsigned int index;
 
-        glEnable(GL_DEPTH_TEST);
-        glPolygonOffset(1.0, 1.0);
-
-        if(vparams->displayFlags().getShowWireFrame())
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glEnable(GL_POLYGON_OFFSET_LINE);
-            glColor4f(0.0, 0.0, 1.0, 1.0);
-            glBegin(GL_TRIANGLES);
-            for (unsigned int i=0; i<outTriangles.size(); i++)
-            {
-                index = outTriangles[i][0];
-                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
-
-                index = outTriangles[i][1];
-                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
-
-                index = outTriangles[i][2];
-                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
-            }
-            glEnd();
-            glDisable(GL_POLYGON_OFFSET_LINE);
-        }
-        else
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glEnable(GL_POLYGON_OFFSET_FILL);
-//            glColor4f(0.0, 0.0, 0.0, 0.0);
-            glBegin(GL_TRIANGLES);
-            for (unsigned int i=0; i<outTriangles.size(); i++)
-            {
-                index = outTriangles[i][0];
-                glColor4f(coloursPerVertex[index][0], coloursPerVertex[index][1], coloursPerVertex[index][2], 1.0);
-                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
-
-                index = outTriangles[i][1];
-                glColor4f(coloursPerVertex[index][0], coloursPerVertex[index][1], coloursPerVertex[index][2], 1.0);
-                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
-
-                index = outTriangles[i][2];
-                glColor4f(coloursPerVertex[index][0], coloursPerVertex[index][1], coloursPerVertex[index][2], 1.0);
-                glVertex3f(outVertices[index][0], outVertices[index][1], outVertices[index][2]);
-            }
-            glEnd();
-            glDisable(GL_POLYGON_OFFSET_FILL);
-        }
-
-#if 0
         // Render shells' contours (subdivision of edges)
         glColor4f(1.0, 1.0, 1.0, 1.0);
 //        glColor4f(0.0, 0.0, 0.0, 1.0);
@@ -1062,9 +1065,6 @@ void BendingPlateMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualPa
 #endif
 
     }
-
-    if (bHaveShader)
-        shader.TurnOff();
 }
 
 

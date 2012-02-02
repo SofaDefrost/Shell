@@ -43,14 +43,17 @@
         -->
 
         <Node name="SubTriangles">
+            <!--
             <TriangleSubdivisionTopologicalMapping name="subMapping"
                 input="@../coarseTopo" output="@../coarseTopo"
                 inputPositions="@../coarseMesh_MO.position" inputTriangles="@../coarseTopo.triangles"
                 subdivisions="2"/>
             <TriangleSetTopologyContainer  name="subCoarseTopo"
                 position="@subMapping.outputPositions" triangles="@subMapping.outputTriangles" />
+                -->
+            <TriangleSetTopologyContainer  name="subCoarseTopo" src="@/TargetMesh/targetMesh" />
 
-            <MechanicalObject name="subCoarse_MO" rest_position="@subMapping.outputPositions" />
+            <MechanicalObject name="subCoarse_MO" rest_position="@subCoarseTopo.position" />
             <BendingPlateMechanicalMapping measureError="1" targetTopology="@/TargetMesh/targetTopo" />
             <!--<BezierTriangleMechanicalMapping measureError="1" targetTopology="/TargetMesh/targetTopo" />-->
 
