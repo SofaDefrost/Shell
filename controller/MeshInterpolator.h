@@ -5,6 +5,8 @@
 #include <sofa/component/controller/Controller.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
+#include <sofa/defaulttype/Vec.h>
+
 #include "../initPluginShells.h"
 
 namespace sofa
@@ -27,6 +29,7 @@ public:
     typedef typename DataTypes::Coord Coord;
     typedef typename DataTypes::Deriv Deriv;
     typedef typename Coord::value_type Real;
+    typedef sofa::defaulttype::Vec<3,Real> Vec3;
 
 protected:
 
@@ -52,10 +55,14 @@ public:
     Data<Real>              f_startTime;
     Data<unsigned int>      f_nbSteps;
     Data<Real>              f_increment;
+
     Data<VecCoord>          f_startPosition;
+    Data<helper::vector<Vec3> > f_startNormals;
     Data<VecCoord>          f_endPosition;
+    Data<helper::vector<Vec3> > f_endNormals;
 
     Data<VecCoord>          f_position;
+    Data<helper::vector<Vec3> > f_normals;
 
     virtual void onEndAnimationStep(const double dt);
 

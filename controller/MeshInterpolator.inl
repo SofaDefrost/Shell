@@ -20,8 +20,11 @@ MeshInterpolator<DataTypes>::MeshInterpolator()
 , f_nbSteps(initData(&f_nbSteps, (unsigned int)10, "nbSteps", "Perform a transition every nbStep steps"))
 , f_increment(initData(&f_increment, (Real)0.05, "increment", "How quickly converge to the final positions"))
 , f_startPosition(initData(&f_startPosition, "startPosition","Starting positions of the nodes"))
+, f_startNormals(initData(&f_startNormals, "startNormals","Starting normals of the nodes"))
 , f_endPosition(initData(&f_endPosition, "endPosition","Final positions of the nodes"))
+, f_endNormals(initData(&f_endNormals, "endNormals","Final normals of the nodes"))
 , f_position(initData(&f_position, "position","Interpolated positions of the nodes"))
+, f_normals(initData(&f_normals, "normals","Interpolated normals of the nodes"))
 , stepCounter(0)
 {
 }
@@ -48,16 +51,30 @@ void MeshInterpolator<DataTypes>::reinit()
 
     // Check that the number of nodes is the same
     if (lenStart != lenEnd) {
-        serr << "Number of start end end nodes has to be the same" << sendl;
+        serr << "Number of start and end nodes has to be the same" << sendl;
         if (lenStart > lenEnd) {
             VecCoord &pts = *f_startPosition.beginEdit();
             pts.resize(lenEnd);
             f_startPosition.endEdit();
+            lenStart = lenEnd;
         } else {
             VecCoord &pts = *f_endPosition.beginEdit();
             pts.resize(lenStart);
             f_endPosition.endEdit();
         }
+    }
+
+    unsigned int lenStartN = f_startNormals.getValue().size();
+    unsigned int lenEndN = f_endNormals.getValue().size();
+
+    // Check that the number of nodes is the same
+    if (((lenStartN != 0) || (lenEndN != 0)) &&
+        ((lenStartN != lenEndN) || (lenStart != lenStartN))) {
+        serr << "Number of start normals, end normals and positions has to be the same!" << sendl;
+        f_startNormals.beginEdit()->clear();
+        f_startNormals.endEdit();
+        f_endNormals.beginEdit()->clear();
+        f_endNormals.endEdit();
     }
 
     // Check startTime
@@ -88,6 +105,10 @@ void MeshInterpolator<DataTypes>::reinit()
     // Start with starting point
     *f_position.beginEdit() = f_startPosition.getValue();
     f_position.endEdit();
+
+    // Start with starting normals
+    *f_normals.beginEdit() = f_startNormals.getValue();
+    f_normals.endEdit();
 
 }
 
@@ -129,11 +150,24 @@ void MeshInterpolator<DataTypes>::interpolate()
     const VecCoord &startPt = f_startPosition.getValue();
     const VecCoord &endPt = f_endPosition.getValue();
 
+    const helper::vector<Vec3> &startNorm = f_startNormals.getValue();
+    const helper::vector<Vec3> &endNorm = f_endNormals.getValue();
+
     VecCoord &pt = *f_position.beginEdit();
+    helper::vector<Vec3> &norm = *f_normals.beginEdit();
 
     for (unsigned int i=0; i<startPt.size(); i++) {
         pt[i] = startPt[i] * (1.0-alpha) + endPt[i] * alpha;
     }
+
+    if (startNorm.size() > 0) {
+        for (unsigned int i=0; i<startNorm.size(); i++) {
+            norm[i] = startNorm[i] * (1.0-alpha) + endNorm[i] * alpha;
+        }
+    }
+
+    f_position.endEdit();
+    f_normals.endEdit();
 }
 
 #if 0
