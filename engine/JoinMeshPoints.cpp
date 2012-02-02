@@ -1,7 +1,6 @@
 #define SOFA_COMPONENT_ENGINE_JOINMESHPOINTS_CPP
-#include <engine/JoinMeshPoints.inl>
+#include "JoinMeshPoints.inl"
 #include <sofa/core/ObjectFactory.h>
-#include "../initPluginShells.h"
 
 namespace sofa
 {

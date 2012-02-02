@@ -8,6 +8,7 @@
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/component/component.h>
+#include "../initPluginShells.h"
 
 namespace sofa
 {

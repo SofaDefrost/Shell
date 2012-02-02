@@ -1,7 +1,6 @@
 #define SOFA_COMPONENT_CONTROLLER_MESHINTERPOLATION_CPP
 #include "MeshInterpolator.inl"
 #include <sofa/core/ObjectFactory.h>
-#include "../initPluginShells.h"
 
 namespace sofa
 {

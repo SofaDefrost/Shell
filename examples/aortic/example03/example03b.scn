@@ -78,8 +78,7 @@
 
         <Node name="simulation">
             <EulerImplicit />
-            <!--<CGLinearSolver iterations="200" tolerance="1e-9" threshold="1e-9" />-->
-            <SparseLDLSolver />
+            <CGLinearSolver iterations="200" tolerance="1e-9" threshold="1e-9" />
 
             <TriangleSetTopologyContainer position="@/joinedMesh/join.joinedPosition" triangles="@/joinedMesh/join.joinedTriangles" />
             <MechanicalObject template="Rigid" position="@/joinedMesh/framesJ.frames" />
