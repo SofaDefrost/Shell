@@ -99,11 +99,26 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         return;
     }
 
-    if (normals.getValue().size() == 0) {
-        serr << "No normals defined, assuming flat triangles" << sendl;
-    } else if (normals.getValue().size() != this->fromModel->getX0()->size()) {
-        serr << "Normals count doesn't correspond with nodes count" << sendl;
-        return;
+    // Retrieve associated Force Field (if available)
+    this->getContext()->get(bezierForcefield);
+    if (bezierForcefield)
+    {
+        sout << "TriangularBendingForcefield was found" << sendl;
+        if (normals.getValue().size() != 0) {
+            serr << "Ignoring normals, using configuration from force field" <<
+                sendl;
+        }
+    }
+    else
+    {
+        sout << "TriangularBendingForcefield was NOT found" << sendl;
+
+        if (normals.getValue().size() == 0) {
+            serr << "No normals defined, assuming flat triangles" << sendl;
+        } else if (normals.getValue().size() != this->fromModel->getX0()->size()) {
+            serr << "Normals count doesn't correspond with nodes count" << sendl;
+            return;
+        }
     }
 
     const OutVecCoord &outVertices = *this->toModel->getX();
@@ -126,7 +141,6 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
 
     const helper::vector<Vec3>& norms = normals.getValue();
 
-
     // Iterates over 'in' triangles
     triangleInfo.resize(inTriangles.size());
     for (unsigned int t=0; t<inTriangles.size(); t++) {
@@ -136,19 +150,24 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
 
         TriangleInformation &tinfo = triangleInfo[t];
 
-        // Compute initial bezier points at the edges 
-        sofa::component::forcefield::BezierTriangularBendingFEMForceField<TIn>::computeEdgeBezierPoints(
-            a, b, c, inVerticesRigid0, norms, tinfo.bezierNodes);
+        if (!bezierForcefield)
+        {
 
-        // Get the segments' position in the reference frames of the rest-shape
-        tinfo.P0_P1 = inVerticesRigid0[a].getOrientation().inverseRotate( tinfo.bezierNodes[3] );
-        tinfo.P0_P2 = inVerticesRigid0[a].getOrientation().inverseRotate( tinfo.bezierNodes[4] );
+            // Compute initial bezier points at the edges 
+            BezierFF::computeEdgeBezierPoints(
+                a, b, c, inVerticesRigid0, norms, tinfo.bezierNodes);
 
-        tinfo.P1_P2 = inVerticesRigid0[b].getOrientation().inverseRotate( tinfo.bezierNodes[5] );
-        tinfo.P1_P0 = inVerticesRigid0[b].getOrientation().inverseRotate( tinfo.bezierNodes[6] );
+            // Get the segments' position in the reference frames of the rest-shape
+            tinfo.P0_P1 = inVerticesRigid0[a].getOrientation().inverseRotate( tinfo.bezierNodes[3] );
+            tinfo.P0_P2 = inVerticesRigid0[a].getOrientation().inverseRotate( tinfo.bezierNodes[4] );
 
-        tinfo.P2_P1 = inVerticesRigid0[c].getOrientation().inverseRotate( tinfo.bezierNodes[7] );
-        tinfo.P2_P0 = inVerticesRigid0[c].getOrientation().inverseRotate( tinfo.bezierNodes[8] );
+            tinfo.P1_P2 = inVerticesRigid0[b].getOrientation().inverseRotate( tinfo.bezierNodes[5] );
+            tinfo.P1_P0 = inVerticesRigid0[b].getOrientation().inverseRotate( tinfo.bezierNodes[6] );
+
+            tinfo.P2_P1 = inVerticesRigid0[c].getOrientation().inverseRotate( tinfo.bezierNodes[7] );
+            tinfo.P2_P0 = inVerticesRigid0[c].getOrientation().inverseRotate( tinfo.bezierNodes[8] );
+
+        }
 
         tinfo.attachedPoints.clear();
     }
@@ -679,24 +698,41 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
     // List of in triangles
     const SeqTriangles& inTriangles = inputTopo->getTriangles();
 
-    // Compute nodes of the Bézier triangle for each input triangle
     for (unsigned int t=0; t<inTriangles.size();t++)
     {
-        //Vec3 p, cp;
 
         TriangleInformation &tinfo = triangleInfo[t];
         Triangle triangle = inTriangles[t];
 
-        // Corners
-        tinfo.bezierNodes[0] = in[ triangle[0] ].getCenter();
-        tinfo.bezierNodes[1] = in[ triangle[1] ].getCenter();
-        tinfo.bezierNodes[2] = in[ triangle[2] ].getCenter();
+        if (bezierForcefield)
+        {
+            // Use data from the force field
+            const typename BezierFF::TriangleInformation fftinfo = 
+                bezierForcefield->getTriangleInfo(t);
+            tinfo.bezierNodes = fftinfo.bezierNodes; 
+
+            tinfo.P0_P1 = fftinfo.P0_P1_inFrame0;
+            tinfo.P0_P2 = fftinfo.P0_P2_inFrame0;
+            tinfo.P1_P2 = fftinfo.P1_P2_inFrame1;
+            tinfo.P1_P0 = fftinfo.P1_P0_inFrame1;
+            tinfo.P2_P0 = fftinfo.P2_P0_inFrame2;
+            tinfo.P2_P1 = fftinfo.P2_P1_inFrame2;
+
+        }
+        else
+        {
+            // Compute nodes of the Bézier triangle
+
+            // Corners
+            tinfo.bezierNodes[0] = in[ triangle[0] ].getCenter();
+            tinfo.bezierNodes[1] = in[ triangle[1] ].getCenter();
+            tinfo.bezierNodes[2] = in[ triangle[2] ].getCenter();
 
 #ifdef ROTQ
-        Quaternion q[3] = {
-            in[ triangle[0] ].getOrientation(),
-            in[ triangle[1] ].getOrientation(),
-            in[ triangle[2] ].getOrientation() };
+            Quaternion q[3] = {
+                in[ triangle[0] ].getOrientation(),
+                in[ triangle[1] ].getOrientation(),
+                in[ triangle[2] ].getOrientation() };
 
 #define BN(i, p, seg) do { \
     tinfo.bezierNodes[(i)] = tinfo.bezierNodes[(p)] + \
@@ -704,11 +740,11 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
 } while (0)
 
 #else
-        // Rotation matrices at corner nodes
-        Mat33 R[3];
-        in[ triangle[0] ].getOrientation().toMatrix(R[0]);
-        in[ triangle[1] ].getOrientation().toMatrix(R[1]);
-        in[ triangle[2] ].getOrientation().toMatrix(R[2]);
+            // Rotation matrices at corner nodes
+            Mat33 R[3];
+            in[ triangle[0] ].getOrientation().toMatrix(R[0]);
+            in[ triangle[1] ].getOrientation().toMatrix(R[1]);
+            in[ triangle[2] ].getOrientation().toMatrix(R[2]);
 
 #define BN(i, p, seg) do { \
     tinfo.bezierNodes[(i)] = tinfo.bezierNodes[(p)] + \
@@ -716,29 +752,30 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
 } while (0)
 
 #endif
-        BN(3, 0, P0_P1);
-        BN(4, 0, P0_P2);
-        BN(5, 1, P1_P2);
-        BN(6, 1, P1_P0);
-        BN(7, 2, P2_P0);
-        BN(8, 2, P2_P1);
+            BN(3, 0, P0_P1);
+            BN(4, 0, P0_P2);
+            BN(5, 1, P1_P2);
+            BN(6, 1, P1_P0);
+            BN(7, 2, P2_P0);
+            BN(8, 2, P2_P1);
 
 #undef BN
 
 #ifdef ROTQ
-        // Center
-        tinfo.bezierNodes[9] =
-            (tinfo.bezierNodes[0] + q[0].rotate( tinfo.P0_P1 + tinfo.P0_P2 ))/3.0 +
-            (tinfo.bezierNodes[1] + q[1].rotate( tinfo.P1_P0 + tinfo.P1_P2 ))/3.0 +
-            (tinfo.bezierNodes[2] + q[2].rotate( tinfo.P2_P0 + tinfo.P2_P1 ))/3.0;
+            // Center
+            tinfo.bezierNodes[9] =
+                (tinfo.bezierNodes[0] + q[0].rotate( tinfo.P0_P1 + tinfo.P0_P2 ))/3.0 +
+                (tinfo.bezierNodes[1] + q[1].rotate( tinfo.P1_P0 + tinfo.P1_P2 ))/3.0 +
+                (tinfo.bezierNodes[2] + q[2].rotate( tinfo.P2_P0 + tinfo.P2_P1 ))/3.0;
 #else
-        // Center
-        tinfo.bezierNodes[9] =
-            (tinfo.bezierNodes[0] + R[0]*( tinfo.P0_P1 + tinfo.P0_P2 ))/3.0 +
-            (tinfo.bezierNodes[1] + R[1]*( tinfo.P1_P0 + tinfo.P1_P2 ))/3.0 +
-            (tinfo.bezierNodes[2] + R[2]*( tinfo.P2_P0 + tinfo.P2_P1 ))/3.0;
+            // Center
+            tinfo.bezierNodes[9] =
+                (tinfo.bezierNodes[0] + R[0]*( tinfo.P0_P1 + tinfo.P0_P2 ))/3.0 +
+                (tinfo.bezierNodes[1] + R[1]*( tinfo.P1_P0 + tinfo.P1_P2 ))/3.0 +
+                (tinfo.bezierNodes[2] + R[2]*( tinfo.P2_P0 + tinfo.P2_P1 ))/3.0;
 #endif
 
+        }
 
         // Go through the attached points
         for (unsigned int i=0; i<tinfo.attachedPoints.size(); i++)

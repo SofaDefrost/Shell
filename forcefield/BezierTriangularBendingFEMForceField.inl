@@ -40,6 +40,8 @@
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 #include <sofa/simulation/common/Simulation.h> // for draw()
 
+#include "../controller/MeshChangedEvent.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -65,7 +67,8 @@ template<class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
 {
     if (ff) {
-        ff->initTriangle(triangleIndex, t[0], t[1], t[2]);
+        ff->initTriangleOnce(triangleIndex, t[0], t[1], t[2]);
+        ff->initTriangle(triangleIndex);
     }
 }
 
@@ -79,6 +82,9 @@ BezierTriangularBendingFEMForceField<DataTypes>::BezierTriangularBendingFEMForce
 , f_young(initData(&f_young,(Real)3000.,"youngModulus","Young's modulus in Hooke's law"))
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
 , normals(initData(&normals, "normals","Node normals at the rest shape"))
+, restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
+, mapTopology(false)
+, topologyMapper(initLink("topologyMapper","Component supplying different topology for the rest shape"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
     triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
@@ -115,21 +121,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
         return;
     }
 
-    _topology = this->getContext()->getMeshTopology();
-
-    if (_topology->getNbTriangles()==0)
-    {
-            serr << "BezierTriangularBendingFEMForceField: object must have a Triangular Set Topology."<<sendl;
-            return;
-    }
-
-    if (normals.getValue().size() == 0) {
-        serr << "No normals defined, assuming flat triangles" << sendl;
-    } else if (normals.getValue().size() != this->mstate->getX0()->size()) {
-        serr << "Normals count doesn't correspond with nodes count" << sendl;
-        return;
-    }
-
     // Create specific handler for TriangleData
     triangleInfo.createTopologicalEngine(_topology, triangleHandler);
     triangleInfo.registerTopologicalData();
@@ -142,6 +133,81 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
 // --------------------------------------------------------------------------------------
 template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::reinit()
 {
+    _topology = this->getContext()->getMeshTopology();
+
+    if (_topology->getNbTriangles()==0)
+    {
+            serr << "BezierTriangularBendingFEMForceField: object must have a Triangular Set Topology."<<sendl;
+            return;
+    }
+
+    if (topologyMapper.get() != NULL) {
+
+        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
+        if (jmp->f_output_triangles.getValue().size() == 0)
+        {
+            serr << "Mapped topology must be triangular! No triangles found." << sendl;
+        } else {
+            mapTopology = true;
+        }
+    }
+
+    if (restShape.get() != NULL) {
+        // Listen for MeshChangedEvent
+        *this->f_listening.beginEdit() = true;
+        this->f_listening.endEdit();
+
+        // Check if there is same number of nodes
+        const VecCoord &rx = restShape.get()->f_position.getValue();
+        if (!mapTopology) {
+            if (rx.size() != this->mstate->getX0()->size()) {
+                serr << "Different number of nodes in rest shape and mechanical state!" << sendl;
+            }
+        } else if (rx.size() != topologyMapper.get()->f_input_position.getValue().size()) {
+            serr << "Different number of nodes in rest shape and (original) mapped topology!" << sendl;
+        }
+
+        // Check normal count
+        helper::vector<Vec3> norms = restShape.get()->f_normals.getValue();
+        if (norms.size() == 0) {
+            serr << "No normals defined in rest shape, assuming flat triangles!" << sendl;
+        } else if (norms.size() !=
+            topologyMapper.get()->f_input_position.getValue().size()) {
+            serr << "Normals count doesn't correspond with nodes count in topologyMapper!" << sendl;
+            return;
+        }
+
+    } else if (mapTopology) {
+        // Mapped topology, no changing rest shape
+
+        if (normals.getValue().size() != 0) {
+            serr << "Ignoring defined normals because topologyMapper is defined." << sendl;
+        }
+
+        // Check normal count
+        helper::vector<Vec3> norms = topologyMapper.get()->f_input_normals.getValue();
+        if (norms.size() == 0) {
+            serr << "No normals defined in topologyMapper, assuming flat triangles!" << sendl;
+        } else if (norms.size() !=
+            topologyMapper.get()->f_input_position.getValue().size()) {
+            serr << "Normals count doesn't correspond with nodes count in topologyMapper!" << sendl;
+            return;
+        }
+
+    }
+
+    if (!mapTopology && restShape.get() == NULL) {
+        // No topology mapper, no changing rest shape -> normal behaviour
+
+        // Check normal count
+        if (normals.getValue().size() == 0) {
+            serr << "No normals defined, assuming flat triangles" << sendl;
+        } else if (normals.getValue().size() != this->mstate->getX0()->size()) {
+            serr << "Normals count doesn't correspond with nodes count" << sendl;
+            return;
+        }
+    }
+
     // Compute the material matrices
     computeMaterialMatrix();
 
@@ -158,12 +224,11 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
     triangleInfo.endEdit();
 }
 
-
 // --------------------------------------------------------------------------------------
-// --- Store the initial position of the nodes
+// --- Initialisation of the triangle that has to be done only once
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, const Index&a, const Index&b, const Index&c)
+void BezierTriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int i, const Index&a, const Index&b, const Index&c)
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
@@ -173,50 +238,100 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i, 
     tinfo->b = b;
     tinfo->c = c;
 
+    // Store indices of each vertex in rest shape
+    Index a0=a, b0=b, c0=c;
+    if (mapTopology) {
+        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
+
+        // Get indices in original topology
+        a0 = jmp->getSrcNodeFromTri(i, a0);
+        b0 = jmp->getSrcNodeFromTri(i, b0);
+        c0 = jmp->getSrcNodeFromTri(i, c0);
+    }
+
+    tinfo->a0 = a0;
+    tinfo->b0 = b0;
+    tinfo->c0 = c0;
+
+    triangleInfo.endEdit();
+}
+
+// --------------------------------------------------------------------------------------
+// --- Initialisation of the triangle that should be done when rest shape changes
+// --------------------------------------------------------------------------------------
+template <class DataTypes>
+void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
+{
     if (this->mstate == NULL) {
         serr << "Missing mechanical state" << sendl;
         return;
     }
 
+    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    TriangleInformation *tinfo = &triangleInf[i];
+
+    Index a0 = tinfo->a0;
+    Index b0 = tinfo->b0;
+    Index c0 = tinfo->c0;
+
     // Gets vertices of rest positions
-    const VecCoord& x0 = *this->mstate->getX0();
-    const helper::vector<Vec3>& norms = normals.getValue();
+    const VecCoord& x0 = (restShape.get() != NULL)
+        // if having changing rest shape take it
+        ? restShape.get()->f_position.getValue()
+        : (mapTopology
+            // if rest shape is fixed but we have mapped topology use it
+            ? topologyMapper.get()->f_input_position.getValue()
+            // otherwise just take rest shape in mechanical state
+            : *this->mstate->getX0()
+          );
+
+    const helper::vector<Vec3>& norms = (restShape.get() != NULL)
+        // if having changing rest shape take its normals
+        ? restShape.get()->f_normals.getValue()
+        : (mapTopology
+            // if rest shape is fixed but we have mapped topology use it
+            ? topologyMapper.get()->f_input_normals.getValue()
+            // otherwise just take normals from parameter
+            : normals.getValue()
+          );
 
     // Compute initial bezier points at the edges 
-    computeEdgeBezierPoints(a, b, c, x0, norms, tinfo->bezierNodes);
+    computeEdgeBezierPoints(a0, b0, c0, x0, norms, tinfo->bezierNodes);
 
     // Get the segments' position in the reference frames of the rest-shape
-    tinfo->P0_P1_inFrame0 = x0[a].getOrientation().inverseRotate( tinfo->bezierNodes[3] );
-    tinfo->P0_P2_inFrame0 = x0[a].getOrientation().inverseRotate( tinfo->bezierNodes[4] );
+    tinfo->P0_P1_inFrame0 = x0[a0].getOrientation().inverseRotate( tinfo->bezierNodes[3] );
+    tinfo->P0_P2_inFrame0 = x0[a0].getOrientation().inverseRotate( tinfo->bezierNodes[4] );
 
-    tinfo->P1_P2_inFrame1 = x0[b].getOrientation().inverseRotate( tinfo->bezierNodes[5] );
-    tinfo->P1_P0_inFrame1 = x0[b].getOrientation().inverseRotate( tinfo->bezierNodes[6] );
+    tinfo->P1_P2_inFrame1 = x0[b0].getOrientation().inverseRotate( tinfo->bezierNodes[5] );
+    tinfo->P1_P0_inFrame1 = x0[b0].getOrientation().inverseRotate( tinfo->bezierNodes[6] );
 
-    tinfo->P2_P1_inFrame2 = x0[c].getOrientation().inverseRotate( tinfo->bezierNodes[7] );
-    tinfo->P2_P0_inFrame2 = x0[c].getOrientation().inverseRotate( tinfo->bezierNodes[8] );
-
-
+    tinfo->P2_P1_inFrame2 = x0[c0].getOrientation().inverseRotate( tinfo->bezierNodes[7] );
+    tinfo->P2_P0_inFrame2 = x0[c0].getOrientation().inverseRotate( tinfo->bezierNodes[8] );
 
     // Compute the initial position and rotation of the reference frame
-    this->interpolateRefFrame(tinfo, Vec2(1.0/3.0,1.0/3.0), x0, tinfo->bezierNodes);
+    this->interpolateRefFrame(tinfo, Vec2(1.0/3.0,1.0/3.0),
+        tinfo->a0, tinfo->b0, tinfo->c0, x0,
+        tinfo->bezierNodes);
+
+    tinfo->bezierNodes0 = tinfo->bezierNodes;
 
     // Compute positions in local frame
     computeLocalTriangle(x0, i);
 
     // Initial positions
-    tinfo->restLocalPositions[0] = tinfo->frameOrientation * (x0[a].getCenter() - tinfo->frameCenter);
-    tinfo->restLocalPositions[1] = tinfo->frameOrientation * (x0[b].getCenter() - tinfo->frameCenter);
-    tinfo->restLocalPositions[2] = tinfo->frameOrientation * (x0[c].getCenter() - tinfo->frameCenter);
+    tinfo->restLocalPositions[0] = tinfo->frameOrientation * (x0[a0].getCenter() - tinfo->frameCenter);
+    tinfo->restLocalPositions[1] = tinfo->frameOrientation * (x0[b0].getCenter() - tinfo->frameCenter);
+    tinfo->restLocalPositions[2] = tinfo->frameOrientation * (x0[c0].getCenter() - tinfo->frameCenter);
 
     // Initial rotations
 #ifdef CRQUAT
-    tinfo->restLocalOrientationsInv[0] = (tinfo->frameOrientationQ * x0[a].getOrientation()).inverse();
-    tinfo->restLocalOrientationsInv[1] = (tinfo->frameOrientationQ * x0[b].getOrientation()).inverse();
-    tinfo->restLocalOrientationsInv[2] = (tinfo->frameOrientationQ * x0[c].getOrientation()).inverse();
+    tinfo->restLocalOrientationsInv[0] = (tinfo->frameOrientationQ * x0[a0].getOrientation()).inverse();
+    tinfo->restLocalOrientationsInv[1] = (tinfo->frameOrientationQ * x0[b0].getOrientation()).inverse();
+    tinfo->restLocalOrientationsInv[2] = (tinfo->frameOrientationQ * x0[c0].getOrientation()).inverse();
 #else
-    x0[a].getOrientation().toMatrix(tinfo->restLocalOrientationsInv[0]);
-    x0[b].getOrientation().toMatrix(tinfo->restLocalOrientationsInv[1]);
-    x0[c].getOrientation().toMatrix(tinfo->restLocalOrientationsInv[2]);
+    x0[a0].getOrientation().toMatrix(tinfo->restLocalOrientationsInv[0]);
+    x0[b0].getOrientation().toMatrix(tinfo->restLocalOrientationsInv[1]);
+    x0[c0].getOrientation().toMatrix(tinfo->restLocalOrientationsInv[2]);
 
     tinfo->restLocalOrientationsInv[0].transpose( tinfo->frameOrientation * tinfo->restLocalOrientationsInv[0] );
     tinfo->restLocalOrientationsInv[1].transpose( tinfo->frameOrientation * tinfo->restLocalOrientationsInv[1] );
@@ -345,32 +460,35 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeEdgeBezierPoints(
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(
     const TriangleInformation *tinfo,
-    const VecCoord& x, /*const VecCoord& x0,*/
+    const Index& a, const Index& b, const Index& c,
+    const VecCoord& x,
     sofa::helper::fixed_array<Vec3,10> &X_bezierPoints)
 {
     // 3 points corresponding to the node position
-    X_bezierPoints[0] = x[tinfo->a].getCenter();
-    X_bezierPoints[1] = x[tinfo->b].getCenter();
-    X_bezierPoints[2] = x[tinfo->c].getCenter();
+    X_bezierPoints[0] = x[a].getCenter();
+    X_bezierPoints[1] = x[b].getCenter();
+    X_bezierPoints[2] = x[c].getCenter();
 
     // compute the corresponding Bezier Points
 
         // (3,4) is attached to frame 0
-    X_bezierPoints[3] = x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( tinfo->P0_P1_inFrame0 );
-    X_bezierPoints[4] = x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( tinfo->P0_P2_inFrame0 );
+    X_bezierPoints[3] = x[a].getCenter()+ x[a].getOrientation().rotate( tinfo->P0_P1_inFrame0 );
+    X_bezierPoints[4] = x[a].getCenter()+ x[a].getOrientation().rotate( tinfo->P0_P2_inFrame0 );
 
         // (5,6) is attached to frame 1
-    X_bezierPoints[5] = x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( tinfo->P1_P2_inFrame1 );
-    X_bezierPoints[6] = x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( tinfo->P1_P0_inFrame1 );
+    X_bezierPoints[5] = x[b].getCenter()+ x[b].getOrientation().rotate( tinfo->P1_P2_inFrame1 );
+    X_bezierPoints[6] = x[b].getCenter()+ x[b].getOrientation().rotate( tinfo->P1_P0_inFrame1 );
 
         // (7,8) is attached to frame 2
-    X_bezierPoints[7] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( tinfo->P2_P0_inFrame2 );
-    X_bezierPoints[8] = x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( tinfo->P2_P1_inFrame2 );
+        // TODO: 7/8 here are switched compared to initTriangle &
+        //       computeEdgeBezierPoints, verify and consolidate
+    X_bezierPoints[7] = x[c].getCenter()+ x[c].getOrientation().rotate( tinfo->P2_P0_inFrame2 );
+    X_bezierPoints[8] = x[c].getCenter()+ x[c].getOrientation().rotate( tinfo->P2_P1_inFrame2 );
 
         // (9) use a kind of skinning function (average of the position obtained when attached respectively to 0, 1 and 2)
-    X_bezierPoints[9] = (x[tinfo->a].getCenter()+ x[tinfo->a].getOrientation().rotate( (tinfo->P0_P1_inFrame0 + tinfo->P0_P2_inFrame0) ))/3.0 +
-                        (x[tinfo->b].getCenter()+ x[tinfo->b].getOrientation().rotate( (tinfo->P1_P2_inFrame1 + tinfo->P1_P0_inFrame1) ))/3.0 +
-                        (x[tinfo->c].getCenter()+ x[tinfo->c].getOrientation().rotate( (tinfo->P2_P0_inFrame2 + tinfo->P2_P1_inFrame2) ))/3.0;
+    X_bezierPoints[9] = (x[a].getCenter()+ x[a].getOrientation().rotate( (tinfo->P0_P1_inFrame0 + tinfo->P0_P2_inFrame0) ))/3.0 +
+                        (x[b].getCenter()+ x[b].getOrientation().rotate( (tinfo->P1_P2_inFrame1 + tinfo->P1_P0_inFrame1) ))/3.0 +
+                        (x[c].getCenter()+ x[c].getOrientation().rotate( (tinfo->P2_P0_inFrame2 + tinfo->P2_P1_inFrame2) ))/3.0;
 }
 
 
@@ -415,10 +533,15 @@ void BezierTriangularBendingFEMForceField<DataTypes>::bezierDerivateFunctions(co
 }
 
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(TriangleInformation *tinfo, const Vec2& /*baryCoord*/, const VecCoord& x, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints)
+void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(
+    TriangleInformation *tinfo,
+    const Vec2& /*baryCoord*/,
+    const Index& a, const Index& b, const Index& c,
+    const VecCoord& x,
+    sofa::helper::fixed_array<Vec3,10>& X_bezierPoints)
 {
     // get the position of the bezier Points
-    this->computePosBezierPoint(tinfo, x, X_bezierPoints);
+    this->computePosBezierPoint(tinfo, a, b, c, x, X_bezierPoints);
 
 #if 0 //Reference frame by rotation at the center of the bezier triangle
     // use the bezier functions to interpolate the positions
@@ -1173,7 +1296,9 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 
     // Compute the quaternion that embodies the rotation between the triangle
     // and world frames (co-rotational method)
-    interpolateRefFrame(tinfo, Vec2(1.0/3.0, 1.0/3.0), x, tinfo->bezierNodes);
+    interpolateRefFrame(tinfo, Vec2(1.0/3.0, 1.0/3.0),
+        tinfo->a, tinfo->b, tinfo->c, x,
+        tinfo->bezierNodes);
 
     computeLocalTriangle(x, elementIndex);
 
@@ -1482,17 +1607,28 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::default
 }
 
 
-
-// Computes principal curvatures for the shell at the given point
+template <class DataTypes>
+void BezierTriangularBendingFEMForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
+{
+    if ( /*sofa::core::objectmodel::MeshChangedEvent* ev =*/ dynamic_cast<sofa::core::objectmodel::MeshChangedEvent*>(event))
+    {
+        // Update of the rest shape
+        // NOTE: the number of triangles should be the same in all topologies
+        unsigned int nbTriangles = _topology->getNbTriangles();
+        for (unsigned int i=0; i<nbTriangles; i++) {
+            initTriangle(i);
+        }
+    }
+}
 
 
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
+    // TODO: draw the mapping between topologies. I'm not sure whether to put
+    // it in showForceField or showBehaviorModels
     if(vparams->displayFlags().getShowForceFields())
     {
-        // Gets vertices of rest and initial positions respectively
-        const VecCoord& x0 = *this->mstate->getX0();
         helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
         // Render Bezier points
@@ -1529,8 +1665,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
         for (int i=0; i<_topology->getNbTriangles(); ++i)
         {
             TriangleInformation *tinfo = &triangleInf[i];
-
-            Vec3 P1P2= x0[tinfo->b].getCenter() - x0[tinfo->a].getCenter();
 
 #ifdef CRQUAT
             Quat qFrame = tinfo->frameOrientationQ.inverse();

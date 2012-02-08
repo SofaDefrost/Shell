@@ -39,6 +39,9 @@
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/component/topology/TopologyData.h>
 
+#include "../controller/MeshInterpolator.h"
+#include "../engine/JoinMeshPoints.h"
+
 
 // Uncomment the following to use quaternions instead of matrices for
 // rotations. Quaternions are slightly faster but numericaly much, much *less*
@@ -136,6 +139,10 @@ public:
                 // Indices of each vertex
                 Index a, b, c;
 
+                // Indices in rest shape topology. Normaly is the same as a, b,
+                // c, but is different if topologyMapper is set.
+                Index a0, b0, c0;
+
                 // Corotational frame
                 Vec3 frameCenter;
                 Transformation frameOrientation;    // frame orientation
@@ -158,6 +165,8 @@ public:
                 // Nodes of the Bezier triangle
                 helper::fixed_array<Vec3, 10> bezierNodes;  // ... in global frame
                 helper::fixed_array<Vec3, 10> pts;          // ... in local frame
+                // ... of the rest shape
+                helper::fixed_array<Vec3, 10> bezierNodes0; // ... in global frame
 
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacement strainDisplacementMatrix1;
@@ -230,9 +239,27 @@ public:
         Data <Real> f_thickness;
         Data< helper::vector<Vec3> > normals;
 
+        // Allow transition between rest shapes
+        SingleLink<BezierTriangularBendingFEMForceField<DataTypes>,
+            sofa::component::controller::MeshInterpolator<DataTypes>,
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> restShape;
+
+        // Indirect rest shape indexing (e.g. for "joining" two meshes)
+        bool mapTopology;
+        SingleLink<BezierTriangularBendingFEMForceField<DataTypes>,
+            sofa::component::engine::JoinMeshPoints<DataTypes>,
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> topologyMapper;
+
+
         static void computeEdgeBezierPoints(const Index& a, const Index& b, const Index& c,
             const VecCoord& x, const helper::vector<Vec3>& norms,
             helper::fixed_array<Vec3,10> &bezierPoints);
+
+        void handleEvent(sofa::core::objectmodel::Event *event);
+
+        const TriangleInformation& getTriangleInfo(Index t) {
+            return triangleInfo.getValue()[t];
+        }
 
 protected :
 
@@ -244,7 +271,8 @@ protected :
         MaterialStiffness materialMatrixBending;
 
 
-        void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
+        void initTriangleOnce(const int i, const Index&a, const Index&b, const Index&c);
+        void initTriangle(const int i);
 
         void computeLocalTriangle(const VecCoord &x, const Index elementIndex);
 
@@ -264,10 +292,10 @@ protected :
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
         virtual void computeMaterialMatrix();
 
-        void computePosBezierPoint(const TriangleInformation *tinfo,  const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
+        void computePosBezierPoint(const TriangleInformation *tinfo, const Index& a, const Index& b, const Index& c, const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
         void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
         void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
-        void interpolateRefFrame( TriangleInformation *tinfo, const Vec2& baryCoord, const VecCoord& x, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints );
+        void interpolateRefFrame(TriangleInformation *tinfo, const Vec2& baryCoord, const Index& a, const Index& b, const Index& c, const VecCoord& x, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints );
 
 
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);

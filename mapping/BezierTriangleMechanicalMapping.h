@@ -91,6 +91,8 @@ public:
     typedef typename Out::MatrixDeriv           OutMatrixDeriv;
     typedef typename Out::Real                  OutReal;
 
+    typedef typename sofa::component::forcefield::BezierTriangularBendingFEMForceField<In>    BezierFF;
+
     typedef InReal Real;
 
     typedef Vec<3, Real> Vec3;
@@ -114,6 +116,7 @@ public:
     : Inherit(from, to)
     , inputTopo(NULL)
     , outputTopo(NULL)
+    , bezierForcefield(NULL)
     , normals(initData(&normals, "normals","Node normals at the rest shape"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
@@ -186,6 +189,7 @@ protected:
     : Inherit()
     , inputTopo(NULL)
     , outputTopo(NULL)
+    , bezierForcefield(NULL)
     , normals(initData(&normals, "normals","Node normals at the rest shape"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
@@ -219,6 +223,9 @@ protected:
 
         BaseMeshTopology* inputTopo;
         BaseMeshTopology* outputTopo;
+
+    // Pointer to the forcefield associated with the input topology
+    BezierFF* bezierForcefield;
 
         Data< helper::vector<Vec3> > normals;
         Data<bool> measureError;
