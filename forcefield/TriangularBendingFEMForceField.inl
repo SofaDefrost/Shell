@@ -409,7 +409,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
         sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
         if (jmp->f_output_triangles.getValue().size() == 0)
         {
-            serr << "Mapped topology must be a triangular! No triangles found." << sendl;
+            serr << "Mapped topology must be triangular! No triangles found." << sendl;
         } else {
             mapTopology = true;
         }
@@ -547,8 +547,8 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
 
     // Gets vertices of rest and initial positions respectively
     const VecCoord& x0 = (restShape.get() != NULL)
-        ? restShape.get()->f_position.getValue()
         // if having changing rest shape take it
+        ? restShape.get()->f_position.getValue()
         : (mapTopology
             // if rest shape is fixed but we have mapped topology use it
             ? topologyMapper.get()->f_input_position.getValue()

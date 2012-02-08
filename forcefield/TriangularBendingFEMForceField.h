@@ -131,7 +131,7 @@ public:
                 // Indices of each vertex
                 Index a, b, c;
                 // Indices in rest shape topology. Normaly is the same as a, b,
-                // c is different if topologyMapper is set.
+                // c, but is different if topologyMapper is set.
                 Index a0, b0, c0;
                 // Local coordinates
                 Vec3 localB, localC;

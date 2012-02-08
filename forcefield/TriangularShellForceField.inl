@@ -675,6 +675,9 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixMembrane(Stiffn
         return;
 
     (this->*csMembrane)(K, tinfo);
+
+    if (this->f_printLog.getValue())
+        sout << "Km = " << K << sendl;
 }
 
 
@@ -688,6 +691,9 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixBending(Stiffne
         return;
 
     (this->*csBending)(K, tinfo);
+
+    if (this->f_printLog.getValue())
+        sout << "Kb = " << K << sendl;
 }
 
 // --------------------------------------------------------------------------------------
