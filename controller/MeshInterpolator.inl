@@ -144,6 +144,9 @@ void MeshInterpolator<DataTypes>::onEndAnimationStep(const double /*dt*/)
     this->getContext()->propagateEvent(sofa::core::ExecParams::defaultInstance(), &mcEvent);
 }
 
+// I do not know how to switch between these two implementations cleanly
+#if 0
+
 template<class DataTypes>
 void MeshInterpolator<DataTypes>::interpolate()
 {
@@ -170,9 +173,7 @@ void MeshInterpolator<DataTypes>::interpolate()
     f_normals.endEdit();
 }
 
-#if 0
-
-I do not know how to switch between these two implementations cleanly
+#else
 
 template<class DataTypes>
 void MeshInterpolator<DataTypes>::interpolate()
@@ -180,7 +181,11 @@ void MeshInterpolator<DataTypes>::interpolate()
     const VecCoord &startPt = f_startPosition.getValue();
     const VecCoord &endPt = f_endPosition.getValue();
 
+    const helper::vector<Vec3> &startNorm = f_startNormals.getValue();
+    const helper::vector<Vec3> &endNorm = f_endNormals.getValue();
+
     VecCoord &pt = *f_position.beginEdit();
+    helper::vector<Vec3> &norm = *f_normals.beginEdit();
 
     for (unsigned int i=0; i<startPt.size(); i++) {
 
@@ -193,7 +198,17 @@ void MeshInterpolator<DataTypes>::interpolate()
             endPt[i].getOrientation(),
             alpha, false);
     }
+
+    if (startNorm.size() > 0) {
+        for (unsigned int i=0; i<startNorm.size(); i++) {
+            norm[i] = startNorm[i] * (1.0-alpha) + endNorm[i] * alpha;
+        }
+    }
+
+    f_position.endEdit();
+    f_normals.endEdit();
 }
+
 #endif
 
 } // namespace controller
