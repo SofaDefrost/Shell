@@ -43,7 +43,7 @@
             startPosition="@/joinedMesh/framesS.frames"
             endPosition="@/splitMesh/frames.frames"
             nbSteps="10"
-            increment="0.05" />
+            increment="0.1" />
         <EulerImplicit />
         <CGLinearSolver iterations="100" tolerance="1e-9" threshold="1e-9" />
 
@@ -81,12 +81,19 @@
             <!-- We need mechanical mapping for collision, because it work with
                  Vec3 and not with Rigid -->
             <Node name="SubTriangles">
-                <!--<VisualStyle displayFlags="hideVisual" />-->
-                <!-- we can just use same points/topology -->
+                <!-- we can use same points/topology like this:
                 <TriangleSetTopologyContainer  name="subTrianglesTopo"
                     position="@../../state.position" triangles="@../../topology.triangles" />
+                    -->
+                <TriangleSetTopologyContainer  name="subTrianglesTopo"
+                    fileTopology="mappedMesh.obj" />
                 <MechanicalObject name="subPoints" />
                 <BendingPlateMechanicalMapping input="@../../state" output="@subPoints"/>
+
+                <Node>
+                    <OglModel name="visual" color="1 0.5 0.5" />
+                    <IdentityMapping input="@.." output="@visual" />
+                </Node>
 
                 <Point contactStiffness="1e2"/>
                 <Line contactStiffness="1e2"/>
@@ -95,8 +102,7 @@
             </Node>
 
         </Node>
-        <OglModel name="visual" color="1 0.5 0.5" />
-        <IdentityMapping input="@." output="@visual" />
+
     </Node>
 
     <Node name="obstruction">
