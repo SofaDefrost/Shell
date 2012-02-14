@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<Node name="Root Node" dt="0.01" gravity="0 0 0" >
+
+    <VisualStyle displayFlags="showVisual" />
+
+    <Node name="MeshOriginal">
+        <MeshObjLoader name="loader" filename="cylinder2.obj"/>
+    </Node>
+
+    <!-- We use the map to combine the nodes -->
+    <Node name="Mesh">
+        <JoinMeshPoints template="Rigid" name="join" src="@/MeshOriginal/loader" joinPoints="
+            1  64
+            2  67
+            4  69
+            6  71
+            8  73
+            10 75
+            12 77
+            14 79
+            16 81
+            18 83
+            20 85
+            22 87
+            24 89
+            26 91
+            28 93
+            30 95
+            32 97
+            34 99
+            36 101
+            38 103
+            40 105
+            42 107
+            44 109
+            46 111
+            48 113
+            50 115
+            52 117
+            54 119
+            56 121
+            58 123
+            60 125
+            62 127
+            " />
+    </Node>
+
+    <Node name="Cylinder">
+        <!-- Rest shape interpolation -->
+        <MeshInterpolator template="Rigid" name="interp"
+            startPosition="@/Mesh/join.mergedPosition"
+            endPosition="@/MeshOriginal/loader.position"
+            startNormals="@/Mesh/join.mergedNormals"
+            endNormals="@/MeshOriginal/loader.normals"
+            nbSteps="10"
+            increment="0.05" />
+
+        <EulerImplicit />
+        <!--
+        <CGLinearSolver name="CG Linear Solver" iterations="200" tolerance="1.0e-9" threshold="1.0e-9"/>
+        -->
+        <SparseLDLSolver />
+
+
+        <TriangleSetTopologyContainer
+            position="@/Mesh/join.joinedPosition"
+            triangles="@/Mesh/join.joinedTriangles" />
+        <MechanicalObject name="MO" template="Rigid" rest_position="@/Mesh/join.joinedPosition" />
+
+        <BoxROI name="fixed1" box="-1 3.59 -1   1 3.61 1" drawBoxes="true" />
+        <BoxROI name="fixed2" box="-1 -1.01 -1   1 -0.99 1" drawBoxes="true" />
+        <FixedConstraint indices="@fixed1.indices" />
+        <FixedConstraint indices="@fixed2.indices" />
+
+        <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+
+        <BezierTriangularBendingFEMForceField name="FEM"
+            youngModulus="1e6"
+            poissonRatio="0.33"
+            thickness="0.01"
+
+            restShape="@interp"
+            topologyMapper="@/Mesh/join"
+            />
+
+        <Node>
+            <OglModel name="Visual1" color="green"/>
+            <IdentityMapping input="@.." output="@Visual1"/>
+        </Node>
+
+        <MeshExporter filename="cyl2-bez-E1e6" format="gmsh"
+            quads="0" tetras="0" hexas="0"
+            listening="true"
+            exportAtBegin="0" exportAtEnd="1" />
+
+    </Node>
+
+</Node>
