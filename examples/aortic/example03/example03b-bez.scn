@@ -74,13 +74,12 @@
             <CGLinearSolver iterations="20" tolerance="1e-9" threshold="1e-9" />
 
             <TriangleSetTopologyContainer position="@/joinedMesh/join.joinedPosition" triangles="@/joinedMesh/join.joinedTriangles" />
-            <MechanicalObject template="Rigid" position="@/joinedMesh/join.joinedPosition" />
+            <MechanicalObject template="Rigid" rest_position="@/joinedMesh/join.joinedPosition" />
             <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
 
             <FixedConstraint indices="5-20 188-199" />
 
             <BezierTriangularBendingFEMForceField
-                    bending="true"
                     poissonRatio="0.5"
                     thickness="0.1"
                     youngModulus="10000"

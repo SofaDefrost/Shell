@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<Node gravity="0 0 0">
+    <VisualStyle displayFlags="showVisual" />
+
+    <!-- Collision stuff -->
+    <CollisionPipeline name="pipeline" depth="6" verbose="0" />
+    <BruteForceDetection name="detection" />
+    <CollisionResponse name="response" response="default" />
+    <MinProximityIntersection name="proximity" alarmDistance="0.05" contactDistance="0.05" />
+
+
+    <Node name="splitMesh">
+        <VisualStyle displayFlags="showWireframe" />
+        <MeshObjLoader name="loader" filename="splitMesh.obj" />
+        <TriangleSetTopologyContainer name="topology" src="@loader" />
+        <MechanicalObject template="Rigid" position="@loader.position" />
+        <OglModel name="visual" color="0.75 0 0" />
+        <IdentityMapping input="@." output="@visual" />
+    </Node>
+
+    <Node name="joinedMesh">
+        <JoinMeshPoints template="Rigid" name="join" src="@/splitMesh/loader" joinPoints="
+            1  153
+            10 154
+            0  155
+            6  156
+            5  150
+            4  166
+            14 165
+            3  164
+            2  163
+            13 162
+            12 151
+            11 152
+            " />
+    </Node>
+
+    <Node name="simulation">
+        <MeshInterpolator template="Rigid" name="interp"
+            startPosition="@/joinedMesh/join.mergedPosition"
+            endPosition="@/splitMesh/loader.position"
+            startNormals="@/joinedMesh/join.mergedNormals"
+            endNormals="@/splitMesh/loader.normals"
+            nbSteps="10"
+            increment="0.1" />
+        <EulerImplicit />
+        <CGLinearSolver iterations="100" tolerance="1e-9" threshold="1e-9" />
+
+        <TriangleSetTopologyContainer name="topology" position="@/joinedMesh/join.joinedPosition" triangles="@/joinedMesh/join.joinedTriangles" />
+        <MechanicalObject name="state" template="Rigid" rest_position="@/joinedMesh/join.joinedPosition" />
+        <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+
+        <Node>
+            <!--<VisualStyle displayFlags="showBehavior" />-->
+
+            <!-- use PlaneROI to discover the proper indices -->
+            <PlaneROI name="Side1" drawSize="0" plane="
+                -5.12 -1.24 -3.90
+                -3.72 2.26 -3.20
+                -3.52 5.36 -0.80
+                0.2" />
+            <FixedConstraint indices="@Side1.indices" />
+            <PlaneROI name="Side2" drawSize="0" plane="
+                -6.12 1.70 1.84
+                -4.52 -1.90 2.34
+                -3.02 -5.10 0.64
+                0.2" />
+            <FixedConstraint indices="@Side2.indices" />
+
+            <BezierTriangularBendingFEMForceField
+                poissonRatio="0.5"
+                thickness="0.2"
+                youngModulus="10000"
+
+                restShape="@../interp"
+                topologyMapper="@/joinedMesh/join"
+                />
+
+            <!-- We need mechanical mapping for collision, because it work with
+                 Vec3 and not with Rigid -->
+            <Node name="SubTriangles">
+                <!-- we can use same points/topology like this:
+                <TriangleSetTopologyContainer  name="subTrianglesTopo"
+                    position="@../../state.position" triangles="@../../topology.triangles" />
+                    -->
+                <TriangleSetTopologyContainer  name="subTrianglesTopo"
+                    fileTopology="mappedMesh.obj" />
+                <MechanicalObject name="subPoints" />
+                <BezierTriangleMechanicalMapping input="@../.." output="@."/>
+
+                <Node>
+                    <OglModel name="visual" color="1 0.5 0.5" />
+                    <IdentityMapping input="@.." output="@visual" />
+                </Node>
+
+                <Point contactStiffness="1e2"/>
+                <Line contactStiffness="1e2"/>
+                <Triangle contactStiffness="1e2"/>
+
+            </Node>
+
+        </Node>
+
+    </Node>
+
+    <Node name="obstruction">
+        <MeshObjLoader name="loader" filename="obstructionMesh.obj" />
+        <TriangleSetTopologyContainer src="@loader" />
+        <MechanicalObject template="Vec3d" />
+        <Node>
+            <OglModel name="visual" color="0.5 0.5 1" />
+            <IdentityMapping input="@.." output="@visual" />
+        </Node>
+
+        <Point moving="0" simulated="0" />
+        <Line moving="0" simulated="0" />
+        <Triangle moving="0" simulated="0" />
+
+    </Node>
+
+</Node>

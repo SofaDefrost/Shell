@@ -67,7 +67,7 @@
             <CGLinearSolver iterations="20" tolerance="1e-9" threshold="1e-9" />
 
             <TriangleSetTopologyContainer position="@/joinedMesh/frames.frames" triangles="@/joinedMesh/join.joinedTriangles" />
-            <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
+            <MechanicalObject template="Rigid" rest_position="@/joinedMesh/frames.frames" />
             <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
 
             <BoxROI name="Side1" box="-2.75 -1.1 -1.1  -2.76 1.1 1.1" drawSize="0"/>
@@ -77,7 +77,6 @@
 
             <!--<TriangularBendingFEMForceField-->
             <BezierTriangularBendingFEMForceField
-                bending="true"
                 poissonRatio="0.5"
                 thickness="0.1"
                 youngModulus="10000"
