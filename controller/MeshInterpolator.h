@@ -80,17 +80,17 @@ private:
 #if defined(WIN32) && !defined(SOFA_COMPONENT_CONTROLLER_MESHINTERPOLATION_CPP)
 #pragma warning(disable : 4231)
 #ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec1dTypes>;
-template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec2dTypes>;
-template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec3dTypes>;
-template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid2dTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec1dTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec2dTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec3dTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid2dTypes>;
 template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid3dTypes>;
 #endif //SOFA_FLOAT
 #ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec1fTypes>;
-template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec2fTypes>;
-template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec3fTypes>;
-template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid2fTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec1fTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec2fTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec3fTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid2fTypes>;
 template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid3fTypes>;
 #endif //SOFA_DOUBLE
 
