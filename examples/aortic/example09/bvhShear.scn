@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<Node name="root" gravity="0 0 0" dt="0.05" > 
+
+	<VisualStyle displayFlags="showVisualModels hideBehaviorModels hideCollisionModels hideMappings hideForceFields showInteractionForceFields" />
+
+      <Node name="mesh">
+        <VisualStyle displayFlags="showWireframe" />
+        <MeshObjLoader name="loader" filename="mesh.obj" />
+        <TriangleSetTopologyContainer name="topology" src="@loader" />
+        <MechanicalObject template="Rigid" position="@loader.position" />
+		<BoxROI name="mybox" box="6.6 -1 -1 7 1 1" drawBoxes="true"/>
+		<!--
+        <OglModel name="visual" color="0.75 0 0" />
+        <IdentityMapping input="@." output="@visual" />-->
+    </Node>
+	
+	  <!-- !! MOTION !! -->
+  <Node name="BVH">
+	<Node name="bati" >
+		<EulerImplicit />
+        <CGLinearSolver />
+        <MechanicalObject name="bati" template="Rigid" position="6.5 0 0  0 0 0 1" />
+		<RestShapeSpringsForceField template="Rigid" stiffness="1000000000" angularStiffness="100000000" />
+
+		
+		<Node name="articulations" >
+	
+			<MechanicalObject name="Articulations" template="Vec1d"/>
+			<Node name="6D_DOFs1">
+				<VisualStyle displayFlags="showVisualModels showBehaviorModels hideCollisionModels hideMappings hideForceFields showInteractionForceFields" />
+				<MechanicalObject name="6D_Dof" template="Rigid"/>
+				<UniformMass mass="0.00128 0.000001 0.0000001 0 0 0 0.0000001 0 0 0 0.0000001" showAxisSizeFactor="5000"/>
+				<ArticulatedSystemMapping input2="@../../bati" input1="@../Articulations" output="@6D_Dof"/>
+				
+
+				<Node name="mappedNodes">
+					<MechanicalObject name="mapPoints" template="Rigid" rest_position="@../../../../../mesh/mybox.pointsInROI"/>
+					<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+				    <RigidRigidMapping globalToLocalCoords="true" index="1"/>
+				</Node >
+			</Node>
+			<ArticulatedHierarchyContainer filename="shearingMotion.bvh"/>
+			<ArticulatedHierarchyBVHController />
+		</Node>
+	</Node>		
+</Node>
+  
+  
+  
+  
+
+
+
+
+	
+	
+
+
+    <Node name="simulation">
+        <EulerImplicit />
+        <CGLinearSolver iterations="100" tolerance="1e-9" threshold="1e-9" />
+
+        <TriangleSetTopologyContainer src="@/mesh/loader" />
+        <MechanicalObject name="state" template="Rigid" rest_position="@/mesh/loader.position" />
+        <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+		<BoxROI name="mybox2" box="6.6 -1 -1 7 1 1" drawBoxes="true"/>
+
+        <RestShapeSpringsForceField
+            angularStiffness="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+            external_points="0-31"
+            external_rest_shape="/BVH/bati/articulations/6D_DOFs1/mappedNodes/mapPoints"
+            points="@mybox2.indices"
+            stiffness="5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000"
+            template="Rigid" />
+			
+		<BoxROI name="boxFix" box="-7 -1 -1 -6.6 1 1" drawBoxes="true"/>	
+
+        <FixedConstraint indices="@boxFix.indices" />
+
+        <Node>
+            <BezierTriangularBendingFEMForceField
+                normals="@/mesh/loader.normals"
+                poissonRatio="0.5"
+                thickness="0.2"
+                youngModulus="10000" />
+                
+                <Node>
+                    <OglModel name="visual" color="1 1 1" />
+                    <IdentityMapping input="@.." output="@visual" />
+                </Node>
+        </Node>
+
+    </Node>
+	
+	
+	
+
+
+</Node>	
