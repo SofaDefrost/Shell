@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<Node gravity=" 0 0 0">
+    <VisualStyle displayFlags="showVisual" />
+
+    <!-- This example show how to use JoinMeshPoints if you have single starting meshes and node map -->
+
+    <!-- Original mesh -->
+    <Node name="splitMesh">
+        <VisualStyle displayFlags="showWireframe" />
+        <MeshObjLoader name="loader" filename="splitMesh.obj" />
+        <!-- Visualisation -->
+        <TriangleSetTopologyContainer name="topology" src="@loader" />
+        <MechanicalObject template="Rigid" position="@loader.position" />
+        <OglModel name="visual" color="1 0 0" />
+        <IdentityMapping input="@." output="@visual" />
+    </Node>
+
+    <!-- We use the map to combine the nodes -->
+    <Node name="joinedMesh">
+        <JoinMeshPoints template="Rigid" name="join" src="@/splitMesh/loader"
+            normals="@/splitMesh/loader.normals"
+            joinPoints="
+				163 107
+				164 106
+				165 105
+				72 160
+				73 161
+				74 162
+				66 154
+				67 155
+				68 156
+				69 157
+				70 158
+				71 159
+            " />
+    </Node>
+
+    <!-- Mesh for mechanical mapping -->
+    <Node name="MappedMesh">
+        <MeshObjLoader name="loader" filename="mappedMesh.obj" />
+    </Node>
+
+    <Node>
+        <!-- Rest shape interpolation -->
+        <MeshInterpolator template="Rigid" name="interp"
+            startPosition="@/joinedMesh/join.mergedPosition"
+            endPosition="@/splitMesh/loader.position"
+            startNormals="@/joinedMesh/join.mergedNormals"
+            endNormals="@/splitMesh/loader.normals"
+            nbSteps="10"
+            increment="0.05" />
+        <!-- Visualisation
+        <TriangleSetTopologyContainer name="topology" position="@interp.position" triangles="@/splitMesh/loader.triangles" />
+        <MechanicalObject template="Rigid" position="@interp.position" />
+        <OglModel name="visual" color="0 0.75 0" />
+        <IdentityMapping input="@." output="@visual" />
+        -->
+
+        <Node name="simulation">
+            <EulerImplicit />
+            <CGLinearSolver iterations="20" tolerance="1e-9" threshold="1e-9" />
+
+            <TriangleSetTopologyContainer position="@/joinedMesh/join.joinedPosition" triangles="@/joinedMesh/join.joinedTriangles" />
+            <MechanicalObject template="Rigid" rest_position="@/joinedMesh/join.joinedPosition" />
+            <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+
+            <FixedConstraint indices="5-20 188-199" />
+
+            <BezierTriangularBendingFEMForceField
+                    poissonRatio="0.5"
+                    thickness="0.1"
+                    youngModulus="10000"
+
+                    restShape="@../interp"
+                    topologyMapper="@/joinedMesh/join"
+                    />
+
+            <!--
+            <Node>
+                <OglModel name="visual" color="0 0 1" />
+                <IdentityMapping input="@.." output="@visual" />
+            </Node>
+            -->
+
+            <Node name="SubTriangles">
+                <TriangleSetTopologyContainer name="subTrianglesTopo" src="@/MappedMesh/loader" />
+                <MechanicalObject name="subPoints" rest_position="@subTrianglesTopo.position" />
+                <BezierTriangleMechanicalMapping input="@.." output="@." />
+                <Node>
+                    <OglModel name="Visual" color="1 0.5 0.5"/>
+                    <IdentityMapping input="@../subPoints" output="@Visual"/>
+                </Node>
+            </Node>
+
+        </Node>
+
+    </Node>
+</Node>
