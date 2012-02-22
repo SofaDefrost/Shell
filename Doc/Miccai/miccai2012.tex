@@ -219,7 +219,7 @@ $$
 
 %}}}
 
-\subsection{shells...}
+\subsection{shells...} % {{{
 
 In this subsection we will briefly summarize how the numerical formulation
 of the linear model is derived. For more thorough description we refer the
@@ -270,6 +270,7 @@ matrix defined by Hooke's law:
 The only two values defining the matrix value are Poisson's ratio $\nu$ and
 the Young's modulus $E$.
 
+% }}}
 
 \subsection{Co-rotational Formulation}
 
@@ -282,7 +283,7 @@ chose to use the corotational formulation instead.\tomas{add ref;
 maybe short description?}
 
 
-\section{Method Description}                          
+\section{Method Description} % {{{
 
 \tomas{clearly state that this is not a complete solution where user points
 and clicks -- it's just a proof-of-concept}
@@ -317,8 +318,40 @@ The simplest solution here would be connecting the respective nodes
 together with springs. Such solution, however, has a disadvantage of adding
 excessive energies to the system.\tomas{do we need a ref.?}
 
+We propose a different approach which uses a two different mesh topologies.
+The basic idea is to transform the mesh by joining the edges and nodes
+where the suturing is supposed to take place and let the dynamic system
+find a stable configuration. Such stable configuration is the result we are
+looking for. This requires us to provide a mapping to the underlying shell
+element code that would translate between nodes of the topology of the rest
+shape and the topology of the deformed mesh. Such a mapping is 1:N for
+nodes where the suturing takes place. \tomas{add image} To make it properly
+defined elements have to be taken into account also:
 
-%\section{Conclusion}
+\begin{equation}
+  \phi : N_d \times E_d -> N_r
+\end{equation}
+
+In the definition of this mapping $\phi$ the $N_d$ and $E_d$ are sets of
+nodes and elements of the deformed mesh and $N_r$ is set of nodes of the
+deformed mesh.
+
+\tomas{what more?}
+
+
+Another problem that a predictive simulation should deal with is filling
+the missing steps that would normally had to be performed fluently by the
+surgeon. For example when suturing two blood vessels together they have to
+be placed close to one another first. Sometimes relatively large distances
+have to be overcome. By ignoring this fact our approach with joining nodes
+and edges could generate unwanted forces at the start of the simulation. To
+alleviate large initial deformations for the elements we employed
+interpolation ...
+
+
+% }}}
+
+\section{Conclusion}
 %\subsection{Verification}
 
 Verification is difficult -- limited or no knowledge of real state after
@@ -336,4 +369,4 @@ physical parameters (E/nu),\ldots or something like that \ldots
 
 % Some Vim setup. If it interferes with anyones work feel free to remove
 % that.
-% vim: et sw=2 tw=75 fdm=marker spell
+% vim: et sw=2 tw=75 fdm=marker fdc=2 spell
