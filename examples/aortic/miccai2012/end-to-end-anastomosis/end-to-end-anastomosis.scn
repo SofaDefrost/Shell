@@ -76,7 +76,7 @@
             <TriangleSetTopologyContainer src="@/pulmonaryArtery/loader" />
             <MechanicalObject name="state" template="Rigid" rest_position="@/pulmonaryArtery/loader.position" />
             <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
-            <FixedConstraint indices="474-486 489-493" />
+            <!--<FixedConstraint indices="" />-->
             <BezierTriangularBendingFEMForceField
                 normals="@/pulmonaryArtery/loader.normals"
                 poissonRatio="0.5"
