@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<Node gravity="0 0 0" dt="0.01">
+    <Node name="heart">
+        <MeshObjLoader name="loader" filename="heart.obj" />
+        <TriangleSetTopologyContainer src="@loader" />
+        <MechanicalObject template="Vec3d" position="@loader.position" />
+        <OglModel name="visual" color="0.8 0.4 0.4" />
+        <IdentityMapping input="@." output="@visual" />
+    </Node>
+    <Node name="pulmonaryArtery">
+        <MeshObjLoader name="loader" filename="pulmonary-artery.obj" />
+        <TriangleSetTopologyContainer src="@loader" />
+        <MechanicalObject template="Vec3d" position="@loader.position" />
+        <OglModel name="visual" color="0 0 1" />
+        <IdentityMapping input="@." output="@visual" />
+    </Node>
+    <Node name="aorticArch">
+        <MeshObjLoader name="loader" filename="aortic-arch-flap3.obj" />
+        <TriangleSetTopologyContainer src="@loader" />
+        <MechanicalObject template="Rigid" position="@loader.position" />
+        <!--<OglModel name="visual" color="1 0 0" />
+        <IdentityMapping input="@." output="@visual" />-->
+    </Node>
+    <Node name="result">
+        <JoinMeshPoints template="Rigid" name="join" src="@/aorticArch/loader" joinPoints="
+            752 304
+            756 361
+            762 360
+            766 334
+            772 730
+            776 718
+            782 717
+            786 686
+            788 687
+            787 616
+            785 617
+            784 698
+            779 675
+            774 705
+            769 729
+            764 342
+            759 323
+            755 349
+            749 372
+            " />
+    </Node>
+    <Node name="simulation">
+        <MeshInterpolator template="Rigid" name="interpolator"
+            startPosition="@/result/join.mergedPosition"
+            endPosition="@/aorticArch/loader.position"
+            startNormals="@/result/join.mergedNormals"
+            endNormals="@/aorticArch/loader.normals"
+            nbSteps="10"
+            increment="0.1" />
+        <EulerImplicit />
+        <CGLinearSolver iterations="100" tolerance="1e-9" threshold="1e-9" />
+        <TriangleSetTopologyContainer position="@/result/join.joinedPosition" triangles="@/result/join.joinedTriangles" />
+        <MechanicalObject name="state" template="Rigid" rest_position="@/result/join.joinedPosition" />
+        <UniformMass showAxisSizeFactor="0.1" totalMass="1" />
+        <FixedConstraint indices="0-15 392-398 408-416" />
+        <Node>
+            <BezierTriangularBendingFEMForceField
+                poissonRatio="0.5"
+                thickness="0.2"
+                youngModulus="10000"
+                restShape="@../interpolator"
+                topologyMapper="@/result/join" />
+            <Node>
+                <OglModel name="visual" color="1 0 0" />
+                <IdentityMapping input="@.." output="@visual" />
+            </Node>
+        </Node>
+    </Node>
+</Node>
