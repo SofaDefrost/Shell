@@ -79,6 +79,7 @@
 \maketitle
 
 \begin{abstract}
+% TODO
 \end{abstract}
 
 \section{Introduction}
@@ -90,19 +91,46 @@ Requirements: Model blood vessels/wall deformation, surgical low-level tasks
 
 Plan
 
-\section{Blood Vessel Model}
+\section{Blood Vessel Model} % {{{
 
 Thin shell model
+\begin{itemize}
+  \item based on mechanics of continuum and shell theory
+  \item used in physics for deformation modelling
+  \item briefly, refer to some textbook
+\end{itemize}
 
-Eq. showing rest position stuff
+\noindent Eq. showing dependence on rest position:
+simple $\myvec{f} = K(\myvec{x} - \myvec{x_0})$
 
-Fullfills requirements + collision
+\noindent Fulfills requirements + collision
+\begin{itemize}
+  \item we need deformations: like bending and twisting
+  \item deformation should be global
+  \item should allow arbitrary models and not rely e.g. on tubular
+  structure (like \cite{Li2009})
+  \item the model has to be able to deal with collisions (e.g. between AA
+  and PA)
+\end{itemize}
 
-Test with tube + convergence
+\noindent Test with tube + convergence
+\begin{itemize}
+  \item experimented with Olivier's model \cite{Comas2010b,Comas2010c} and
+  our own model, in principle the shell implementation is not that
+  important
+  \item geometrical tool, independence on physical parameters -- E
+\end{itemize}
+
+% }}}
 
 \section{Simulation of Surgical Procedures}
 
-surgical low-level tasks done with rest position trick (joining, patch, complex cutting/suturing)
+\noindent surgical low-level tasks done with rest position trick (joining, patch, complex cutting/suturing)
+\begin{itemize}
+  \item describe the particular tasks and show that the essence is the same,
+  \item describe our method with all the tricks
+  \item include a schematic illustration
+\end{itemize}
 
 \section{Results and Discussion}
 
