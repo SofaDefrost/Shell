@@ -1,0 +1,41 @@
+Several different models are commonly used for modelling thin structures or
+tubular-like structures resembling blood vessels. \tomas{Add refs. or
+reformulate!}
+We choose to use thin shell elements for the predictive
+simulation of the surgery. Shell elements are often considered numerically
+too expensive, this is however not necessarily true.
+
+The formulation of the thin shell elements is based on the mechanics of
+continuum and these elements are commonly used in physics and mechanics for
+deformation modelling of thin structures.
+
+\tomas{TODO}
+\noindent
+briefly, refer to some textbook,
+Eq. showing dependence on rest position:
+simple $\myvec{f} = K(\myvec{x} - \myvec{x_0})$
+
+\ldots
+
+From our point of view, there are several requirements that the model
+should be able to fulfill. Namely:
+
+\begin{itemize}
+  \item good support for deformations by bending and twisting
+  \item the results of the deformation should be global
+  \item method should allow arbitrary models and not rely on specific
+  structure of the object (e.g. on tubular structure like \cite{Li2009})
+  \item the model has to be able to deal with collisions (e.g. between the
+  aortic arch and pulmonary artery)
+\end{itemize}
+
+Simulation using shell model satisfies all these requirements very well.
+
+\tomas{TODO}
+\noindent Test with tube + convergence
+\begin{itemize}
+  \item experimented with Olivier's model \cite{Comas2010b,Comas2010c} and
+  our own model, in principle the shell implementation is not that
+  important
+  \item geometrical tool, independence on physical parameters -- E
+\end{itemize}
