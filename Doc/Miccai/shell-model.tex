@@ -35,7 +35,7 @@ $\myvec{x}$ from the rest shape $\myvec{x_0}$.
 \end{equation}
 
 For more thorough description we refer the reader to the textbook about
-Finite Elements for example \tomas{add ref}.
+Finite Element methods for example \cite{Reddy1993}.
 
 In the rest of the section we want to show that the performance of a model
 based on shell elements is adequate for the simulation.
@@ -73,13 +73,27 @@ results are closer to the real deformations.
 
 The bending property of the shell allows us to use smaller number of
 elements for the simulation and use high polygonal model only for
-visualisation. The convergence of the model is a key factor here. In our experiments we
-were able to use only as few as eight nodes around the circumference of a
-tubular model while still maintaining realistic behaviour. Figure
-\tomas{add-ref} shows the results for different number of nodes along the
-circumference.
+visualisation. The convergence of the model is a key factor here. In our
+experiments we were able to use only as few as eight nodes around the
+circumference of a tubular model while still maintaining realistic
+behaviour. Figure \ref{fig-convergence} shows the results for different
+number of nodes along the circumference.
 
-\tomas{image: convergence}
+\begin{figure}[tbh]
+  \centering
+  \begin{tabular}{cccc}
+    \includegraphics[width=0.24\columnwidth]{img/twist-06-cg.png}
+    &
+    \includegraphics[width=0.24\columnwidth]{img/twist-08-cg.png}
+    &
+    \includegraphics[width=0.24\columnwidth]{img/twist-16-cg.png}
+    &
+    \includegraphics[width=0.24\columnwidth]{img/twist-31-cg.png}
+  \end{tabular}
+  \caption{Convergence on a twisted cylinder with 6, 8, 16 and 31 nodes
+  around the circumference (120, 208, 832 and 3038 elements)}
+  \label{fig-convergence}
+\end{figure}
 
 We have used the model of Olivier Comas \cite{Comas2010b,Comas2010c} and
 also our own model. But our method described in section \ref{sec-method}
