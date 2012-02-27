@@ -6,6 +6,7 @@
 # the time
 
 FILE:=miccai2012
+SUBFILES:=conclusion introduction results shell-model simulation
 BIBFILE:=miccai2012
 
 
@@ -45,7 +46,7 @@ endif
 TEXCMDS=\newcount\DoComments\DoComments=$(comments)
 
 
-TEXFILES=$(patsubst %,%.tex, $(FILE)) 
+TEXFILES=$(patsubst %,%.tex, $(FILE)) $(patsubst %,%.tex, $(SUBFILES)) 
 PDFFILES=$(patsubst %,%.pdf, $(FILE)) 
 PSFILES=$(patsubst %,%.ps, $(FILE)) 
 
@@ -55,7 +56,7 @@ space:= $(empty) $(empty)
 FILEPAT={$(subst $(space),$(comma),$(FILE))}
 
 
-all: $(PDFFILES) $(PSFILES)
+all: $(PDFFILES) #$(PSFILES)
 
 ##  Real targets  ##############################################################
 
@@ -63,7 +64,7 @@ all: $(PDFFILES) $(PSFILES)
 %.ps: %.dvi
 	HOME=`pwd` $(DVIPS) -o $@ $<
 
-%.pdf: %.tex $(BIBFILE).bib
+%.pdf: %.tex $(TEXFILES) $(BIBFILE).bib
 	export HOME=`pwd`; \
 	export TEXMFLOCAL=`pwd`/texmf:`kpsexpand '$$TEXMFLOCAL'`; \
 	mkdir -p "$(TMPDIR)" && \
@@ -73,7 +74,7 @@ all: $(PDFFILES) $(PSFILES)
 	$(PDFLATEX) '\def\GraphicsType{pdftex}$(TEXCMDS)\input $*' && \
 	$(CP) $(TMPDIR)/$@ .
 
-%.dvi: %.tex $(BIBFILE).bib
+%.dvi: %.tex $(TEXFILES) $(BIBFILE).bib
 	export HOME=`pwd`; \
 	export TEXMFLOCAL=`pwd`/texmf:`kpsexpand '$$TEXMFLOCAL'`; \
 	mkdir -p "$(TMPDIR)" && \
