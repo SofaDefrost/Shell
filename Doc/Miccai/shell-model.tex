@@ -25,15 +25,16 @@ deformation modelling of thin structures because they are numerically more
 stable then volumetric FEM methods in this situation. The shell element is
 a 2-dimensional element whose thickness is a parameter of the simulation.
 Often the thickness is considered constant over the surface of the element.
-Shell combines forces from in-plane deformations, like stretching or
-shearing, with bending forces. Such internal forces $\myvec{f}$ are a
-function of current displacement measured as difference of current shape
+Shell combines forces from in-plane deformations, like stretching or shearing, with bending forces. 
+Such internal forces $\myvec{f}$ are a function of current displacement measured as difference of current shape
 $\myvec{x}$ from the rest shape $\myvec{x_0}$.
 
 \begin{equation}
   \myvec{f} = K(\myvec{x} - \myvec{x_0})
+ \label{linear_static_model} 
 \end{equation}
 
+\christian{I think that we should precise that we rely on corotational shell formulation: the model is linear in the local frame of the element, otherwise equation (\ref{linear_static_model}) is false } 
 For more thorough description we refer the reader to the textbook about
 Finite Element methods for example \cite{Reddy1993}.
 
@@ -91,7 +92,8 @@ number of nodes along the circumference.
     \includegraphics[width=0.24\columnwidth]{img/twist-31-cg.png}
   \end{tabular}
   \caption{Convergence on a twisted cylinder with 6, 8, 16 and 31 nodes
-  around the circumference (120, 208, 832 and 3038 elements)}
+  around the circumference (120, 208, 832 and 3038 elements).
+  \christian{Could we add wire-frame images to show the density of the meshes} } 
   \label{fig-convergence}
 \end{figure}
 
