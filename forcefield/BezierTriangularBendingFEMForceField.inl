@@ -200,13 +200,13 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
         // No topology mapper, no changing rest shape -> normal behaviour
 
         // Check normal count
-        if (normals.getValue().size() == 0) {
-            serr << "No normals defined, assuming flat triangles" << sendl;
-        } else if (normals.getValue().size() != this->mstate->getX0()->size()) {
-            serr << "Normals count doesn't correspond with nodes count" << sendl;
-            return;
-        }
+    if (normals.getValue().size() == 0) {
+        serr << "No normals defined, assuming flat triangles" << sendl;
+    } else if (normals.getValue().size() != this->mstate->getX0()->size()) {
+        serr << "Normals count doesn't correspond with nodes count" << sendl;
+        return;
     }
+}
 
     // Compute the material matrices
     computeMaterialMatrix();
@@ -1629,6 +1629,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
     // it in showForceField or showBehaviorModels
     if(vparams->displayFlags().getShowForceFields())
     {
+
+        // Gets vertices of rest and initial positions respectively
+        const VecCoord& x0 = *this->mstate->getX0();
+
+
         helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
         // Render Bezier points
@@ -1666,6 +1671,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
         {
             TriangleInformation *tinfo = &triangleInf[i];
 
+            Vec3 P1P2= x0[tinfo->b].getCenter() - x0[tinfo->a].getCenter();
+            Vec3 P2P3= x0[tinfo->c].getCenter() - x0[tinfo->b].getCenter();
+            Vec3 P3P1= x0[tinfo->a].getCenter() - x0[tinfo->c].getCenter();
+            double length = (P1P2.norm()+P2P3.norm()+P3P1.norm())/8.0;
+
 #ifdef CRQUAT
             Quat qFrame = tinfo->frameOrientationQ.inverse();
 #else
@@ -1675,7 +1685,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
             vparams->drawTool()->drawFrame(
                 tinfo->frameCenter,
                 qFrame,
-                Vec3(tinfo->area2, tinfo->area2, tinfo->area2)/4);
+                Vec3(length, length, length));
 
         }
 

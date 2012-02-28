@@ -1,14 +1,8 @@
-From our point of view, there are several requirements that the model
-should be able to fulfill. Namely:
+Infantile cardiac surgery offers a reconfiguration of the blood vessel walls that limits or rectifies the congenital anomalies of the anatomy.
+During the surgery, the vessel walls are deformed, cut, and reconnected to other vessels.
+To do a planning of the surgery, the geometry changes of these vessel walls (the motions and deformations, their configuration when they are cut or stitched)  must be anticipated.
 
-\begin{itemize}
-  \item good support for deformations by bending and twisting
-  \item the results of the deformation should be global
-  \item method should allow arbitrary models and not rely on specific
-  structure of the object (e.g. on tubular structure like \cite{Li2009})
-  \item the model has to be able to deal with collisions (e.g. between the
-  aortic arch and pulmonary artery)
-\end{itemize}
+These requirements ask for a physics-based model for the vessel walls. This model should provide (I) a good support for the deformations by bending and twisting. (II) an accurate modeling of the wall motion when the vessel is cut along its axis (III) global deformations of stitched vessels that capture their final configuration, after surgery (IV) collision response when detected (e.g. between the aortic arch and pulmonary artery). 
 
 Several different models are commonly used for modelling thin structures or
 tubular-like structures resembling blood vessels. \tomas{Add refs. or

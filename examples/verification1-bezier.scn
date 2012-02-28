@@ -19,17 +19,29 @@ Theoretical results are:
 
 -->
 
-<Node name="root" dt="0.1" gravity="0 0 0"
+<Node name="root" dt="0.01" gravity="0 0 0"
     showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" showWireFrame="1" showNormals="0" >
     <CollisionPipeline verbose="0" />
     <BruteForceDetection name="N2" />
     <CollisionResponse response="default" />
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
     <CollisionGroup />
+	
+	<Node name="SquareDetailed">
+		<RegularGrid name="gridTopo" min="-1 -1 0" max="1 1 0" nx="30" ny="30" nz="1" />
+        <MechanicalObject template="Vec3d" name="toto"/>
+		
+		<Node name="DetailedTriangleTopo">
+		
+				<TriangleSetTopologyContainer name="detailedTri"/>
+				<TriangleSetTopologyModifier name="Modifier" />
+				<Quad2TriangleTopologicalMapping object1="gridTopo" object2="detailedTri" />
+		</Node>
+	
+	</Node>
 
     <Node name="Square2" activated="true">
-        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
-        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
+
 <!--
         <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
         <CGLinearSolver iterations="20" tolerance="1e-15" threshold="1e-15"/>
@@ -39,9 +51,12 @@ Theoretical results are:
 -->
 
         <RegularGrid name="gridTopo" min="-1 -1 0" max="1 1 0" nx="3" ny="3" nz="1" />
-        <MechanicalObject template="Rigid" />
+        <MechanicalObject template="Vec3d" name="toto"/>
 
         <Node>
+		
+			<EulerImplicitSolver />
+			<CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
             <TriangleSetTopologyContainer name="trianglesTopo"/>
             <TriangleSetTopologyModifier name="Modifier" />
             <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
@@ -52,30 +67,36 @@ Theoretical results are:
             <BoxROI name="box1" box="-1.1 -1.1 -0.1 1.1 -0.9 0.1" drawSize="0"/>
             <FixedConstraint indices="@box1.indices" drawSize="0"/>
 
+<!--
             <BoxROI name="box2" box="-1.1 0.9 -0.1 1.1 1.1 0.1" drawSize="0"/>
             <FixedConstraint indices="@box2.indices" drawSize="0"/>
+
 
             <BoxROI name="box3" box="-1.1 -1.1 -0.1 -0.9 1.1 0.1" drawSize="0"/>
             <FixedConstraint indices="@box3.indices" drawSize="0"/>
 
             <BoxROI name="box4" box="0.9 -1.1 -0.1 1.1 1.1 0.1" drawSize="0"/>
             <FixedConstraint indices="@box4.indices" drawSize="0"/>
+-->			
 
             <BoxROI name="boxCenter" box="-1e-4 -1e-4 -1e-4  1e-4 1e-4 1e-4" drawSize="0"/>
             <BoxROI name="boxAll" box="-1.1 -1.1 -1.1  1.1 1.1 1.1" drawSize="0"/>
 
             <!-- Distributed load 
             -->
-            <ConstantForceField points="@boxAll.indices" totalForce="0 0 4e-4 0 0 0"/>
+            <ConstantForceField points="@boxAll.indices" totalForce="0 0 4e1 0 0 0"/>
             <!-- Concentrated load
             <ConstantForceField points="@boxCenter.indices" forces="0 0 4e-4 0 0 0"/>
             -->
             <!--<FixedRotationConstraint FixedZRotation="true"/>-->
 
-            <BezierTriangularBendingFEMForceField name="FEM" youngModulus="1.7472e7" poissonRatio="0.3" thickness="0.01" printLog="false" />
+            <BezierTriangularBendingFEMForceField name="FEM" youngModulus="1.7472e7" poissonRatio="0.3" thickness="0.05" printLog="false" />
             
+			<!--
             <OglModel name="Visual" />
             <IdentityMapping object1="basePoints" object2="Visual"/>
+			
+			-->
 
             <!--
             <WriteState filename="verification1-bezier-9x9.state"
@@ -88,18 +109,22 @@ Theoretical results are:
                 exportEveryNumberOfSteps="100" exportAtBegin="0" exportAtEnd="0" />
             -->
 
-            <!--
+            
             <Node name="SubTriangles">
-                <TriangleSetTopologyContainer name="subTrianglesTopo"/>
-                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>
-                <MechanicalObject name="subPoints" />
-                <BendingPlateMechanicalMapping />
+				<TriangleSetTopologyContainer name="subTrianglesTopo" src="@../../../SquareDetailed/DetailedTriangleTopo/detailedTri"  />
+				<!--
+                <TriangleSubdivisionTopologicalMapping name="subdivTopoMapping" object1="trianglesTopo" inputTriangles="@../trianglesTopo.triangles" inputPositions="@../../toto.position" object2="subTrianglesTopo" subdivisions="1"/>
+				-->
+                <MechanicalObject template="Vec3d" name="subPoints" />
+				<Point/>
+				
+                <BezierTriangleMechanicalMapping />
                 <Node name="visual">
                     <OglModel name="Visual" color="red"/>
                     <IdentityMapping object1="subPoints" object2="Visual"/>
                 </Node>
             </Node>
-            -->
+            
         </Node>
     </Node>
 
