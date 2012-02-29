@@ -1,9 +1,9 @@
+The primary goal of the surgery is to restore a normal heart function and circulation.
+This goal is reached by rebuilding the heart in a more or less anatomical way.
 There are several types of low-level task the surgeon usually employs while
-performing the surgery.
-The most common:
+performing the surgery that are:
 
 \begin{description}
-  \item Reconnection and joining of blood vessels to the arteries.
 
   \item[End to end aortoplasty:] the surgeon completely cuts away the
     affected part of aorta and sutures the two ends of aorta back together.
@@ -16,39 +16,40 @@ The most common:
     removing also half of the artery (along the axis) and part of the
     aorta in the affected place. He then uses the rest of the artery to
     patch the aorta.
+    
+  \item[Reconnection and joining of blood vessels:] In addition to the modification of the aorta, the surgeon is lead to establish certain connections that are absent in pathological anatomy.
 
 \end{description}
 
-With our method we are able to simulate all these tasks.
-We have based our general approach on the common task involved in all these operations which is suturing of two or more edges together.
-Since we are interested in predicting the result rather than creating a training simulator for suturing (trained surgeon knows well how to perform the sutures) the simplest way of performing the suture would be to connect the respective edges with springs. 
+With our method we are able to simulate these tasks, in order to be able to plan them.
+We have based our general approach on a common characteristic: In all these operations the surgeon sutures two or more edges of the vessel walls together.
+Since we are interested in predicting the results rather than creating a training simulator for suturing (trained surgeon knows well how to perform the sutures) the simplest way of performing the suture would be to connect the respective edges with springs. 
 Springs however adds some unwanted energy to the system. 
-Our method is based solely on the relaxation of the mesh of shell elements.
-%% christian: I like the "relaxation" term !!!
+Our method is based on a topological connection of the shell elements that are neighbors of the joining edges and a controlled relaxation of these shell elements' rest shape.
 
 We start with a mesh representing the situation after all the cuts have been performed but before suturing takes place. 
 In the first step we perform the required topological changes to the mesh. We keep the number of elements in new mesh the same as in the original mesh so that we can define 1:1 mapping between elements of these meshes.
-The Figure \ref{fig-JoiningVessels} explains this operation when joining vessels. 
-Then we start the simulation on the modified mesh while using the original mesh to define rest shapes of all shell elements. 
+The Figure \ref{fig-JoiningVessels} (a) and (b) explains this operation when joining vessels. 
+Then we start the simulation on the modified mesh while keeping the information of the original rest shapes of all shell elements. 
 
 \begin{figure}[tbh]
 \begin{center}
 \includegraphics[width=\columnwidth]{img/rest_shape_scheme.png}
 \end{center}
 
-\caption{Scheme showing the method for joining two vessels. \christian{Do we need to extend the scheme for every type of aortoplasty (end to end / Patch / Subclavian): it would illustrate that the relaxation method works for every case...}
-  \tomas{No we don't. This there will be real examples in results (if I remember correctly).} }
+\caption{Scheme showing the method for joining two vessels:  (a) the cut on vessel meshes is performed in a 3D geometry edition software. In the software, we impose that the number of segments that sample both joining edges is the same (\color{BlueGreen}{$\mathbf{\rightarrow}$}\color{black})
+Moreover, we select some shell elements that are neighbors of the edges (\color{purple}{$\mathbf{\rightarrow}$}\color{black}).
+(b) In our software, we connect the vessel topologies by performing a relaxation of the shape and the rest shape for the selected shells.  
+(c) We progressively re-contract the rest shape of the shells while computing the deformation of the whole unified mesh. 
+In the final steady state computed in the simulation, the shell elements have all their correct rest shape.}
 \label{fig-JoiningVessels}
 \end{figure}
 
-In case of non-trivial distance between the nodes that are sutured together the involved elements will undergo large deformation at the beginning of the simulation.
-This results in quick increase of internal forces which can cause unwanted effects.
+We can not always step back all the shells to their original shape (passage from figure \ref{fig-JoiningVessels} (b) to (c))  in a single simulation step. 
+In case of non-small distance between the nodes that are sutured together, the involved elements will undergo large deformation that could create quick and non-smooth increase of internal forces and  cause unwanted effects.
 To allevieate the problem we have implemented the technique that allows for moderate changes in the rest shape between simulation steps.
 Between the start and the end of the simulation we use a linear interpolation of the rest shape for the shells that lie along the sutured edges. 
-\christian{I think that it is unclear that we do the relaxation on some shells that are on the side edges of the connecting line}
-\tomas{I don't understand what do you mean by that. We will have to discuss that.}
-The interpolation starts with the rest shape equal to the deformed elements and we progressively recontract the rest shape of the relaxed shells to their initial shapes. 
-The energetical equilibrium found by the simulation gradually forces the side edges to connect.
-After the mesh relaxes the simulation again terminates.
-
-% vim: et sw=2 tw=0 spell
+The interpolation starts with the rest shape equal to the deformed elements and we progressively lead the elements to recover their original rest shape.
+This way, the simulation gradually forces the side edges to connect without any abrupt jump in the behavior.
+When all elements have recover their original rest shape, the steady state found in the simulation corresponds to a physics-based energetical equilibrium of the shells deformation. 
+Thus, we take these positions as an estimation of the result of the connection of the vessel edges.
