@@ -37,19 +37,19 @@ Then we start the simulation on the modified mesh while keeping the information 
 \includegraphics[width=\columnwidth]{img/rest_shape_scheme.png}
 \end{center}
 
-\caption{Scheme showing the method for joining two vessels:  (a) the cut on vessel meshes is performed in a 3D geometry edition software. In the software, we impose that the number of segments that sample both joining edges is the same (\color{BlueGreen}{$\mathbf{\rightarrow}$}\color{black})
-Moreover, we select some shell elements that are neighbors of the edges (\color{purple}{$\mathbf{\rightarrow}$}\color{black}).
+\caption{Scheme showing the method for joining two vessels:  (a) the cut on vessel meshes is performed in a 3D geometry edition software. In the software, we impose that the number of the segments on the edges is the same on both side  (\color{BlueGreen}{$\mathbf{\rightarrow}$}\color{black})
+Moreover, we select some shell elements that lie along the sutured edges (\color{purple}{$\mathbf{\rightarrow}$}\color{black}).
 (b) In our software, we connect the vessel topologies by performing a relaxation of the shape and the rest shape for the selected shells.  
 (c) We progressively re-contract the rest shape of the shells while computing the deformation of the whole unified mesh. 
 In the final steady state computed in the simulation, the shell elements have all their correct rest shape.}
 \label{fig-JoiningVessels}
 \end{figure}
 
-We can not always step back all the shells to their original shape (passage from figure \ref{fig-JoiningVessels} (b) to (c))  in a single simulation step. 
+We can not always step back all the shells to their original shape (transition from figure \ref{fig-JoiningVessels} (b) to (c))  in a single simulation step. 
 In case of non-small distance between the nodes that are sutured together, the involved elements will undergo large deformation that could create quick and non-smooth increase of internal forces and  cause unwanted effects.
 To allevieate the problem we have implemented the technique that allows for moderate changes in the rest shape between simulation steps.
 Between the start and the end of the simulation we use a linear interpolation of the rest shape for the shells that lie along the sutured edges. 
 The interpolation starts with the rest shape equal to the deformed elements and we progressively lead the elements to recover their original rest shape.
 This way, the simulation gradually forces the side edges to connect without any abrupt jump in the behavior.
 When all elements have recover their original rest shape, the steady state found in the simulation corresponds to a physics-based energetical equilibrium of the shells deformation. 
-Thus, we take these positions as an estimation of the result of the connection of the vessel edges.
+Thus, we take these positions as an estimation of the result of the connection of the vessels.
