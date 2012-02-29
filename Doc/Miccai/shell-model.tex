@@ -12,8 +12,8 @@ This model should provide
 
 In addition, the computation of this model must be fast enough to allows for interactive planning of the surgery. 
 The options on the choice of model are limited: 
-The model based on the deformation of the centerline, that can be very quickly computed, (like ??\tomas{Add refs.!} \christian{Do you have some refs that uses model based on centerline? }  ) must be discarded because they do not support cut of the wall along the vessel axis. 
-Mass-springs approaches that are often used for cloth simulation (\christian{do we consider this option ? if yes add ref ??}), allow for fast computation but do not provide sufficient accuracy as they do not necessary converge to a unique solution when changing the mesh.
+The model based on the deformation of the centerline, that can be very quickly computed, (like ??\tomas{Add refs.!} \christian{Do you have some refs that uses model based on centerline? }\tomas{No, but I will find something}  ) must be discarded because they do not support cut of the wall along the vessel axis. 
+Mass-springs approaches that are often used for cloth simulation \cite{Volino2005b}, allow for fast computation but do not provide sufficient accuracy as they do not necessary converge to a unique solution when changing the mesh.
 In this work, we then propose to rely on Finite Element formulation of thin-shell theory. 
 These model are numerically more expensive, but provide accurate models of thin deformable structure.% that converge to unique solutions.
 Moreover, we show that we can still obtain fast computation with a reasonable number of elements.
@@ -21,12 +21,10 @@ Moreover, we show that we can still obtain fast computation with a reasonable nu
 
 \subsubsection{Thin shell elements: } 
 The formulation of the thin shell elements is based on the mechanics of continuum. 
-\tomas{image: single shell}
 For thorough description we refer the reader to the textbook about Finite Element methods for example \cite{Reddy1993}.
 These elements are commonly used in physics and mechanics for deformation modelling of thin structures because they are numerically more stable then volumetric FEM methods in this situation. 
-The shell element is a 2-dimensional element (in our case, triangle element) whose thickness is a parameter of the simulation.
-Often the thickness is considered constant over the surface of the element.
-Shell combines forces from in-plane deformations, like stretching or shearing, with bending forces. 
+The shell element is a 2-dimensional element (in our case, triangular element) whose thickness is a parameter of the simulation (often considered constant over the surface of the element).
+Shell element combines forces from in-plane deformations, like stretching or shearing, with bending forces. 
 Such internal forces $\myvec{f}$ are a function of current displacement measured as difference of current shape
 $\myvec{x}$ from the rest shape $\myvec{x_0}$.
 To accelerate the computation, we use a corotational formulation, that is based on the definition of a local frame for each element (that can be built using the geometry of the triangle, \christian{see figure "image: single shell" ?? }). 
@@ -36,9 +34,9 @@ In this local frame, the computation of the internal forces is linear:
   \myvec{f} = \mathbf{K_e}(\myvec{x} - \myvec{x_0})
  \label{linear_static_model} 
 \end{equation}
-where $\mathbf{K_e}$ is a stiffness matrix that is computed thanks to a weak formulation (integral formulation) of Kirshohoff-Loves equations.
+where $\mymat{K_e}$ is a stiffness matrix that is computed thanks to a weak formulation (integral formulation) of Kirshohoff-Loves equations.
 This approach is very similar to the model presented in  \cite{Comas2010b,Comas2010c}  even if the interpolation functions we use are  different to allow for better convergence\footnote{Our shell model will be published separately}. 
-We emphasis that the method described in the paper is independent of the shell model used (other non-corotational shell models can be used).
+We emphasize that the method described in the paper is independent of the shell model used (other non-corotational shell models can be used as well).
 %
 When the structure is assembled, the contributions of each element are computed in the global frame using a different rotation matrix for each element.
 \begin{equation}
@@ -80,8 +78,9 @@ based on shell elements is adequate for the simulation.
   \end{minipage}
 \end{figure}
 
-Figure \ref{fig-deformations} shows different deformations that are likely to
-occur during the surgery (bending and twisting). The figure compares our
+Figure \ref{fig-deformations} shows bending and twisting deformations.
+These are likely to occur during the surgery.
+The figure compares our
 results with the results of Li et al. \cite{Li2009}. As you can see the
 results are close to the real deformations.
 
@@ -114,6 +113,7 @@ number of nodes along the circumference.
   \end{tabular}
   \caption{Convergence on a twisted cylinder with 6, 8, 16 and 31 nodes
   around the circumference (120, 208, 832 and 3038 elements).
+  Using mesh with 3038 triangles for visualisation.
   \tomas{improve the wireframe images if there's time} } 
   \label{fig-convergence}
 \end{figure}
@@ -124,8 +124,8 @@ number of nodes along the circumference.
 Since we use the method as a
 geometrical tool we have also certain independence on physical parameters.
 For example the variation of Young's modulus in the interval from $10^3$ to
-$10^7$ resulted to only $0.1\%$ change of the deformation.
+$10^7$ resulted in only $0.1\%$ change of the deformation.
 }
 
 
-% vim: et sw=2 tw=75 fdm=marker fdc=2 spell
+% vim: et sw=2 tw=0 spell
