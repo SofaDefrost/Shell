@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<Camera version="1.0">
+    <!--Vector of 3 reals (x, y, z)-->
+    <position value="2.17542 4.42881 4.0094" />
+    <!--Quaternion (x, y, z, w)-->
+    <orientation value="-0.341432 0.201019 0.047791 0.916914" />
+    <!--Vector of 3 reals (x, y, z)-->
+    <lookAt value="0.142204 0.523684 -0.141945" />
+    <!--Real-->
+    <fieldOfView value="45" />
+    <!--Real-->
+    <distance value="6.05125" />
+    <!--Real-->
+    <zNear value="0" />
+    <!--Real-->
+    <zFar value="0" />
+    <!--Int (0 -> Perspective, 1 -> Orthographic)-->
+    <type value="0" />
+</Camera>
