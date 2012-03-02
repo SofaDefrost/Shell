@@ -5,11 +5,11 @@ Options on the choice of model are limited. Mass-spring models, often used for c
 \begin{figure}[tbh]
   \centering
   \includegraphics[width=0.4\columnwidth]{img/shell.pdf}
-  \caption{Shell element combines bending with in-plane deformations.}
+  \caption{TODO: Thin shell elements model bended plates.}
   \label{fig-shell}
 \end{figure}
 
-Formulation of thin shell elements is based on the machanics of continuum. For a thorough description we refer the reader to a standard textbook about finite element methods (FEM), i.e. \cite{Reddy1993}. Thin shell elements are commonly used in physics and mechanics to model deformation of thin structures because in that case they are numerically more stable than volumetric FEMs. A shell element is a 2-dimensional element whose thickness is a parameter of the simulation. They combine forces from in-plane deformations, i.e. stretching or shearing, with bending forces. Such internal forces $\myvec{f}$ are a function of current displacement measured as difference of the current shape $\myvec{x}$ to the rest shape $\myvec{x_0}$. To accelerate computation, we use a corotational formulation that is based on the definition of local frames for each element.
+Formulation of thin shell elements is based on the machanics of continuum. For a thorough description we refer the reader to a standard textbook about finite element methods (FEM), i.e. \cite{Reddy1993}. Thin shell elements are commonly used in physics and mechanics to model deformation of thin structures because in that case they are numerically more stable than volumetric FEMs. A shell element is a 2-dimensional element whose thickness is a parameter of the simulation. They combine forces from in-plane deformations, i.e. stretching or shearing, with bending forces (see figure \ref{fig-shell}). Such internal forces $\myvec{f}$ are a function of current displacement measured as difference of the current shape $\myvec{x}$ to the rest shape $\myvec{x_0}$. To accelerate computation, we use a corotational formulation that is based on the definition of local frames for each element.
 
 In these local frames computation of internal forces is linear:
 \begin{equation}
