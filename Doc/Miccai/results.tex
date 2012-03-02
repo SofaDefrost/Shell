@@ -6,7 +6,7 @@ In order to show an improvement on existing predictive simulation systems for CH
 \end{enumerate}
 We close this section with a discussion about limitations and constraints of our simulation approach in terms of generation and dynamic remeshing of thin shell element meshes.
 
-A quantitative validation by means of a comparision to real pre- and post-surgery image data is impossible at present. This is mainly due to ethical issues that arise during image data acquirement of infants, i.e. necessary heart rate lowering medications or exposure to radiation. There is no such data available that is obtained shortly after surgeries in infants where the growth of the patient would not interfere comparison. However, a qualitative comparison to real image data acquired months after a surgical intervention, which confirms a principal suitability of predictive simulations for surgery planning, can be found in \cite{Li2009}.
+A quantitative validation by means of a comparison to real pre- and post-surgery image data is impossible at present. This is mainly due to ethical issues that arise during image data acquirement of infants, i.e. necessary heart rate lowering medications or exposure to radiation. There is no such data available that is obtained shortly after surgeries in infants where the growth of the patient would not interfere comparison. However, a qualitative comparison to real image data acquired months after a surgical intervention, which confirms a principal suitability of predictive simulations for surgery planning, can be found in \cite{Li2009}.
 
 \subsection{Predictive Simulation Results}
 
@@ -21,7 +21,7 @@ A quantitative validation by means of a comparision to real pre- and post-surger
       &
       \includegraphics[width=0.3\columnwidth]{img/compare-twist-other.png}
     \end{tabular}
-    \caption{Simulation of bending and twisting of an elestic tube. Top row: Thin shell element model; Bottom row: Real elastic tube manipulated by hand and Cosserat rod-based hybrid model \cite{Li2009} (Credits for the bottom images: Li et al.).}
+    \caption{Simulation of bending and twisting of an elastic tube. Top row: Thin shell element model; Bottom row: Real elastic tube manipulated by hand and Cosserat rod-based hybrid model \cite{Li2009} (Credits for the bottom images: Li et al.).}
     \label{fig-deformations}
 \end{figure}
 
@@ -64,11 +64,11 @@ It is important to minimize the number of shell elements to reduce computation t
   \label{fig-surgery}
 \end{figure}
 
-We manually modeled an aortic arch based on real image data to be able to demonstrate suitability of our joining approach for different kinds of low-level surgical procedures on a concrete example. Therefore we chose a coarctation of an aortic arch that can be repaired by completely different surgical approaches that heavily alter the surface of the blood vessel \cite{Dodge2000}. Results can be examined in figure \ref{fig-surgery}. We show that our topological method for joining of shell elements through a controlled relaxation to their rest shape is able to handle different kinds of connections universally and in a correct manner.
+We manually modeled an aortic arch based on real image data to be able to demonstrate suitability of our joining approach for different kinds of low-level surgical procedures on a concrete example. Therefore we chose a coarctation of an aortic arch that can be repaired by several different surgical approaches that heavily alter the surface of the blood vessel \cite{Dodge2000}. Results can be examined in figure \ref{fig-surgery}. We show that our topological method for joining of shell elements through a controlled relaxation to their rest shape is able to handle different kinds of connections universally and in a correct manner.
 
 \subsection{Limitations and Constraints}
 
-Finite element methods including thin shell elements have some constraints in common regarding the simulation mesh quality. A homogeneous neighborhood of equally sized elements is desirable. Especially when minimizing the number of elements, high mesh quality is necessary to maintain convergence and stability of the simulation. We showed that an elastic tubular structure can be simulated appropriately for CHD corrective surgeries with only a few elements. To allow for arbitrary incisions under such circumstances, the mesh must be remeshed in a way that its elements align along an incision. Mesh quality must be retained during remeshing and therfore the whole mesh may be affected. A limitation of our joining approach is that we need the same number of elements along connecting edges. Appropriate remeshing strategies must be developed to take full benefit of our proposed simulation approach. However, as a fallback, element count could be increased which will have negative impact on the simulation speed.
+Finite element methods including thin shell elements have some constraints in common regarding the simulation mesh quality. A homogeneous neighborhood of equally sized elements is desirable. Especially when minimizing the number of elements, high mesh quality is necessary to maintain convergence and stability of the simulation. We showed that an elastic tubular structure can be simulated appropriately for CHD corrective surgeries with only a few elements. To allow for arbitrary incisions under such circumstances, the mesh must be remeshed in a way that its elements align along an incision. Mesh quality must be retained during remeshing and therefore the whole mesh may be affected. A limitation of our joining approach is that we need the same number of elements along connecting edges. Appropriate remeshing strategies must be developed to take full benefit of our proposed simulation approach. However, as a fall-back, element count could be increased which will have negative impact on the simulation speed.
 
 %Example with 3 diff. surgical procedures
 %Parameters
