@@ -1,13 +1,20 @@
 In CHD corrective surgeries blood vessels respond to plastic interventions with a certain amount of deformation. Surgeons try to find an optimal approach to correct defects with a minimum of deformations and collisions that would have unnecessary negative impact on blood flow or that may lead to problems during growth of the patient. To be able to predict results for different surgical approaches a physicaly approriate model of blood vessels is mandatory. Furthermore, computation time of simulations must be low enough to enable interactive and usable planning software.
 
-Options on the choice of model are limited. Mass-spring models, often used for cloth simulation \cite{Volino2005b}, allow for fast computation but do not do not posses the required level of physical accuracy and therefore are inappropriate for predictive simulations. On the contrary, simulation models based on the formulation of finite elements, either 3-dimensional elements or thin shell elements, are commonly used when high physical accuracy is required but are well known to be computationally expensive \tomas{add some refs?}. The hybrid blood vessel model of \cite{Li2009} strikes a balance but is too constrained to be used as a truly universal approach for all kinds of surgical procedures used in CHD corrective surgery. We propose a model based on thin shell elements that still allows for fast computation with a reasonable number of elements.
+Options on the choice of model are limited. Mass-spring models, often used for cloth simulation \cite{Volino2005b}, allow for fast computation but do not do not posses the required level of physical accuracy and therefore are inappropriate for predictive simulations. On the contrary, simulation models based on the formulation of finite elements, either 3-dimensional elements or thin shell elements, are commonly used when high physical accuracy is required but are well known to be computationally expensive. The hybrid blood vessel model of \cite{Li2009} strikes a balance but is too constrained to be used as a truly universal approach for all kinds of surgical procedures used in CHD corrective surgery. We propose a model based on thin shell elements that still allows for fast computation with a reasonable number of elements.
+
+\begin{figure}[tbh]
+  \centering
+  \includegraphics[width=0.4\columnwidth]{img/shell.pdf}
+  \caption{Shell element combines bending with in-plane deformations}
+  \label{fig-shell}
+\end{figure}
 
 Formulation of thin shell elements is based on the machanics of continuum. For a thorough description we refer the reader to a standard textbook about finite element methods (FEM), i.e. \cite{Reddy1993}. Thin shell elements are commonly used in physics and mechanics to model deformation of thin structures because in that case they are numerically more stable than volumetric FEMs. A shell element is a 2-dimensional element whose thickness is a parameter of the simulation. They combine forces from in-plane deformations, i.e. stretching or shearing, with bending forces. Such internal forces $\myvec{f}$ are a function of current displacement measured as difference of the current shape $\myvec{x}$ to the rest shape $\myvec{x_0}$. To accelerate computation, we use a corotational formulation that is based on the definition of local frames for each element.
 
 In these local frames computation of internal forces is linear:
 \begin{equation}
   \myvec{f} = \mathbf{K_e}(\myvec{x} - \myvec{x_0})
- \label{linear_static_model} 
+  \label{linear_static_model} 
 \end{equation}
 where $\mymat{K_e}$ is a stiffness matrix that is computed by Kirshohoff-Loves equations. This approach is similar to the model presented in  \cite{Comas2010b,Comas2010c}, although the interpolation functions we use are different to allow for better convergence\footnote{Our thin shell element model will be published separately}. We emphasize that the method described in this paper is independent of the concrete thin shell element model used and other non-corotational shell models can be used as well. When the simulation mesh is assembled, the contributions of each element are computed in a global frame using a different rotation matrix for each element:
 \begin{equation}
