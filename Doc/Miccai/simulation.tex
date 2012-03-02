@@ -12,8 +12,8 @@ We present a new approach that overcomes these difficulties by performing topolo
 Both actual shape $\myvec{x}$ and rest shape $\myvec{x_0}$ of these shells are modified.
 Note that in this simulation state there is temporarily no correlation to reality. 
 We then start a controlled relaxation process during which the shell elements progressively converge to their energetical equilibrium
-(i.e. we progressively re-contract the rest shape of the shells to their initial value while the simulation compute the positions of the whole mesh).
-To keep the simulation stable we avoid a strong increase in internal forces by linearly interpolate the rest shape of the connected mesh to the initial rest shape before joining. 
+(i.e. we progressively re-contract the rest shape of the shells to their initial value while the simulation computes the deformation of the whole mesh).
+To keep the simulation stable we avoid a strong increase in internal forces by linearly interpolating the rest shape of the connected mesh to the initial rest shape before joining. 
 The effect is similar to contracting springs but there is no such problem like surplus energy after the joining process is done.
 
 
