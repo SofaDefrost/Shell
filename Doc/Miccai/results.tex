@@ -1,6 +1,6 @@
 In order to show an improvement on existing predictive simulation systems for CHD corrective surgeries, we want to demonstrate that our blood vessel model based on thin shell elements is
 \begin{enumerate}
-\item physically accurate,
+\item physically accurate, \tomas{I suggest to use \uv{fitness for the purpose}}
 \item converges to expected results with a low number of elements,
 \item is able to simulate low-level surgical procedures universally.
 \end{enumerate}
@@ -53,7 +53,7 @@ Figure \ref{fig-deformations} shows bending and twisting of an elastic tube mani
   \label{fig-convergence}
 \end{figure}
 
-It is important to minimize the number of shell elements to reduce computation time. This is the key factor to enable an interactive simulation system that is accepted by surgeons to simulate multiple surgical approaches in succession. The bending capabilities of thin shell elements allow to reduce their number by still representing the tubular structure of blood vessels while maintaining their physical behavior appropriately. Figure \ref{fig-convergence} shows simulation results of a strongly deformed tube represented by different numbers of thin shell elements. With only eight vertices along the circumference of the elastic tube the simulation result is comparable to a simulation result with high element count. We map a fine polygonal mesh to the coarse shell element meshes to visualize their intrinsic bending detail and therefore to get comparable results that correlates with the true shape of the simulated tube.
+It is important to minimize the number of shell elements to reduce computation time. This is the key factor to enable an interactive simulation system that is accepted by surgeons to simulate multiple surgical approaches in succession. The bending capabilities of thin shell elements allow to reduce their number and still representing the tubular structure of blood vessels while maintaining their physical behavior appropriately. Figure \ref{fig-convergence} shows simulation results of a strongly deformed tube represented by different numbers of thin shell elements. With only eight vertices along the circumference of the elastic tube the simulation result is comparable to a simulation result with high element count. We map a fine polygonal mesh to the coarse shell element meshes to visualize their intrinsic bending detail. \tomas{redundant, already in previous sentences: and therefore to get comparable results that correlates with the true shape of the simulated tube.}
 
 \subsection{Low-level surgical procedures}
 
@@ -67,6 +67,20 @@ It is important to minimize the number of shell elements to reduce computation t
 We manually modeled an aortic arch based on real image data to be able to demonstrate suitability of our joining approach for different kinds of low-level surgical procedures on a concrete example. Therefore we chose a coarctation of an aortic arch that can be repaired by completely different surgical approaches that heavily alter the surface of the blood vessel \cite{Dodge2000}. Results can be examined in figure \ref{fig-surgery}. We prove that our topological method for joining of shell elements through a controlled relaxation to their rest shape is able to handle all different kinds of connections universally and in a correct manner.
 
 \subsection{Limitations and Constraints}
+\tomas{rename do \uv{Discussion}}
+
+More general problems for this kind of simulation: (not limited to our method)
+
+-- getting image data -- that is something you're already working on in Germany
+
+-- hi-quality mesh with low number of polygons -- there seem to be something already, e.g. \cite{Comas2010c}.
+
+At the moment biggest limitation of our method resides in the requirement of the same number of nodes on both edges of the suture.
+Meeting this requirement may not be easy.
+Also FE methods put constrain on the quality of mesh that is necessary to maintain the convergence and stability of the model.
+These are especially important for meshes with low number of elements.
+To deal with this problems techniques for dynamic remeshig during the simulation may be required.
+
 
 %Example with 3 diff. surgical procedures
 %Parameters
