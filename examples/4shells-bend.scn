@@ -5,10 +5,9 @@
      (initial) rotation of the shell does not influence the deformation.
 -->
 
-<Node name="root" dt="0.02"
-    showBehaviorModels="1" showCollisionModels="0" showMappings="0"
-    showForceFields="1" showBoundingTree="0" showVisualModels="1"
-    gravity="0 0 0">
+<Node name="root" dt="0.02" gravity="0 0 0">
+
+    <VisualStyle displayFlags="showVisual showBehaviorModels showForceFields" />
 
     <CollisionPipeline verbose="0"/>
     <BruteForceDetection name="N2"/>
@@ -74,7 +73,7 @@
 
         <MechanicalObject name="points" template="Rigid"
             rest_position="@/Mesh/basePoints.position"
-            showObject="true" showObjectScale="0.1"
+            showObject="false" showObjectScale="0.1"
             showIndices="false" showIndicesScale="0.0001" />
 
         <TriangleSetTopologyContainer name="triangles"
@@ -82,21 +81,20 @@
             edges="@/Mesh/baseTriangles.edges"
             triangles="@/Mesh/baseTriangles.triangles" />
 
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]"
-                     showAxisSizeFactor="0.2" totalmass="0.1"/>
+        <UniformMass showAxisSizeFactor="0.1" totalmass="1"/>
 
-                 <!-- <FixedRotationConstraint FixedZRotation="true"/>-->
         <FixedConstraint indices="0 1 3 4 6 7 9 10" />
         <ConstantForceField points="2 5 8 11" forces="0 0 100 0 0 0"/>
 
+        <!-- <FixedRotationConstraint FixedZRotation="true"/>-->
         <!--
-        <TriangularBendingFEMForceField bendig="true"
+        <TriangularBendingFEMForceField bending="true"
         <TriangularShellForceField name="FEM" bendingElement="DKT" membraneElement="None" corotated="false"
         <TriangularShellForceField name="FEM" bendingElement="DKT" membraneElement="ANDES-OPT" corotated="true"
         -->
         <BezierTriangularBendingFEMForceField name="FEM"
             youngModulus="2e6" poissonRatio="0.45" thickness="0.1"
-            printLog="true" />
+            printLog="false" />
 
         <OglModel name="Visual2" color="green"/>
         <IdentityMapping input="@points" output="@Visual2"/>

@@ -1700,4 +1700,4 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
 } // namespace sofa
 
 
-#endif
+#endif // #ifndef SOFA_COMPONENT_FORCEFIELD_BEZIER_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL

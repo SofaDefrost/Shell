@@ -320,4 +320,4 @@ extern template class BezierTriangularBendingFEMForceField<defaulttype::Rigid3fT
 
 } // namespace sofa
 
-#endif
+#endif // #ifndef SOFA_COMPONENT_FORCEFIELD_BEZIER_TRIANGULAR_BENDING_FEM_FORCEFIELD_H
