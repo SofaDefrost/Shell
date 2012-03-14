@@ -99,28 +99,6 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
         return;
     }
 
-    // Retrieve associated Force Field (if available)
-    this->getContext()->get(bezierForcefield);
-    if (bezierForcefield)
-    {
-        sout << "TriangularBendingForcefield was found" << sendl;
-        if (normals.getValue().size() != 0) {
-            serr << "Ignoring normals, using configuration from force field" <<
-                sendl;
-        }
-    }
-    else
-    {
-        sout << "TriangularBendingForcefield was NOT found" << sendl;
-
-        if (normals.getValue().size() == 0) {
-            serr << "No normals defined, assuming flat triangles" << sendl;
-        } else if (normals.getValue().size() != this->fromModel->getX0()->size()) {
-            serr << "Normals count doesn't correspond with nodes count" << sendl;
-            return;
-        }
-    }
-
     const OutVecCoord &outVertices = *this->toModel->getX();
 
     barycentricCoordinates.clear();
@@ -128,7 +106,6 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
 
     // Retrieves 'in' vertices and triangles
     const InVecCoord &inVerticesRigid = *this->fromModel->getX();
-    const InVecCoord &inVerticesRigid0 = *this->fromModel->getX0();
 
     // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
     OutVecCoord inVertices;
@@ -139,36 +116,10 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
     const SeqEdges &inEdges = inputTopo->getEdges();
     const SeqTriangles &inTriangles = inputTopo->getTriangles();
 
-    const helper::vector<Vec3>& norms = normals.getValue();
-
     // Iterates over 'in' triangles
     triangleInfo.resize(inTriangles.size());
     for (unsigned int t=0; t<inTriangles.size(); t++) {
-        Index a = inTriangles[t][0];
-        Index b = inTriangles[t][1];
-        Index c = inTriangles[t][2];
-
         TriangleInformation &tinfo = triangleInfo[t];
-
-        if (!bezierForcefield)
-        {
-
-            // Compute initial bezier points at the edges 
-            BezierFF::computeEdgeBezierPoints(
-                a, b, c, inVerticesRigid0, norms, tinfo.bezierNodes);
-
-            // Get the segments' position in the reference frames of the rest-shape
-            tinfo.P0_P1 = inVerticesRigid0[a].getOrientation().inverseRotate( tinfo.bezierNodes[3] );
-            tinfo.P0_P2 = inVerticesRigid0[a].getOrientation().inverseRotate( tinfo.bezierNodes[4] );
-
-            tinfo.P1_P2 = inVerticesRigid0[b].getOrientation().inverseRotate( tinfo.bezierNodes[5] );
-            tinfo.P1_P0 = inVerticesRigid0[b].getOrientation().inverseRotate( tinfo.bezierNodes[6] );
-
-            tinfo.P2_P1 = inVerticesRigid0[c].getOrientation().inverseRotate( tinfo.bezierNodes[7] );
-            tinfo.P2_P0 = inVerticesRigid0[c].getOrientation().inverseRotate( tinfo.bezierNodes[8] );
-
-        }
-
         tinfo.attachedPoints.clear();
     }
 
@@ -696,86 +647,9 @@ void BezierShellMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParams
     }
 
     // List of in triangles
-    const SeqTriangles& inTriangles = inputTopo->getTriangles();
-
-    for (unsigned int t=0; t<inTriangles.size();t++)
+    for (int t=0; t<inputTopo->getNbTriangles();t++)
     {
-
         TriangleInformation &tinfo = triangleInfo[t];
-        Triangle triangle = inTriangles[t];
-
-        if (bezierForcefield)
-        {
-            // Use data from the force field
-            const typename BezierFF::TriangleInformation fftinfo = 
-                bezierForcefield->getTriangleInfo(t);
-            tinfo.bezierNodes = fftinfo.bezierNodes; 
-
-            tinfo.P0_P1 = fftinfo.P0_P1_inFrame0;
-            tinfo.P0_P2 = fftinfo.P0_P2_inFrame0;
-            tinfo.P1_P2 = fftinfo.P1_P2_inFrame1;
-            tinfo.P1_P0 = fftinfo.P1_P0_inFrame1;
-            tinfo.P2_P0 = fftinfo.P2_P0_inFrame2;
-            tinfo.P2_P1 = fftinfo.P2_P1_inFrame2;
-
-        }
-        else
-        {
-            // Compute nodes of the Bézier triangle
-
-            // Corners
-            tinfo.bezierNodes[0] = in[ triangle[0] ].getCenter();
-            tinfo.bezierNodes[1] = in[ triangle[1] ].getCenter();
-            tinfo.bezierNodes[2] = in[ triangle[2] ].getCenter();
-
-#ifdef ROTQ
-            Quaternion q[3] = {
-                in[ triangle[0] ].getOrientation(),
-                in[ triangle[1] ].getOrientation(),
-                in[ triangle[2] ].getOrientation() };
-
-#define BN(i, p, seg) do { \
-    tinfo.bezierNodes[(i)] = tinfo.bezierNodes[(p)] + \
-        q[(p)].rotate(tinfo.seg); \
-} while (0)
-
-#else
-            // Rotation matrices at corner nodes
-            Mat33 R[3];
-            in[ triangle[0] ].getOrientation().toMatrix(R[0]);
-            in[ triangle[1] ].getOrientation().toMatrix(R[1]);
-            in[ triangle[2] ].getOrientation().toMatrix(R[2]);
-
-#define BN(i, p, seg) do { \
-    tinfo.bezierNodes[(i)] = tinfo.bezierNodes[(p)] + \
-        R[(p)] * tinfo.seg; \
-} while (0)
-
-#endif
-            BN(3, 0, P0_P1);
-            BN(4, 0, P0_P2);
-            BN(5, 1, P1_P2);
-            BN(6, 1, P1_P0);
-            BN(7, 2, P2_P0);
-            BN(8, 2, P2_P1);
-
-#undef BN
-
-#ifdef ROTQ
-            // Center
-            tinfo.bezierNodes[9] =
-                (tinfo.bezierNodes[0] + q[0].rotate( tinfo.P0_P1 + tinfo.P0_P2 ))/3.0 +
-                (tinfo.bezierNodes[1] + q[1].rotate( tinfo.P1_P0 + tinfo.P1_P2 ))/3.0 +
-                (tinfo.bezierNodes[2] + q[2].rotate( tinfo.P2_P0 + tinfo.P2_P1 ))/3.0;
-#else
-            // Center
-            tinfo.bezierNodes[9] =
-                (tinfo.bezierNodes[0] + R[0]*( tinfo.P0_P1 + tinfo.P0_P2 ))/3.0 +
-                (tinfo.bezierNodes[1] + R[1]*( tinfo.P1_P0 + tinfo.P1_P2 ))/3.0 +
-                (tinfo.bezierNodes[2] + R[2]*( tinfo.P2_P0 + tinfo.P2_P1 ))/3.0;
-#endif
-
-        }
 
         // Go through the attached points
         for (unsigned int i=0; i<tinfo.attachedPoints.size(); i++)
@@ -783,19 +657,11 @@ void BezierShellMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParams
             Index pt = tinfo.attachedPoints[i] ;
             Vec3 bc = barycentricCoordinates[pt];
 
-            // TODO: precompute the coefficients
-            out[pt] = tinfo.bezierNodes[0] * bc[0]*bc[0]*bc[0] +
-                tinfo.bezierNodes[1] * bc[1]*bc[1]*bc[1] +
-                tinfo.bezierNodes[2] * bc[2]*bc[2]*bc[2] +
-                tinfo.bezierNodes[3] * 3*bc[0]*bc[0]*bc[1] +
-                tinfo.bezierNodes[4] * 3*bc[0]*bc[0]*bc[2] +
-                tinfo.bezierNodes[5] * 3*bc[1]*bc[1]*bc[2] +
-                tinfo.bezierNodes[6] * 3*bc[0]*bc[1]*bc[1] +
-                tinfo.bezierNodes[7] * 3*bc[0]*bc[2]*bc[2] +
-                tinfo.bezierNodes[8] * 3*bc[1]*bc[2]*bc[2] +
-                tinfo.bezierNodes[9] * 6*bc[0]*bc[1]*bc[2];
+            // TODO: fix this type madness
+            Vec3 opt;
+            bsInterpolation->interpolateOnBTriangle((unsigned int)t, bc, opt);
+            out[pt] = opt;
         }
-
     }
 
     //{
@@ -821,6 +687,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParams
 }
 
 
+#if 0 // TODO
 // Updates velocities of the visual mesh from mechanical vertices
 template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParams* /*mparams*/, Data<OutVecDeriv>& dOut, const Data<InVecDeriv>& dIn)
@@ -1322,7 +1189,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPara
 //    stop = timer.getTime();
 //    std::cout << "time applyJT = " << stop-start << std::endl;
 }
-
+#endif
 
 template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/)
@@ -1331,6 +1198,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintPara
 }
 
 
+#if 0 // TODO
 template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualParams* vparams)
 {
@@ -1471,6 +1339,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualPar
     }
         // TODO: visualise the mesh
 }
+#endif
 
 
 } // namespace mapping

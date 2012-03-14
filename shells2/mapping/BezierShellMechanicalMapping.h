@@ -46,6 +46,7 @@
 #include <sofa/helper/system/thread/CTime.h>
 
 #include "../forcefield/BezierShellForceField.h"
+#include "../fem/BezierShellInterpolation.h"
 
 // Use quaternions for rotations
 //#define ROTQ
@@ -116,8 +117,7 @@ public:
     : Inherit(from, to)
     , inputTopo(NULL)
     , outputTopo(NULL)
-    , bezierForcefield(NULL)
-    , normals(initData(&normals, "normals","Node normals at the rest shape"))
+    , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
     , verticesTarget(OutVecCoord()) // dummy initialization
@@ -133,13 +133,13 @@ public:
 
     void init();
     void reinit();
-    virtual void draw(const core::visual::VisualParams* vparams);
+    //virtual void draw(const core::visual::VisualParams* vparams);
 
 
     void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in);
-    const sofa::defaulttype::BaseMatrix* getJ(const core::MechanicalParams * mparams);
-    void applyJ(const core::MechanicalParams *mparams, Data<OutVecDeriv>& out, const Data<InVecDeriv>& in);
-    void applyJT(const core::MechanicalParams *mparams, Data<InVecDeriv>& out, const Data<OutVecDeriv>& in);
+    //const sofa::defaulttype::BaseMatrix* getJ(const core::MechanicalParams * mparams);
+    //void applyJ(const core::MechanicalParams *mparams, Data<OutVecDeriv>& out, const Data<InVecDeriv>& in);
+    //void applyJT(const core::MechanicalParams *mparams, Data<InVecDeriv>& out, const Data<OutVecDeriv>& in);
     void applyJT(const core::ConstraintParams *cparams, Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in);
 
 
@@ -189,8 +189,7 @@ protected:
     : Inherit()
     , inputTopo(NULL)
     , outputTopo(NULL)
-    , bezierForcefield(NULL)
-    , normals(initData(&normals, "normals","Node normals at the rest shape"))
+    , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
     , verticesTarget(OutVecCoord()) // dummy initialization
@@ -203,16 +202,7 @@ protected:
     typedef struct {
 
         // Nodes of the Bézier triangle
-        sofa::helper::fixed_array<Vec3, 10> bezierNodes;
         sofa::helper::fixed_array<Vec3, 10> bezierNodesV;
-
-        // Segments in the reference frame
-        Vec3 P0_P1;
-        Vec3 P0_P2;
-        Vec3 P1_P2;
-        Vec3 P1_P0;
-        Vec3 P2_P0;
-        Vec3 P2_P1;
 
         // Contains the list of poinst connected to this triangle
         sofa::helper::vector<int> attachedPoints;
@@ -224,10 +214,10 @@ protected:
         BaseMeshTopology* inputTopo;
         BaseMeshTopology* outputTopo;
 
-    // Pointer to the forcefield associated with the input topology
-    BezierFF* bezierForcefield;
+        SingleLink<BezierShellMechanicalMapping<TIn, TOut>,
+            sofa::component::fem::BezierShellInterpolation<TIn>,
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> bsInterpolation;
 
-        Data< helper::vector<Vec3> > normals;
         Data<bool> measureError;
         SingleLink<BezierShellMechanicalMapping<TIn, TOut>,
             sofa::core::topology::BaseMeshTopology,

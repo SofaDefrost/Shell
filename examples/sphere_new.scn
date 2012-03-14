@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<Node name="root" dt="0.02" gravity="0 0 0">
+
+    <VisualStyle displayFlags="showVisual" />
+
+    <CollisionPipeline verbose="0"/>
+    <BruteForceDetection name="N2"/>
+    <CollisionResponse response="default"/>
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
+    <CollisionGroup/>
+
+    <Node name="Mesh">
+        <MeshObjLoader name="mesh" filename="../mesh/sphere10.obj" flipNormals="false"/>
+    </Node>
+
+    <Node name="MeshFine">
+        <MeshObjLoader name="mesh" filename="../mesh/sphere40.obj" flipNormals="false"/>
+    </Node>
+
+    <Node name="Sphere">
+        <EulerImplicitSolver rayleighMass="0.5" rayleighStiffness="0.5"/>
+
+        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
+        <!--
+        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
+        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
+        <SparseLUSolver name="SparseLU Solver" printLog="false" />
+        -->
+
+        <TriangleSetTopologyContainer name="baseTriangles"
+            position="@/Mesh/mesh.position"
+            edges="@/Mesh/mesh.edges"
+            triangles="@/Mesh/mesh.triangles" />
+
+        <MechanicalObject name="sphere" template="Rigid"
+                          rest_position="@/Mesh/mesh.position" />
+
+        <UniformMass showAxisSizeFactor="0.1" totalmass="1"/>
+
+        <FixedConstraint indices="0" />
+
+        <BezierTriangularBendingFEMForceField name="FEM" normals="@/Mesh/mesh.normalsList"
+            youngModulus="1.092e6" poissonRatio="0.33" thickness="0.1"/>
+
+        <!--
+        <Node>
+            <OglModel name="Visual" color="green"/>
+            <TriangleSetTopologyContainer name="baseTriangles"
+                position="@/Mesh/mesh.position"
+                edges="@/Mesh/mesh.edges"
+                triangles="@/Mesh/mesh.triangles" />
+
+            <MechanicalObject name="MO" template="Vec3d" rest_position="@/Mesh/mesh.position" />
+
+            <TriangleSetGeometryAlgorithms name="GeomAlgo" template="Vec3d" drawEdges="1" drawColorEdges="0.2 1 0.2" />
+            <IdentityMapping input="@.." output="@MO"/>
+        </Node>
+        -->
+
+        <Node name="bezierNodes">
+            <PointSetTopologyContainer template="Vec3d" name="BezierPoints" />
+            <MechanicalObject template="Vec3d" name="BezierPointsMO" />
+            <Mesh2PointTopologicalMapping input="@../baseTriangles" output="@BezierPoints" pointBaryCoords="0 0 0" edgeBaryCoords="0.333 0.6666 0    0.6666 0.3333 0"  triangleBaryCoords="0.3333 0.3333 0" />
+            <BezierShellInterpolation template="Rigid" name="bsInterp" normals="@/Mesh/mesh.normalsList"/>
+        </Node>
+
+
+        <Node name="SubTriangles">
+            <TriangleSetTopologyContainer name="subTrianglesTopo" src="@/MeshFine/mesh" />
+            <MechanicalObject name="subPoints" rest_position="@subTrianglesTopo.position" />
+
+            <BezierShellMechanicalMapping input="@.." output="@." bsInterpolation="@../bezierNodes/bsInterp" />
+            <!--
+            <BezierTriangleMechanicalMapping input="@.." output="@." normals="@/Mesh/mesh.normalsList"
+                checkJacobian="false" printLog="true" />
+                -->
+            <!--<TriangleSetGeometryAlgorithms name="GeomAlgo" template="Vec3d" drawEdges="1" drawColorEdges="1 0.2 0.2" />-->
+            <Node>
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping input="@../subPoints" output="@Visual"/>
+            </Node>
+        </Node>
+
+    </Node>
+</Node>
