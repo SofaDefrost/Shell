@@ -36,6 +36,7 @@
 
 #include "../../controller/MeshInterpolator.h"
 #include "../../engine/JoinMeshPoints.h"
+#include "../fem/BezierShellInterpolation.h"
 
 
 // Uncomment the following to use quaternions instead of matrices for
@@ -129,12 +130,10 @@ public:
                 helper::fixed_array <Transformation, 3> restLocalOrientationsInv;
 #endif
 
+                // Index of this element
+                Index elementID;
                 // Indices of each vertex
                 Index a, b, c;
-
-                // Indices in rest shape topology. Normaly is the same as a, b,
-                // c, but is different if topologyMapper is set.
-                Index a0, b0, c0;
 
                 // Corotational frame
                 Vec3 frameCenter;
@@ -147,19 +146,8 @@ public:
                 // Matrix of interpolation functions
                 Mat<3,3> interpol;
 
-                // Segments in rest position used to keep Bézier points rigidly fixed
-                Vec3 P0_P1_inFrame0;
-                Vec3 P0_P2_inFrame0;
-                Vec3 P1_P2_inFrame1;
-                Vec3 P1_P0_inFrame1;
-                Vec3 P2_P0_inFrame2;
-                Vec3 P2_P1_inFrame2;
-
                 // Nodes of the Bezier triangle
-                helper::fixed_array<Vec3, 10> bezierNodes;  // ... in global frame
                 helper::fixed_array<Vec3, 10> pts;          // ... in local frame
-                // ... of the rest shape
-                helper::fixed_array<Vec3, 10> bezierNodes0; // ... in global frame
 
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacement strainDisplacementMatrix1;
@@ -243,6 +231,12 @@ public:
             sofa::component::engine::JoinMeshPoints<DataTypes>,
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> topologyMapper;
 
+        // Bezier shell interpolation
+        SingleLink<BezierShellForceField<DataTypes>,
+            sofa::component::fem::BezierShellInterpolation<DataTypes>,
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> bsInterpolation;
+
+
 
         static void computeEdgeBezierPoints(const Index& a, const Index& b, const Index& c,
             const VecCoord& x, const helper::vector<Vec3>& norms,
@@ -285,10 +279,9 @@ protected :
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
         virtual void computeMaterialMatrix();
 
-        void computePosBezierPoint(const TriangleInformation *tinfo, const Index& a, const Index& b, const Index& c, const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
-        void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
-        void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
-        void interpolateRefFrame(TriangleInformation *tinfo, const Vec2& baryCoord, const Index& a, const Index& b, const Index& c, const VecCoord& x, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints );
+        //void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
+        //void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
+        void interpolateRefFrame(TriangleInformation *tinfo, const Vec2& baryCoord);
 
 
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);

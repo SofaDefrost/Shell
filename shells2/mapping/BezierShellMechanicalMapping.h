@@ -45,7 +45,7 @@
 
 #include <sofa/helper/system/thread/CTime.h>
 
-#include "../forcefield/BezierShellForceField.h"
+//#include "../forcefield/BezierShellForceField.h"
 #include "../fem/BezierShellInterpolation.h"
 
 // Use quaternions for rotations
@@ -91,8 +91,6 @@ public:
     typedef typename Out::Deriv                 OutDeriv;
     typedef typename Out::MatrixDeriv           OutMatrixDeriv;
     typedef typename Out::Real                  OutReal;
-
-    typedef typename sofa::component::forcefield::BezierShellForceField<In>    BezierFF;
 
     typedef InReal Real;
 

@@ -139,7 +139,7 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
          */
         void handleEvent(core::objectmodel::Event *event)
         {
-            if (dynamic_cast< sofa::simulation::AnimateBeginEvent *>(event) !=  NULL)
+            if (dynamic_cast< sofa::simulation::AnimateBeginEvent *>(event))
             {
                 this->updateBezierPoints();
             }
@@ -169,6 +169,15 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         //
         // Interface
         //
+
+        void getBezierNodes(ElementID elemID, sofa::helper::fixed_array<Vec3,10>& bn)
+        {
+            const BTri& btri = getBezierTriangle(elemID);
+            const VecVec3d& x = *mStateNodes->getX();
+            for (int i=0; i<10; i++) {
+                bn[i] = x[ btri[i] ];
+            }
+        }
 
         // simple interpolation of a point:
         void interpolateOnBTriangle(Index triID, const VecVec3d& posNode, const Vec3& baryCoord, Vec3& Result);

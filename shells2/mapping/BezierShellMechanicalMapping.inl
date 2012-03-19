@@ -687,7 +687,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParams
 }
 
 
-#if 0 // TODO
+#if 0 // TODO {{{
 // Updates velocities of the visual mesh from mechanical vertices
 template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParams* /*mparams*/, Data<OutVecDeriv>& dOut, const Data<InVecDeriv>& dIn)
@@ -1189,7 +1189,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPara
 //    stop = timer.getTime();
 //    std::cout << "time applyJT = " << stop-start << std::endl;
 }
-#endif
+#endif // }}}
 
 template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/)
@@ -1198,7 +1198,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintPara
 }
 
 
-#if 0 // TODO
+#if 0 // TODO {{{
 template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualParams* vparams)
 {
@@ -1339,7 +1339,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualPar
     }
         // TODO: visualise the mesh
 }
-#endif
+#endif // }}}
 
 
 } // namespace mapping

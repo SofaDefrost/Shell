@@ -53,6 +53,7 @@ BezierShellInterpolation<DataTypes>::BezierShellInterpolation()
     //, bezierM2P(sofa::core::objectmodel::New< sofa::component::topology::Mesh2PointTopologicalMapping >())
     //, bezierState(sofa::core::objectmodel::New< sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3dTypes> >())
 {
+    this->f_listening.setValue(true);
     /*
        bezierM2P->setName("bezierNodeMapper");
        bezierM2P->pointBaryCoords.beginEdit()->push_back(Vec3(0, 0, 0));
@@ -356,12 +357,12 @@ void BezierShellInterpolation<DataTypes>::updateBezierPoints()
         Vec3 P2_P1 = xSim0[c].getOrientation().inverseRotate( xRest[ bTri[8] ] - xRest[ bTri[2] ] );
 
         // Update the positions
-        x[ bTri[3] ] = xSim[a].getOrientation().rotate(P0_P1) + xRest[ bTri[0] ];
-        x[ bTri[4] ] = xSim[a].getOrientation().rotate(P0_P2) + xRest[ bTri[0] ];
-        x[ bTri[5] ] = xSim[b].getOrientation().rotate(P1_P2) + xRest[ bTri[1] ];
-        x[ bTri[6] ] = xSim[b].getOrientation().rotate(P1_P0) + xRest[ bTri[1] ];
-        x[ bTri[7] ] = xSim[c].getOrientation().rotate(P2_P0) + xRest[ bTri[2] ];
-        x[ bTri[8] ] = xSim[c].getOrientation().rotate(P2_P1) + xRest[ bTri[2] ];
+        x[ bTri[3] ] = xSim[a].getOrientation().rotate(P0_P1) + x[ bTri[0] ];
+        x[ bTri[4] ] = xSim[a].getOrientation().rotate(P0_P2) + x[ bTri[0] ];
+        x[ bTri[5] ] = xSim[b].getOrientation().rotate(P1_P2) + x[ bTri[1] ];
+        x[ bTri[6] ] = xSim[b].getOrientation().rotate(P1_P0) + x[ bTri[1] ];
+        x[ bTri[7] ] = xSim[c].getOrientation().rotate(P2_P0) + x[ bTri[2] ];
+        x[ bTri[8] ] = xSim[c].getOrientation().rotate(P2_P1) + x[ bTri[2] ];
 
         x[ bTri[9] ] = (x[ bTri[3] ] + x[ bTri[4] ] - x[ bTri[0] ] +
             x[ bTri[5] ] + x[ bTri[6] ] - x[ bTri[1] ] +
