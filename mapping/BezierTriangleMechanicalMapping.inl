@@ -42,6 +42,7 @@ namespace mapping
 {
 
 using namespace sofa::component::collision;
+using namespace sofa::helper;
 
 // Returns the skew-symetric matrix for computing a cross-product with the 
 // vector @x
