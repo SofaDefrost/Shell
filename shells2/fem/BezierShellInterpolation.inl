@@ -35,6 +35,25 @@
 using namespace sofa::core::behavior;
 
 
+// Returns the skew-symetric matrix for computing a cross-product with the 
+// vector @x
+template <typename Real>
+inline void crossMatrix(const sofa::defaulttype::Vec<3, Real>& x,
+    sofa::defaulttype::Mat<3,3, Real>& m)
+{
+    m[0][0] = 0;
+    m[0][1] = -x[2];
+    m[0][2] = x[1];
+
+    m[1][0] = x[2];
+    m[1][1] = 0;
+    m[1][2] = -x[0];
+
+    m[2][0] = -x[1];
+    m[2][1] = x[0];
+    m[2][2] = 0;
+}
+
 namespace sofa
 {
 
@@ -164,6 +183,8 @@ void BezierShellInterpolation<DataTypes>::init()
             }
         }
 
+        // Create the array of node indices
+
         BTri btri;
 
         btri[0] = mapPoint[tri[0]][0];
@@ -186,22 +207,34 @@ void BezierShellInterpolation<DataTypes>::init()
     Data<VecVec3d>* dataxRest = mStateNodes->write(sofa::core::VecCoordId::restPosition());
     VecVec3d& xRest = *dataxRest->beginEdit();
 
-    const VecCoord& inPoints = *mState->getX0();
+    const VecCoord& inPoints = mState->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
     VecVec3 normals = inputNormals.getValue();
 
     xRest.resize(bezierM2P->getTo()->getNbPoints());
+    segments.resize(bezierM2P->getTo()->getNbPoints());
 
     for (int i=0; i<inputTopology->getNbTriangles(); i++)
     {
-
         const BTri& bTri = bezierTriangles.getValue()[i];
         sofa::core::topology::Triangle tri = inputTopology->getTriangle(i);
 
+        // Compute the nodes
         xRest[ bTri[0] ] = inPoints[ tri[0] ].getCenter();
         xRest[ bTri[1] ] = inPoints[ tri[1] ].getCenter();
         xRest[ bTri[2] ] = inPoints[ tri[2] ].getCenter();
 
-        this->computeBezierPointsUsingNormals(i, xRest, normals);
+        computeBezierPointsUsingNormals(i, xRest, normals);
+
+        // Compute the segments in the reference frames of the rest-shape.
+        // I.e. how are the internal bezier nodes attached to the corners of
+        // the triangle.
+        segments[ bTri[3] ] = inPoints[ tri[0] ].getOrientation().inverseRotate( xRest[ bTri[3] ] - xRest[ bTri[0] ] );
+        segments[ bTri[4] ] = inPoints[ tri[0] ].getOrientation().inverseRotate( xRest[ bTri[4] ] - xRest[ bTri[0] ] );
+        segments[ bTri[5] ] = inPoints[ tri[1] ].getOrientation().inverseRotate( xRest[ bTri[5] ] - xRest[ bTri[1] ] );
+        segments[ bTri[6] ] = inPoints[ tri[1] ].getOrientation().inverseRotate( xRest[ bTri[6] ] - xRest[ bTri[1] ] );
+        segments[ bTri[7] ] = inPoints[ tri[2] ].getOrientation().inverseRotate( xRest[ bTri[7] ] - xRest[ bTri[2] ] );
+        segments[ bTri[8] ] = inPoints[ tri[2] ].getOrientation().inverseRotate( xRest[ bTri[8] ] - xRest[ bTri[2] ] );
+
     }
 
     dataxRest->endEdit();
@@ -320,22 +353,17 @@ void BezierShellInterpolation<DataTypes>::computeBezierPointsUsingNormals(const 
 template <class DataTypes>
 void BezierShellInterpolation<DataTypes>::updateBezierPoints()
 {
-    // Bézier nodes for rest position
-    const VecVec3d& xRest = *mStateNodes->getX0();
 
     // Nodes of the simulation
-    const VecCoord& xSim0 = *mState->getX0();
-    const VecCoord& xSim = *mState->getX();
+    const VecCoord& xSim = mState->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     Data<VecVec3d>* datax = mStateNodes->write(sofa::core::VecCoordId::position());
     VecVec3d& x = *datax->beginEdit();
 
-    x.resize(xRest.size());
+    x.resize(mStateNodes->read(sofa::core::ConstVecCoordId::restPosition())->getValue().size());
 
-    // TODO: We should go by edges to avoid doing things twice
     for (Index i=0; i<(Index)inputTopology->getNbTriangles(); i++)
     {
-
         sofa::core::topology::Triangle tri= inputTopology->getTriangle(i);
         Index a = tri[0];
         Index b = tri[1];
@@ -343,33 +371,50 @@ void BezierShellInterpolation<DataTypes>::updateBezierPoints()
 
         const BTri& bTri = bezierTriangles.getValue()[i];
 
-        x[ bTri[0] ] = xSim[a].getCenter();
-        x[ bTri[1] ] = xSim[b].getCenter();
-        x[ bTri[2] ] = xSim[c].getCenter();
+        // Combine global and optional local transformation for the DOFs  
 
-        // TODO We can precompute this and store, but I'm too tired now
-        // Get the segments' position in the reference frames of the rest-shape
-        Vec3 P0_P1 = xSim0[a].getOrientation().inverseRotate( xRest[ bTri[3] ] - xRest[ bTri[0] ] );
-        Vec3 P0_P2 = xSim0[a].getOrientation().inverseRotate( xRest[ bTri[4] ] - xRest[ bTri[0] ] );
-        Vec3 P1_P2 = xSim0[b].getOrientation().inverseRotate( xRest[ bTri[5] ] - xRest[ bTri[1] ] );
-        Vec3 P1_P0 = xSim0[b].getOrientation().inverseRotate( xRest[ bTri[6] ] - xRest[ bTri[1] ] );
-        Vec3 P2_P0 = xSim0[c].getOrientation().inverseRotate( xRest[ bTri[7] ] - xRest[ bTri[2] ] );
-        Vec3 P2_P1 = xSim0[c].getOrientation().inverseRotate( xRest[ bTri[8] ] - xRest[ bTri[2] ] );
+        Transform global_H_DOF0(xSim[a].getCenter(), xSim[a].getOrientation());
+        Transform global_H_DOF1(xSim[b].getCenter(), xSim[b].getOrientation());
+        Transform global_H_DOF2(xSim[c].getCenter(), xSim[c].getOrientation());
+
+        Transform DOF0_H_local0, DOF1_H_local1, DOF2_H_local2;
+        getDOFtoLocalTransform(tri, DOF0_H_local0, DOF1_H_local1, DOF2_H_local2);
+
+        Transform global_H_local0 = global_H_DOF0 * DOF0_H_local0;
+        Transform global_H_local1 = global_H_DOF1 * DOF1_H_local1;
+        Transform global_H_local2 = global_H_DOF2 * DOF2_H_local2;
 
         // Update the positions
-        x[ bTri[3] ] = xSim[a].getOrientation().rotate(P0_P1) + x[ bTri[0] ];
-        x[ bTri[4] ] = xSim[a].getOrientation().rotate(P0_P2) + x[ bTri[0] ];
-        x[ bTri[5] ] = xSim[b].getOrientation().rotate(P1_P2) + x[ bTri[1] ];
-        x[ bTri[6] ] = xSim[b].getOrientation().rotate(P1_P0) + x[ bTri[1] ];
-        x[ bTri[7] ] = xSim[c].getOrientation().rotate(P2_P0) + x[ bTri[2] ];
-        x[ bTri[8] ] = xSim[c].getOrientation().rotate(P2_P1) + x[ bTri[2] ];
 
-        x[ bTri[9] ] = (x[ bTri[3] ] + x[ bTri[4] ] - x[ bTri[0] ] +
+        x[ bTri[0] ] = global_H_local0.getOrigin();
+        x[ bTri[1] ] = global_H_local1.getOrigin();
+        x[ bTri[2] ] = global_H_local2.getOrigin();
+
+        x[ bTri[3] ] = global_H_local0.projectPoint( segments[ bTri[3] ] );
+        x[ bTri[4] ] = global_H_local0.projectPoint( segments[ bTri[4] ] );
+        x[ bTri[5] ] = global_H_local1.projectPoint( segments[ bTri[5] ] );
+        x[ bTri[6] ] = global_H_local1.projectPoint( segments[ bTri[6] ] );
+        x[ bTri[7] ] = global_H_local2.projectPoint( segments[ bTri[7] ] );
+        x[ bTri[8] ] = global_H_local2.projectPoint( segments[ bTri[8] ] );
+
+        x[ bTri[9] ] = (
+            x[ bTri[3] ] + x[ bTri[4] ] - x[ bTri[0] ] +
             x[ bTri[5] ] + x[ bTri[6] ] - x[ bTri[1] ] +
             x[ bTri[7] ] + x[ bTri[8] ] - x[ bTri[2] ])/3;
     }
 
     datax->endEdit();
+}
+
+template <class DataTypes>
+void BezierShellInterpolation<DataTypes>::getDOFtoLocalTransform(
+    sofa::core::topology::Triangle /*tri*/,
+    Transform DOF0_H_local0, Transform DOF1_H_local1, Transform DOF2_H_local2)
+{
+    // TODO
+    DOF0_H_local0.clear();
+    DOF1_H_local1.clear();
+    DOF2_H_local2.clear();
 }
 
 //
@@ -509,6 +554,228 @@ void BezierShellInterpolation<DataTypes>::interpolateOnBTriangle(const BTri& btr
 
 }
 #endif
+
+// @projBaryCoords Barycentric coordinates of projected points
+// @projElements   element index for each barycentric coordinate
+template <class DataTypes>
+void BezierShellInterpolation<DataTypes>::applyOnBTriangle(
+    VecVec3 projBaryCoords, VecIndex projElements,
+               helper::vector<Vec3>& out)
+{
+    if (projBaryCoords.size() != projElements.size())
+    {
+        serr << "projBaryCoords.size() != projElements.size()" << sendl;
+        return;
+    }
+
+    out.resize(projElements.size());
+    for (Index i=0; i<projElements.size(); i++)
+    {
+        interpolateOnBTriangle(projElements[i], projBaryCoords[i], out[i]);
+    }
+}
+
+template <class DataTypes>
+void BezierShellInterpolation<DataTypes>::applyJOnBTriangle(
+    VecVec3 projBaryCoords, VecIndex projElements,
+    const VecDeriv& in, VecVec3& out)
+{
+    if (projBaryCoords.size() != projElements.size())
+    {
+        serr << "projBaryCoords.size() != projElements.size()" << sendl;
+        return;
+    }
+
+    const VecCoord& xSim = mState->read(sofa::core::ConstVecCoordId::position())->getValue();
+    VecVec3d v;
+    v.resize(mStateNodes->read(sofa::core::ConstVecCoordId::restPosition())->getValue().size());
+
+    // Compute nodes of the Bézier triangle for each input triangle
+    for (Index i=0; i<(Index)inputTopology->getNbTriangles(); i++)
+    {
+        sofa::core::topology::Triangle tri= inputTopology->getTriangle(i);
+        const BTri& bTri = bezierTriangles.getValue()[i];
+
+        // Velocities in corner nodes
+        v[ bTri[0] ] = in[ tri[0] ].getVCenter();
+        v[ bTri[1] ] = in[ tri[1] ].getVCenter();
+        v[ bTri[2] ] = in[ tri[2] ].getVCenter();
+
+        // Angular velocities in cross-product matrix
+        Mat33 Omega0, Omega1, Omega2;
+        crossMatrix<Real>(in[ tri[0] ].getVOrientation(), Omega0);
+        crossMatrix<Real>(in[ tri[1] ].getVOrientation(), Omega1);
+        crossMatrix<Real>(in[ tri[2] ].getVOrientation(), Omega2);
+
+        // Apply optional local transform
+        Transform global_H_DOF0(xSim[ tri[0] ].getCenter(), xSim[ tri[0] ].getOrientation());
+        Transform global_H_DOF1(xSim[ tri[1] ].getCenter(), xSim[ tri[1] ].getOrientation());
+        Transform global_H_DOF2(xSim[ tri[2] ].getCenter(), xSim[ tri[2] ].getOrientation());
+
+        Transform DOF0_H_local0, DOF1_H_local1, DOF2_H_local2;
+        getDOFtoLocalTransform(tri, DOF0_H_local0, DOF1_H_local1, DOF2_H_local2);
+
+        Transform global_H_local0 = global_H_DOF0 * DOF0_H_local0;
+        Transform global_H_local1 = global_H_DOF1 * DOF1_H_local1;
+        Transform global_H_local2 = global_H_DOF2 * DOF2_H_local2;
+
+        Mat33 dR0, dR1, dR2;
+
+        // Rotation matrices at corner nodes
+        global_H_local0.getOrientation().toMatrix(dR0);
+        global_H_local1.getOrientation().toMatrix(dR1);
+        global_H_local2.getOrientation().toMatrix(dR2);
+
+        // Derivatives of the rotation matrix
+        dR0 = Omega0*dR0;
+        dR1 = Omega1*dR1;
+        dR2 = Omega2*dR2;
+
+        // Velocities at other nodes
+        v[ bTri[3] ] = v[ bTri[0] ] + dR0*segments[ bTri[3] ];
+        v[ bTri[4] ] = v[ bTri[0] ] + dR0*segments[ bTri[4] ];
+        v[ bTri[5] ] = v[ bTri[1] ] + dR1*segments[ bTri[5] ];
+        v[ bTri[6] ] = v[ bTri[1] ] + dR1*segments[ bTri[6] ];
+        v[ bTri[7] ] = v[ bTri[2] ] + dR2*segments[ bTri[7] ];
+        v[ bTri[8] ] = v[ bTri[2] ] + dR2*segments[ bTri[8] ];
+
+#if 0
+        // TODO: should be faster?
+        Vec3 tmp;
+        tmp = v[ bTri[0] ] + cross(in[ tri[0] ].getVOrientation(),x[ bTri[3] ]) + cross(segments[ bTri[3] ], in[ tri[0] ].getVOrientation());
+        if (norm(tmp - v[ bTri[3] ]) > 1e-10) std::cout << "3: " << tmp << " " << v[ bTri[3] ] << std::endl;
+        tmp = v[ bTri[0] ] + cross(in[ tri[0] ].getVOrientation(),x[ bTri[4] ]) + cross(segments[ bTri[4] ], in[ tri[0] ].getVOrientation());
+        if (norm(tmp - v[ bTri[4] ]) > 1e-10) std::cout << "4: " << tmp << " " << v[ bTri[4] ] << std::endl;
+        tmp = v[ bTri[1] ] + cross(in[ tri[1] ].getVOrientation(),x[ bTri[5] ]) + cross(segments[ bTri[5] ], in[ tri[1] ].getVOrientation());
+        if (norm(tmp - v[ bTri[5] ]) > 1e-10) std::cout << "5: " << tmp << " " << v[ bTri[5] ] << std::endl;
+        tmp = v[ bTri[1] ] + cross(in[ tri[1] ].getVOrientation(),x[ bTri[6] ]) + cross(segments[ bTri[6] ], in[ tri[1] ].getVOrientation());
+        if (norm(tmp - v[ bTri[6] ]) > 1e-10) std::cout << "6: " << tmp << " " << v[ bTri[6] ] << std::endl;
+        tmp = v[ bTri[2] ] + cross(in[ tri[2] ].getVOrientation(),x[ bTri[7] ]) + cross(segments[ bTri[7] ], in[ tri[2] ].getVOrientation());
+        if (norm(tmp - v[ bTri[7] ]) > 1e-10) std::cout << "7: " << tmp << " " << v[ bTri[7] ] << std::endl;
+        tmp = v[ bTri[2] ] - cross(in[ tri[2] ].getVOrientation(),x[ bTri[8] ]) + cross(segments[ bTri[8] ], in[ tri[2] ].getVOrientation());
+        if (norm(tmp - v[ bTri[8] ]) > 1e-10) std::cout << "8: " << tmp << " " << v[ bTri[8] ] << std::endl;
+#endif
+
+
+        v[ bTri[9] ] = (
+            v[ bTri[3] ] + v[ bTri[4] ] - v[ bTri[0] ] +
+            v[ bTri[5] ] + v[ bTri[6] ] - v[ bTri[1] ] +
+            v[ bTri[7] ] + v[ bTri[8] ] - v[ bTri[2] ])/3;
+    }
+
+    out.resize(projElements.size());
+    for (Index i=0; i<projElements.size(); i++)
+    {
+        interpolateOnBTriangle(projElements[i], v, projBaryCoords[i], out[i]);
+    }
+}
+
+template <class DataTypes>
+void BezierShellInterpolation<DataTypes>::applyJTOnBTriangle(
+    VecVec3 projBaryCoords, VecIndex projElements,
+    const VecVec3& in, VecDeriv& out)
+{
+    if (projBaryCoords.size() != projElements.size())
+    {
+        serr << "projBaryCoords.size() != projElements.size()" << sendl;
+        return;
+    }
+
+    const VecCoord& xSim = mState->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecVec3d& x = mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
+
+    // Compute nodes of the Bézier triangle for each input triangle
+    out.resize(projElements.size());
+    for (Index i=0; i<projElements.size(); i++)
+    {
+        if (in[i] == Vec3(0,0,0)) continue;
+
+        sofa::core::topology::Triangle tri= inputTopology->getTriangle(projElements[i]);
+        const BTri& bTri = bezierTriangles.getValue()[projElements[i]];
+
+        // Rotation matrices at corner nodes
+        Mat33 R[3];
+        xSim[ tri[0] ].getOrientation().toMatrix(R[0]);
+        xSim[ tri[1] ].getOrientation().toMatrix(R[1]);
+        xSim[ tri[2] ].getOrientation().toMatrix(R[2]);
+
+            Vec3 f1, f2, f3;    // resulting linear forces on corner nodes 
+            Vec3 f1r, f2r, f3r; // resulting torques
+            Vec3 fn;
+
+            const Vec3& bc = projBaryCoords[i];
+
+            // Compute the influence on the corner nodes
+            f1 = in[i] * (bc[0]*bc[0]*bc[0]);
+            f2 = in[i] * (bc[1]*bc[1]*bc[1]);
+            f3 = in[i] * (bc[2]*bc[2]*bc[2]);
+
+            // Now the influence through other nodes
+
+            fn = in[i] * (3*bc[0]*bc[0]*bc[1]);
+            if (fn != Vec3(0,0,0))
+            {
+                f1 += fn;
+                f1r += cross((x[ bTri[3] ] - x[ bTri[0] ]), fn);
+            }
+
+            fn = in[i] * (3*bc[0]*bc[0]*bc[2]);
+            if (fn != Vec3(0,0,0))
+            {
+                f1 += fn;
+                f1r += cross((x[ bTri[4] ] - x[ bTri[0] ]), fn);
+            }
+
+            fn = in[i] * (3*bc[1]*bc[1]*bc[2]);
+            if (fn != Vec3(0,0,0))
+            {
+                f2 += fn;
+                f2r += cross((x[ bTri[5] ] - x[ bTri[1] ]), fn);
+            }
+
+            fn = in[i] * (3*bc[0]*bc[1]*bc[1]);
+            if (fn != Vec3(0,0,0))
+            {
+                f2 += fn;
+                f2r += cross((x[ bTri[6] ] - x[ bTri[1] ]), fn);
+            }
+
+            fn = in[i] * (3*bc[0]*bc[2]*bc[2]);
+            if (fn != Vec3(0,0,0))
+            {
+                f3 += fn;
+                f3r += cross((x[ bTri[7] ] - x[ bTri[2] ]), fn);
+            }
+
+            fn = in[i] * (3*bc[1]*bc[2]*bc[2]);
+            if (fn != Vec3(0,0,0))
+            {
+                f3 += fn;
+                f3r += cross((x[ bTri[8] ] - x[ bTri[2] ]), fn);
+            }
+
+            fn = in[i] * (2*bc[0]*bc[1]*bc[2]);
+            if (fn != Vec3(0,0,0))
+            {
+                f1 += fn;
+                f2 += fn;
+                f3 += fn;
+                f1r += cross(R[0]*(segments[ bTri[3] ] + segments[ bTri[4] ]), fn);
+                f2r += cross(R[1]*(segments[ bTri[5] ] + segments[ bTri[6] ]), fn);
+                f3r += cross(R[2]*(segments[ bTri[7] ] + segments[ bTri[8] ]), fn);
+            }
+
+            getVCenter(out[ tri[0] ]) += f1;
+            getVCenter(out[ tri[1] ]) += f2;
+            getVCenter(out[ tri[2] ]) += f3;
+
+            getVOrientation(out[ tri[0] ]) += f1r;
+            getVOrientation(out[ tri[1] ]) += f2r;
+            getVOrientation(out[ tri[2] ]) += f3r;
+    }
+}
+
+
 
 #if 0 // {{{
 
@@ -1298,7 +1565,7 @@ void BezierShellInterpolation<DataTypes>::draw(const core::visual::VisualParams*
     if ((!vparams->displayFlags().getShowBehaviorModels()))
         return;
 
-    const VecVec3d& bn = *mStateNodes->getX();
+    const VecVec3d& bn = mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     glDisable(GL_LIGHTING);
     glBegin(GL_POINTS);

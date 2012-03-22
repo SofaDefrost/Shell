@@ -5,7 +5,6 @@
 //
 // Copyright:
 //
-//
 #ifndef SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_H
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_H
 
@@ -15,7 +14,7 @@
 #include <sofa/component/topology/Mesh2PointTopologicalMapping.h>
 //#include <sofa/core/behavior/Mass.h>
 //#include <sofa/core/objectmodel/Data.h>
-//#include <sofa/defaulttype/SolidTypes.h>
+#include <sofa/defaulttype/SolidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
@@ -75,18 +74,6 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         //bezier triangle
         typedef sofa::defaulttype::Vec<10,Index> BTri;
         typedef helper::vector<BTri> VecBTri;
-
-
-
-
-
-
-
-        enum PosType {
-            RestPos,
-            FreePos,
-            CurrentPos
-        };
 
         Data< sofa::helper::vector<sofa::helper::vector< unsigned int > > > f_interpolationIndices; //output interpolation indices
         Data< sofa::helper::vector<sofa::helper::vector< Real > > > f_interpolationValues;          //output interpolation values
@@ -179,6 +166,9 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
             }
         }
 
+        void getDOFtoLocalTransform(sofa::core::topology::Triangle tri,
+            Transform DOF0_H_local0, Transform DOF1_H_local1, Transform DOF2_H_local2);
+
         // simple interpolation of a point:
         void interpolateOnBTriangle(Index triID, const VecVec3d& posNode, const Vec3& baryCoord, Vec3& Result);
         void interpolateOnBTriangle(Index triID, const Vec3& baryCoord, Vec3& point) {
@@ -193,9 +183,9 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         //                       Vec3& fieldResult, Vec3& t0, Vec3& t1,
         //                       Vec3& D2t0, Vec3& D2t01, Vec3& D2t1);
 
-        // ComputeBezierierApplyJ(VecDeriv dx, type);
-        // ComputeBezierierApplyJT(VecDeriv dx, type);
-
+        void applyOnBTriangle(VecVec3 projBaryCoords, VecIndex projElements, VecVec3& out);
+        void applyJOnBTriangle(VecVec3 projBaryCoords, VecIndex projElements, const VecDeriv& in, VecVec3& out);
+        void applyJTOnBTriangle(VecVec3 projBaryCoords, VecIndex projElements, const VecVec3& in, VecDeriv& out);
 
     protected:
         // pointer on mechanical state holding the Bézier points and to
@@ -211,14 +201,16 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         //sofa::component::topology::Mesh2PointTopologicalMapping::SPtr bezierM2P;
         //sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3dTypes>::SPtr bezierState;
 
-        // init process=> computes the position of the bezier point given the positions and the normals
-        void computeBezierPointsUsingNormals(const Index& inputTri, VecVec3d& x, const VecVec3& normals);
-        void updateBezierPoints();
+        VecVec3 segments; // How are the internal bezier nodes attached to the corners of the triangle
 
         //Data< VecVec3d > bezierNodesPosition;
         //Data< VecBSeg > bezierSegments;
         Data< VecBTri > bezierTriangles;
         Data< VecVec3 > inputNormals;
+
+        // init process=> computes the position of the bezier point given the positions and the normals
+        void computeBezierPointsUsingNormals(const Index& inputTri, VecVec3d& x, const VecVec3& normals);
+        void updateBezierPoints();
 
         /////// projection of points
         //Data< VecVec3>  pointsToProject; // input : position of the points to project of the surface

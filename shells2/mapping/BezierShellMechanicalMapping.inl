@@ -46,25 +46,6 @@ namespace mapping
 using namespace sofa::component::collision;
 using namespace sofa::helper;
 
-// Returns the skew-symetric matrix for computing a cross-product with the 
-// vector @x
-template <typename Real>
-inline void crossMatrix(const Vec<3, Real>& x, Mat<3,3, Real>& m)
-{
-    m[0][0] = 0;
-    m[0][1] = -x[2];
-    m[0][2] = x[1];
-
-    m[1][0] = x[2];
-    m[1][1] = 0;
-    m[1][2] = -x[0];
-
-    m[2][0] = -x[1];
-    m[2][1] = x[0];
-    m[2][2] = 0;
-}
-
-
 
 template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::init()
@@ -121,6 +102,8 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
 
     // Iterates over 'in' triangles
     triangleInfo.resize(inTriangles.size());
+    projBaryCoords.clear();
+    projElements.clear();
     for (unsigned int t=0; t<inTriangles.size(); t++) {
         TriangleInformation &tinfo = triangleInfo[t];
         tinfo.attachedPoints.clear();
@@ -132,7 +115,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
     {
         unsigned int closestVertex, closestEdge, closestTriangle;
         Real minVertex, minEdge, minTriangle;
-        int triangleID;
+        int triangleID = 0;
         Vec3 vertexBaryCoord;
 
         // Iterates over 'in' vertices
@@ -167,16 +150,6 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
             else
             {
                 triangleID = trianglesAroundVertex[0];
-                triangleInfo[triangleID].attachedPoints.push_back(i);
-
-                // Computes barycentric coordinates within the triangle
-                computeBaryCoefs(vertexBaryCoord, outVertices[i],
-                    inVertices[ inTriangles[triangleID][0] ],
-                    inVertices[ inTriangles[triangleID][1] ],
-                    inVertices[ inTriangles[triangleID][2] ]);
-
-                // Adds the barycentric coordinates to the list
-                barycentricCoordinates[i] = vertexBaryCoord;
             }
         }
 
@@ -192,32 +165,30 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
             else
             {
                 triangleID = trianglesAroundEdge[0];
-                triangleInfo[triangleID].attachedPoints.push_back(i);
-
-                // Computes barycentric coordinates within the triangle
-                computeBaryCoefs(vertexBaryCoord, outVertices[i],
-                    inVertices[ inTriangles[triangleID][0] ],
-                    inVertices[ inTriangles[triangleID][1] ],
-                    inVertices[ inTriangles[triangleID][2] ]);
-
-                // Adds the barycentric coordinates to the list
-                barycentricCoordinates[i] = vertexBaryCoord;
             }
         }
 
         if (which == 2)
         {
             // If it is a triangle, consider it
-            triangleInfo[closestTriangle].attachedPoints.push_back(i);
+            triangleID = closestTriangle;
+        }
 
-            // Computes barycentric coordinates within each triangles
+        if (which < 3)
+        {
+            triangleInfo[triangleID].attachedPoints.push_back(i);
+
+            // Computes barycentric coordinates within the triangle
             computeBaryCoefs(vertexBaryCoord, outVertices[i],
-                inVertices[ inTriangles[closestTriangle][0] ],
-                inVertices[ inTriangles[closestTriangle][1] ],
-                inVertices[ inTriangles[closestTriangle][2] ]);
+                inVertices[ inTriangles[triangleID][0] ],
+                inVertices[ inTriangles[triangleID][1] ],
+                inVertices[ inTriangles[triangleID][2] ]);
 
             // Adds the barycentric coordinates to the list
             barycentricCoordinates[i] = vertexBaryCoord;
+
+            projBaryCoords.push_back(vertexBaryCoord);
+            projElements.push_back(triangleID);
         }
     }
 
@@ -638,59 +609,19 @@ void BezierShellMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParams
     //
     //start = timer.getTime();
 
-    if (!inputTopo || !outputTopo)
-    {
-        serr << "apply() was called before init()" << sendl;
-        return;
+    // TODO: fix this type madness
+    helper::vector<Vec3> rout;
+    bsInterpolation->applyOnBTriangle(projBaryCoords, projElements, rout);
+    out.resize(rout.size());
+    for (unsigned int i=0; i<rout.size(); i++) {
+        out[i] = rout[i];
     }
-    if (inputTopo->getNbTriangles() <= 0)
-    {
-        serr << "apply() requires an input triangular topology" << sendl;
-        return;
-    }
-
-    // List of in triangles
-    for (int t=0; t<inputTopo->getNbTriangles();t++)
-    {
-        TriangleInformation &tinfo = triangleInfo[t];
-
-        // Go through the attached points
-        for (unsigned int i=0; i<tinfo.attachedPoints.size(); i++)
-        {
-            Index pt = tinfo.attachedPoints[i] ;
-            Vec3 bc = barycentricCoordinates[pt];
-
-            // TODO: fix this type madness
-            Vec3 opt;
-            bsInterpolation->interpolateOnBTriangle((unsigned int)t, bc, opt);
-            out[pt] = opt;
-        }
-    }
-
-    //{
-    //    std::cout << "| In[" << in.size() << "] : ";
-    //    for (unsigned int i=0; i<in.size(); i++) {
-    //        if (i != 0) std::cout << ", ";
-    //        std::cout << in[i];
-    //    }
-    //    std::cout << std::endl;
-
-    //    helper::ReadAccessor< Data<OutVecCoord> > rout = dOut;
-    //    std::cout << "| Out[" << rout.size() << "]: ";
-    //    for (unsigned int i=0; i<rout.size(); i++) {
-    //        if (i != 0) std::cout << ", ";
-    //        std::cout << rout[i];
-    //    }
-    //    std::cout << std::endl;
-    //}
-
 
     //stop = timer.getTime();
     //std::cout << "time apply = " << stop-start << std::endl;
 }
 
 
-#if 0 // TODO {{{
 // Updates velocities of the visual mesh from mechanical vertices
 template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParams* /*mparams*/, Data<OutVecDeriv>& dOut, const Data<InVecDeriv>& dIn)
@@ -700,91 +631,19 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParam
 
     //std::cout << "---------------- ApplyJ ----------------------------" << std::endl;
 
-//    sofa::helper::system::thread::ctime_t start, stop;
-//    sofa::helper::system::thread::CTime timer;
-//
-//    start = timer.getTime();
+    //sofa::helper::system::thread::ctime_t start, stop;
+    //sofa::helper::system::thread::CTime timer;
 
-    if (!inputTopo || !outputTopo)
-    {
-        serr << "applyJ() was called before init()" << sendl;
-        return;
-    }
-    if (inputTopo->getNbTriangles() <= 0)
-    {
-        serr << "applyJ() requires an input triangular topology" << sendl;
-        return;
+    //start = timer.getTime();
+
+    // TODO: fix this type madness
+    helper::vector<Vec3> rout;
+    bsInterpolation->applyJOnBTriangle(projBaryCoords, projElements, dIn.getValue(), rout);
+    out.resize(rout.size());
+    for (unsigned int i=0; i<rout.size(); i++) {
+        out[i] = rout[i];
     }
 
-    // List of in triangles
-    const SeqTriangles& inTriangles = inputTopo->getTriangles();
-    //const helper::vector<Rigid>& inVertices = *this->fromModel->getX();
-    const InVecCoord& inVertices = *this->fromModel->getX();
-
-    // Compute nodes of the Bézier triangle for each input triangle
-    for (unsigned int t=0; t<inTriangles.size();t++)
-    {
-        Triangle triangle = inTriangles[t];
-        TriangleInformation &tinfo = triangleInfo[t];
-
-        // Velocities in corner nodes
-        tinfo.bezierNodesV[0] = in[ triangle[0] ].getVCenter();
-        tinfo.bezierNodesV[1] = in[ triangle[1] ].getVCenter();
-        tinfo.bezierNodesV[2] = in[ triangle[2] ].getVCenter();
-
-        // Angular velocities in cross-product matrix
-        Mat33 Omega0, Omega1, Omega2;
-        crossMatrix<Real>(in[ triangle[0] ].getVOrientation(), Omega0);
-        crossMatrix<Real>(in[ triangle[1] ].getVOrientation(), Omega1);
-        crossMatrix<Real>(in[ triangle[2] ].getVOrientation(), Omega2);
-
-        Mat33 dR0, dR1, dR2;
-
-        // Rotation matrices at corner nodes
-        inVertices[ triangle[0] ].getOrientation().toMatrix(dR0);
-        inVertices[ triangle[1] ].getOrientation().toMatrix(dR1);
-        inVertices[ triangle[2] ].getOrientation().toMatrix(dR2);
-
-        // Derivatives of the rotation matrix
-        dR0 = Omega0*dR0;
-        dR1 = Omega1*dR1;
-        dR2 = Omega2*dR2;
-
-        // Velocities at other nodes
-        tinfo.bezierNodesV[3] = tinfo.bezierNodesV[0] + dR0*tinfo.P0_P1;
-        tinfo.bezierNodesV[4] = tinfo.bezierNodesV[0] + dR0*tinfo.P0_P2;
-
-        tinfo.bezierNodesV[5] = tinfo.bezierNodesV[1] + dR1*tinfo.P1_P2;
-        tinfo.bezierNodesV[6] = tinfo.bezierNodesV[1] + dR1*tinfo.P1_P0;
-
-        tinfo.bezierNodesV[7] = tinfo.bezierNodesV[2] + dR2*tinfo.P2_P0;
-        tinfo.bezierNodesV[8] = tinfo.bezierNodesV[2] + dR2*tinfo.P2_P1;
-
-        tinfo.bezierNodesV[9] = (
-            (tinfo.bezierNodesV[0] + dR0*(tinfo.P0_P1 + tinfo.P0_P2)) +
-            (tinfo.bezierNodesV[1] + dR1*(tinfo.P1_P0 + tinfo.P1_P2)) +
-            (tinfo.bezierNodesV[2] + dR2*(tinfo.P2_P0 + tinfo.P2_P1))
-        )/3.0;
-
-        for (unsigned int i=0; i<tinfo.attachedPoints.size(); i++)
-        {
-
-            Index pt = tinfo.attachedPoints[i];
-            Vec3 bc = barycentricCoordinates[pt];
-
-            out[pt] =
-                tinfo.bezierNodesV[0] * bc[0]*bc[0]*bc[0] +
-                tinfo.bezierNodesV[1] * bc[1]*bc[1]*bc[1] +
-                tinfo.bezierNodesV[2] * bc[2]*bc[2]*bc[2] +
-                tinfo.bezierNodesV[3] * 3*bc[0]*bc[0]*bc[1] +
-                tinfo.bezierNodesV[4] * 3*bc[0]*bc[0]*bc[2] +
-                tinfo.bezierNodesV[5] * 3*bc[1]*bc[1]*bc[2] +
-                tinfo.bezierNodesV[6] * 3*bc[0]*bc[1]*bc[1] +
-                tinfo.bezierNodesV[7] * 3*bc[0]*bc[2]*bc[2] +
-                tinfo.bezierNodesV[8] * 3*bc[1]*bc[2]*bc[2] +
-                tinfo.bezierNodesV[9] * 6*bc[0]*bc[1]*bc[2];
-        }
-    }
 
     // The following code compares the result with results obtained using
     // getJ() because checkJacobian sucks (at this point in time).
@@ -829,7 +688,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParam
     }
 #endif
 
-    // Dump input and output vectors
+    // Dump input and output vectors {{{
     //{
     //    std::cout << "In[" << in.size() << "] : ";
     //    for (unsigned int i=0; i<in.size(); i++) {
@@ -890,11 +749,13 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParam
     //    barycentricCoordinates[maxi][0] << "/" <<
     //    barycentricCoordinates[maxi][1] << "/" <<
     //    barycentricCoordinates[maxi][2] << "\n";
+    // }}}
 
-//    stop = timer.getTime();
-//    std::cout << "time applyJ = " << stop-start << std::endl;
+    //stop = timer.getTime();
+    //std::cout << "time applyJ = " << stop-start << std::endl;
 }
 
+#if 0 // TODO {{{
 template <class TIn, class TOut>
 const BaseMatrix* BezierShellMechanicalMapping<TIn, TOut>::getJ(const core::MechanicalParams * /*mparams*/)
 {
@@ -1007,6 +868,7 @@ const BaseMatrix* BezierShellMechanicalMapping<TIn, TOut>::getJ(const core::Mech
 
     return matrixJ.get();
 }
+#endif // }}}
 
 // Updates positions of the mechanical vertices from visual    f(n-1) = JT * fn
 template <class TIn, class TOut>
@@ -1052,104 +914,13 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPara
     }
 #endif
 
-    // List of in triangles
-    const SeqTriangles& inTriangles = inputTopo->getTriangles();
-    const InVecCoord& inVertices = *this->fromModel->getX();
-
-    // Compute nodes of the Bézier triangle for each input triangle
-    for (unsigned int t=0; t<inTriangles.size();t++)
-    {
-        Triangle triangle = inTriangles[t];
-        TriangleInformation &tinfo = triangleInfo[t];
-
-        // Rotation matrices at corner nodes
-        Mat33 R[3];
-        inVertices[ triangle[0] ].getOrientation().toMatrix(R[0]);
-        inVertices[ triangle[1] ].getOrientation().toMatrix(R[1]);
-        inVertices[ triangle[2] ].getOrientation().toMatrix(R[2]);
-
-        for (unsigned int i=0; i<tinfo.attachedPoints.size(); i++)
-        {
-            Vec3 f1, f2, f3;    // resulting linear forces on corner nodes 
-            Vec3 f1r, f2r, f3r; // resulting torques
-            Vec3 fn;
-
-            Index pt = tinfo.attachedPoints[i];
-            Vec3 bc = barycentricCoordinates[pt];
-
-            if (in[pt] == Vec3(0,0,0)) continue;
-
-            // Compute the influence on the corner nodes
-            f1 = in[pt] * (bc[0]*bc[0]*bc[0]);
-            f2 = in[pt] * (bc[1]*bc[1]*bc[1]);
-            f3 = in[pt] * (bc[2]*bc[2]*bc[2]);
-
-            // Now the influence through other nodes
-
-            sofa::helper::fixed_array<Vec3,10> &bn = tinfo.bezierNodes;
-
-            fn = in[pt] * (3*bc[0]*bc[0]*bc[1]);
-            if (fn != Vec3(0,0,0))
-            {
-                f1 += fn;
-                f1r += cross((bn[3]-bn[0]), fn);
-            }
-
-            fn = in[pt] * (3*bc[0]*bc[0]*bc[2]);
-            if (fn != Vec3(0,0,0))
-            {
-                f1 += fn;
-                f1r += cross((bn[4]-bn[0]), fn);
-            }
-
-            fn = in[pt] * (3*bc[1]*bc[1]*bc[2]);
-            if (fn != Vec3(0,0,0))
-            {
-                f2 += fn;
-                f2r += cross((bn[5]-bn[1]), fn);
-            }
-
-            fn = in[pt] * (3*bc[0]*bc[1]*bc[1]);
-            if (fn != Vec3(0,0,0))
-            {
-                f2 += fn;
-                f2r += cross((bn[6]-bn[1]), fn);
-            }
-
-            fn = in[pt] * (3*bc[0]*bc[2]*bc[2]);
-            if (fn != Vec3(0,0,0))
-            {
-                f3 += fn;
-                f3r += cross((bn[7]-bn[2]), fn);
-            }
-
-            fn = in[pt] * (3*bc[1]*bc[2]*bc[2]);
-            if (fn != Vec3(0,0,0))
-            {
-                f3 += fn;
-                f3r += cross((bn[8]-bn[2]), fn);
-            }
-
-            fn = in[pt] * (2*bc[0]*bc[1]*bc[2]);
-            if (fn != Vec3(0,0,0))
-            {
-                f1 += fn;
-                f2 += fn;
-                f3 += fn;
-                f1r += cross(R[0]*(tinfo.P0_P1 + tinfo.P0_P2), fn);
-                f2r += cross(R[1]*(tinfo.P1_P2 + tinfo.P1_P0), fn);
-                f3r += cross(R[2]*(tinfo.P2_P0 + tinfo.P2_P1), fn);
-            }
-
-            getVCenter(out[ triangle[0] ]) += f1;
-            getVCenter(out[ triangle[1] ]) += f2;
-            getVCenter(out[ triangle[2] ]) += f3;
-
-            getVOrientation(out[ triangle[0] ]) += f1r;
-            getVOrientation(out[ triangle[1] ]) += f2r;
-            getVOrientation(out[ triangle[2] ]) += f3r;
-        }
+    helper::vector<Vec3> rin;
+    rin.resize(in.size());
+    for (unsigned int i=0; i<in.size(); i++) {
+        rin[i] = in[i];
     }
+    bsInterpolation->applyJTOnBTriangle(projBaryCoords, projElements,
+        rin, *dOut.beginEdit());
 
     // The following code compares the result with results obtained using
     // getJ() because checkJacobian sucks (at this point in time).
@@ -1192,13 +963,12 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPara
 //    stop = timer.getTime();
 //    std::cout << "time applyJT = " << stop-start << std::endl;
 }
-#endif // }}}
 
-template <class TIn, class TOut>
-void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/)
-{
-    //serr << "applyJT(const core::ConstraintParams*, Data<InMatrixDeriv>&, const Data<OutMatrixDeriv>&) NOT implemented" << sendl;
-}
+//template <class TIn, class TOut>
+//void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/)
+//{
+//    serr << "applyJT(const core::ConstraintParams*, Data<InMatrixDeriv>&, const Data<OutMatrixDeriv>&) NOT implemented" << sendl;
+//}
 
 
 #if 0 // TODO {{{
