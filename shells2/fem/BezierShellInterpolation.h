@@ -170,18 +170,20 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
             Transform DOF0_H_local0, Transform DOF1_H_local1, Transform DOF2_H_local2);
 
         // simple interpolation of a point:
-        void interpolateOnBTriangle(Index triID, const VecVec3d& posNode, const Vec3& baryCoord, Vec3& Result);
+        void interpolateOnBTriangle(Index triID, const VecVec3d& nodes, const Vec3& baryCoord,
+            Vec3& point);
         void interpolateOnBTriangle(Index triID, const Vec3& baryCoord, Vec3& point) {
             interpolateOnBTriangle(triID, *mStateNodes->getX(), baryCoord, point);
         }
 
         // interpolation + normal
-        //void interpolateOnBTriangle(Index triID, const VecVec3d& fieldNode, const Vec3& baryCoord, Vec3& fieldResult, Vec3& normalResult, Vec3& t1, Vec3& t2);
+        void interpolateOnBTriangle(Index triID, const VecVec3d& nodes, const Vec3& baryCoord,
+            Vec3& point, Vec3& normal, Vec3& t0, Vec3 &t1);
 
-        // interpolation + derivatives
-        //void interpolateOnBTriangle(Index triID, const VecVec3d& fieldNode, const Vec3& baryCoord,
-        //                       Vec3& fieldResult, Vec3& t0, Vec3& t1,
-        //                       Vec3& D2t0, Vec3& D2t01, Vec3& D2t1);
+        // interpolation + normal + second derivatives
+        //void interpolateOnBTriangle(Index triID, const VecVec3d& nodes, const Vec3& baryCoord,
+        //    Vec3& point, Vec3& normal, Vec3& t0, Vec3 &t1,
+        //    Vec3& D2t0, Vec3& D2t01, Vec3& D2t1);
 
         void applyOnBTriangle(VecVec3 projBaryCoords, VecIndex projElements, VecVec3& out);
         void applyJOnBTriangle(VecVec3 projBaryCoords, VecIndex projElements, const VecDeriv& in, VecVec3& out);
