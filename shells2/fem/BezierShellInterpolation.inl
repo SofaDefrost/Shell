@@ -29,7 +29,12 @@
 //#include <sofa/simulation/common/Node.h>
 
 
+//
+// TODO: don't use MO but use PointSetTopologyContainer directly. The content
+//       of MO grows uncontrolably when topology changes happen.
+//
 // TODO: Bézier points and Bézier nodes are used interchangeably, choose just one!
+//
 
 
 using namespace sofa::core::behavior;
@@ -63,6 +68,106 @@ namespace component
 namespace fem
 {
 
+// NOTE: The following functions assume that M2P is updated before us. This
+// means all the points in M2P are already created.
+
+//template<class DataTypes>
+//void BezierShellInterpolation<DataTypes>::PointInfoHandler::applyCreateFunction(
+//    unsigned int pointIndex, PointInformation &/*pInfo*/, const topology::Point& /*elem*/, const sofa::helper::vector< unsigned int > &/*ancestors*/, const sofa::helper::vector< double > &/*coeffs*/)
+//{
+//    std::cout << __FUNCTION__ << " pt " << pointIndex << std::endl;
+//}
+
+template<class DataTypes>
+void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1, unsigned int i2)
+{
+    // Renumber in bTri
+    const std::pair<topology::Mesh2PointTopologicalMapping::Element,int>& src1 = bsi->bezierM2P->getPointSource()[i1];
+    const std::pair<topology::Mesh2PointTopologicalMapping::Element,int>& src2 = bsi->bezierM2P->getPointSource()[i2];
+
+    helper::vector<Index> tris;
+
+    if (src1.second != (int)topology::BaseMeshTopology::InvalidID)
+    {
+        switch(src1.first)
+        {
+            case topology::Mesh2PointTopologicalMapping::POINT:
+                {
+                    const helper::vector<Index> lst = bsi->inputTopology->getTrianglesAroundVertex(src1.second);
+                    tris.resize(tris.size() + lst.size());
+                    copy_backward(lst.begin(), lst.end(), tris.end());
+                    break;
+                }
+            case topology::Mesh2PointTopologicalMapping::EDGE:
+                {
+                    const helper::vector<Index> lst = bsi->inputTopology->getTrianglesAroundEdge(src1.second);
+                    tris.resize(tris.size() + lst.size());
+                    copy_backward(lst.begin(), lst.end(), tris.end());
+                    break;
+                }
+            case topology::Mesh2PointTopologicalMapping::TRIANGLE:
+                tris.push_back(src1.second);
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (src2.second != (int)topology::BaseMeshTopology::InvalidID)
+    {
+        switch(src2.first)
+        {
+            case topology::Mesh2PointTopologicalMapping::POINT:
+                {
+                    const helper::vector<Index> lst = bsi->inputTopology->getTrianglesAroundVertex(src2.second);
+                    tris.resize(tris.size() + lst.size());
+                    copy_backward(lst.begin(), lst.end(), tris.end());
+                    break;
+                }
+            case topology::Mesh2PointTopologicalMapping::EDGE:
+                {
+                    const helper::vector<Index> lst = bsi->inputTopology->getTrianglesAroundEdge(src2.second);
+                    tris.resize(tris.size() + lst.size());
+                    copy_backward(lst.begin(), lst.end(), tris.end());
+                    break;
+                }
+            case topology::Mesh2PointTopologicalMapping::TRIANGLE:
+                tris.push_back(src2.second);
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    helper::vector<TriangleInformation>& bezTris = *bsi->triInfo.beginEdit();
+
+    for (Index i = 0; i < tris.size(); i++) {
+        for (Index j = 0; j < 10; j++) {
+            if (bezTris[ tris[i] ].btri[j] == i1)
+                bezTris[ tris[i] ].btri[j] = i2;
+            else if (bezTris[ tris[i] ].btri[j] == i2)
+                bezTris[ tris[i] ].btri[j] = i1;
+        }
+    }
+
+    bsi->triInfo.endEdit();
+
+    Inherited::swap(i1, i2);
+
+    bsi->updateBezierPoints();
+}
+
+template<class DataTypes>
+void BezierShellInterpolation<DataTypes>::TriangleInfoHandler::applyCreateFunction(
+    unsigned int triIndex, TriangleInformation &tInfo,
+    const topology::Triangle &/*elem*/,
+    const sofa::helper::vector< unsigned int > &/*ancestors*/,
+    const sofa::helper::vector< double > &/*coeffs*/)
+{
+    bsi->initTriangle(triIndex, tInfo);
+}
+
 template<class DataTypes>
 BezierShellInterpolation<DataTypes>::BezierShellInterpolation()
     : mState(NULL)
@@ -71,6 +176,8 @@ BezierShellInterpolation<DataTypes>::BezierShellInterpolation()
     , inputNormals(initData(&inputNormals, "normals", "normal defined on the source topology"))
     //, bezierM2P(sofa::core::objectmodel::New< sofa::component::topology::Mesh2PointTopologicalMapping >())
     //, bezierState(sofa::core::objectmodel::New< sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3dTypes> >())
+    , pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
+    , triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
     this->f_listening.setValue(true);
     /*
@@ -85,6 +192,8 @@ BezierShellInterpolation<DataTypes>::BezierShellInterpolation()
     this->addSlave(bezierState);
     */
 
+    pointHandler = new PointInfoHandler(this, &pointInfo);
+    triHandler = new TriangleInfoHandler(this, &triInfo);
 }
 
 ////////////////////////////////////////////////////////////
@@ -124,120 +233,37 @@ void BezierShellInterpolation<DataTypes>::init()
         return;
     }
 
-    // Given the bezierM2P, fill the bezierTriangles
-    vector< vector<int> > mapPoint = bezierM2P->getPointsMappedFromPoint();
-    vector< vector<int> > mapEdge = bezierM2P->getPointsMappedFromEdge();
-    vector< vector<int> > mapTri = bezierM2P->getPointsMappedFromTriangle();
+    pointInfo.createTopologicalEngine(bezierM2P->getTo(), pointHandler);
+    pointInfo.registerTopologicalData();
+    pointInfo.beginEdit()->resize(dynamic_cast<topology::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
+    pointInfo.endEdit();
+
+    triInfo.createTopologicalEngine(inputTopology, triHandler);
+    triInfo.registerTopologicalData();
+    triInfo.beginEdit()->resize(dynamic_cast<topology::TriangleSetTopologyContainer*>(inputTopology)->getNumberOfElements());
+    triInfo.endEdit();
 
     // Verify that the inputs are coherents
+    const vector< vector<int> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
     if( (int) mapEdge.size() != inputTopology->getNbEdges() )
     {
         serr<<"Problem in Mesh2PointTopologicalMapping:mapEdge.size() != inputTopology->getNbEdges()"<<sendl;
         return;
     }
 
-    VecBTri& bezTris = *bezierTriangles.beginEdit();
-    bezTris.clear();
+    helper::vector<TriangleInformation>& bezTris = *triInfo.beginEdit();
 
     for (int i=0; i<inputTopology->getNbTriangles(); i++)
     {
-        sofa::core::topology::Triangle tri = inputTopology->getTriangle(i);
-        const helper::fixed_array<unsigned int,3>& edgesInTriangle = inputTopology->getEdgesInTriangle(i);
-
-        unsigned int j; // j= seg0  find segment between tri[0] and tri[1]
-        unsigned int inverseSeg0=false;
-        for (j=0; j<3; j++)
-        {
-            sofa::core::topology::Edge edge= inputTopology->getEdge(edgesInTriangle[j]);
-            if(edge[0]==tri[0] && edge[1]==tri[1] ){
-                inverseSeg0=false; break;
-            }
-            if(edge[1]==tri[0] && edge[0]==tri[1]){
-                inverseSeg0=true; break;
-            }
-        }
-
-        unsigned int k; // k= seg1 find segment between tri[1] and tri[2]
-        unsigned int inverseSeg1=false;
-        for (k=0; k<3; k++)
-        {
-            sofa::core::topology::Edge edge= inputTopology->getEdge(edgesInTriangle[k]);
-            if(edge[0]==tri[1] && edge[1]==tri[2] ){
-                inverseSeg1=false; break;
-            }
-            if(edge[1]==tri[1] && edge[0]==tri[2]){
-                inverseSeg1=true; break;
-            }
-        }
-
-        unsigned int l; // l= seg1 find segment between tri[0] and tri[2]
-        bool inverseSeg2=false;
-        for (l=0; l<3; l++)
-        {
-            sofa::core::topology::Edge edge= inputTopology->getEdge(edgesInTriangle[l]);
-            if(edge[0]==tri[0] && edge[1]==tri[2] ){
-                inverseSeg2=false; break;
-            }
-            if(edge[1]==tri[0] && edge[0]==tri[2]){
-                inverseSeg2=true; break;
-            }
-        }
-
-        // Create the array of node indices
-
-        BTri btri;
-
-        btri[0] = mapPoint[tri[0]][0];
-        btri[1] = mapPoint[tri[1]][0];
-        btri[2] = mapPoint[tri[2]][0];
-        btri[3] = mapEdge[edgesInTriangle[j]][(inverseSeg0?1:0)];
-        btri[4] = mapEdge[edgesInTriangle[l]][(inverseSeg2?1:0)];
-        btri[5] = mapEdge[edgesInTriangle[k]][(inverseSeg1?1:0)];
-        btri[6] = mapEdge[edgesInTriangle[j]][(inverseSeg0?0:1)];
-        btri[7] = mapEdge[edgesInTriangle[l]][(inverseSeg2?0:1)];
-        btri[8] = mapEdge[edgesInTriangle[k]][(inverseSeg1?0:1)];
-        btri[9] = mapTri[i][0];
-
-        bezTris.push_back(btri);
-
-    }
-    bezierTriangles.endEdit();
-
-    // Update the original position of Bézier points
-    Data<VecVec3d>* dataxRest = mStateNodes->write(sofa::core::VecCoordId::restPosition());
-    VecVec3d& xRest = *dataxRest->beginEdit();
-
-    const VecCoord& inPoints = mState->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
-    VecVec3 normals = inputNormals.getValue();
-
-    xRest.resize(bezierM2P->getTo()->getNbPoints());
-    segments.resize(bezierM2P->getTo()->getNbPoints());
-
-    for (int i=0; i<inputTopology->getNbTriangles(); i++)
-    {
-        const BTri& bTri = bezierTriangles.getValue()[i];
-        sofa::core::topology::Triangle tri = inputTopology->getTriangle(i);
-
-        // Compute the nodes
-        xRest[ bTri[0] ] = inPoints[ tri[0] ].getCenter();
-        xRest[ bTri[1] ] = inPoints[ tri[1] ].getCenter();
-        xRest[ bTri[2] ] = inPoints[ tri[2] ].getCenter();
-
-        computeBezierPointsUsingNormals(i, xRest, normals);
-
-        // Compute the segments in the reference frames of the rest-shape.
-        // I.e. how are the internal bezier nodes attached to the corners of
-        // the triangle.
-        segments[ bTri[3] ] = inPoints[ tri[0] ].getOrientation().inverseRotate( xRest[ bTri[3] ] - xRest[ bTri[0] ] );
-        segments[ bTri[4] ] = inPoints[ tri[0] ].getOrientation().inverseRotate( xRest[ bTri[4] ] - xRest[ bTri[0] ] );
-        segments[ bTri[5] ] = inPoints[ tri[1] ].getOrientation().inverseRotate( xRest[ bTri[5] ] - xRest[ bTri[1] ] );
-        segments[ bTri[6] ] = inPoints[ tri[1] ].getOrientation().inverseRotate( xRest[ bTri[6] ] - xRest[ bTri[1] ] );
-        segments[ bTri[7] ] = inPoints[ tri[2] ].getOrientation().inverseRotate( xRest[ bTri[7] ] - xRest[ bTri[2] ] );
-        segments[ bTri[8] ] = inPoints[ tri[2] ].getOrientation().inverseRotate( xRest[ bTri[8] ] - xRest[ bTri[2] ] );
-
+        triHandler->applyCreateFunction(
+            i,
+            bezTris[i],
+            inputTopology->getTriangle(i),
+            (const sofa::helper::vector< unsigned int > )0,
+            (const sofa::helper::vector< double >)0);
     }
 
-    dataxRest->endEdit();
+    triInfo.endEdit();
 
     // Update the current position of Bézier points
     this->updateBezierPoints();
@@ -248,6 +274,104 @@ void BezierShellInterpolation<DataTypes>::init()
 template <class DataTypes>
 void BezierShellInterpolation<DataTypes>::bwdInit()
 {
+}
+
+template <class DataTypes>
+void BezierShellInterpolation<DataTypes>::initTriangle(Index triIndex,
+    TriangleInformation &tInfo)
+{
+    sofa::core::topology::Triangle tri = inputTopology->getTriangle(triIndex);
+    const helper::fixed_array<unsigned int,3>& edgesInTriangle = inputTopology->getEdgesInTriangle(triIndex);
+
+    unsigned int j; // j= seg0  find segment between tri[0] and tri[1]
+    unsigned int inverseSeg0=false;
+    for (j=0; j<3; j++)
+    {
+        sofa::core::topology::Edge edge = inputTopology->getEdge(edgesInTriangle[j]);
+        if(edge[0]==tri[0] && edge[1]==tri[1] ){
+            inverseSeg0=false; break;
+        }
+        if(edge[1]==tri[0] && edge[0]==tri[1]){
+            inverseSeg0=true; break;
+        }
+    }
+
+    unsigned int k; // k= seg1 find segment between tri[1] and tri[2]
+    unsigned int inverseSeg1=false;
+    for (k=0; k<3; k++)
+    {
+        sofa::core::topology::Edge edge = inputTopology->getEdge(edgesInTriangle[k]);
+        if(edge[0]==tri[1] && edge[1]==tri[2] ){
+            inverseSeg1=false; break;
+        }
+        if(edge[1]==tri[1] && edge[0]==tri[2]){
+            inverseSeg1=true; break;
+        }
+    }
+
+    unsigned int l; // l= seg1 find segment between tri[0] and tri[2]
+    bool inverseSeg2=false;
+    for (l=0; l<3; l++)
+    {
+        sofa::core::topology::Edge edge = inputTopology->getEdge(edgesInTriangle[l]);
+        if(edge[0]==tri[0] && edge[1]==tri[2] ){
+            inverseSeg2=false; break;
+        }
+        if(edge[1]==tri[0] && edge[0]==tri[2]){
+            inverseSeg2=true; break;
+        }
+    }
+
+    // Create the array of node indices
+
+    BTri &btri = tInfo.btri;
+
+    const vector< vector<int> >& mapPoint = bezierM2P->getPointsMappedFromPoint();
+    const vector< vector<int> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
+    const vector< vector<int> >& mapTri = bezierM2P->getPointsMappedFromTriangle();
+
+    btri[0] = mapPoint[tri[0]][0];
+    btri[1] = mapPoint[tri[1]][0];
+    btri[2] = mapPoint[tri[2]][0];
+    btri[3] = mapEdge[edgesInTriangle[j]][(inverseSeg0?1:0)];
+    btri[4] = mapEdge[edgesInTriangle[l]][(inverseSeg2?1:0)];
+    btri[5] = mapEdge[edgesInTriangle[k]][(inverseSeg1?1:0)];
+    btri[6] = mapEdge[edgesInTriangle[j]][(inverseSeg0?0:1)];
+    btri[7] = mapEdge[edgesInTriangle[l]][(inverseSeg2?0:1)];
+    btri[8] = mapEdge[edgesInTriangle[k]][(inverseSeg1?0:1)];
+    btri[9] = mapTri[triIndex][0];
+
+    // Compute the initial position of Bézier points
+    Data<VecVec3d>* dataxRest = mStateNodes->write(sofa::core::VecCoordId::position());
+    VecVec3d& xRest = *dataxRest->beginEdit();
+
+    const VecCoord& inPoints = mState->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
+    VecVec3 normals = inputNormals.getValue();
+
+    xRest.resize(bezierM2P->getTo()->getNbPoints());
+    helper::vector<PointInformation>& pInfo = *pointInfo.beginEdit();
+
+    // Compute the nodes
+    xRest[ btri[0] ] = inPoints[ tri[0] ].getCenter();
+    xRest[ btri[1] ] = inPoints[ tri[1] ].getCenter();
+    xRest[ btri[2] ] = inPoints[ tri[2] ].getCenter();
+
+    computeBezierPointsUsingNormals(triIndex, xRest, normals);
+
+    // Compute the segments in the reference frames of the rest-shape.
+    // I.e. how are the internal bezier nodes attached to the corners of
+    // the triangle.
+    pInfo[ btri[3] ].segment = inPoints[ tri[0] ].getOrientation().inverseRotate( xRest[ btri[3] ] - xRest[ btri[0] ] );
+    pInfo[ btri[4] ].segment = inPoints[ tri[0] ].getOrientation().inverseRotate( xRest[ btri[4] ] - xRest[ btri[0] ] );
+    pInfo[ btri[5] ].segment = inPoints[ tri[1] ].getOrientation().inverseRotate( xRest[ btri[5] ] - xRest[ btri[1] ] );
+    pInfo[ btri[6] ].segment = inPoints[ tri[1] ].getOrientation().inverseRotate( xRest[ btri[6] ] - xRest[ btri[1] ] );
+    pInfo[ btri[7] ].segment = inPoints[ tri[2] ].getOrientation().inverseRotate( xRest[ btri[7] ] - xRest[ btri[2] ] );
+    pInfo[ btri[8] ].segment = inPoints[ tri[2] ].getOrientation().inverseRotate( xRest[ btri[8] ] - xRest[ btri[2] ] );
+
+    pointInfo.endEdit();
+    dataxRest->endEdit();
+
+    updateBezierPoints(triIndex);
 }
 
 // ------------------------
@@ -276,7 +400,31 @@ void BezierShellInterpolation<DataTypes>::computeBezierPointsUsingNormals(const 
 
     if ((int) normals.size() != inputTopology->getNbPoints())
     {
-        serr<<"Number of input normals does not match number of points of the input topology"<<sendl;
+        if (normals.size() == 0)
+            serr << "No normals defined, assuming flat triangles!" << sendl;
+        else
+            serr << "Number of input normals does not match number of points of the input topology" << sendl;
+
+        // No normals, assume flat triangles
+
+        const BTri& bTri = getBezierTriangle(inputTri);
+
+        // Edge A-B
+        x[ bTri[3] ] = x[ bTri[0] ] + (x[ bTri[1] ] - x[ bTri[0] ])/3.0;
+        x[ bTri[6] ] = x[ bTri[1] ] + (x[ bTri[0] ] - x[ bTri[1] ])/3.0;
+
+        // Edge B-C
+        x[ bTri[5] ] = x[ bTri[1] ] + (x[ bTri[2] ] - x[ bTri[1] ])/3.0;
+        x[ bTri[8] ] = x[ bTri[2] ] + (x[ bTri[1] ] - x[ bTri[2] ])/3.0;
+
+        // Edge C-A
+        x[ bTri[7] ] = x[ bTri[2] ] + (x[ bTri[0] ] - x[ bTri[2] ])/3.0;
+        x[ bTri[4] ] = x[ bTri[0] ] + (x[ bTri[2] ] - x[ bTri[0] ])/3.0;
+
+        x[ bTri[9] ] = (x[ bTri[3] ] + x[ bTri[4] ] - x[ bTri[0] ] +
+            x[ bTri[5] ] + x[ bTri[6] ] - x[ bTri[1] ] +
+            x[ bTri[7] ] + x[ bTri[8] ] - x[ bTri[2] ])/3;
+
         return;
     }
 
@@ -285,7 +433,7 @@ void BezierShellInterpolation<DataTypes>::computeBezierPointsUsingNormals(const 
     Index b = tri[1];
     Index c = tri[2];
 
-    const BTri& bTri = bezierTriangles.getValue()[inputTri];
+    const BTri& bTri = getBezierTriangle(inputTri);
 
     // Edge A-B
     Vec3 n = (normals[a] + normals[b]) / 2.0;
@@ -353,6 +501,15 @@ void BezierShellInterpolation<DataTypes>::computeBezierPointsUsingNormals(const 
 template <class DataTypes>
 void BezierShellInterpolation<DataTypes>::updateBezierPoints()
 {
+    for (Index i=0; i<(Index)inputTopology->getNbTriangles(); i++)
+    {
+        updateBezierPoints(i);
+    }
+}
+
+template <class DataTypes>
+void BezierShellInterpolation<DataTypes>::updateBezierPoints(Index triIndex)
+{
 
     // Nodes of the simulation
     const VecCoord& xSim = mState->read(sofa::core::ConstVecCoordId::position())->getValue();
@@ -360,48 +517,45 @@ void BezierShellInterpolation<DataTypes>::updateBezierPoints()
     Data<VecVec3d>* datax = mStateNodes->write(sofa::core::VecCoordId::position());
     VecVec3d& x = *datax->beginEdit();
 
-    x.resize(mStateNodes->read(sofa::core::ConstVecCoordId::restPosition())->getValue().size());
+    x.resize(dynamic_cast<topology::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
 
-    for (Index i=0; i<(Index)inputTopology->getNbTriangles(); i++)
-    {
-        sofa::core::topology::Triangle tri= inputTopology->getTriangle(i);
-        Index a = tri[0];
-        Index b = tri[1];
-        Index c = tri[2];
+    sofa::core::topology::Triangle tri = inputTopology->getTriangle(triIndex);
+    const Index a = tri[0];
+    const Index b = tri[1];
+    const Index c = tri[2];
 
-        const BTri& bTri = bezierTriangles.getValue()[i];
+    const BTri& bTri = getBezierTriangle(triIndex);
 
-        // Combine global and optional local transformation for the DOFs  
+    // Combine global and optional local transformation for the DOFs  
 
-        Transform global_H_DOF0(xSim[a].getCenter(), xSim[a].getOrientation());
-        Transform global_H_DOF1(xSim[b].getCenter(), xSim[b].getOrientation());
-        Transform global_H_DOF2(xSim[c].getCenter(), xSim[c].getOrientation());
+    Transform global_H_DOF0(xSim[a].getCenter(), xSim[a].getOrientation());
+    Transform global_H_DOF1(xSim[b].getCenter(), xSim[b].getOrientation());
+    Transform global_H_DOF2(xSim[c].getCenter(), xSim[c].getOrientation());
 
-        Transform DOF0_H_local0, DOF1_H_local1, DOF2_H_local2;
-        getDOFtoLocalTransform(tri, DOF0_H_local0, DOF1_H_local1, DOF2_H_local2);
+    Transform DOF0_H_local0, DOF1_H_local1, DOF2_H_local2;
+    getDOFtoLocalTransform(tri, DOF0_H_local0, DOF1_H_local1, DOF2_H_local2);
 
-        Transform global_H_local0 = global_H_DOF0 * DOF0_H_local0;
-        Transform global_H_local1 = global_H_DOF1 * DOF1_H_local1;
-        Transform global_H_local2 = global_H_DOF2 * DOF2_H_local2;
+    Transform global_H_local0 = global_H_DOF0 * DOF0_H_local0;
+    Transform global_H_local1 = global_H_DOF1 * DOF1_H_local1;
+    Transform global_H_local2 = global_H_DOF2 * DOF2_H_local2;
 
-        // Update the positions
+    // Update the positions
 
-        x[ bTri[0] ] = global_H_local0.getOrigin();
-        x[ bTri[1] ] = global_H_local1.getOrigin();
-        x[ bTri[2] ] = global_H_local2.getOrigin();
+    x[ bTri[0] ] = global_H_local0.getOrigin();
+    x[ bTri[1] ] = global_H_local1.getOrigin();
+    x[ bTri[2] ] = global_H_local2.getOrigin();
 
-        x[ bTri[3] ] = global_H_local0.projectPoint( segments[ bTri[3] ] );
-        x[ bTri[4] ] = global_H_local0.projectPoint( segments[ bTri[4] ] );
-        x[ bTri[5] ] = global_H_local1.projectPoint( segments[ bTri[5] ] );
-        x[ bTri[6] ] = global_H_local1.projectPoint( segments[ bTri[6] ] );
-        x[ bTri[7] ] = global_H_local2.projectPoint( segments[ bTri[7] ] );
-        x[ bTri[8] ] = global_H_local2.projectPoint( segments[ bTri[8] ] );
+    x[ bTri[3] ] = global_H_local0.projectPoint( getSegment(bTri[3]) );
+    x[ bTri[4] ] = global_H_local0.projectPoint( getSegment(bTri[4]) );
+    x[ bTri[5] ] = global_H_local1.projectPoint( getSegment(bTri[5]) );
+    x[ bTri[6] ] = global_H_local1.projectPoint( getSegment(bTri[6]) );
+    x[ bTri[7] ] = global_H_local2.projectPoint( getSegment(bTri[7]) );
+    x[ bTri[8] ] = global_H_local2.projectPoint( getSegment(bTri[8]) );
 
-        x[ bTri[9] ] = (
-            x[ bTri[3] ] + x[ bTri[4] ] - x[ bTri[0] ] +
-            x[ bTri[5] ] + x[ bTri[6] ] - x[ bTri[1] ] +
-            x[ bTri[7] ] + x[ bTri[8] ] - x[ bTri[2] ])/3;
-    }
+    x[ bTri[9] ] = (
+        x[ bTri[3] ] + x[ bTri[4] ] - x[ bTri[0] ] +
+        x[ bTri[5] ] + x[ bTri[6] ] - x[ bTri[1] ] +
+        x[ bTri[7] ] + x[ bTri[8] ] - x[ bTri[2] ])/3;
 
     datax->endEdit();
 }
@@ -426,7 +580,7 @@ void BezierShellInterpolation<DataTypes>::interpolateOnBTriangle(
     const Vec3& baryCoord,
     Vec3& point)
 {
-    const BTri& btri = bezierTriangles.getValue()[triID];
+    const BTri& btri = getBezierTriangle(triID);
     point =
         nodes[btri[0]] * baryCoord[0]*baryCoord[0]*baryCoord[0] +
         nodes[btri[1]] * baryCoord[1]*baryCoord[1]*baryCoord[1] +
@@ -451,7 +605,7 @@ void BezierShellInterpolation<DataTypes>::interpolateOnBTriangle(
 {
     interpolateOnBTriangle(triID, nodes, baryCoord, point);
 
-    const BTri& btri = bezierTriangles.getValue()[triID];
+    const BTri& btri = getBezierTriangle(triID);
 
     t0 =
         nodes[btri[0]] * 3*baryCoord[0]*baryCoord[0] +
@@ -501,7 +655,7 @@ void BezierShellInterpolation<DataTypes>::interpolateOnBTriangle(
 {
     interpolateOnBTriangle(triID, nodes, baryCoord, point, t0, t1);
 
-    const BTri& btri = bezierTriangles.getValue()[triID];
+    const BTri& btri = getBezierTriangle(triID);
 
     D2t0 =
         nodes[btri[0]] * 6*baryCoord[0] +
@@ -575,13 +729,13 @@ void BezierShellInterpolation<DataTypes>::applyJOnBTriangle(
     //const VecCoord& xSim = mState->read(sofa::core::ConstVecCoordId::position())->getValue();
     const VecVec3d& x = mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
     VecVec3d v;
-    v.resize(mStateNodes->read(sofa::core::ConstVecCoordId::restPosition())->getValue().size());
+    v.resize(dynamic_cast<topology::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
 
     // Compute nodes of the Bézier triangle for each input triangle
     for (Index i=0; i<(Index)inputTopology->getNbTriangles(); i++)
     {
         sofa::core::topology::Triangle tri= inputTopology->getTriangle(i);
-        const BTri& bTri = bezierTriangles.getValue()[i];
+        const BTri& bTri = getBezierTriangle(i);
 
         // Velocities in corner nodes
         v[ bTri[0] ] = in[ tri[0] ].getVCenter();
@@ -620,12 +774,12 @@ void BezierShellInterpolation<DataTypes>::applyJOnBTriangle(
         dR2 = Omega2*dR2;
 
         // Velocities at other nodes
-        v[ bTri[3] ] = v[ bTri[0] ] + dR0*segments[ bTri[3] ];
-        v[ bTri[4] ] = v[ bTri[0] ] + dR0*segments[ bTri[4] ];
-        v[ bTri[5] ] = v[ bTri[1] ] + dR1*segments[ bTri[5] ];
-        v[ bTri[6] ] = v[ bTri[1] ] + dR1*segments[ bTri[6] ];
-        v[ bTri[7] ] = v[ bTri[2] ] + dR2*segments[ bTri[7] ];
-        v[ bTri[8] ] = v[ bTri[2] ] + dR2*segments[ bTri[8] ];
+        v[ bTri[3] ] = v[ bTri[0] ] + dR0*getSegment(bTri[3]);
+        v[ bTri[4] ] = v[ bTri[0] ] + dR0*getSegment(bTri[4]);
+        v[ bTri[5] ] = v[ bTri[1] ] + dR1*getSegment(bTri[5]);
+        v[ bTri[6] ] = v[ bTri[1] ] + dR1*getSegment(bTri[6]);
+        v[ bTri[7] ] = v[ bTri[2] ] + dR2*getSegment(bTri[7]);
+        v[ bTri[8] ] = v[ bTri[2] ] + dR2*getSegment(bTri[8]);
         */
 
         // This is faster
@@ -671,7 +825,7 @@ void BezierShellInterpolation<DataTypes>::applyJTOnBTriangle(
         if (in[i] == Vec3(0,0,0)) continue;
 
         sofa::core::topology::Triangle tri= inputTopology->getTriangle(projElements[i]);
-        const BTri& bTri = bezierTriangles.getValue()[projElements[i]];
+        const BTri& bTri = getBezierTriangle(projElements[i]);
 
         // Rotation matrices at corner nodes
         Mat33 R[3];
@@ -740,9 +894,9 @@ void BezierShellInterpolation<DataTypes>::applyJTOnBTriangle(
                 f1 += fn;
                 f2 += fn;
                 f3 += fn;
-                f1r += cross(R[0]*(segments[ bTri[3] ] + segments[ bTri[4] ]), fn);
-                f2r += cross(R[1]*(segments[ bTri[5] ] + segments[ bTri[6] ]), fn);
-                f3r += cross(R[2]*(segments[ bTri[7] ] + segments[ bTri[8] ]), fn);
+                f1r += cross(R[0]*(getSegment(bTri[3]) + getSegment(bTri[4])), fn);
+                f2r += cross(R[1]*(getSegment(bTri[5]) + getSegment(bTri[6])), fn);
+                f3r += cross(R[2]*(getSegment(bTri[7]) + getSegment(bTri[8])), fn);
             }
 
             getVCenter(out[ tri[0] ]) += f1;
@@ -765,13 +919,43 @@ void BezierShellInterpolation<DataTypes>::draw(const core::visual::VisualParams*
     const VecVec3d& bn = mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
     vparams->drawTool()->drawPoints(bn, 2, sofa::defaulttype::Vec<4,float>(0.5, 1.0, 0.5, 1.0));
 
+    typedef sofa::defaulttype::Vec<2,int> Vec2i;
+    std::vector< Vec2i > lines;
+
     VecVec3d points;
 
     for (int tri=0; tri<inputTopology->getNbTriangles(); tri++ )
     {
+        //        1        //
+        //       / \       //
+        //      6---5      //
+        //     / \ / \     //
+        //    3---9---8    //
+        //   / \ / \ / \   //
+        //  0---4---7---2  //
 
+        // Control mesh
+        const BTri& btri = getBezierTriangle(tri);
+        lines.push_back(Vec2i(btri[0], btri[3]));
+        lines.push_back(Vec2i(btri[0], btri[4]));
+        lines.push_back(Vec2i(btri[1], btri[5]));
+        lines.push_back(Vec2i(btri[1], btri[6]));
+        lines.push_back(Vec2i(btri[2], btri[7]));
+        lines.push_back(Vec2i(btri[2], btri[8]));
+
+        lines.push_back(Vec2i(btri[3], btri[6]));
+        lines.push_back(Vec2i(btri[4], btri[7]));
+        lines.push_back(Vec2i(btri[8], btri[5]));
+
+        lines.push_back(Vec2i(btri[6], btri[9]));
+        lines.push_back(Vec2i(btri[5], btri[9]));
+        lines.push_back(Vec2i(btri[4], btri[9]));
+        lines.push_back(Vec2i(btri[7], btri[9]));
+        lines.push_back(Vec2i(btri[3], btri[9]));
+        lines.push_back(Vec2i(btri[8], btri[9]));
+
+        // Surface
         points.clear();
-
         for (double alpha=0.0; alpha<1.00001; alpha+=0.1)
         {
             for (double beta=0.0; beta<(1.0001-alpha); beta+=0.1)
@@ -787,6 +971,8 @@ void BezierShellInterpolation<DataTypes>::draw(const core::visual::VisualParams*
 
          // TODO: draw edges, normals?
     }
+
+    vparams->drawTool()->drawLines(bn, lines, 1, sofa::defaulttype::Vec<4,float>(0.5,1.0,0.5,1));
 }
 
 

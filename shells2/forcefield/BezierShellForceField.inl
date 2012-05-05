@@ -64,7 +64,7 @@ namespace sofa
 // ---  Topology Creation/Destruction functions
 // --------------------------------------------------------------------------------------
 template<class DataTypes>
-void BezierShellForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
+void BezierShellForceField<DataTypes>::TriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
 {
     if (ff) {
         ff->initTriangleOnce(triangleIndex, t[0], t[1], t[2]);
@@ -72,6 +72,20 @@ void BezierShellForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(
     }
 }
 
+template<class DataTypes>
+void BezierShellForceField<DataTypes>::TriangleHandler::swap(unsigned int i1, unsigned int i2)
+{
+    if (ff) {
+        helper::vector<TriangleInformation>& triangleInf = *(ff->triangleInfo.beginEdit());
+
+        triangleInf[i1].elementID = i2;
+        triangleInf[i2].elementID = i1;
+
+        ff->triangleInfo.endEdit();
+    }
+
+    Inherited::swap(i1, i2);
+}
 
 // --------------------------------------------------------------------------------------
 // ---
@@ -87,7 +101,7 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
-    triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
+    triangleHandler = new TriangleHandler(this, &triangleInfo);
 }
 
 // --------------------------------------------------------------------------------------
@@ -120,6 +134,8 @@ void BezierShellForceField<DataTypes>::init()
         serr << "Mechanical state is required!" << sendl;
         return;
     }
+
+    _topology = this->getContext()->getMeshTopology();
 
     // Create specific handler for TriangleData
     triangleInfo.createTopologicalEngine(_topology, triangleHandler);

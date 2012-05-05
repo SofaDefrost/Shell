@@ -18,6 +18,7 @@
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
+#include <sofa/component/topology/TopologyData.inl>
 #include <sofa/simulation/common/AnimateBeginEvent.h>
 
 #include <sofa/helper/vector.h>
@@ -75,11 +76,99 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         typedef sofa::defaulttype::Vec<10,Index> BTri;
         typedef helper::vector<BTri> VecBTri;
 
+        class PointInformation
+        {
+            public:
+                // How are the internal bezier nodes attached to the corners of the triangle
+                // (valid only for internal edge nodes)
+                Vec3 segment;
+
+                PointInformation() {}
+
+                /// Output stream
+                inline friend std::ostream& operator<< ( std::ostream& os, const PointInformation& /*pi*/ ) { return os; }
+                /// Input stream
+                inline friend std::istream& operator>> ( std::istream& in, PointInformation& /*pi*/ ) { return in; }
+        };
+
+        class PointInfoHandler : public topology::TopologyDataHandler<topology::Point, sofa::helper::vector<PointInformation> >
+        {
+            typedef topology::TopologyDataHandler<topology::Point, sofa::helper::vector<PointInformation> > Inherited;
+
+            public:
+                PointInfoHandler(BezierShellInterpolation<DataTypes> *_bsi, topology::PointData<sofa::helper::vector<PointInformation> >* _data) : Inherited(_data), bsi(_bsi) {}
+
+                //void applyCreateFunction(
+                //    unsigned int pointIndex,
+                //    PointInformation &pInfo,
+                //    const sofa::helper::vector< unsigned int > &ancestors,
+                //    const sofa::helper::vector< double > &coeffs)
+                //{ applyCreateFunction(pointIndex, pInfo, topology::BaseMeshTopology::InvalidID, ancestors, coeffs); }
+
+                //void applyCreateFunction(
+                //    unsigned int pointIndex,
+                //    PointInformation &pInfo,
+                //    const topology::Point &elem,
+                //    const sofa::helper::vector< unsigned int > &ancestors,
+                //    const sofa::helper::vector< double > &coeffs);
+
+                void swap( unsigned int i1, unsigned int i2 );
+
+            protected:
+                BezierShellInterpolation<DataTypes> *bsi;
+        };
+
+        class TriangleInformation
+        {
+            public:
+                BTri btri;
+
+                TriangleInformation() {}
+
+                /// Output stream
+                inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ ) { return os; }
+                /// Input stream
+                inline friend std::istream& operator>> ( std::istream& in, TriangleInformation& /*ti*/ ) { return in; }
+        };
+
+        class TriangleInfoHandler : public topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> >
+        {
+            typedef topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
+
+            public:
+                TriangleInfoHandler(BezierShellInterpolation<DataTypes> *_bsi, topology::TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : Inherited(_data), bsi(_bsi) {}
+
+                void applyCreateFunction(
+                    unsigned int triIndex,
+                    TriangleInformation &tInfo,
+                    const sofa::helper::vector< unsigned int > &ancestors,
+                    const sofa::helper::vector< double > &coeffs)
+                {
+                    applyCreateFunction(triIndex, tInfo,
+                    topology::Triangle(topology::BaseMeshTopology::InvalidID, topology::BaseMeshTopology::InvalidID, topology::BaseMeshTopology::InvalidID),
+                    ancestors, coeffs);
+                }
+
+                void applyCreateFunction(
+                    unsigned int triIndex,
+                    TriangleInformation &tInfo,
+                    const topology::Triangle &elem,
+                    const sofa::helper::vector< unsigned int > &ancestors,
+                    const sofa::helper::vector< double > &coeffs);
+
+            protected:
+                BezierShellInterpolation<DataTypes> *bsi;
+        };
+
         Data< sofa::helper::vector<sofa::helper::vector< unsigned int > > > f_interpolationIndices; //output interpolation indices
         Data< sofa::helper::vector<sofa::helper::vector< Real > > > f_interpolationValues;          //output interpolation values
 
         BezierShellInterpolation();
-        ~BezierShellInterpolation() {}
+        ~BezierShellInterpolation()
+        {
+            if(pointHandler) delete pointHandler;
+            if(triHandler) delete triHandler;
+        }
 
         virtual std::string getTemplateName() const
         {
@@ -143,14 +232,9 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
             return this->inputTopology;
         }
 
-        //const BSeg& getBezierSegment(unsigned int s)
-        //{
-        //    return this->bezierSegments.getValue()[s];
-        //}
-
-        const BTri& getBezierTriangle(unsigned int t)
+        const BTri& getBezierTriangle(unsigned int t) const
         {
-            return this->bezierTriangles.getValue()[t];
+            return this->triInfo.getValue()[t].btri;
         }
 
         //
@@ -198,21 +282,22 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         sofa::core::topology::BaseMeshTopology* inputTopology;
         sofa::component::topology::Mesh2PointTopologicalMapping *bezierM2P;
 
-
         // Mapping that creates bezier points and MO to store positions of the points
         //sofa::component::topology::Mesh2PointTopologicalMapping::SPtr bezierM2P;
         //sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3dTypes>::SPtr bezierState;
 
-        VecVec3 segments; // How are the internal bezier nodes attached to the corners of the triangle
-
-        //Data< VecVec3d > bezierNodesPosition;
-        //Data< VecBSeg > bezierSegments;
-        Data< VecBTri > bezierTriangles;
         Data< VecVec3 > inputNormals;
+
+        topology::PointData< sofa::helper::vector<PointInformation> > pointInfo;
+        PointInfoHandler* pointHandler;
+
+        topology::TriangleData< sofa::helper::vector<TriangleInformation> > triInfo;
+        TriangleInfoHandler* triHandler;
 
         // init process=> computes the position of the bezier point given the positions and the normals
         void computeBezierPointsUsingNormals(const Index& inputTri, VecVec3d& x, const VecVec3& normals);
         void updateBezierPoints();
+        void updateBezierPoints(Index triIndex);
 
         /////// projection of points
         //Data< VecVec3>  pointsToProject; // input : position of the points to project of the surface
@@ -238,6 +323,13 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         //};
 
         //helper::vector< BorderPointInfo > PointsOnBorderInfo;
+
+        void initTriangle(Index triIndex, TriangleInformation &tInfo);
+
+        const Vec3& getSegment(Index point)
+        {
+            return this->pointInfo.getValue()[point].segment;
+        }
 
 
 };

@@ -185,15 +185,18 @@ public:
                 }
         };
 
-        class TRQSTriangleHandler : public topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> >
+        class TriangleHandler : public topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> >
         {
+            typedef topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
             public:
-                TRQSTriangleHandler(BezierShellForceField<DataTypes>* _ff, TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >(_data), ff(_ff) {}
+                TriangleHandler(BezierShellForceField<DataTypes>* _ff, TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : Inherited(_data), ff(_ff) {}
 
                 void applyCreateFunction(unsigned int triangleIndex, TriangleInformation& ,
                     const Triangle & t,
                     const sofa::helper::vector< unsigned int > &,
                     const sofa::helper::vector< double > &);
+
+                void swap(unsigned int i1, unsigned int i2);
 
             protected:
                 BezierShellForceField<DataTypes>* ff;
@@ -218,7 +221,6 @@ public:
         Data<Real> f_poisson;
         Data<Real> f_young;
         Data <Real> f_thickness;
-        Data< helper::vector<Vec3> > normals;
 
         // Allow transition between rest shapes
         SingleLink<BezierShellForceField<DataTypes>,
@@ -251,7 +253,7 @@ public:
 protected :
 
         TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
-        TRQSTriangleHandler* triangleHandler;
+        TriangleHandler* triangleHandler;
 
         /// Material stiffness matrices for plane stress and bending
         MaterialStiffness materialMatrix;
