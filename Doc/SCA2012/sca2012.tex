@@ -1,0 +1,171 @@
+\documentclass{egpubl}
+\usepackage{sca2012}
+
+% --- for  Annual CONFERENCE
+% \ConferenceSubmission % uncomment for Conference submission
+% \ConferencePaper      % uncomment for (final) Conference Paper
+% \STAR                 % uncomment for STAR contribution
+% \Tutorial             % uncomment for Tutorial contribution
+% \ShortPresentation    % uncomment for (final) Short Conference Presentation
+%
+% --- for  CGF Journal
+% \JournalSubmission    % uncomment for submission to Computer Graphics Forum
+% \JournalPaper         % uncomment for final version of Journal Paper
+%
+% --- for  EG Workshop Proceedings
+\WsSubmission    % uncomment for submission to EG Workshop
+% \WsPaper         % uncomment for final version of EG Workshop contribution
+%
+ \electronicVersion % can be used both for the printed and electronic version
+
+% !! *please* don't change anything above
+% !! unless you REALLY know what you are doing
+% ------------------------------------------------------------------------
+
+% for including postscript figures
+% mind: package option 'draft' will replace PS figure by a filname within a frame
+\ifpdf \usepackage[pdftex]{graphicx} \pdfcompresslevel=9
+\else \usepackage[dvips]{graphicx} \fi
+
+\PrintedOrElectronic
+
+% prepare for electronic version of your document
+\usepackage{t1enc,dfadobe}
+
+\usepackage{egweblnk}
+\usepackage{cite}
+
+% For backwards compatibility to old LaTeX type font selection.
+% Uncomment if your document adheres to LaTeX2e recommendations.
+% \let\rm=\rmfamily    \let\sf=\sffamily    \let\tt=\ttfamily
+% \let\it=\itshape     \let\sl=\slshape     \let\sc=\scshape
+% \let\bf=\bfseries
+
+% end of prologue
+
+% ------------------------------------------------------------------------
+
+\title[EG \LaTeX\ Author Guidelines]%
+      {Fill in the Title} % TODO
+
+% for anonymous conference submission please enter your SUBMISSION ID
+% instead of the author's name (and leave the affiliation blank) !!
+\author[...]
+       {...} % TODO
+
+% ------------------------------------------------------------------------
+
+% if the Editors-in-Chief have given you the data, you may uncomment
+% the following five lines and insert it here
+%
+% \volume{27}   % the volume in which the issue will be published;
+% \issue{1}     % the issue number of the publication
+% \pStartPage{1}      % set starting page
+
+
+%-------------------------------------------------------------------------
+\begin{document}
+
+% \teaser{
+%  \includegraphics[width=\linewidth]{eg_new}
+%  \centering
+%   \caption{New EG Logo}
+% \label{fig:teaser}
+% }
+
+\maketitle
+
+\begin{abstract} % TODO
+   The ABSTRACT is to be in fully-justified italicized text, 
+   between two horizontal lines,
+   in one-column format, 
+   below the author and affiliation information. 
+   Use the word ``Abstract'' as the title, in 9-point Times, boldface type, 
+   left-aligned to the text, initially capitalized. 
+   The abstract is to be in 9-point, single-spaced type.
+   The abstract may be up to 3 inches (7.62 cm) long. \\
+   Leave one blank line after the abstract, 
+   then add the subject categories according to the ACM Classification Index 
+   (see http://www.acm.org/class/1998/).
+
+% TODO
+\begin{classification} % according to http://www.acm.org/class/1998/
+\CCScat{Computer Graphics}{I.3.3}{Picture/Image Generation}{Line and curve generation}
+\end{classification}
+
+\end{abstract}
+
+
+
+
+
+%-------------------------------------------------------------------------
+\section{Introduction}
+
+Long captions should be set as in Figure~\ref{fig:ex1}.
+
+\begin{figure}[htb]
+   % an empty figure just consisting of the caption lines
+   \caption{\label{fig:ex1}
+     'Empty' figure only to serve as an example of long caption requiring 
+     more than one line. It is not typed centered but aligned on both sides.}
+\end{figure}
+
+%-------------------------------------------------------------------------
+\subsection{References}
+
+All graphics should be centered.
+
+%%%
+%%% Figure 1
+%%%
+%\begin{figure}[htb]
+%  \centering
+%  % the following command controls the width of the embedded PS file
+%  % (relative to the width of the current column)
+%  \includegraphics[width=.8\linewidth]{sampleFig}
+%  % replacing the above command with the one below will explicitly set
+%  % the bounding box of the PS figure to the rectangle (xl,yl),(xh,yh).
+%  % It will also prevent LaTeX from reading the PS file to determine
+%  % the bounding box (i.e., it will speed up the compilation process)
+%  % \includegraphics[width=.95\linewidth, bb=39 696 126 756]{sampleFig}
+%  %
+%  \parbox[t]{.9\columnwidth}{\relax
+%           For all figures please keep in mind that you \textbf{must not}
+%           use images with transparent background! 
+%           }
+%  %
+%  \caption{\label{fig:firstExample}
+%           Here is a sample figure.}
+%\end{figure}
+
+%If your paper includes images, it is very important that they are of
+%sufficient resolution to be faithfully reproduced.
+%
+%To determine the optimum size (width and height) of an image, measure
+%the image's size as it appears in your document (in millimeters), and
+%then multiply those two values by 12. The resulting values are the
+%optimum $x$ and $y$ resolution, in pixels, of the image. Image quality
+%will suffer if these guidelines are not followed.
+%
+%Example 1: 
+%%
+%An image measures 50\,mm by 75\,mm when placed in a document. This
+%image should have a resolution of no less than 600 pixels by 900
+%pixels in order to be reproduced faithfully.
+
+%%------------------------------------------------------------------------
+%\subsection{Copyright forms}
+%
+%You must include your signed Eurographics copyright release form
+%when you submit your finished paper. We MUST have this form before
+%your paper can be published in the proceedings.
+
+%-------------------------------------------------------------------------
+
+%\bibliographystyle{eg-alpha}
+\bibliographystyle{eg-alpha-doi}
+
+\bibliography{sca2012.bib}
+
+\end{document}
