@@ -45,7 +45,23 @@
 
 % ------------------------------------------------------------------------
 
-\title[EG \LaTeX\ Author Guidelines]%
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+
+\usepackage{amsmath}
+
+% Partial derivative
+\newcommand{\deriv}[2]{\frac{\partial #1}{\partial #2}}
+
+\newcommand{\Figure}[3]{%
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=#1]{#2}
+  \caption{\label{fig-#2}#3}
+\end{figure}}
+
+
+\title[Short title]%
       {Fill in the Title} % TODO
 
 % for anonymous conference submission please enter your SUBMISSION ID
@@ -102,20 +118,423 @@
 %-------------------------------------------------------------------------
 \section{Introduction}
 
-Long captions should be set as in Figure~\ref{fig:ex1}.
+Objects with thin structure form a very specific field of research. Because
+they have high ratio between width and thickness methods from volumetric
+deformation modeling cannot be immediately used. Such object occur in many
+places e.g. textiles, paper or leaves. They are also very common in
+anatomical structures for example in form of tubular objects like blood
+vessels or colon, in the form of thin membranes, but also many others
+(lense, skin, \ldots).
 
-\begin{figure}[htb]
-   % an empty figure just consisting of the caption lines
-   \caption{\label{fig:ex1}
-     'Empty' figure only to serve as an example of long caption requiring 
-     more than one line. It is not typed centered but aligned on both sides.}
-\end{figure}
+Methods based on continuum mechanics and namely theory of elasticity gained
+on popularity ever since Terzopoulos \cite{Terzopoulos1987} presented his
+work on elastic deformation modeling. While the methods using finite
+elements and theory of elasticity are fairly popular in volumetric modeling
+\footnote{TODO: do we need ref. here?} of deformations, they are still
+frowned uppon in the area of thin structures. Instead either the
+mass-spring models \cite{Volino2009} or bending models
+\cite{Grinspun2003,Choi2007} are preffered. Unfortunately they have the
+disadvantage that physical parameters of a material (like Young's modulus
+and Poisson's ratio) cannot be used directly.
 
-%-------------------------------------------------------------------------
-\subsection{References}
+The usual argument agains FEM based methods being that they are too slow.
+This is indeed true if lots of elements are used to discretize the object.
+However, exploiting the bending property of the shell elements allows us to
+achieve good results even with relatively small number of elements. We can
+use high-polygonal mesh only for rendering or collision detection and
+response. Similar idea has been already presented in the work of Bouthors
+et al. \cite{Bouthors2007}. They used twinned meshes for animation of mesh
+defined by implicit surface. Simple low-polygonal mesh was used for
+mechanical FEM model and the mesh was subdivided in areas with high
+curvature after every step of the simulation to produce finer mesh for
+rendering. The underlaying FEM model is however not aware of the implicit
+surface used. We build uppon the work of Comas \cite{Comas2010c} who used a
+simple cubic polynomial to describe the element geometry and derived the
+shell model from it.
 
-All graphics should be centered.
+The Comas's element has several drawbacks that we needed to address. Namely
+it produces discontinuities between the elements on the edges, it is
+missing one rotationonal degree of freedom and is not completly symetric in
+context of deformations.
 
+% TODO: cite Ubach & Oñate?
+
+In this paper we present a new shell element based on the formulation of
+Bézier triangle.
+
+\subsection{Contribution}
+
+% TODO
+The main contributions of the paper are following:
+\begin{itemize}
+    % not really novel, similar model already in Ubach2010
+    %\item shell element based on Bézier triangles
+    \item Our element solves the problems of the element presented by Comas
+        \cite{Comas2010c}.
+
+    % TODO: needs better explanation
+    % + two stage interpolation => Nodes (6DOFS) => bezier points => bezier
+    %   triangle
+    \item Two stage interpolation: 6DOF nodes -> bezier points -> bezier
+        triangle
+
+    % + separation between nodes and dofs
+    \item The model separates nodes of the mesh from degrees of freedom of the
+        control mesh. This allows mapping a surface on deformable skeleton.
+
+    % + mapping: smooth surface results with less shells + collision response
+    %   on smooth surface +  [? if I have time]  deformable on deformable:
+    %   conjonctiva 2D motion on the surface of the shells
+    \item Smooth maping of high resolution mesh on the curved surface of the
+        shell. The mapped surfce can be used for collision detection and
+        allows the propagation of proper collision response back onto the
+        (low resolution) mechanical mesh.
+
+\end{itemize}
+
+
+\section{Preliminaries}
+
+\subsection{Shell Element}
+
+Shell element combines two types of deformations:
+
+\begin{itemize}
+
+    \item Elastic membrane: deformation in the plane of the element,
+        described by in-plane displacements $u_x, u_y$ and rotation
+        $\theta_z$ around the axis perpendicular to the plane of the
+        element (Figure \ref{fig-membrane}).
+
+    \item Bending plate: out of the plane deformation described by rotation
+        around two in-plane axes $\theta_x, \theta_z$ and out of plane
+        displacmenent $u_z$ (Figure \ref{fig-plate}).
+
+\end{itemize}
+
+\Figure{0.8\linewidth}{membrane}
+{DOFs of elastic membrane element.}
+
+\Figure{0.8\linewidth}{plate}
+{DOFs of bending plate element.}
+
+\subsection{Bézier Triangle} % {{{
+
+In the rest of the document we define the surface over the triangle:
+\begin{equation}
+    (\xi_1,\xi_2) \in \Delta^2 = \left\{ (\xi_1,\xi_2)~|~\xi_1, \xi_2 \ge 0
+        \mathrm{~and~} \xi_1+\xi_2 \le 1 \right\}
+\end{equation}
+
+The general $n$-th order Bézier triangle is defined as:
+
+\begin{equation}
+    T(\xi_1, \xi_2) = \sum_{0 \le i + j \le n} B^n_{i,j}(\xi_1,\xi_2) P_{i,j}
+\end{equation}
+
+where $P_{i,j}$ are the control points and $B^n_{i,j}$ are the bivairate
+Bernstein basis functions defined as:
+
+\begin{equation}
+  B^n_{i,j} (\xi_1,\xi_2) =
+    \binom{n}{i~j} \xi_1^i \xi_2^j (1-\xi_1-\xi_2)^{n-i-j},
+\end{equation}
+\begin{equation}
+  \binom{n}{i~j} = \frac{n!}{i!j!(n-i-j)!}
+\end{equation}
+
+where $ 0 \le i+j \le n $.
+
+Specificaly the cubic Bézier triangle ($n=3$) used in our model is
+described by 10 control points and the surface is explicitly defined as (see
+fig. \ref{fig-bezier}):
+
+\begin{equation}\label{eq-cubicbez}
+  \begin{split}
+  T(\xi_1,\xi_2) & =
+           + \xi_1^3\ P_1
+           + \xi_2^3\ P_2
+           + \xi_3^3\ P_3 \\
+         & + 3\ \xi_1^2 \xi_2\ P_4
+           + 3\ \xi_1^2 \xi_3\ P_5
+           + 3\ \xi_2^2 \xi_3\ P_6 \\
+         & + 3\ \xi_1 \xi_2^2\ P_7
+           + 3\ \xi_1 \xi_3^2\ P_8
+           + 3\ \xi_2 \xi_3^2\ P_9 \\
+         & + 6\ \xi_1 \xi_2 \xi_3\ P_{10} \\
+  \end{split}
+\end{equation}
+
+where $ \xi_3 = 1 - \xi_1 - \xi_2 $. By naming the respective values of
+the Bernstein basis functions $n_i$ we can shortly express
+\eqref{eq-cubicbez} as:
+
+\begin{equation}\label{eq-cubicbez2}
+    T = \sum_{i=1}^{10} n_i P_i
+\end{equation}
+
+\Figure{0.8\linewidth}{bezier}
+{Cubic Bézier triangle with net of 10 control points.}
+
+% }}}
+
+\section{Bézier Shell Element} % {{{
+
+\subsection{Control Points} % {{{
+
+The Bézier triangles are defined by a net of control points, however the
+simulated object is usually described by a triangular mesh. We construct
+the Bézier mesh by taking into account the curvature of the triangular
+mesh. When constructing the mesh a special care has to be taken to maintain
+the continuity accross the nodes and edges. During the initialization phase
+we partialy employ the method described in \cite{Ubach2010} to maintain
+$C^0$ continuity on the edges. Each of the control points on the edge is
+computed as the intersection of:
+
+\begin{enumerate}
+    \item The plane perpendicular to the normal at the vertex.
+    \item The plane that contains the the curve of triangle's contour. The
+        choise is arbitrary, but necessary to maintain $C^0$ continuity. 
+        We choose the plane defined by the edge of the flat triangle and
+        average of the two normals at vertices of the edge. 
+    \item The plane perpendicular to the edge of the flat triangle placed at
+        $1/3$ of the edge length.
+\end{enumerate}
+
+Notice that the points on the edge will be same for both triangles sharing
+the edge.
+
+We do not repeat this procedure during the simulation. For faster update of
+the control points we rigidly attach the edge points to corner points. We
+remember the position and orientation of the edge point relative to the
+nearest corner point and use this information together with the rotation on
+the corner points to reconstruct new position of control points. See Figure
+\ref{fig-segments} for the correspondence between edge points and
+associated corner points.
+
+\Figure{0.8\linewidth}{segments}
+{Correspondence between edge points and associated corner points shown in
+blue.}
+
+$C^1$ continuity can also be maintained if special care is taken when
+computing the position of the central point (see \cite{Ubach2010}). For
+simplicity we compute the central point followingly:
+
+\begin{equation}\label{eq-central}
+    P_{10} = \frac{1}{3}(\sum_{i=4}^9 P_i - \sum_{i=1}^3 P_i)
+\end{equation}
+
+% TODO: explain the equation eq-central? would require an image
+
+That way the central point is slightly elevated and not in the plane of
+other nodes thus keeping the curvature of the element.
+
+%}}}
+
+% TODO - nodes + DOFs (local + global position)
+
+\subsection{Mechanics}
+
+We base the displacement field $u$ on the formulation of the Bézier
+triangle \eqref{eq-cubicbez}:
+
+\begin{equation}\label{eq-bezU}
+\begin{split}
+  u & = U_1 ( \xi_1^3 + 3 \xi_1^2 \xi_2 + 3 \xi_1^2 \xi_3
+        + 2 \xi_1 \xi_2 \xi_3 ) \\
+    & + U_2 ( \xi_2^3 + 3 \xi_1 \xi_2^2 + 3 \xi_2^2 \xi_3
+        + 2 \xi_1 \xi_2 \xi_3 ) \\
+    & + U_3 ( \xi_3^3 + 3 \xi_1 \xi_3^2 + 3 \xi_2 \xi_3^3
+        + 2 \xi_1 \xi_2 \xi_3 ) \\
+    & + 3 \xi_1^2 \xi_2 (P_{4-1} \times \theta_1) \\
+    & + 3 \xi_1^2 \xi_3 (P_{5-1} \times \theta_1) \\
+    & + 3 \xi_1 \xi_2^2 (P_{7-2} \times \theta_2) \\
+    & + 3 \xi_2^2 \xi_3 (P_{6-2} \times \theta_2) \\
+    & + 3 \xi_1 \xi_3^2 (P_{8-3} \times \theta_3) \\
+    & + 3 \xi_2 \xi_3^2 (P_{9-3} \times \theta_3) \\
+    & + 2 \xi_1 \xi_2 \xi_3 (P_{10-1} \times \theta_1 +
+        P_{10-2} \times \theta_2 +
+        P_{10-3} \times \theta_3)
+\end{split}
+\end{equation}
+
+where $U_1, U_2, U_3$ are the translational displacment vectors of the
+corner nodes of the element, $\theta_1, \theta_2, \theta_3$ are the angular
+displacements of the corner nodes and $P_{i-j}$ are the segments from
+corner nodes to other nodes of the control mesh:
+
+\begin{equation}
+    P_{i-j} = P_j-P_i, \quad i \in [4;10], j \in [1;3]
+\end{equation}
+
+Using the plate theory we can now compute the strain-displacement matrices
+from the displacement field. From the Cauchy's strain tensor for the
+elastic membrane:
+
+\begin{equation}
+    J_m = \left[ \begin{matrix}
+        \deriv{u_x}{x} \\
+        \deriv{u_y}{y} \\
+        \deriv{u_x}{y} + \deriv{u_y}{x}
+    \end{matrix} \right]
+\end{equation}
+
+and from Kirchhoff-Love theory for thin plates:
+
+\begin{equation}
+    J_b = \left[ \begin{matrix}
+        - z \deriv{^2 u_z}{x^2} \\
+        - z \deriv{^2 u_z}{y^2} \\
+        - 2z \deriv{^2 u_z}{xy}
+    \end{matrix} \right]
+\end{equation}
+
+Assuming constant thickness $t$ of the element and integrating over the volume
+of the element we compute the stiffness matrices for the elastic membrane
+and bending plate respectively:
+
+\begin{align}
+    \label{eq-Km}
+    K_m & = \iiint_V J_m^T M J_m \, \mathrm{d} V \\
+    \label{eq-Kb}
+    K_b & = \iiint_V J_b^T M J_b \, \mathrm{d} V
+\end{align}
+
+where $M$ is the material matrix. We use Hooke's law.
+
+Because the deformation field for the shell is non-linear \eqref{eq-bezU}
+the integrals \eqref{eq-Km} and \eqref{eq-Kb} have to be computed using
+numerical integration. In our implementation we employ 4-point Gaussian
+quadrature for integration over triangle area.
+% TODO: add ref
+% TODO: add abscissas/weights?
+%  \xi_1        \xi_2           w
+% 0.211324865, 0.166666667 0.197168783
+% 0.211324865, 0.622008467 0.197168783
+% 0.788675134, 0.044658198 0.052831216
+% 0.788675134, 0.166666667 0.052831216
+
+To keep the system linear during simulation we compute the forces in
+corotational frame.
+
+% }}}
+
+\section{Mechanical Mapping} % {{{
+
+% TODO: mention it is 6 DOF <-> 3 DOF
+
+Because of the bending property of the shells relatively few elements are
+necessary to simulate curved surface. To enrich the visual experience from
+the simulated object it is desirable to use more triangles in the areas
+with high curvature during rendering. To do that we can map a high
+resolution mesh onto the mechanical mesh. For every vertex of the high
+resolution mesh we first find the triangle on the mechanical mesh that is
+closest to the vertex and then assign barycentric coordinates on the
+triangle to this vertex. After every step of the simulation the high
+resolution mesh is updated using the assigned barycentric coordinates and
+the function of the surface \eqref{eq-cubicbez}.
+
+mapping velocities (necessary for collisions?)
+
+
+Differentiating \eqref{eq-cubicbez2} by time we get:
+
+\begin{equation}
+    \dot{T} = \sum_{i=1}^{10} n_i \dot{P_i} = \sum_{i=1}^{10} n_i V_i
+\end{equation}
+
+Which means we use the same expression to interpolate the velocities only
+by substituting the velocities at control points. For the corner nodes we
+already have the velocities $V_i$. For the internal nodes we need to compute
+them. In case of the edge nodes it is a problem of computing the velocity
+of a point attached to the moving rigid body:
+
+\begin{eqnarray}
+    V_i = V_j + \omega_j \times (P_i - P_j)
+\end{eqnarray}
+
+where $j$ is the index of the corner node this edge node is attached to and
+$\omega_j$ is the angular velocity at the node. For the central node we
+again use the interpolation as in \eqref{eq-central}.
+
+* reverse mapping forces for collision response
+
+We compute the influence of force $F$ on the corners through all the
+control points by the formula:
+
+\begin{equation}
+    F_j += F n_i
+\end{equation}
+
+and the torques applied through edge control points by:
+
+\begin{eqnarray}
+    \theta_j += (P_i - P_j) \times F
+\end{eqnarray}
+
+where $j$ is the index of the corner node associated with control point
+$P_i$.
+
+And finaly we add the torques through the central control point with:
+
+\begin{eqnarray}
+    \theta_1 += ((P_4 - P_1) + (P_5 - P_1)) \times F \\
+    \theta_2 += ((P_6 - P_2) + (P_7 - P_2)) \times F \\
+    \theta_3 += ((P_8 - P_3) + (P_9 - P_3)) \times F
+\end{eqnarray}
+
+% }}}
+
+
+\section{Results}
+
+proof of symmetry
+
+some other examples?
+
+computation speed
+
+
+\section{Discussion}
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+%
+% Benefits:
+% + C^0 continuity on the edges
+% + Perfectly symmetric results for the element (it is not the case with
+%   "classical shells")
+% + Better conditioning (comparison between Comas model and ours in term of
+%   convergence of CG...) * Good trade-off between continuity of interpolation
+%   and spasticity: only 18 Dofs per elements for an interpolation with 3d
+%   order
+% + polynomials [Bezier triangle has theoretically 10 points x 3 dofs=> 30 dofs]
+%
+% Limitations:
+% + Continuity C1 at the nodes but C0 on the edges
+% + The segments are at fixed distance from corner nodes, may lead to
+%   uneven curvature for too stretched or shrinked elements 
+%
+% Applications:
+% + cataract surgery
+% + arterial vessel (MICCAI)
+% + vagina/uterus?
+%
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+
+%Long captions should be set as in Figure~\ref{fig:ex1}.
+%
+%\begin{figure}[htb]
+%   % an empty figure just consisting of the caption lines
+%   \caption{\label{fig:ex1}
+%     'Empty' figure only to serve as an example of long caption requiring 
+%     more than one line. It is not typed centered but aligned on both sides.}
+%\end{figure}
+%
+%All graphics should be centered.
+%
 %%%
 %%% Figure 1
 %%%
@@ -160,6 +579,8 @@ All graphics should be centered.
 %You must include your signed Eurographics copyright release form
 %when you submit your finished paper. We MUST have this form before
 %your paper can be published in the proceedings.
+
+%-------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------
 
