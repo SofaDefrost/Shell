@@ -222,7 +222,7 @@ Shell element combines two types of deformations:
 
 In the rest of the document we define the surface over the triangle:
 \begin{equation}
-    (\xi_1,\xi_2) \in \Delta^2 = \left\{ (\xi_1,\xi_2)~|~\xi_1, \xi_2 \ge 0
+    (\xi_1,\xi_2) \in \bigtriangleup = \left\{ (\xi_1,\xi_2)~|~\xi_1, \xi_2 \ge 0
         \mathrm{~and~} \xi_1+\xi_2 \le 1 \right\}
 \end{equation}
 
@@ -293,7 +293,7 @@ computed as the intersection of:
 
 \begin{enumerate}
     \item The plane perpendicular to the normal at the vertex.
-    \item The plane that contains the the curve of triangle's contour. The
+    \item The plane that contains the curve of triangle's contour. The
         choise is arbitrary, but necessary to maintain $C^0$ continuity. 
         We choose the plane defined by the edge of the flat triangle and
         average of the two normals at vertices of the edge. 
@@ -316,8 +316,8 @@ associated corner points.
 {Correspondence between edge points and associated corner points shown in
 blue.}
 
-$C^1$ continuity can also be maintained if special care is taken when
-computing the position of the central point (see \cite{Ubach2010}). For
+$C^1$ continuity on the edges can also be maintained if special care is taken
+when computing the position of the central point (see \cite{Ubach2010}). For
 simplicity we compute the central point followingly:
 
 \begin{equation}\label{eq-central}
@@ -335,8 +335,8 @@ other nodes thus keeping the curvature of the element.
 
 \subsection{Mechanics}
 
-We base the displacement field $u$ on the formulation of the Bézier
-triangle \eqref{eq-cubicbez}:
+Our definition of the displacement field $u$ is based on the formulation of the
+Bézier triangle \eqref{eq-cubicbez}:
 
 \begin{equation}\label{eq-bezU}
 \begin{split}
@@ -364,14 +364,14 @@ displacements of the corner nodes and $P_{i-j}$ are the segments from
 corner nodes to other nodes of the control mesh:
 
 \begin{equation}
-    P_{i-j} = P_j-P_i, \quad i \in [4;10], j \in [1;3]
+    P_{i-j} = P_j-P_i %, \quad i \in [4;10], j \in [1;3]
 \end{equation}
 
 Using the plate theory we can now compute the strain-displacement matrices
 from the displacement field. From the Cauchy's strain tensor for the
 elastic membrane:
 
-\begin{equation}
+\begin{equation}\label{eq-cauchy}
     J_m = \left[ \begin{matrix}
         \deriv{u_x}{x} \\
         \deriv{u_y}{y} \\
@@ -381,7 +381,7 @@ elastic membrane:
 
 and from Kirchhoff-Love theory for thin plates:
 
-\begin{equation}
+\begin{equation}\label{eq-kirchhoff}
     J_b = \left[ \begin{matrix}
         - z \deriv{^2 u_z}{x^2} \\
         - z \deriv{^2 u_z}{y^2} \\
@@ -400,42 +400,61 @@ and bending plate respectively:
     K_b & = \iiint_V J_b^T M J_b \, \mathrm{d} V
 \end{align}
 
-where $M$ is the material matrix. We use Hooke's law.
+where $M$ is the material matrix. To keep the system simple we use linear
+Hooke's law for isotropic materials.
 
 Because the deformation field for the shell is non-linear \eqref{eq-bezU}
 the integrals \eqref{eq-Km} and \eqref{eq-Kb} have to be computed using
-numerical integration. In our implementation we employ 4-point Gaussian
+numerical integration. In our implementation we employ 6-point Gaussian
 quadrature for integration over triangle area.
 % TODO: add ref
 % TODO: add abscissas/weights?
-%  \xi_1        \xi_2           w
-% 0.211324865, 0.166666667 0.197168783
-% 0.211324865, 0.622008467 0.197168783
-% 0.788675134, 0.044658198 0.052831216
-% 0.788675134, 0.166666667 0.052831216
 
-To keep the system linear during simulation we compute the forces in
-corotational frame.
+The Cauchy's strain tensor \eqref{eq-cauchy} is know to not be rotation
+invariant \footnote{add ref}. To deal with rigid body rotations we compute
+the displacements and forces in corotational frame. At each step of the
+simulation we compute the local frame for every element from the position
+of the corner nodes and we allign one axis of the frame with one edge of
+the element. \footnote{add image}
+
+The resulting internal force of deformed elemnt is then computed relative
+to this frame:
+
+\begin{equation}
+    F_e = R_e^T (K_e u) = R_e^T \left(K_e(R_e x - R_e^0 x^0)\right)
+\end{equation}
+
+\noindent
+where $R$ and $R_0$ are rotation matrices of the frame for current and rest
+mesh respectively.
 
 % }}}
 
-\section{Mechanical Mapping} % {{{
-
-% TODO: mention it is 6 DOF <-> 3 DOF
+\section{Visual and Mechanical Mapping} % {{{
 
 Because of the bending property of the shells relatively few elements are
 necessary to simulate curved surface. To enrich the visual experience from
 the simulated object it is desirable to use more triangles in the areas
-with high curvature during rendering. To do that we can map a high
-resolution mesh onto the mechanical mesh. For every vertex of the high
-resolution mesh we first find the triangle on the mechanical mesh that is
-closest to the vertex and then assign barycentric coordinates on the
-triangle to this vertex. After every step of the simulation the high
+with high curvature during rendering. Besides the visual accuracy the high
+resolution mesh correctly modeling the curved areas is needed for
+interaction and correct simulation of collisions and constraints. To handle
+these we have also to know how to map the velocities from the mechanical
+mesh onto the high resolution mesh and how to map forces acting on the high
+resolution mesh back onto the mechanical mesh.
+
+\subsection{Mapping the Surface Mesh}
+
+We use the fact that the geometry of the shell is based on the formulation
+of cubic Bézier triangle \eqref{eq-cubicbez}. For every vertex of the high
+resolution mesh we first find the corresponding triangle on the mechanical
+mesh that is closest to the vertex and assign barycentric coordinates on
+the triangle to this vertex. After every step of the simulation the high
 resolution mesh is updated using the assigned barycentric coordinates and
 the function of the surface \eqref{eq-cubicbez}.
 
-mapping velocities (necessary for collisions?)
+\subsection{Mapping Velocities}
 
+In the 
 
 Differentiating \eqref{eq-cubicbez2} by time we get:
 
@@ -444,7 +463,7 @@ Differentiating \eqref{eq-cubicbez2} by time we get:
 \end{equation}
 
 Which means we use the same expression to interpolate the velocities only
-by substituting the velocities at control points. For the corner nodes we
+substituting the velocities at control points. For the corner nodes we
 already have the velocities $V_i$. For the internal nodes we need to compute
 them. In case of the edge nodes it is a problem of computing the velocity
 of a point attached to the moving rigid body:
@@ -457,31 +476,56 @@ where $j$ is the index of the corner node this edge node is attached to and
 $\omega_j$ is the angular velocity at the node. For the central node we
 again use the interpolation as in \eqref{eq-central}.
 
-* reverse mapping forces for collision response
+\subsection{Mapping Forces}
+
+For physical interaction with the object one also requiers that the normal
+forces applied on the high resolution mesh are trasmitted back as forces
+and torques on the vertices of the mechanical mesh.
 
 We compute the influence of force $F$ on the corners through all the
-control points by the formula:
-
-\begin{equation}
-    F_j += F n_i
-\end{equation}
-
-and the torques applied through edge control points by:
+associated control points by the formula:
 
 \begin{eqnarray}
-    \theta_j += (P_i - P_j) \times F
+    F_1 & = & F \sum_{i \in \{1,4,5\}} n_i + \frac{1}{3} F n_{10} \\
+    F_2 & = & F \sum_{i \in \{2,6,7\}} n_i + \frac{1}{3} F n_{10} \\
+    F_3 & = & F \sum_{i \in \{3,8,9\}} n_i + \frac{1}{3} F n_{10} \\
 \end{eqnarray}
 
-where $j$ is the index of the corner node associated with control point
-$P_i$.
+%\begin{eqnarray}
+%    F_1 & = & F (n_1 + n_4 + n_5) + \frac{1}{3} F n_{10} \\
+%    F_2 & = & F (n_2 + n_6 + n_7) + \frac{1}{3} F n_{10} \\
+%    F_3 & = & F (n_3 + n_8 + n_9) + \frac{1}{3} F n_{10} \\
+%\end{eqnarray}
 
-And finaly we add the torques through the central control point with:
+Similarily we compute the torques applied through edge control points and
+the central control points by:
 
 \begin{eqnarray}
-    \theta_1 += ((P_4 - P_1) + (P_5 - P_1)) \times F \\
-    \theta_2 += ((P_6 - P_2) + (P_7 - P_2)) \times F \\
-    \theta_3 += ((P_8 - P_3) + (P_9 - P_3)) \times F
+    \theta_1 & = & P_{1-4} \times (n_4 F) + P_{1-5} \times (n_5 F) + \\
+        & + & \frac{1}{3} (P_{1-4} + P_{1-5}) \times (n_{10} F) \\
+    \theta_2 & = & P_{1-6} \times (n_6 F) + P_{1-7} \times (n_7 F) + \\
+        & + & \frac{1}{3} (P_{1-6} + P_{1-7}) \times (n_{10} F) \\
+    \theta_3 & = & P_{1-8} \times (n_8 F) + P_{1-9} \times (n_9 F) + \\
+        & + & \frac{1}{3} (P_{1-8} + P_{1-9}) \times (n_{10} F) \\
 \end{eqnarray}
+
+%\begin{eqnarray}
+%    \theta_1 & = & \sum_{i \in \{4,5\}} P_{1-i} \times (n_i F) \\
+%    & + &\frac{1}{3} (P_{1-4} + P_{1-5}) \times (n_{10} F) \\
+%    \theta_1 & = & \sum_{i \in \{6,7\}} P_{1-i} \times (n_i F) + \\
+%    & + &\frac{1}{3} (P_{1-6} + P_{1-7}) \times (n_{10} F) \\
+%    \theta_1 & = & \sum_{i \in \{8,9\}} P_{1-i} \times (n_i F) + \\
+%    & + &\frac{1}{3} (P_{1-8} + P_{1-9}) \times (n_{10} F) \\
+%\end{eqnarray}
+%
+%\begin{eqnarray}
+%    \theta_1 & = & \sum_{i \in \{4,5\}} P_{1-i} \times (n_i F) +
+%    \frac{1}{3} (P_{1-4} + P_{1-5}) \times (n_{10} F) \\
+%    \theta_1 & = & \sum_{i \in \{6,7\}} P_{1-i} \times (n_i F) +
+%    \frac{1}{3} (P_{1-6} + P_{1-7}) \times (n_{10} F) \\
+%    \theta_1 & = & \sum_{i \in \{8,9\}} P_{1-i} \times (n_i F) +
+%    \frac{1}{3} (P_{1-8} + P_{1-9}) \times (n_{10} F) \\
+%\end{eqnarray}
 
 % }}}
 
