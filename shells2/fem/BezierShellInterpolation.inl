@@ -171,26 +171,26 @@ void BezierShellInterpolation<DataTypes>::TriangleInfoHandler::applyCreateFuncti
 template<class DataTypes>
 BezierShellInterpolation<DataTypes>::BezierShellInterpolation()
     : mState(NULL)
-    , mStateNodes(NULL)
     , inputTopology(NULL)
-    , inputNormals(initData(&inputNormals, "normals", "normal defined on the source topology"))
     //, bezierM2P(sofa::core::objectmodel::New< sofa::component::topology::Mesh2PointTopologicalMapping >())
-    //, bezierState(sofa::core::objectmodel::New< sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3dTypes> >())
+    , mStateNodes(sofa::core::objectmodel::New< sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3dTypes> >())
+    , inputNormals(initData(&inputNormals, "normals", "normal defined on the source topology"))
     , pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
     , triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
     this->f_listening.setValue(true);
     /*
+     * If M2P is a slave topological changes are not propagated!
        bezierM2P->setName("bezierNodeMapper");
        bezierM2P->pointBaryCoords.beginEdit()->push_back(Vec3(0, 0, 0));
        bezierM2P->pointBaryCoords.endEdit();
     //edgeBaryCoords="0.333 0.6666 0    0.6666 0.3333 0"
     //triangleBaryCoords="0.3333 0.3333 0"
     this->addSlave(bezierM2P);
-
-    bezierState->setName("bezierNodes");
-    this->addSlave(bezierState);
     */
+
+    mStateNodes->setName("bezierNodes");
+    this->addSlave(mStateNodes);
 
     pointHandler = new PointInfoHandler(this, &pointInfo);
     triHandler = new TriangleInfoHandler(this, &triInfo);
@@ -207,12 +207,6 @@ void BezierShellInterpolation<DataTypes>::init()
     this->getContext()->get(mState, BaseContext::SearchUp);
     if (!mState) {
         serr << "No MechanicalState for the simulation found" << sendl;
-        return;
-    }
-
-    mStateNodes = dynamic_cast<MechanicalState<sofa::defaulttype::Vec3dTypes>*> (this->getContext()->getMechanicalState());
-    if (!mStateNodes) {
-        serr << "No MechanicalState for Bézier points found (must have template Vec3d)" << sendl;
         return;
     }
 

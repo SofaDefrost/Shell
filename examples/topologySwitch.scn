@@ -65,7 +65,6 @@
             <PointSetTopologyContainer template="Vec3d" name="BezierPoints" />
             <PointSetTopologyModifier />
             <PointSetGeometryAlgorithms showPointIndices="true" />
-            <MechanicalObject template="Vec3d" name="BezierPointsMO" />
             <Mesh2PointTopologicalMapping input="@../trianglesTopo" output="@BezierPoints"
                 printLog="true"
                 pointBaryCoords="0 0 0"

@@ -274,17 +274,16 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         void applyJTOnBTriangle(VecVec3 projBaryCoords, VecIndex projElements, const VecVec3& in, VecDeriv& out);
 
     protected:
-        // pointer on mechanical state holding the Bézier points and to
-        // mechanical state of the simulation
+        // pointer on mechanical state of the simulation
         sofa::core::behavior::MechanicalState<DataTypes> *mState;
-        sofa::core::behavior::MechanicalState<sofa::defaulttype::Vec3dTypes> *mStateNodes;
         // pointer to the topology
         sofa::core::topology::BaseMeshTopology* inputTopology;
         sofa::component::topology::Mesh2PointTopologicalMapping *bezierM2P;
 
         // Mapping that creates bezier points and MO to store positions of the points
         //sofa::component::topology::Mesh2PointTopologicalMapping::SPtr bezierM2P;
-        //sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3dTypes>::SPtr bezierState;
+        // Mechanical state holding the Bézier points and their velocities
+        sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3dTypes>::SPtr mStateNodes;
 
         Data< VecVec3 > inputNormals;
 
