@@ -107,7 +107,7 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Mat<3, 3, Real> MaterialStiffness;              ///< matrix of material stiffness
         typedef Mat<3, 9, Real> StrainDisplacement;             ///< strain-displacement matrix for in-plane forces
         typedef Mat<3, 9, Real> StrainDisplacementBending;
-        typedef Mat<3, 3, Real > Transformation;                ///< matrix for rigid transformations like rotations
+        typedef Mat33  Transformation;                          ///< matrix for rigid transformations like rotations
         typedef Mat<9, 9, Real> StiffnessMatrix;
         typedef Mat<9, 9, Real> StiffnessMatrixBending;
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
@@ -118,6 +118,9 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
         // Nodes of the Bezier triangles
 
 public:
+
+        // Data for Gaussian quadrature
+        static const int Gn = 6; // Number of Gauss points
 
         class TriangleInformation
         {
@@ -144,7 +147,10 @@ public:
 #endif
 
                 // Matrix of interpolation functions
-                Mat<3,3> interpol;
+                // NOTE: we might need to always use double here, with
+                // floats the matrix makes the strain-displacement and
+                // stiffness matrices unusable due to lack of precision.
+                Mat33 interpol;
 
                 // Nodes of the Bezier triangle
                 helper::fixed_array<Vec3, 10> pts;          // ... in local frame
@@ -154,6 +160,8 @@ public:
                 StrainDisplacement strainDisplacementMatrix2;
                 StrainDisplacement strainDisplacementMatrix3;
                 StrainDisplacement strainDisplacementMatrix4;
+
+                StrainDisplacement strainDisplacementMatrix[Gn];
 
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacementBending strainDisplacementMatrixB1;

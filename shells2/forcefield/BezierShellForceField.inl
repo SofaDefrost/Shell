@@ -48,6 +48,19 @@
 
 // Use 4-point Gaussian quadrature to integrate over the triangle
 #define GAUSS4
+// n=4 (source: can't remember)
+//const double GX[] = { 0.211324865, 0.211324865, 0.788675134, 0.788675134 };
+//const double GY[] = { 0.166666667, 0.622008467, 0.044658198, 0.166666667 };
+//const double GW[] = { 0.197168783, 0.197168783, 0.052831216, 0.052831216 };
+// n=6, d = 4 (source: http://www.electromagnetics.biz/integration.htm)
+const double GX[] = { 0.8168476,  0.09157621, 0.09157621, 0.1081030, 0.4459485, 0.4459485 };
+const double GY[] = { 0.09157621, 0.8168476,  0.09157621, 0.4459485, 0.1081030, 0.4459485 };
+const double GW[] = { 0.05497587, 0.05497587, 0.05497587, 0.1116908, 0.1116908, 0.1116908 };
+// n = 12, d = 6 (source: http://www.electromagnetics.biz/integration.htm)
+//const double GX[] = { 0.5014265,  0.2492867,  0.2492867,  0.8738220,  0.06308901, 0.06308901, 0.6365025,  0.6365025,  0.05314505, 0.05314505, 0.3103525,  0.3103525  };
+//const double GY[] = { 0.2492867,  0.5014265,  0.2492867,  0.06308901, 0.8738220,  0.06308901, 0.05314505, 0.3103525,  0.6365025,  0.3103525,  0.6365025,  0.05314505 };
+//const double GW[] = { 0.05839314, 0.05839314, 0.05839314, 0.02542245, 0.02542245, 0.02542245, 0.04142554, 0.04142554, 0.04142554, 0.04142554, 0.04142554, 0.04142554 };
+
 
 namespace sofa
 {
@@ -57,7 +70,6 @@ namespace sofa
 		{
 			using namespace sofa::defaulttype;
 			using namespace	sofa::component::topology;
-
 
 
 // --------------------------------------------------------------------------------------
@@ -503,7 +515,7 @@ void BezierShellForceField<DataTypes>::interpolateRefFrame(TriangleInformation *
     }
 
     // compute the corresponding rotation
-    defaulttype::Matrix3 R(X1,Y,Z);
+    Mat33 R(X1,Y,Z);
     tinfo->frameOrientation = R;
     tinfo->frameOrientationInv.transpose(R);
 
@@ -606,7 +618,11 @@ void BezierShellForceField<DataTypes>::computeLocalTriangle(
     //// Rotate the already computed nodes
     //sout << "QFrame: " << tinfo->frame.getOrientation() << sendl;
     for (int i = 0; i < 10; i++) {
+#ifdef CRQUAT
+        pts[i] = tinfo->frameOrientationQ.rotate(bn[i] - tinfo->frameCenter);
+#else
         pts[i] = tinfo->frameOrientation * (bn[i] - tinfo->frameCenter);
+#endif
     }
 
 
@@ -720,37 +736,40 @@ void BezierShellForceField<DataTypes>::computeStrainDisplacementMatrixMembrane(T
     matrixSDM(tinfo.strainDisplacementMatrix2, gaussPoint2, tinfo);
     matrixSDM(tinfo.strainDisplacementMatrix3, gaussPoint3, tinfo);
 #else
-    matrixSDM(tinfo.strainDisplacementMatrix1, Vec3(0.211324865, 0.166666667, 0), tinfo);
-    matrixSDM(tinfo.strainDisplacementMatrix2, Vec3(0.211324865, 0.622008467, 0), tinfo);
-    matrixSDM(tinfo.strainDisplacementMatrix3, Vec3(0.788675134, 0.044658198, 0), tinfo);
-    matrixSDM(tinfo.strainDisplacementMatrix4, Vec3(0.788675134, 0.166666667, 0), tinfo);
+    for (int i=0; i<Gn; i++)
+        matrixSDM(tinfo.strainDisplacementMatrix[i], Vec3(GX[i], GY[i], 0), tinfo);
 #endif
 
     if (this->f_printLog.getValue()) {
         sout << "pts: " << tinfo.pts << std::endl;
         sout << "x2b: " << tinfo.interpol << std::endl;
 
+#ifdef GAUSS4
+        sout << "Bm:";
+        for (int i=0; i<Gn; i++)
+            sout << "\t" << tinfo.strainDisplacementMatrix[i] << "\n";
+#else
         sout << "Bm: " << tinfo.strainDisplacementMatrix1 <<
             "\n    " << tinfo.strainDisplacementMatrix2 <<
             "\n    " << tinfo.strainDisplacementMatrix3 <<
-#ifdef GAUSS4
-            "\n    " << tinfo.strainDisplacementMatrix4 <<
-#endif
             "\n";
+#endif
 
         Displacement u = Vec<9,Real>(1, -5, 0, 1, -5, 0, 1, -5, 0);
 
-        sout << "-- Disp test Bm (u=" << u << ")\n" <<
+        sout << "-- Disp test Bm (u=" << u << ")\n";
+#ifdef GAUSS4
+        for (int i=0; i<Gn; i++)
+            sout << i << ": " << tinfo.strainDisplacementMatrix[i] * u << "\n";
+#else
             "1 : " << tinfo.strainDisplacementMatrix1 * u << "\n"
             "2 : " << tinfo.strainDisplacementMatrix2 * u << "\n"
-            "3 : " << tinfo.strainDisplacementMatrix3 * u << "\n"
-#ifdef GAUSS4
-            "4 : " << tinfo.strainDisplacementMatrix4 * u << "\n"
+            "3 : " << tinfo.strainDisplacementMatrix3 * u << "\n";
 #endif
-            ;
     }
 
 }
+
 
 // ----------------------------------------------------------------------------
 // --- Compute the strain-displacement matrix for in-plane deformation
@@ -1074,12 +1093,14 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixMembrane(
         Jt3 * materialMatrix * tinfo.strainDisplacementMatrix3;
     K /= 3.0;
 #else
-    Mat<9, 3, Real> Jt4;
-    Jt4.transpose(tinfo.strainDisplacementMatrix4);
-    K = Jt1 * materialMatrix * tinfo.strainDisplacementMatrix1*0.197168783 +
-        Jt2 * materialMatrix * tinfo.strainDisplacementMatrix2*0.197168783 +
-        Jt3 * materialMatrix * tinfo.strainDisplacementMatrix3*0.052831216 +
-        Jt4 * materialMatrix * tinfo.strainDisplacementMatrix4*0.052831216;
+    Mat<9, 3, Real> Jt;
+    K.clear();
+    for (int i=0; i<Gn; i++)
+    {
+        Jt.transpose(tinfo.strainDisplacementMatrix[i]); 
+        K += Jt * (materialMatrix * GW[i]) * tinfo.strainDisplacementMatrix[i];
+    }
+
     K *= tinfo.area2;
 #endif
 
@@ -1156,8 +1177,6 @@ void BezierShellForceField<DataTypes>::computeMaterialMatrix()
 
     // Material matrix for plane bending (a.k.a. flextural rigidity/bending stiffness)
     materialMatrixBending = materialMatrix * t*t / 12;
-
-    triangleInfo.endEdit();
 }
 
 
