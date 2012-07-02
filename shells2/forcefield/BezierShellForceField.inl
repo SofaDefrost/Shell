@@ -40,6 +40,10 @@
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 #include <sofa/simulation/common/Simulation.h> // for draw()
 
+#include <sofa/defaulttype/SolidTypes.h>
+
+#include <sofa/helper/decompose.h>
+
 #include "../../controller/MeshChangedEvent.h"
 
 #ifdef _WIN32
@@ -70,6 +74,7 @@ namespace sofa
 		{
 			using namespace sofa::defaulttype;
 			using namespace	sofa::component::topology;
+
 
 
 // --------------------------------------------------------------------------------------
@@ -718,13 +723,290 @@ void BezierShellForceField<DataTypes>::computeDisplacements( Displacement &Disp,
     //for (int i=0; i<9; i++) { std::cout << " " << round(BDisp[i]*1e8)/1e8; }
     //std::cout << std::endl;
 
+
+    //////////////////// comparison  ///////////////////////////////
+/*
+    Transform world_H_DofA(x[a].getCenter(), x[a].getOrientation());
+    Transform world_H_DofB(x[b].getCenter(), x[b].getOrientation());
+    Transform world_H_DofC(x[c].getCenter(), x[c].getOrientation());
+
+
+    Quat world_R_local; world_R_local.fromMatrix(tinfo->frameOrientationInv);
+    Transform world_H_EltFrame(tinfo->frameCenter, world_R_local);
+
+
+    Transform EltFrame_H_DofA = world_H_EltFrame.inversed()*world_H_DofA;
+    Transform EltFrame_H_DofB = world_H_EltFrame.inversed()*world_H_DofB;
+    Transform EltFrame_H_DofC = world_H_EltFrame.inversed()*world_H_DofC;
+
+
+
+    // get the rest position...
+    const VecCoord &x0 = (*this->mstate->getX0());
+    Transform world_H_DofArest(x0[a].getCenter(), x0[a].getOrientation());
+    Transform world_H_DofBrest(x0[b].getCenter(), x0[b].getOrientation());
+    Transform world_H_DofCrest(x0[c].getCenter(), x0[c].getOrientation());
+
+    Transform DofA_REST_H_DofA_debug =  world_H_DofArest.inversed()*world_H_DofA;
+    Transform DofB_REST_H_DofB_debug =  world_H_DofBrest.inversed()*world_H_DofB;
+    Transform DofC_REST_H_DofC_debug =  world_H_DofCrest.inversed()*world_H_DofC;
+
+
+
+    Quat DofA_R_EltFrame_REST;
+    DofA_R_EltFrame_REST.fromMatrix(tinfo->restLocalOrientationsInv[0]);
+    Transform EltFrame_H_DofA_REST(tinfo->restLocalPositions[0], DofA_R_EltFrame_REST.inverse());
+    Transform DofA_REST_H_DofA = EltFrame_H_DofA_REST.inversed()*EltFrame_H_DofA;
+   // SpatialVector DispA_in_DofA_REST  = DofA_REST_H_DofA.CreateSpatialVector();
+    SpatialVector DispA_in_DofA_REST  = DofA_REST_H_DofA_debug.CreateSpatialVector();
+    SpatialVector DispA_in_EltFrame;
+    DispA_in_EltFrame.setAngularVelocity(EltFrame_H_DofA.projectVector( DispA_in_DofA_REST.getAngularVelocity() ) ) ;
+    DispA_in_EltFrame.setLinearVelocity(EltFrame_H_DofA.projectVector( DispA_in_DofA_REST.getLinearVelocity() ) ) ;
+
+
+    Quat DofB_R_EltFrame_REST;
+    DofB_R_EltFrame_REST.fromMatrix(tinfo->restLocalOrientationsInv[1]);
+    Transform EltFrame_H_DofB_REST(tinfo->restLocalPositions[1], DofB_R_EltFrame_REST.inverse());
+    Transform DofB_REST_H_DofB = EltFrame_H_DofB_REST.inversed()*EltFrame_H_DofB;
+   // SpatialVector DispB_in_DofB_REST  = DofB_REST_H_DofB.CreateSpatialVector();
+    SpatialVector DispB_in_DofB_REST  = DofB_REST_H_DofB_debug.CreateSpatialVector();
+    SpatialVector DispB_in_EltFrame;
+    DispB_in_EltFrame.setAngularVelocity(EltFrame_H_DofB.projectVector( DispB_in_DofB_REST.getAngularVelocity() ) ) ;
+    DispB_in_EltFrame.setLinearVelocity(EltFrame_H_DofB.projectVector( DispB_in_DofB_REST.getLinearVelocity() ) ) ;
+
+
+    Quat DofC_R_EltFrame_REST;
+    DofC_R_EltFrame_REST.fromMatrix(tinfo->restLocalOrientationsInv[2]);
+    Transform EltFrame_H_DofC_REST(tinfo->restLocalPositions[2], DofC_R_EltFrame_REST.inverse());
+    Transform DofC_REST_H_DofC = EltFrame_H_DofC_REST.inversed()*EltFrame_H_DofC;
+    //SpatialVector DispC_in_DofC_REST  = DofC_REST_H_DofC.CreateSpatialVector();
+    SpatialVector DispC_in_DofC_REST  = DofC_REST_H_DofC_debug.CreateSpatialVector();
+    SpatialVector DispC_in_EltFrame;
+    DispC_in_EltFrame.setAngularVelocity(EltFrame_H_DofC.projectVector( DispC_in_DofC_REST.getAngularVelocity() ) ) ;
+    DispC_in_EltFrame.setLinearVelocity(EltFrame_H_DofC.projectVector( DispC_in_DofC_REST.getLinearVelocity() ) ) ;
+
+
+
+
+    // InPLANE
+
+    Displacement DispBuf=Disp;
+
+    // inPlane => translation along X and  Y
+    Disp[0] = DispA_in_EltFrame.getLinearVelocity()[0];
+    Disp[1] = DispA_in_EltFrame.getLinearVelocity()[1];
+    Disp[3] = DispB_in_EltFrame.getLinearVelocity()[0];
+    Disp[4] = DispB_in_EltFrame.getLinearVelocity()[1];
+    Disp[6] = DispC_in_EltFrame.getLinearVelocity()[0];
+    Disp[7] = DispC_in_EltFrame.getLinearVelocity()[1];
+
+    // bending => translation along Z
+    Disp[2] = DispA_in_EltFrame.getAngularVelocity()[2];
+    Disp[5] = DispB_in_EltFrame.getAngularVelocity()[2];
+    Disp[8] = DispC_in_EltFrame.getAngularVelocity()[2];
+
+
+    Vec3 DispA_world = world_H_EltFrame.projectVector(Vec3(Disp[0],Disp[1],0));
+    Vec3 DispB_world = world_H_EltFrame.projectVector(Vec3(Disp[3],Disp[4],0));
+    Vec3 DispC_world = world_H_EltFrame.projectVector(Vec3(Disp[6],Disp[7],0));
+*/
+
+    StrainDisplacement J;
+    Vec3 GP(1.0/3.0, 1.0/3.0, 1.0/3.0);
+    Mat2x2 gradient;
+
+    this->computeInPlaneDisplacementGradient(gradient, Disp, GP, (*tinfo) );
+
+    // gradient Pos = gradient(U) + I
+    gradient[0][0]+=1;
+    gradient[1][1]+=1;
+
+    // get the rotation
+    Mat2x2 R;
+    helper::Decompose<Real>::polarDecomposition(gradient, R);
+    R.transpose();
+
+    // modification of the local displacement
+    Vec2 DispA_new = R * Vec2(Disp[0],Disp[1]);
+    Vec2 DispB_new = R * Vec2(Disp[3],Disp[4]);
+    Vec2 DispC_new = R * Vec2(Disp[6],Disp[7]);
+    Disp[0] = DispA_new[0]; Disp[1] = DispA_new[1];
+    Disp[3] = DispB_new[0]; Disp[4] = DispB_new[1];
+    Disp[6] = DispC_new[0]; Disp[7] = DispC_new[1];
+
+
+    // modification of the element frame
+    Transformation R3d;
+    R3d[0][0]= R[0][0]; R3d[0][1]= R[0][1]; R3d[1][0]= R[1][0]; R3d[1][1]= R[1][1];
+    R3d[2][2]=1.0;
+    /*Quat newFrame_R_oldFrame;
+    newFrame_R_oldFrame.fromMatrix(R3d);*/
+
+
+    // tinfo->frameOrientationInv = world_R_old
+    // R3d = new_R_old
+    // so modification of tinfo->frameOrientationInv
+    tinfo->frameOrientationInv = tinfo->frameOrientationInv* R3d.transposed();
+
+    // tinfo->frameOrientation = old_R_world
+    // R3d = new_R_old
+    // so modification of tinfo->frameOrientation
+    tinfo->frameOrientation = R3d * tinfo->frameOrientation;
+
+
+
+
+
+
+
+    std::cout<<"\n\n gradient ="<<gradient<<"   Rotation = "<<R<<"\n \n"<<std::endl;
+
+
+
+
+    // Bending (test)
+    BDisp[0] =0;
+    BDisp[1] =0;
+    BDisp[2] =0;
+    BDisp[3] =0;
+    BDisp[4] =0;
+    BDisp[5] =0;
+    BDisp[6] =0;
+    BDisp[7] =0;
+    BDisp[8] =0;
+
+
+
+
+   /* std::cout<<"*********\n \n  EltFrame_H_DofA ="<<EltFrame_H_DofA<<"   EltFrame_H_DofA_REST ="<<EltFrame_H_DofA_REST<<
+               "   DispA_in_DofA_REST ="<<DispA_in_DofA_REST <<
+               "   DispA_in_EltFrame ="<<DispA_in_EltFrame <<" \n \n *********"<<std::endl;
+
+    std::cout<<"*********\n \n  Disp ="<<Disp <<"   DispBuf ="<<DispBuf<<
+               " \n DofA_REST_H_DofA_debug= "<<DofA_REST_H_DofA_debug<<"  DofA_REST_H_DofA="<<DofA_REST_H_DofA<<
+              " \n DofB_REST_H_DofB_debug= "<<DofB_REST_H_DofB_debug<<"  DofB_REST_H_DofB="<<DofB_REST_H_DofB<<
+               " \n DofC_REST_H_DofC_debug= "<<DofC_REST_H_DofC_debug<<"  DofC_REST_H_DofC="<<DofC_REST_H_DofC<<
+               " \n \n *********"<<std::endl;
+*/
 }
+
+
+// ----------------------------------------------------------------------------
+// --- Compute the displacement gradient for in-plane formulation
+// -----------------------------------------------------------------------------
+template <class DataTypes>
+void BezierShellForceField<DataTypes>::computeInPlaneDisplacementGradient(Mat2x2& gradient, const Displacement &UinPlane, const Vec3& GP, const TriangleInformation &tinfo )
+{
+
+    // Directional vectors from corner nodes
+    Vec3 P4P1 = tinfo.pts[3] - tinfo.pts[0];
+    Vec3 P5P1 = tinfo.pts[4] - tinfo.pts[0];
+    Vec3 P6P2 = tinfo.pts[5] - tinfo.pts[1];
+    Vec3 P7P2 = tinfo.pts[6] - tinfo.pts[1];
+    Vec3 P8P3 = tinfo.pts[7] - tinfo.pts[2];
+    Vec3 P9P3 = tinfo.pts[8] - tinfo.pts[2];
+    Vec3 P10P1 = tinfo.pts[9] - tinfo.pts[0];
+    Vec3 P10P2 = tinfo.pts[9] - tinfo.pts[1];
+    Vec3 P10P3 = tinfo.pts[9] - tinfo.pts[2];
+
+#ifndef GAUSS4
+    Vec3 P(1, GP[0], GP[1]);
+
+    Vec3 p; // Barycentric coordinates of the point GP
+    p[0] = tinfo.interpol.line(0)*P;
+    p[1] = tinfo.interpol.line(1)*P;
+    p[2] = tinfo.interpol.line(2)*P;
+
+#else
+    Vec3 p(GP[0], GP[1], 1-GP[0]-GP[1]);
+#endif
+
+    Real b1 = tinfo.interpol(0,1);
+    Real c1 = tinfo.interpol(0,2);
+    Real b2 = tinfo.interpol(1,1);
+    Real c2 = tinfo.interpol(1,2);
+    Real b3 = tinfo.interpol(2,1);
+    Real c3 = tinfo.interpol(2,2);
+
+    Vec3 p2(p[0]*p[0], p[1]*p[1], p[2]*p[2]); // Squares of p
+
+    // Derivatives of powers of p (by x and y)
+    Real DPhi1n3_x= 3.0 * b1 * p2[0];
+    Real DPhi1n2_x= 2.0 * b1 * p[0];
+    Real DPhi1n3_y= 3.0 * c1 * p2[0];
+    Real DPhi1n2_y= 2.0 * c1 * p[0];
+    Real DPhi2n3_x= 3.0 * b2 * p2[1];
+    Real DPhi2n2_x= 2.0 * b2 * p[1];
+    Real DPhi2n3_y= 3.0 * c2 * p2[1];
+    Real DPhi2n2_y= 2.0 * c2 * p[1];
+    Real DPhi3n3_x= 3.0 * b3 * p2[2];
+    Real DPhi3n2_x= 2.0 * b3 * p[2];
+    Real DPhi3n3_y= 3.0 * c3 * p2[2];
+    Real DPhi3n2_y= 2.0 * c3 * p[2];
+
+    Real DPhi123_x = b1*p[1]*p[2] + p[0]*b2*p[2] + p[0]*p[1]*b3;
+    Real DPhi123_y = c1*p[1]*p[2] + p[0]*c2*p[2] + p[0]*p[1]*c3;
+
+    // Derivatives of the U1, U2, U3 parts (with respect to x and y)
+    Real du_dx_U1= DPhi1n3_x + 3.0*p2[0]*b2 + 3.0*DPhi1n2_x*p[1] + 3.0*p2[0]*b3 + 3.0*DPhi1n2_x*p[2] + 2.0*DPhi123_x;
+    Real du_dx_U2= DPhi2n3_x + 3.0*p2[1]*b3 + 3.0*DPhi2n2_x*p[2] + 3.0*p2[1]*b1 + 3.0*DPhi2n2_x*p[0] + 2.0*DPhi123_x;
+    Real du_dx_U3= DPhi3n3_x + 3.0*p2[2]*b1 + 3.0*DPhi3n2_x*p[0] + 3.0*p2[2]*b2 + 3.0*DPhi3n2_x*p[1] + 2.0*DPhi123_x;
+
+    // du_dx  = du_dx_DU1 * dU1 + ...
+
+    Real du_dy_U1= DPhi1n3_y + 3.0*p2[0]*c2 + 3.0*DPhi1n2_y*p[1] + 3.0*p2[0]*c3 + 3.0*DPhi1n2_y*p[2] + 2.0*DPhi123_y;
+    Real du_dy_U2= DPhi2n3_y + 3.0*p2[1]*c3 + 3.0*DPhi2n2_y*p[2] + 3.0*p2[1]*c1 + 3.0*DPhi2n2_y*p[0] + 2.0*DPhi123_y;
+    Real du_dy_U3= DPhi3n3_y + 3.0*p2[2]*c1 + 3.0*DPhi3n2_y*p[0] + 3.0*p2[2]*c2 + 3.0*DPhi3n2_y*p[1] + 2.0*DPhi123_y;
+
+
+    // Derivatives of Theta1..3 parts (with respect to x and y)
+    Real dux_dx_T1= 3.0*DPhi1n2_x*p[1]*P4P1[1] + 3.0*p2[0]*b2*P4P1[1] + 3.0*DPhi1n2_x*p[2]*P5P1[1] + 3.0*p2[0]*b3*P5P1[1] + 2.0*DPhi123_x*P10P1[1];
+    Real duy_dx_T1=-3.0*DPhi1n2_x*p[1]*P4P1[0] - 3.0*p2[0]*b2*P4P1[0] - 3.0*DPhi1n2_x*p[2]*P5P1[0] - 3.0*p2[0]*b3*P5P1[0] - 2.0*DPhi123_x*P10P1[0];
+
+    Real dux_dy_T1= 3.0*DPhi1n2_y*p[1]*P4P1[1] + 3.0*p2[0]*c2*P4P1[1] + 3.0*DPhi1n2_y*p[2]*P5P1[1] + 3.0*p2[0]*c3*P5P1[1] + 2.0*DPhi123_y*P10P1[1];
+    Real duy_dy_T1=-3.0*DPhi1n2_y*p[1]*P4P1[0] - 3.0*p2[0]*c2*P4P1[0] - 3.0*DPhi1n2_y*p[2]*P5P1[0] - 3.0*p2[0]*c3*P5P1[0] - 2.0*DPhi123_y*P10P1[0];
+
+
+    Real dux_dx_T2= 3.0*DPhi2n2_x*p[2]*P6P2[1] + 3.0*p2[1]*b3*P6P2[1] + 3.0*DPhi2n2_x*p[0]*P7P2[1] + 3.0*p2[1]*b1*P7P2[1] + 2.0*DPhi123_x*P10P2[1];
+    Real duy_dx_T2=-3.0*DPhi2n2_x*p[2]*P6P2[0] - 3.0*p2[1]*b3*P6P2[0] - 3.0*DPhi2n2_x*p[0]*P7P2[0] - 3.0*p2[1]*b1*P7P2[0] - 2.0*DPhi123_x*P10P2[0];
+
+    Real dux_dy_T2= 3.0*DPhi2n2_y*p[2]*P6P2[1] + 3.0*p2[1]*c3*P6P2[1] + 3.0*DPhi2n2_y*p[0]*P7P2[1] + 3.0*p2[1]*c1*P7P2[1] + 2.0*DPhi123_y*P10P2[1];
+    Real duy_dy_T2=-3.0*DPhi2n2_y*p[2]*P6P2[0] - 3.0*p2[1]*c3*P6P2[0] - 3.0*DPhi2n2_y*p[0]*P7P2[0] - 3.0*p2[1]*c1*P7P2[0] - 2.0*DPhi123_y*P10P2[0];
+
+
+    Real dux_dx_T3= 3.0*DPhi3n2_x*p[0]*P8P3[1] + 3.0*p2[2]*b1*P8P3[1] + 3.0*DPhi3n2_x*p[1]*P9P3[1] + 3.0*p2[2]*b2*P9P3[1] + 2.0*DPhi123_x*P10P3[1];
+    Real duy_dx_T3=-3.0*DPhi3n2_x*p[0]*P8P3[0] - 3.0*p2[2]*b1*P8P3[0] - 3.0*DPhi3n2_x*p[1]*P9P3[0] - 3.0*p2[2]*b2*P9P3[0] - 2.0*DPhi123_x*P10P3[0];
+
+    Real dux_dy_T3= 3.0*DPhi3n2_y*p[0]*P8P3[1] + 3.0*p2[2]*c1*P8P3[1] + 3.0*DPhi3n2_y*p[1]*P9P3[1] + 3.0*p2[2]*c2*P9P3[1] + 2.0*DPhi123_y*P10P3[1];
+    Real duy_dy_T3=-3.0*DPhi3n2_y*p[0]*P8P3[0] - 3.0*p2[2]*c1*P8P3[0] - 3.0*DPhi3n2_y*p[1]*P9P3[0] - 3.0*p2[2]*c2*P9P3[0] - 2.0*DPhi123_y*P10P3[0];
+
+
+
+
+    // dux/dx
+    gradient[0][0]= du_dx_U1*UinPlane[0] + du_dx_U2*UinPlane[3] + du_dx_U3*UinPlane[6]+ dux_dx_T1*UinPlane[2] + dux_dx_T2 * UinPlane[5] + dux_dx_T3 * UinPlane[8];
+    // dux/dy
+    gradient[0][1]= du_dy_U1*UinPlane[0] + du_dy_U2*UinPlane[3] + du_dy_U3*UinPlane[6]+ dux_dy_T1*UinPlane[2] + dux_dy_T2 * UinPlane[5] + dux_dy_T3 * UinPlane[8];
+    // duy/dx
+    gradient[1][0]= du_dx_U1*UinPlane[1] + du_dx_U2*UinPlane[4] + du_dx_U3*UinPlane[7]+ duy_dx_T1*UinPlane[2] + duy_dx_T2 * UinPlane[5] + duy_dx_T3 * UinPlane[8];
+    // duy/dy
+    gradient[1][1]= du_dy_U1*UinPlane[1] + du_dy_U2*UinPlane[4] + du_dy_U3*UinPlane[7]+ duy_dy_T1*UinPlane[2] + duy_dy_T2 * UinPlane[5] + duy_dy_T3 * UinPlane[8];
+
+
+
+
+
+
+
+}
+
+
 
 // ----------------------------------------------------------------------------
 // --- Compute the strain-displacement matrix for in-plane deformation
 // -----------------------------------------------------------------------------
 template <class DataTypes>
-void BezierShellForceField<DataTypes>::computeStrainDisplacementMatrixMembrane(TriangleInformation &tinfo)
+void BezierShellForceField<DataTypes>:: computeStrainDisplacementMatrixMembrane(TriangleInformation &tinfo)
 {
     // Calculation of the 3 Gauss points
 #ifndef GAUSS4
@@ -891,6 +1173,10 @@ void BezierShellForceField<DataTypes>::matrixSDM(
     J[2][7] = du_dx_U3;
     J[2][8] = -duy_dx_T3 - dux_dy_T3;
 }
+
+
+
+
 
 
 // ------------------------------------------------------------------------------------------------------------
@@ -1245,6 +1531,8 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
     DisplacementBending F_bending;
     computeForceBending(F_bending, D_bending, elementIndex);
 
+
+
     // Transform forces back into global reference frame
     Vec3 fa1 = tinfo->frameOrientationInv * Vec3(F[0], F[1], F_bending[0]);
     Vec3 fa2 = tinfo->frameOrientationInv * Vec3(F_bending[1], F_bending[2], F[2]);
@@ -1254,6 +1542,9 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
 
     Vec3 fc1 = tinfo->frameOrientationInv * Vec3(F[6], F[7], F_bending[6]);
     Vec3 fc2 = tinfo->frameOrientationInv * Vec3(F_bending[7], F_bending[8], F[8]);
+
+    std::cout<<" MatRotation = "<<tinfo->frameOrientationInv<<" \n  F1 = "<<Vec3(F[0], F[1], F_bending[0])<<" fa1="<<fa1<<std::endl;
+    std::cout<<" F2 = "<< Vec3(F[3], F[4], F_bending[3])<<"  fb1="<<fb1<<std::endl;
 
     if (this->f_printLog.getValue()) {
         std::cout << "E: " << elementIndex << "\tu: " << D << "\n\tf: " << F << "\n";
@@ -1410,8 +1701,16 @@ void BezierShellForceField<DataTypes>::convertStiffnessMatrixToGlobalSpace(Stiff
         }
     }
 
+    /*
+    std::cout<<"R18x18 ="<<R18x18<<std::endl;
+    std::cout<<"Rt18x18 ="<<Rt18x18<<std::endl;
+    std::cout<<"K_18x18 ="<<K_18x18<<std::endl;
+    */
     // Then we put the stifness matrix into the global frame
     K_gs = Rt18x18 * K_18x18 * R18x18;
+
+    std::cout<<" K_gs="<<K_gs<<std::endl;
+
 
 }
 
@@ -1434,6 +1733,10 @@ void BezierShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams
 
     double kFactor = mparams->kFactor();
 
+    std::cout<<"***\n kFactor ="<<kFactor<<" \n***"<<std::endl;
+
+
+
     for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
             TriangleInformation *tinfo = &triangleInf[t];
@@ -1441,6 +1744,7 @@ void BezierShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams
 
             convertStiffnessMatrixToGlobalSpace(K_gs, tinfo);
 
+            std::cout<<"ADDK=[";
             // find index of node 1
             for (n1=0; n1<3; n1++)
             {
@@ -1460,11 +1764,16 @@ void BezierShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams
                                             COLUMN = r.offset+6*node2+j;
                                             column = 6*n2+j;
                                             r.matrix->add(ROW, COLUMN, - K_gs[row][column] * kFactor);
+
+                                            std::cout<<" "<<r.matrix->element(ROW, COLUMN);
                                     }
                             }
+                            std::cout<<" ; "<<std::endl;
                     }
             }
+            std::cout<<"];"<<std::endl;
     }
+
 
     #ifdef PRINT
     std::cout << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" << std::endl;

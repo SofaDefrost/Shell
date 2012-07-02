@@ -96,6 +96,9 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
         typedef sofa::core::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
 
+        typedef typename sofa::defaulttype::SolidTypes<Real>::Transform Transform;
+        typedef typename sofa::defaulttype::SolidTypes<Real>::SpatialVector SpatialVector;
+
     protected:
 
         // Displacement vector for in-plane forces:
@@ -111,6 +114,9 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Mat<9, 9, Real> StiffnessMatrix;
         typedef Mat<9, 9, Real> StiffnessMatrixBending;
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
+        typedef Mat<4, 9, Real> GradDisplacement;
+        typedef Mat<2,2,Real> Mat2x2;
+
 
         sofa::core::topology::BaseMeshTopology* _topology;
         sofa::core::topology::BaseMeshTopology* _topologyTarget;
@@ -140,7 +146,7 @@ public:
 
                 // Corotational frame
                 Vec3 frameCenter;
-                Transformation frameOrientation;    // frame orientation
+                Transformation frameOrientation;    // frame orientation    *
                 Transformation frameOrientationInv; // it's inverse (transposition)
 #ifdef CRQUAT
                 Quat frameOrientationQ;             // representation as quaternion
@@ -284,6 +290,9 @@ protected :
         // Strain-displacement matrices
         void matrixSDM(StrainDisplacement &J, const Vec3 &GP, const TriangleInformation& tinfo);
         void matrixSDB(StrainDisplacementBending &J, const Vec3 &GP, const TriangleInformation& tinfo);
+
+        // inPlane Gradient
+        void computeInPlaneDisplacementGradient(Mat2x2& gradient, const Displacement &UinPlane, const Vec3& GP, const TriangleInformation &tinfo );
 
         /// f += Kx where K is the stiffness matrix and x a displacement
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
