@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<Node name="root" dt="0.02" gravity="0 0 0">
+
+    <VisualStyle displayFlags="showVisualModels" />
+
+    <Node name="Mesh">
+        <RegularGrid name="gridTopo" min="-5 -5 0" max="5 5 0" nx="11" ny="11" nz="1"/>
+        <TriangleSetTopologyContainer name="trianglesTopo"/>
+        <TriangleSetTopologyModifier />
+        <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
+    </Node>
+
+    <Node name="triangles">
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
+        <CGLinearSolver iterations="20" tolerance="1e-15" threshold="1e-15"/>
+        <!--
+        <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
+        <CGLinearSolver template="FullMatrix" iterations="200" tolerance="1e-15" threshold="1e-15"/>
+        <SparseLUSolver />
+        <SparseLDLSolver />
+        -->
+
+        <TriangleSetTopologyContainer name="tri" src="@/Mesh/trianglesTopo" />
+        <MechanicalObject name="MO" template="Rigid" />
+        <UniformMass showAxisSizeFactor="0.2" totalmass="1" />
+
+        <Node name="bezierNodes">
+            <PointSetTopologyContainer template="Vec3d" name="BezierPoints" />
+            <Mesh2PointTopologicalMapping input="@../tri" output="@BezierPoints"
+                pointBaryCoords="0 0 0" edgeBaryCoords="0.333 0.6666 0    0.6666 0.3333 0"  triangleBaryCoords="0.3333 0.3333 0" />
+            <BezierShellInterpolation template="Rigid" name="bsInterp" />
+        </Node>
+        <!--
+        -->
+
+        <Node name="FF">
+
+            <BoxROI name="box1" box="-5.0001 -5.0001 -0.0001 -4.9999 -4.9999 0.0001" drawBoxes="true" />
+            <BoxROI name="box2" box="4.9999 -5.0001 -0.0001 5.0001 -4.9999 0.0001" drawBoxes="true" />
+            <BoxROI name="box3" box="-0.0001 4.9999 -0.0001 0.0001 5.0001 0.0001" drawBoxes="true" />
+
+            <FixedConstraint indices="@box1.indices"/>
+            <FixedConstraint indices="@box2.indices"/>
+            <ConstantForceField points="@box3.indices" forces="0 5000 0 0 0 0"/>
+
+            <!--
+                -->
+            <BezierShellForceField
+                youngModulus="1.092e6" poissonRatio="0.33" thickness="0.01"
+                polarMaxIters="20" polarMinTheta="1e-6"
+                bsInterpolation="@../bezierNodes/bsInterp" printLog="false" />
+
+            <!--
+            <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.33" thickness="0.01"/>
+            <BezierTriangularBendingFEMForceField name="FEM" youngModulus="1.092e6" poissonRatio="0.33" thickness="0.01" />
+            -->
+
+        </Node>
+
+        <Node>
+            <OglModel name="Visual" color="red"/>
+            <IdentityMapping input="@.." output="@Visual"/>
+        </Node>
+
+    </Node>
+</Node>
+
