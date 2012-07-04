@@ -83,6 +83,7 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Vec<3,Real> Vec3;
         typedef Vec<2,Real> Vec2;
 
+        typedef Mat<2,2,Real> Mat22;
         typedef Mat<3,3,Real> Mat33;
 
         typedef helper::Quater<Real> Quat;
@@ -101,7 +102,7 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
 
     protected:
 
-        // Displacement vector for in-plane forces:
+        // Displacement vectorshfor in-plane forces:
         //  [ U1x, U1y, dT1z, U2x, U2y, dT2z, U3x, U3y, dT3z ]
         typedef Vec<9, Real> Displacement;
         // Displacement vector for bending forces:
@@ -114,8 +115,7 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Mat<9, 9, Real> StiffnessMatrix;
         typedef Mat<9, 9, Real> StiffnessMatrixBending;
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
-        typedef Mat<4, 9, Real> GradDisplacement;
-        typedef Mat<2,2,Real> Mat2x2;
+        typedef Mat<4, 6, Real> GradDisplacement;
 
 
         sofa::core::topology::BaseMeshTopology* _topology;
@@ -151,6 +151,9 @@ public:
 #ifdef CRQUAT
                 Quat frameOrientationQ;             // representation as quaternion
 #endif
+
+                // Matrix for computing displacement gradient
+                GradDisplacement gradU;
 
                 // Matrix of interpolation functions
                 // NOTE: we might need to always use double here, with
@@ -235,6 +238,8 @@ public:
         Data<Real> f_poisson;
         Data<Real> f_young;
         Data <Real> f_thickness;
+        Data<unsigned int> f_polarMaxIters;
+        Data<Real> f_polarMinTheta;
 
         // Allow transition between rest shapes
         SingleLink<BezierShellForceField<DataTypes>,
@@ -273,11 +278,12 @@ protected :
         MaterialStiffness materialMatrix;
         MaterialStiffness materialMatrixBending;
 
+        Real polarMinSinTheta;
 
         void initTriangleOnce(const int i, const Index&a, const Index&b, const Index&c);
         void initTriangle(const int i);
 
-        void computeLocalTriangle(const VecCoord &x, const Index elementIndex);
+        void computeLocalTriangle(const Index elementIndex);
 
         void computeDisplacements( Displacement &Disp, DisplacementBending &BDisp, const VecCoord &x, TriangleInformation *tinfo);
         void computeStrainDisplacementMatrixMembrane(TriangleInformation &tinfo);
@@ -292,7 +298,10 @@ protected :
         void matrixSDB(StrainDisplacementBending &J, const Vec3 &GP, const TriangleInformation& tinfo);
 
         // inPlane Gradient
-        void computeInPlaneDisplacementGradient(Mat2x2& gradient, const Displacement &UinPlane, const Vec3& GP, const TriangleInformation &tinfo );
+        void computeInPlaneDisplacementGradient(GradDisplacement& gradU, const Vec3& GP, const TriangleInformation &tinfo);
+
+        // Use polar decomposition to fix inPlane rotation
+        void fixFramePolar(const Displacement &Disp, Mat22 &R, TriangleInformation &tinfo);
 
         /// f += Kx where K is the stiffness matrix and x a displacement
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);

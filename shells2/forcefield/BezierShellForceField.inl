@@ -112,6 +112,8 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 : f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson's ratio in Hooke's law"))
 , f_young(initData(&f_young,(Real)3000.,"youngModulus","Young's modulus in Hooke's law"))
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
+, f_polarMaxIters(initData(&f_polarMaxIters, 20U, "polarMaxIters", "Use this number of polar decomposition iterations to fix the corotational frames. We suggest at least 1 iteration."))
+, f_polarMinTheta(initData(&f_polarMinTheta, (Real)1e-6, "polarMinTheta", "Stop if the angle change by polar decomposition is smaller than the value"))
 , restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
 , mapTopology(false)
 , topologyMapper(initLink("topologyMapper","Component supplying different topology for the rest shape"))
@@ -167,6 +169,8 @@ void BezierShellForceField<DataTypes>::init()
 template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
 {
     _topology = this->getContext()->getMeshTopology();
+
+    polarMinSinTheta = sin(f_polarMinTheta.getValue());
 
     if (_topology->getNbTriangles()==0)
     {
@@ -278,7 +282,10 @@ void BezierShellForceField<DataTypes>::initTriangle(const int i)
     this->interpolateRefFrame(tinfo, Vec2(1.0/3.0,1.0/3.0));
 
     // Compute positions in local frame
-    computeLocalTriangle(x0, i);
+    computeLocalTriangle(i);
+
+    Vec3 GP(1.0/3.0, 1.0/3.0, 1.0/3.0);
+    computeInPlaneDisplacementGradient(tinfo->gradU, GP, *tinfo);
 
     // Initial positions
     tinfo->restLocalPositions[0] = tinfo->frameOrientation * (x0[a0].getCenter() - tinfo->frameCenter);
@@ -607,7 +614,7 @@ void BezierShellForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeri
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierShellForceField<DataTypes>::computeLocalTriangle(
-    const VecCoord &/*x*/, const Index elementIndex)
+    const Index elementIndex)
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
@@ -811,58 +818,6 @@ void BezierShellForceField<DataTypes>::computeDisplacements( Displacement &Disp,
     Vec3 DispC_world = world_H_EltFrame.projectVector(Vec3(Disp[6],Disp[7],0));
 */
 
-    StrainDisplacement J;
-    Vec3 GP(1.0/3.0, 1.0/3.0, 1.0/3.0);
-    Mat2x2 gradient;
-
-    this->computeInPlaneDisplacementGradient(gradient, Disp, GP, (*tinfo) );
-
-    // gradient Pos = gradient(U) + I
-    gradient[0][0]+=1;
-    gradient[1][1]+=1;
-
-    // get the rotation
-    Mat2x2 R;
-    helper::Decompose<Real>::polarDecomposition(gradient, R);
-    R.transpose();
-
-    // modification of the local displacement
-    Vec2 DispA_new = R * Vec2(Disp[0],Disp[1]);
-    Vec2 DispB_new = R * Vec2(Disp[3],Disp[4]);
-    Vec2 DispC_new = R * Vec2(Disp[6],Disp[7]);
-    Disp[0] = DispA_new[0]; Disp[1] = DispA_new[1];
-    Disp[3] = DispB_new[0]; Disp[4] = DispB_new[1];
-    Disp[6] = DispC_new[0]; Disp[7] = DispC_new[1];
-
-
-    // modification of the element frame
-    Transformation R3d;
-    R3d[0][0]= R[0][0]; R3d[0][1]= R[0][1]; R3d[1][0]= R[1][0]; R3d[1][1]= R[1][1];
-    R3d[2][2]=1.0;
-    /*Quat newFrame_R_oldFrame;
-    newFrame_R_oldFrame.fromMatrix(R3d);*/
-
-
-    // tinfo->frameOrientationInv = world_R_old
-    // R3d = new_R_old
-    // so modification of tinfo->frameOrientationInv
-    tinfo->frameOrientationInv = tinfo->frameOrientationInv* R3d.transposed();
-
-    // tinfo->frameOrientation = old_R_world
-    // R3d = new_R_old
-    // so modification of tinfo->frameOrientation
-    tinfo->frameOrientation = R3d * tinfo->frameOrientation;
-
-
-
-
-
-
-
-    std::cout<<"\n\n gradient ="<<gradient<<"   Rotation = "<<R<<"\n \n"<<std::endl;
-
-
-
 
     // Bending (test)
     BDisp[0] =0;
@@ -895,7 +850,7 @@ void BezierShellForceField<DataTypes>::computeDisplacements( Displacement &Disp,
 // --- Compute the displacement gradient for in-plane formulation
 // -----------------------------------------------------------------------------
 template <class DataTypes>
-void BezierShellForceField<DataTypes>::computeInPlaneDisplacementGradient(Mat2x2& gradient, const Displacement &UinPlane, const Vec3& GP, const TriangleInformation &tinfo )
+void BezierShellForceField<DataTypes>::computeInPlaneDisplacementGradient(GradDisplacement& gradU, const Vec3& GP, const TriangleInformation &tinfo )
 {
 
     // Directional vectors from corner nodes
@@ -980,26 +935,87 @@ void BezierShellForceField<DataTypes>::computeInPlaneDisplacementGradient(Mat2x2
     Real dux_dy_T3= 3.0*DPhi3n2_y*p[0]*P8P3[1] + 3.0*p2[2]*c1*P8P3[1] + 3.0*DPhi3n2_y*p[1]*P9P3[1] + 3.0*p2[2]*c2*P9P3[1] + 2.0*DPhi123_y*P10P3[1];
     Real duy_dy_T3=-3.0*DPhi3n2_y*p[0]*P8P3[0] - 3.0*p2[2]*c1*P8P3[0] - 3.0*DPhi3n2_y*p[1]*P9P3[0] - 3.0*p2[2]*c2*P9P3[0] - 2.0*DPhi123_y*P10P3[0];
 
-
-
-
     // dux/dx
-    gradient[0][0]= du_dx_U1*UinPlane[0] + du_dx_U2*UinPlane[3] + du_dx_U3*UinPlane[6]+ dux_dx_T1*UinPlane[2] + dux_dx_T2 * UinPlane[5] + dux_dx_T3 * UinPlane[8];
+    gradU[0][0] = du_dx_U1;
+    gradU[0][1] = du_dx_U2;
+    gradU[0][2] = du_dx_U3;
+    gradU[0][3] = dux_dx_T1;
+    gradU[0][4] = dux_dx_T2;
+    gradU[0][5] = dux_dx_T3;
     // dux/dy
-    gradient[0][1]= du_dy_U1*UinPlane[0] + du_dy_U2*UinPlane[3] + du_dy_U3*UinPlane[6]+ dux_dy_T1*UinPlane[2] + dux_dy_T2 * UinPlane[5] + dux_dy_T3 * UinPlane[8];
+    gradU[1][0] = du_dy_U1;
+    gradU[1][1] = du_dy_U2;
+    gradU[1][2] = du_dy_U3;
+    gradU[1][3] = dux_dy_T1;
+    gradU[1][4] = dux_dy_T2;
+    gradU[1][5] = dux_dy_T3;
     // duy/dx
-    gradient[1][0]= du_dx_U1*UinPlane[1] + du_dx_U2*UinPlane[4] + du_dx_U3*UinPlane[7]+ duy_dx_T1*UinPlane[2] + duy_dx_T2 * UinPlane[5] + duy_dx_T3 * UinPlane[8];
+    gradU[2][0] = du_dx_U1;
+    gradU[2][1] = du_dx_U2;
+    gradU[2][2] = du_dx_U3;
+    gradU[2][3] = duy_dx_T1;
+    gradU[2][4] = duy_dx_T2;
+    gradU[2][5] = duy_dx_T3;
     // duy/dy
-    gradient[1][1]= du_dy_U1*UinPlane[1] + du_dy_U2*UinPlane[4] + du_dy_U3*UinPlane[7]+ duy_dy_T1*UinPlane[2] + duy_dy_T2 * UinPlane[5] + duy_dy_T3 * UinPlane[8];
-
-
-
-
-
-
-
+    gradU[3][0] = du_dy_U1;
+    gradU[3][1] = du_dy_U2;
+    gradU[3][2] = du_dy_U3;
+    gradU[3][3] = duy_dy_T1;
+    gradU[3][4] = duy_dy_T2;
+    gradU[3][5] = duy_dy_T3;
 }
 
+template <class DataTypes>
+void BezierShellForceField<DataTypes>::fixFramePolar(const Displacement &Disp, Mat22 &R, TriangleInformation &tinfo)
+{
+
+    //Vec3 GP(1.0/3.0, 1.0/3.0, 1.0/3.0);
+    //computeInPlaneDisplacementGradient(tinfo->gradU, GP, *tinfo);
+
+    Mat22 gradient;
+    // dux/dx
+    gradient[0][0] = tinfo.gradU[0] * Vec<6,Real>(Disp[0], Disp[3], Disp[6], Disp[2], Disp[5], Disp[8]);
+    // dux/dy
+    gradient[0][1] = tinfo.gradU[1] * Vec<6,Real>(Disp[0], Disp[3], Disp[6], Disp[2], Disp[5], Disp[8]);
+    // duy/dx
+    gradient[1][0] = tinfo.gradU[2] * Vec<6,Real>(Disp[1], Disp[4], Disp[7], Disp[2], Disp[5], Disp[8]);
+    // duy/dy
+    gradient[1][1] = tinfo.gradU[3] * Vec<6,Real>(Disp[1], Disp[4], Disp[7], Disp[2], Disp[5], Disp[8]);
+
+
+    // gradient Pos = gradient(U) + I
+    gradient[0][0]+=1;
+    gradient[1][1]+=1;
+
+    // get the rotation
+    R.clear();
+    helper::Decompose<Real>::polarDecomposition(gradient, R);
+
+    //std::cout<<"gradient = " << gradient << "   Rotation = " << R << "\n";
+
+    // Create 3D rotation matrix from 2D, transposing the matrix for inverse rotation.
+    Transformation R3d;
+    R3d[0][0]= R[0][0]; R3d[0][1]= R[1][0];
+    R3d[1][0]= R[0][1]; R3d[1][1]= R[1][1];
+    R3d[2][2]=1.0;
+    /*Quat newFrame_R_oldFrame;
+    newFrame_R_oldFrame.fromMatrix(R3d);*/
+
+    // Modification of the element frame
+
+    // tinfo.frameOrientationInv = world_R_old
+    // R3d = new_R_old
+    // so modification of tinfo.frameOrientationInv
+    tinfo.frameOrientationInv = tinfo.frameOrientationInv* R3d.transposed();
+
+    // tinfo.frameOrientation = old_R_world
+    // R3d = new_R_old
+    // so modification of tinfo.frameOrientation
+    tinfo.frameOrientation = R3d * tinfo.frameOrientation;
+
+    // Update node position in local frame
+    computeLocalTriangle(tinfo.elementID);
+}
 
 
 // ----------------------------------------------------------------------------
@@ -1516,12 +1532,25 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
     // and world frames (co-rotational method)
     interpolateRefFrame(tinfo, Vec2(1.0/3.0, 1.0/3.0));
 
-    computeLocalTriangle(x, elementIndex);
+    computeLocalTriangle(elementIndex);
 
     // Compute in-plane and bending displacements in the triangle's frame
     Displacement D;
     DisplacementBending D_bending;
     computeDisplacements(D, D_bending, x, tinfo);
+
+    // Use polar decomposition to fix the frame (inPlane)
+    Mat22 R;
+    for (unsigned int i=0; i<f_polarMaxIters.getValue(); i++)
+    {
+        fixFramePolar(D, R, *tinfo);
+        computeDisplacements(D, D_bending, x, tinfo);
+        // Stop if sin(θ) of the rotation angle θ is too small
+        if (helper::rabs(R[0][1]) < polarMinSinTheta) {
+            std::cout << "Stop after " << i << " iteration(s).\n";
+            break;
+        }
+    }
 
     // Compute in-plane forces on this element (in the co-rotational space)
     Displacement F;
@@ -1542,9 +1571,6 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
 
     Vec3 fc1 = tinfo->frameOrientationInv * Vec3(F[6], F[7], F_bending[6]);
     Vec3 fc2 = tinfo->frameOrientationInv * Vec3(F_bending[7], F_bending[8], F[8]);
-
-    std::cout<<" MatRotation = "<<tinfo->frameOrientationInv<<" \n  F1 = "<<Vec3(F[0], F[1], F_bending[0])<<" fa1="<<fa1<<std::endl;
-    std::cout<<" F2 = "<< Vec3(F[3], F[4], F_bending[3])<<"  fb1="<<fb1<<std::endl;
 
     if (this->f_printLog.getValue()) {
         std::cout << "E: " << elementIndex << "\tu: " << D << "\n\tf: " << F << "\n";
