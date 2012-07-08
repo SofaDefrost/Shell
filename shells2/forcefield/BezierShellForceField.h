@@ -280,10 +280,12 @@ protected :
 
         Real polarMinSinTheta;
 
+        //unsigned int pditers;
+
         void initTriangleOnce(const int i, const Index&a, const Index&b, const Index&c);
         void initTriangle(const int i);
 
-        void computeLocalTriangle(const Index elementIndex);
+        void computeLocalTriangle(const Index elementIndex, bool bFast);
 
         void computeDisplacements( Displacement &Disp, DisplacementBending &BDisp, const VecCoord &x, TriangleInformation *tinfo);
         void computeStrainDisplacementMatrixMembrane(TriangleInformation &tinfo);

@@ -112,7 +112,7 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 : f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson's ratio in Hooke's law"))
 , f_young(initData(&f_young,(Real)3000.,"youngModulus","Young's modulus in Hooke's law"))
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
-, f_polarMaxIters(initData(&f_polarMaxIters, 20U, "polarMaxIters", "Use this number of polar decomposition iterations to fix the corotational frames. We suggest at least 1 iteration."))
+, f_polarMaxIters(initData(&f_polarMaxIters, 5U, "polarMaxIters", "Use this number of polar decomposition iterations to fix the corotational frames. We suggest at least 1 iteration."))
 , f_polarMinTheta(initData(&f_polarMinTheta, (Real)1e-6, "polarMinTheta", "Stop if the angle change by polar decomposition is smaller than the value"))
 , restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
 , mapTopology(false)
@@ -282,7 +282,7 @@ void BezierShellForceField<DataTypes>::initTriangle(const int i)
     this->interpolateRefFrame(tinfo, Vec2(1.0/3.0,1.0/3.0));
 
     // Compute positions in local frame
-    computeLocalTriangle(i);
+    computeLocalTriangle(i, false);
 
     Vec3 GP(1.0/3.0, 1.0/3.0, 1.0/3.0);
     computeInPlaneDisplacementGradient(tinfo->gradU, GP, *tinfo);
@@ -611,10 +611,12 @@ void BezierShellForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeri
 
 // -----------------------------------------------------------------------------
 // --- Compute all nodes of the Bézier triangle in local frame
+// ---
+// --- If @bFast is false only local position of the corer nodes is computed.
 // -----------------------------------------------------------------------------
 template <class DataTypes>
 void BezierShellForceField<DataTypes>::computeLocalTriangle(
-    const Index elementIndex)
+    const Index elementIndex, bool bFast)
 {
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
@@ -629,7 +631,7 @@ void BezierShellForceField<DataTypes>::computeLocalTriangle(
 
     //// Rotate the already computed nodes
     //sout << "QFrame: " << tinfo->frame.getOrientation() << sendl;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < (bFast ? 3 : 10); i++) {
 #ifdef CRQUAT
         pts[i] = tinfo->frameOrientationQ.rotate(bn[i] - tinfo->frameCenter);
 #else
@@ -637,6 +639,7 @@ void BezierShellForceField<DataTypes>::computeLocalTriangle(
 #endif
     }
 
+    if (bFast) return;
 
     // TODO: this is no longer correct, or is it? (the nodes of the shell don't
     // lie on the plane of reference frame and have non-zero z-coordinate)
@@ -819,20 +822,6 @@ void BezierShellForceField<DataTypes>::computeDisplacements( Displacement &Disp,
 */
 
 
-    // Bending (test)
-    BDisp[0] =0;
-    BDisp[1] =0;
-    BDisp[2] =0;
-    BDisp[3] =0;
-    BDisp[4] =0;
-    BDisp[5] =0;
-    BDisp[6] =0;
-    BDisp[7] =0;
-    BDisp[8] =0;
-
-
-
-
    /* std::cout<<"*********\n \n  EltFrame_H_DofA ="<<EltFrame_H_DofA<<"   EltFrame_H_DofA_REST ="<<EltFrame_H_DofA_REST<<
                "   DispA_in_DofA_REST ="<<DispA_in_DofA_REST <<
                "   DispA_in_EltFrame ="<<DispA_in_EltFrame <<" \n \n *********"<<std::endl;
@@ -993,13 +982,59 @@ void BezierShellForceField<DataTypes>::fixFramePolar(const Displacement &Disp, M
 
     //std::cout<<"gradient = " << gradient << "   Rotation = " << R << "\n";
 
+    //
+    // Scale the angle of rotation down because the polar decomposition tends
+    // to "overshoot" the best rotation.
+    //
+    Real theta;
+    //Real theta2;
+    if (R[0][0] >= 0.0)
+    {
+        if (R[1][0] >= 0.0)
+        {
+            theta = acos(R[0][0]);
+            //theta2 = asin(R[1][0]);
+        }
+        else
+        {
+            theta = - acos(R[0][0]);
+            //theta2 = asin(R[1][0]);
+        }
+    }
+    else
+    {
+        if (R[1][0] >= 0.0)
+        {
+            theta = acos(R[0][0]);
+            //theta2 = M_PI - asin(R[1][0]);
+        }
+        else
+        {
+            theta = - acos(R[0][0]);
+            //theta2 = M_PI - asin(R[1][0]);
+        }
+    }
+
+    //if (abs(theta - theta2) > 1e-10)
+    //std::cout <<  "θ: "<< theta << "    " << theta2 << "\n";
+
+    // The Magical Constant
+    theta *= 0.61;
+
+    Mat22 R2;
+    R2[0][0] = R2[1][1] = cos(theta);
+    R2[1][0] = sin(theta);
+    R2[0][1] = - R2[1][0];
+
+
     // Create 3D rotation matrix from 2D, transposing the matrix for inverse rotation.
     Transformation R3d;
-    R3d[0][0]= R[0][0]; R3d[0][1]= R[1][0];
-    R3d[1][0]= R[0][1]; R3d[1][1]= R[1][1];
+    R3d[0][0]= R2[0][0]; R3d[0][1]= R2[1][0];
+    R3d[1][0]= R2[0][1]; R3d[1][1]= R2[1][1];
     R3d[2][2]=1.0;
     /*Quat newFrame_R_oldFrame;
     newFrame_R_oldFrame.fromMatrix(R3d);*/
+
 
     // Modification of the element frame
 
@@ -1014,7 +1049,7 @@ void BezierShellForceField<DataTypes>::fixFramePolar(const Displacement &Disp, M
     tinfo.frameOrientation = R3d * tinfo.frameOrientation;
 
     // Update node position in local frame
-    computeLocalTriangle(tinfo.elementID);
+    computeLocalTriangle(tinfo.elementID, true);
 }
 
 
@@ -1532,7 +1567,7 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
     // and world frames (co-rotational method)
     interpolateRefFrame(tinfo, Vec2(1.0/3.0, 1.0/3.0));
 
-    computeLocalTriangle(elementIndex);
+    computeLocalTriangle(elementIndex, true);
 
     // Compute in-plane and bending displacements in the triangle's frame
     Displacement D;
@@ -1541,16 +1576,27 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
 
     // Use polar decomposition to fix the frame (inPlane)
     Mat22 R;
+    //bool bStop = false;
     for (unsigned int i=0; i<f_polarMaxIters.getValue(); i++)
     {
         fixFramePolar(D, R, *tinfo);
         computeDisplacements(D, D_bending, x, tinfo);
         // Stop if sin(θ) of the rotation angle θ is too small
         if (helper::rabs(R[0][1]) < polarMinSinTheta) {
-            std::cout << "Stop after " << i << " iteration(s).\n";
+            //std::cout << "Stop after " << i+1 << " iteration(s).\n";
+            //pditers -= f_polarMaxIters.getValue() - (i+1);
+            //bStop = true;
             break;
         }
     }
+    //pditers += f_polarMaxIters.getValue();
+
+    //if (!bStop && f_polarMaxIters.getValue() > 0)
+    //    std::cerr << ".";
+    //    std::cout << elementIndex << "\n";
+
+    // TODO: is this necessary?
+    computeLocalTriangle(elementIndex, false);
 
     // Compute in-plane forces on this element (in the co-rotational space)
     Displacement F;
@@ -1614,6 +1660,8 @@ void BezierShellForceField<DataTypes>::addForce(const sofa::core::MechanicalPara
     {
         accumulateForce(f, p, i);
     }
+    //std::cout << "Avg pdi: " << (Real)pditers/nbTriangles << "\n";
+    //pditers = 0;
 
     dataF.endEdit();
 
