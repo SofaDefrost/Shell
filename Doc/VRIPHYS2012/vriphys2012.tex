@@ -1,5 +1,5 @@
 \documentclass{egpubl}
-\usepackage{sca2012}
+\usepackage{vriphys2012}
 
 % --- for  Annual CONFERENCE
 % \ConferenceSubmission % uncomment for Conference submission
@@ -23,7 +23,7 @@
 % ------------------------------------------------------------------------
 
 % for including postscript figures
-% mind: package option 'draft' will replace PS figure by a filname within a frame
+% mind: package option 'draft' will replace PS figure by a filename within a frame
 \ifpdf \usepackage[pdftex]{graphicx} \pdfcompresslevel=9
 \else \usepackage[dvips]{graphicx} \fi
 
@@ -568,55 +568,6 @@ computation speed
 
 
 
-%Long captions should be set as in Figure~\ref{fig:ex1}.
-%
-%\begin{figure}[htb]
-%   % an empty figure just consisting of the caption lines
-%   \caption{\label{fig:ex1}
-%     'Empty' figure only to serve as an example of long caption requiring 
-%     more than one line. It is not typed centered but aligned on both sides.}
-%\end{figure}
-%
-%All graphics should be centered.
-%
-%%%
-%%% Figure 1
-%%%
-%\begin{figure}[htb]
-%  \centering
-%  % the following command controls the width of the embedded PS file
-%  % (relative to the width of the current column)
-%  \includegraphics[width=.8\linewidth]{sampleFig}
-%  % replacing the above command with the one below will explicitly set
-%  % the bounding box of the PS figure to the rectangle (xl,yl),(xh,yh).
-%  % It will also prevent LaTeX from reading the PS file to determine
-%  % the bounding box (i.e., it will speed up the compilation process)
-%  % \includegraphics[width=.95\linewidth, bb=39 696 126 756]{sampleFig}
-%  %
-%  \parbox[t]{.9\columnwidth}{\relax
-%           For all figures please keep in mind that you \textbf{must not}
-%           use images with transparent background! 
-%           }
-%  %
-%  \caption{\label{fig:firstExample}
-%           Here is a sample figure.}
-%\end{figure}
-
-%If your paper includes images, it is very important that they are of
-%sufficient resolution to be faithfully reproduced.
-%
-%To determine the optimum size (width and height) of an image, measure
-%the image's size as it appears in your document (in millimeters), and
-%then multiply those two values by 12. The resulting values are the
-%optimum $x$ and $y$ resolution, in pixels, of the image. Image quality
-%will suffer if these guidelines are not followed.
-%
-%Example 1: 
-%%
-%An image measures 50\,mm by 75\,mm when placed in a document. This
-%image should have a resolution of no less than 600 pixels by 900
-%pixels in order to be reproduced faithfully.
-
 %%------------------------------------------------------------------------
 %\subsection{Copyright forms}
 %
@@ -626,11 +577,9 @@ computation speed
 
 %-------------------------------------------------------------------------
 
-%-------------------------------------------------------------------------
-
 %\bibliographystyle{eg-alpha}
 \bibliographystyle{eg-alpha-doi}
 
-\bibliography{sca2012.bib}
+\bibliography{vriphys2012.bib}
 
 \end{document}

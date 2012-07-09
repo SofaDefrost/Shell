@@ -5,9 +5,9 @@
 # Rtargets is timestamp file used to prevent R based images from rebuilding all
 # the time
 
-FILE:=sca2012
+FILE:=vriphys2012
 SUBFILES:=
-BIBFILE:=sca2012
+BIBFILE:=vriphys2012
 
 
 TMPDIR=tmp
