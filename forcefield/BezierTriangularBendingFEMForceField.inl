@@ -1317,6 +1317,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
     DisplacementBending F_bending;
     computeForceBending(F_bending, D_bending, elementIndex);
 
+
+
     // Transform forces back into global reference frame
     Vec3 fa1 = tinfo->frameOrientationInv * Vec3(F[0], F[1], F_bending[0]);
     Vec3 fa2 = tinfo->frameOrientationInv * Vec3(F_bending[1], F_bending[2], F[2]);

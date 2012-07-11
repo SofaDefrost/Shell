@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <Node name="root" dt="0.02" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
     <CollisionPipeline verbose="0" />
     <BruteForceDetection name="N2" />
@@ -6,9 +7,8 @@
     <CollisionGroup />
 
     <Node name="Rest_position">
-        <MeshLoader name="rest_shape" filename="../mesh/square3x3.obj"/>
-        <Mesh/>
-        <Vertex2Frame name="RestVertex2Frame" template="Rigid" vertices="@rest_shape.vertices" normals="@rest_shape.normals" />
+        <MeshObjLoader name="rest_shape" filename="../mesh/square3x3.obj"/>
+        <Vertex2Frame name="RestVertex2Frame" template="Rigid" position="@rest_shape.position" normals="@rest_shape.normals" />
         <MechanicalObject name="rest_triangles" template="Rigid" position="@RestVertex2Frame.frames"/>
 <!--        <OglModel name="Visual" color="green"/>-->
     </Node>
@@ -19,41 +19,28 @@
 <!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
 <!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
         <TriangleSetTopologyContainer name="baseTriangles" filename="../mesh/square3x3.obj"/>
-        <MechanicalObject name="tri" template="Rigid" debugViewIndices="false" debugViewIndicesScale="0.0003" rest_position="@../Rest_position/RestVertex2Frame.frames" position="@../Rest_position/RestVertex2Frame.frames"/>
+        <MechanicalObject name="tri" template="Rigid" debugViewIndices="false"  rest_position="@../Rest_position/RestVertex2Frame.frames" position="@../Rest_position/RestVertex2Frame.frames"/>
 <!--        <MechanicalObject name="tri" template="Vec3d" debugViewIndices="false" debugViewIndicesScale="0.0003"/>-->
 
 
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.1" />
+        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="1" totalmass="0.1" />
 
-        <BoxROI name="box1" box="-0.0051 -0.0051 -0.0001 0.0051 -0.0049 0.0001"/>
+        <BoxROI name="box1" box="-5.1 -5.1 -0.1 5.1 -4.9 0.1" drawBoxes="1"/>
         <FixedConstraint indices="@box1.indices" drawSize="0"/>
-        <BoxROI name="box2" box="-0.0051 0.0049 -0.0001 0.0051 0.0051 0.0001"/>
+        <BoxROI name="box2" box="-5.1 4.9 -0.1 5.1 5.1 0.1" drawBoxes="1" />
         <FixedConstraint indices="@box2.indices" drawSize="0"/>
-        <BoxROI name="box3" box="-0.0051 -0.0051 -0.0001 -0.0049 0.0051 0.0001"/>
+        <BoxROI name="box3" box="-5.1 -5.1 -0.1 -4.9 5.1 0.1" drawBoxes="1" />
         <FixedConstraint indices="@box3.indices" drawSize="0"/>
-        <BoxROI name="box4" box="0.0049 -0.0051 -0.0001 0.0051 0.0051 0.0001"/>
-        <FixedConstraint indices="@box4.indices" drawSize="0"/>
+        <BoxROI name="box4" box="4.9 -5.1 -0.1 5.1 5.1 0.1" drawBoxes="1"/>
+        <FixedConstraint indices="@box4.indices" drawSize="0" />
 
-<!--        <BoxROI name="box1" box="-0.01 -0.01 -0.01 1.01 0.01 0.01" drawSize="0"/>-->
-<!--        <FixedConstraint indices="@box1.indices" drawSize="0"/>-->
-<!--        <BoxROI name="box2" box="-0.01 -0.01 -0.01 0.01 1.01 0.01" drawSize="0"/>-->
-<!--        <FixedConstraint indices="@box2.indices" drawSize="0"/>-->
-<!--        <BoxROI name="box3" box="-0.01 0.99 -0.01 1.01 1.01 0.01" drawSize="0"/>-->
-<!--        <FixedConstraint indices="@box3.indices" drawSize="0"/>-->
-<!--        <BoxROI name="box4" box="0.99 1.01 -0.01 1.01 -0.01 0.01" drawSize="0"/>-->
-<!--        <FixedConstraint indices="@box4.indices" drawSize="0"/>-->
-
-<!--        <FixedConstraint indices="0-4 20-24 5 10 15 9 14 19"/>-->
-            <FixedConstraint indices="1 4 7"/>
-
-<!--        <FixedRotationConstraint FixedZRotation="true"/>-->
-<!--        <ConstantForceField points="0-8" forces="0 0 0.05 0 0 0"/>-->        
+        <!--    <FixedConstraint indices="1 4 7"/>-->
+  
 
         <ConstantForceField points="0-8" forces="0 0 0.05 0 0 0"/>
-<!--        <TriangleFEMForceField name="FEM" youngModulus="1.092e6" poissonRatio="0.42"/>-->
-        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.0001"/>
+        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e3" poissonRatio="0.42" thickness="0.0001"/>
 
-
+<!--
         <Node>
             <MechanicalObject name="basePointsVec3" template="Vec3d"/>
             <IdentityMapping/>
@@ -63,18 +50,24 @@
                 <IdentityMapping object1="basePointsVec3" object2="Visual"/>
             </Node>
         </Node>
+		-->
 
-<!--        <Node name="SubTriangles">-->
-<!--            <TriangleSetTopologyContainer  name="subTriangles"/>-->
-<!--            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="0"/>-->
-<!--            <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003"/>-->
-<!--            <BendingPlateMechanicalMapping/>-->
-<!--            <Triangle />-->
-<!--            <Node>-->
-<!--                <OglModel name="Visual" color="red"/>-->
-<!--                <IdentityMapping object1="subPoints" object2="Visual"/>-->
-<!--            </Node>-->
-<!--        </Node>-->
+        <Node name="SubTriangles">
+			<TriangleSetTopologyContainer  name="subTriangles"  />
+            <TriangleSubdivisionTopologicalMapping name="topoMapping" inputPositions="@baseTriangles.position"  inputTriangles="@baseTriangles.triangles" output="@subTriangles" subdivisions="0"/>
+
+			<TriangleSetTopologyContainer  name="toto" position="@topoMapping.outputPositions" triangles="@topoMapping.outputTriangles" />
+
+          
+			
+            <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003"/>
+            <BendingPlateMechanicalMapping/>
+            <Triangle />
+            <Node>
+                <OglModel name="Visual" color="red"/>
+                <IdentityMapping object1="subPoints" object2="Visual"/>
+            </Node>
+        </Node>
 
     </Node>
 </Node>

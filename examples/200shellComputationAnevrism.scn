@@ -11,7 +11,7 @@
 
     <Node name="CoarseMesh">
         <MeshObjLoader name="coarseMesh" filename="../mesh/aneurysm200.obj"/>
-        <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid" position="@coarseMesh.vertices" normals="@coarseMesh.normals" invertNormals="false"/>
+        <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid" position="@coarseMesh.position" normals="@coarseMesh.normals" invertNormals="false"/>
 
     </Node>
 
@@ -26,11 +26,11 @@
 
     <Node name="Shell">
         <EulerImplicitSolver />
-        <CGLinearSolver iterations="20" tolerance="0.05" threshold="1e-20"/>
-        <!--
-        <CGLinearSolver iterations="1000" tolerance="0.05" threshold="1e-20"/>
-        <SparseLDLSolver />
-        -->
+        <!--<CGLinearSolver iterations="20" tolerance="0.05" threshold="1e-20"/>-->
+        
+        <PCGLinearSolver iterations="5" tolerance="0.05"  preconditioners="Precond"/>
+        <SparseLDLSolver name="Precond"/>
+        
 
         <TriangleSetTopologyContainer name="coarseTopo"
             position="@/CoarseMesh/coarseMesh.position"
@@ -41,54 +41,14 @@
         <UniformMass mass="0.3 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.03"  compute_mapping_inertia="0" />
 
 		<BoxConstraint box="-0.2 -1 -0.2 0.2 -0.8 0.2  0.4 0.3 -0.8 0.8 0.7 -0.7" />
-<!--
 
-        <FixedConstraint indices="63 396 62 389 392 64 387 395 45 152 43 204 61 281"/>
-        <FixedConstraint indices="54 275 96 394 93 295 16 347"/>
-        <FixedConstraint indices="85 234 78 208 79 325 19 332"/>
-		
-		-->
-
-       
-        <!--
-        <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="5000000" poissonRatio="0.45" thickness="0.05" refineMesh="0"/>
-        <Node name="SubTriangles">
-            <TriangleSetTopologyContainer  name="subCoarseTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="coarseTopo" object2="subCoarseTopo" subdivisions="0"/>
-            <MechanicalObject  name="subCoarse_MO" />
-            <BendingPlateMechanicalMapping printLog="1" object1="coarseMesh_MO" object2="subCoarse_MO" name="MappingShells" isMechanical="false"/>
-            <Node>
-                <OglModel name="Visual" color="red"/>
-                <IdentityMapping object1="subCoarse_MO" object2="Visual"/>
-            </Node>
-
-        </Node>
-        -->
-        
-        <!--
-        <TriangularShellForceField name="FEM"
-        <BezierTriangularBendingFEMForceField name="FEM"
-        -->
         <FixedRotationConstraint FixedZRotation="true" />
         <TriangularBendingFEMForceField name="FEM" bending="true"
             youngModulus="5000000" poissonRatio="0.45" thickness="0.05" />
 
-        <!--
-        <OglModel name="Visual" color="green"/>
-        <IdentityMapping input="@coarseMesh_MO" output="@Visual"/>
-        -->
+
 
         <Node name="SubTriangles">
-
-            <!--
-            <TriangleSubdivisionTopologicalMapping name="subMapping"
-                input="@../coarseTopo" output="@../coarseTopo"
-                inputPositions="@../coarseMesh_MO.position" inputTriangles="@../coarseTopo.triangles"
-                subdivisions="3" />
-            <TriangleSetTopologyContainer  name="subTrianglesTopo"
-                position="@subMapping.outputPositions" triangles="@subMapping.outputTriangles" />
-            <MechanicalObject name="subCoarse_MO" rest_position="@subMapping.outputPositions" />
-                -->
 
             <TriangleSetTopologyContainer  name="subTrianglesTopo"
                 position="@/TargetMesh/targetTopo.position" triangles="@/TargetMesh/targetTopo.triangles" />

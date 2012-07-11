@@ -1,5 +1,7 @@
+<?xml version="1.0"?>
 <Node name="root" dt="0.02" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
-    <MasterContactSolver name="MasterSolver" maxIt="5000" tolerance="0.00000001"  displayTime="true"  printLog="0"/>
+    <FreeMotionAnimationLoop />
+	<LCPConstraintSolver name="constraintSolver" maxIt="5000" tolerance="0.00000001"  displayTime="true"  printLog="0"/>
     <CollisionPipeline verbose="0" />
     <BruteForceDetection name="N2" />
     <CollisionResponse response="FrictionContact" />
@@ -7,9 +9,9 @@
 <!--    <LocalMinDistance name="Proximity" alarmDistance="0.0002" contactDistance="0.00005" bothSides="true" coneFactor="0.3" angleCone="0.001"/>-->
 
     <Node name="Rest_position">
-        <MeshLoader name="rest_shape" filename="../mesh/lens_implant_refinedHaptics.obj"/>
+        <MeshObjLoader name="rest_shape" filename="../mesh/lens_implant_refinedHaptics.obj"/>
         <Mesh/>
-        <Vertex2Frame name="RestVertex2Frame" template="Rigid" vertices="@rest_shape.vertices" normals="@rest_shape.normals" />
+        <Vertex2Frame name="RestVertex2Frame" template="Rigid" position="@rest_shape.position" normals="@rest_shape.normals" />
 <!--        <MechanicalObject name="rest_triangles" template="Rigid" position="@RestVertex2Frame.frames"/>-->
 <!--        <OglModel name="Visual" color="green"/>-->
     </Node>
