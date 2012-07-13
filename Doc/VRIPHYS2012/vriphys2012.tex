@@ -53,6 +53,7 @@
 % Partial derivative
 \newcommand{\deriv}[2]{\frac{\partial #1}{\partial #2}}
 
+%\Figure{width}{name}{caption}
 \newcommand{\Figure}[3]{%
 \begin{figure}[htb]
   \centering
@@ -116,7 +117,8 @@
 
 
 %-------------------------------------------------------------------------
-\section{Introduction}
+
+\section{Introduction} % {{{
 
 Objects with thin structure form a very specific field of research. Because
 they have high ratio between width and thickness methods from volumetric
@@ -124,20 +126,20 @@ deformation modeling cannot be immediately used. Such object occur in many
 places e.g. textiles, paper or leaves. They are also very common in
 anatomical structures for example in form of tubular objects like blood
 vessels or colon, in the form of thin membranes, but also many others
-(lense, skin, \ldots).
+(lens, skin, \ldots).
 
 Methods based on continuum mechanics and namely theory of elasticity gained
 on popularity ever since Terzopoulos \cite{Terzopoulos1987} presented his
 work on elastic deformation modeling. While the methods using finite
 elements and theory of elasticity are fairly popular in volumetric modeling
 \footnote{TODO: do we need ref. here?} of deformations, they are still
-frowned uppon in the area of thin structures. Instead either the
+frowned upon in the area of thin structures. Instead either the
 mass-spring models \cite{Volino2009} or bending models
-\cite{Grinspun2003,Choi2007} are preffered. Unfortunately they have the
+\cite{Grinspun2003,Choi2007} are preferred. Unfortunately they have the
 disadvantage that physical parameters of a material (like Young's modulus
 and Poisson's ratio) cannot be used directly.
 
-The usual argument agains FEM based methods being that they are too slow.
+The usual argument against FEM based methods being that they are too slow.
 This is indeed true if lots of elements are used to discretize the object.
 However, exploiting the bending property of the shell elements allows us to
 achieve good results even with relatively small number of elements. We can
@@ -148,16 +150,18 @@ defined by implicit surface. Simple low-polygonal mesh was used for
 mechanical FEM model and the mesh was subdivided in areas with high
 curvature after every step of the simulation to produce finer mesh for
 rendering. The underlaying FEM model is however not aware of the implicit
-surface used. We build uppon the work of Comas \cite{Comas2010c} who used a
+surface used. We build upon the work of Comas \cite{Comas2010c} who used a
 simple cubic polynomial to describe the element geometry and derived the
 shell model from it.
 
 The Comas's element has several drawbacks that we needed to address. Namely
 it produces discontinuities between the elements on the edges, it is
-missing one rotationonal degree of freedom and is not completly symetric in
+missing one rotational degree of freedom and is not completely symmetric in
 context of deformations.
 
-% TODO: cite Ubach & Oñate?
+% TODO: cite Ubach & Oñate
+TODO: cite \cite{Ubach2010}: rotation-free shell elements, also based on
+Bézier triangle
 
 In this paper we present a new shell element based on the formulation of
 Bézier triangle.
@@ -192,8 +196,9 @@ The main contributions of the paper are following:
 
 \end{itemize}
 
+ % }}}
 
-\section{Preliminaries}
+\section{Preliminaries} % {{{
 
 \subsection{Shell Element}
 
@@ -232,6 +237,7 @@ The general $n$-th order Bézier triangle is defined as:
     T(\xi_1, \xi_2) = \sum_{0 \le i + j \le n} B^n_{i,j}(\xi_1,\xi_2) P_{i,j}
 \end{equation}
 
+\noindent
 where $P_{i,j}$ are the control points and $B^n_{i,j}$ are the bivairate
 Bernstein basis functions defined as:
 
@@ -243,6 +249,7 @@ Bernstein basis functions defined as:
   \binom{n}{i~j} = \frac{n!}{i!j!(n-i-j)!}
 \end{equation}
 
+\noindent
 where $ 0 \le i+j \le n $.
 
 Specificaly the cubic Bézier triangle ($n=3$) used in our model is
@@ -265,6 +272,7 @@ fig. \ref{fig-bezier}):
   \end{split}
 \end{equation}
 
+\noindent
 where $ \xi_3 = 1 - \xi_1 - \xi_2 $. By naming the respective values of
 the Bernstein basis functions $n_i$ we can shortly express
 \eqref{eq-cubicbez} as:
@@ -275,6 +283,8 @@ the Bernstein basis functions $n_i$ we can shortly express
 
 \Figure{0.8\linewidth}{bezier}
 {Cubic Bézier triangle with net of 10 control points.}
+
+% }}}
 
 % }}}
 
@@ -333,7 +343,7 @@ other nodes thus keeping the curvature of the element.
 
 % TODO - nodes + DOFs (local + global position)
 
-\subsection{Mechanics}
+\subsection{Mechanics} % {{{
 
 Our definition of the displacement field $u$ is based on the formulation of the
 Bézier triangle \eqref{eq-cubicbez}:
@@ -358,6 +368,7 @@ Bézier triangle \eqref{eq-cubicbez}:
 \end{split}
 \end{equation}
 
+\noindent
 where $U_1, U_2, U_3$ are the translational displacment vectors of the
 corner nodes of the element, $\theta_1, \theta_2, \theta_3$ are the angular
 displacements of the corner nodes and $P_{i-j}$ are the segments from
@@ -379,6 +390,7 @@ elastic membrane:
     \end{matrix} \right]
 \end{equation}
 
+\noindent
 and from Kirchhoff-Love theory for thin plates:
 
 \begin{equation}\label{eq-kirchhoff}
@@ -400,6 +412,7 @@ and bending plate respectively:
     K_b & = \iiint_V J_b^T M J_b \, \mathrm{d} V
 \end{align}
 
+\noindent
 where $M$ is the material matrix. To keep the system simple we use linear
 Hooke's law for isotropic materials.
 
@@ -410,15 +423,19 @@ quadrature for integration over triangle area.
 % TODO: add ref
 % TODO: add abscissas/weights?
 
-The Cauchy's strain tensor \eqref{eq-cauchy} is know to not be rotation
-invariant \footnote{add ref}. To deal with rigid body rotations we compute
-the displacements and forces in corotational frame. At each step of the
-simulation we compute the local frame for every element from the position
-of the corner nodes and we allign one axis of the frame with one edge of
-the element. \footnote{add image}
+% }}}
 
-The resulting internal force of deformed elemnt is then computed relative
-to this frame:
+\subsection{Corotational Formulation} % {{{
+\label{sec-corot}
+
+It is known that the Cauchy's strain tensor \eqref{eq-cauchy} is not
+rotation invariant \footnote{add ref} and produces ghost forces for rigid
+rotations. The alternative approach is to use Green's strain tensor,
+however it leads to nonlinear system. To keep the system linear and to deal
+with rigid body rotations we compute the displacements and forces in
+corotational frame. At each step of the simulation we compute the local
+frame for every element, the resulting internal force of deformed element
+is then computed relative to this frame:
 
 \begin{equation}
     F_e = R_e^T (K_e u) = R_e^T \left(K_e(R_e x - R_e^0 x^0)\right)
@@ -427,6 +444,71 @@ to this frame:
 \noindent
 where $R$ and $R_0$ are rotation matrices of the frame for current and rest
 mesh respectively.
+
+TODO: how we compute frame?
+%from the position of the corner nodes and we align one axis of the frame with one
+%edge of the element. \footnote{add image}
+
+
+%The displacement field defined in \eqref{eq-bezU} is clearly symmetric in
+%respect to deformations, but ...
+
+This choice of the frame aligns one axis of the frame with one of the edges
+of the triangle. Correct choice of the corotational frame is a tricky
+problem \cite{Felippa2005} and incorrect frame for the membrane element can
+have adverse effects on the simulation. In our case we have experienced
+nonnegligible difference in deformation of equilateral triangle depending
+on whether an axis was aligned to the edge favored by the deformation or to
+one of the two other edges.
+
+Performing a polar decomposition on the deformation gradient $F = \nabla u
++ I$ can be used to extract a rotation component from the deformation of
+the element \cite{Ciarlet1994}. Because we are only fixing the membrane
+element we can perform the polar decomposition in 2D with the following
+formula:
+
+\begin{equation}
+    R = F + \mathrm{sgn}(\mathrm{det}(F)) \begin{pmatrix}
+        F_{22} & - F_{21} \\
+        F_{12} & F_{11}
+    \end{pmatrix}
+\end{equation}
+
+\noindent
+and subsequently normalizing the columns. We then rotate the corotational
+frame in inverse direction. Even single step of this process improves the
+final frame but more iterations of the polar decompositions are usually
+necessary (up to 20) which severely degrades the performance. But polar
+decomposition tends to "overshoot" the ideal rotation angle and each
+subsequent step performs a rotation in the opposite direction. By properly
+scaling the rotation angle we are able to minimize the amount of needed
+iterations down to 5. The best value for the scaling factor depends on the
+simulated problem, but we have experimentally localized the best value to
+be somewhere between 0.6 and 0.65. We choose to use the value 0.61.
+
+We employ two stop conditions for the iteration process:
+\begin{itemize}
+    \item The change in rotation angle is less than $10^{-6}$,
+    \item and the maximum number of 5 iterations.
+\end{itemize}
+
+If the first condition is not met in 5 iterations it can mean one of three
+things:
+
+\begin{enumerate}
+    \item We still have very good approximation of the ideal frame.
+    \item The convergence for the element is too slow.
+    \item The process is diverging.
+\end{enumerate}
+
+\noindent
+and performing any more iterations is unnecessary.
+
+% TODO: maybe make a short table showing the convergence to the symmetric
+% solution.
+
+
+% }}}
 
 % }}}
 
@@ -488,7 +570,7 @@ associated control points by the formula:
 \begin{eqnarray}
     F_1 & = & F \sum_{i \in \{1,4,5\}} n_i + \frac{1}{3} F n_{10} \\
     F_2 & = & F \sum_{i \in \{2,6,7\}} n_i + \frac{1}{3} F n_{10} \\
-    F_3 & = & F \sum_{i \in \{3,8,9\}} n_i + \frac{1}{3} F n_{10} \\
+    F_3 & = & F \sum_{i \in \{3,8,9\}} n_i + \frac{1}{3} F n_{10}
 \end{eqnarray}
 
 %\begin{eqnarray}
@@ -497,17 +579,25 @@ associated control points by the formula:
 %    F_3 & = & F (n_3 + n_8 + n_9) + \frac{1}{3} F n_{10} \\
 %\end{eqnarray}
 
-Similarily we compute the torques applied through edge control points and
+Similarly we compute the torques applied through edge control points and
 the central control points by:
 
-\begin{eqnarray}
-    \theta_1 & = & P_{1-4} \times (n_4 F) + P_{1-5} \times (n_5 F) + \\
-        & + & \frac{1}{3} (P_{1-4} + P_{1-5}) \times (n_{10} F) \\
-    \theta_2 & = & P_{1-6} \times (n_6 F) + P_{1-7} \times (n_7 F) + \\
-        & + & \frac{1}{3} (P_{1-6} + P_{1-7}) \times (n_{10} F) \\
-    \theta_3 & = & P_{1-8} \times (n_8 F) + P_{1-9} \times (n_9 F) + \\
-        & + & \frac{1}{3} (P_{1-8} + P_{1-9}) \times (n_{10} F) \\
-\end{eqnarray}
+\begin{gather}
+    \begin{split}
+        \theta_1 & = P_{1-4} \times (n_4 F) + P_{1-5} \times (n_5 F) + \\
+        & + \frac{1}{3} (P_{1-4} + P_{1-5}) \times (n_{10} F)
+    \end{split}
+    \\
+    \begin{split}
+        \theta_2 & = P_{1-6} \times (n_6 F) + P_{1-7} \times (n_7 F) + \\
+        & + \frac{1}{3} (P_{1-6} + P_{1-7}) \times (n_{10} F) \\
+    \end{split}
+    \\
+    \begin{split}
+        \theta_3 & = P_{1-8} \times (n_8 F) + P_{1-9} \times (n_9 F) + \\
+        & + \frac{1}{3} (P_{1-8} + P_{1-9}) \times (n_{10} F) \\
+    \end{split}
+\end{gather}
 
 %\begin{eqnarray}
 %    \theta_1 & = & \sum_{i \in \{4,5\}} P_{1-i} \times (n_i F) \\
@@ -529,51 +619,152 @@ the central control points by:
 
 % }}}
 
+\section{Validation and Results} % {{{
 
-\section{Results}
+% We cannot show results for simple plane in bending because the solution
+% seems to converge to wrong value (but it converges! :)). Thus showing
+% results for plain membrane deformations doesn't make sense (it would be
+% inconsistent).
 
-proof of symmetry
+In next two subsections we present tests to validate the convergence of our
+Bézier shell element. The results are compared with the shell element
+composed of DKT element and optimal ANDES element \cite{Felippa2003}. The
+last subsection presents evaluation of the computational complexity of our
+solution.
 
-some other examples?
+\subsection{Roof Test}
 
-computation speed
+To validate the results of the element we have performed a modified version
+of a test known as Scordelis-Lo roof. It simulates a cylindrical roof under
+self-weight. The geometry is defined by 80° cylindrical patch of length
+$L=50$ and radius $r=25$ and thickness $t=0.25$ and is discretized into
+mesh of NxN nodes. The physical parameters are $E = 4.32 \times 10^8$ and
+$\nu = 0$. The roof is loaded with uniformly distributed load $q = 90$ per
+unit area. The curved edges are clamped at both ends to avoid rigid body
+movement. This the only difference from the original Scordelis-Lo roof test
+where the edges are free to move in longitudinal direction. The Figure
+\ref{fig-roof} shows the vertical displacement of midpoint on the free
+edge.
+
+\Figure{\linewidth}{roof}
+{Convergence for modified Scordelis-Lo roof test of DKT+ANDES element and
+our Bézier shell element.}
 
 
-\section{Discussion}
+\subsection{Hemisphere Test}
 
+Second performed test is a hemisphere with hole subjected to two opposing
+forces at the base. The geometry is described by a hemisphere with radius
+$r=10$ and thickness $t=0.04$ with 18° hole at the top and the geometry is
+discretized into the grid of NxN nodes per quadrant. The physical
+parameters are $E = 6.825 \times 10^7$ and $\nu = 0.3$. The hemisphere is
+at it's base subjected to two opposing outwards forces and two opposing
+inwards forces with magnitude $P = 4$. To avoid rigid body movement we have
+constrained two opposite nodes at the top of the hemisphere. The radial
+displacement for one point with applied load is shown in Figure
+\ref{fig-hemisphere}.
+
+\Figure{\linewidth}{hemisphere}
+{Convergence for test on hemisphere with 18° hole for the DKT+ANDES element and
+our Bézier shell element.}
+
+\subsection{Computation Speed}
+
+In figure \ref{fig-fps} we present performance of the element in terms of
+frames per second. All tests were performed on machine equipped Dual-Core
+AMD Opteron Processor 2218 and 3 GB of RAM and conjugate gradient solver
+has been to solve the system. Our implementation is without optimizations
+and isn't parallel, which means only single CPU core was used for the
+simulation. The values reported are for the raw physical simulation with
+and without the frame fixing method described in subsection
+\ref{sec-corot}. We also present results including the mapping of
+high-resolution mesh onto the physical mesh for visualisation purposes or
+collisions.
+
+\Figure{\linewidth}{fps}
+{Performance in frames per seconds for different number of elements. Shows
+values for element with frame fixing (B) method described in subsection
+\ref{sec-corot} and without it (A), and with high-resolution mesh of 2048
+(C) or 3200 (D) triangles mapped onto the physical mesh.}
+
+We can see that the frame fixing technique is really fast and we are able
+to simulate up to 1000 elements and still maintain visual refresh rate of
+25 FPS. Our implementation of mechanical mapping clearly needs improving
+because it consumes most of the computation time, but it is still able to
+provide good results for more than 600 elements.
+
+% }}}
+
+\section{Discussion and Limitations} % {{{
+
+The element has been successfully tested in SOFA framework for surgical
+simulations. The applications being for example simulation pre-operative
+planning of cardiac surgery on arterial vessels \cite{Kislinskiy2012}, or
+{\em something, something} of vagina/uterus.
 
 % = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 %
-% Benefits:
-% + C^0 continuity on the edges
-% + Perfectly symmetric results for the element (it is not the case with
-%   "classical shells")
-% + Better conditioning (comparison between Comas model and ours in term of
-%   convergence of CG...) * Good trade-off between continuity of interpolation
-%   and spasticity: only 18 Dofs per elements for an interpolation with 3d
-%   order
-% + polynomials [Bezier triangle has theoretically 10 points x 3 dofs=> 30 dofs]
-%
-% Limitations:
-% + Continuity C1 at the nodes but C0 on the edges
-% + The segments are at fixed distance from corner nodes, may lead to
-%   uneven curvature for too stretched or shrinked elements 
-%
-% Applications:
+% TODO
+% Other Applications:
 % + cataract surgery
-% + arterial vessel (MICCAI)
-% + vagina/uterus?
 %
-% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
+Currently, due to the technical decisions the element has two limitations.
+The first limitation is that the element does not provide $C^1$ continuity
+across edges. It is $C^1$ continuous at corners but only $C^0$ on the
+edges. This may prove to be an issue for example if curvature needs to be
+computed not only inside the element but also on the edges.
 
-%%------------------------------------------------------------------------
-%\subsection{Copyright forms}
-%
-%You must include your signed Eurographics copyright release form
-%when you submit your finished paper. We MUST have this form before
-%your paper can be published in the proceedings.
+The second limitation is the choice of rigidly attached edge control
+points. While it greatly simplifies the formulation the rigidity may cause
+issues. In case of large compression of the element the results may be
+unpredictable. This is however unlikely to occur because the element will
+bend before reaching such configuration. It may, however, fail to maintain
+even curvature of the surface if the element is subjected to large
+stretching.
+
+On the other hand the choices provide a good trade-off between continuity
+and simplicity. Only $ 3 \times 6~\mathrm{DOFs} = 18~\mathrm{DOFs}$ are
+necessary while the Bézier triangle has theoretically $ 10 \times
+3~\mathrm{DOFs} = 30~\mathrm{DOFs}$.
+
+% }}}
+
+\subsection{Conclusion} % {{{
+
+This paper presents new shell element with geometry and displacement
+function based on the formulation of Bézier triangle. It fixes problems
+of the previous model \cite{Comas2010c}, namely:
+
+\begin{itemize}
+
+    \item It is continuous on the edges and provides $C^1$ continuity in
+    corners of the element. This is essential for good visual experience if
+    high-resolution mesh is mapped on the physical mesh.
+
+    \item Deformations of the element are symmetric. A method of improving
+    the corotational frame to keep the deformation symmetric is also
+    presented in the paper.
+
+    \item TODO: anything else \ldots? % TODO
+
+    % TODO: check this:
+    % + Better conditioning (comparison between Comas model and ours in term of
+    %   convergence of CG...) 
+
+\end{itemize}
+
+Because of the formulation of Bézier triangle that is intrinsically present
+there is a clean and obvious way of mapping high-resolution mesh for
+better visualisation. We also provide a mapping of forces and velocities
+between simulation mesh and physical mesh for collision detection/response
+and interaction with the mesh which are essential component for the surgical
+simulator.
+
+Finally examples showing the convergence to the optimal solution were also provided. 
+
+% }}}
 
 %-------------------------------------------------------------------------
 
@@ -583,3 +774,5 @@ computation speed
 \bibliography{vriphys2012.bib}
 
 \end{document}
+
+% vim: fdm=marker tw=75
