@@ -12,8 +12,8 @@ plot(range(fps$elements), range(c(fps$fpsBase, fps$fpsPolar, fps$fpsMap1, fps$fp
 
 lines(fps$elements, fps$fpsBase, type="b", col="black", pch=1);
 lines(fps$elements, fps$fpsPolar, type="b", col="black", pch=4);
-lines(fps$elements, fps$fpsMap2, type="b", col="black", pch=6);
-lines(fps$elements, fps$fpsMap1, type="b", col="black", pch=5);
+lines(fps$elements, fps$fpsMap2, type="b", col="black", pch=5);
+lines(fps$elements, fps$fpsMap1, type="b", col="black", pch=6);
 
 abline(h=25, lty="dotted");
 
