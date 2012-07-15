@@ -1,0 +1,38 @@
+var hierarchy =
+[
+    [ "BendingPlateMechanicalMapping< TIn, TOut >", "classsofa_1_1component_1_1mapping_1_1_bending_plate_mechanical_mapping.html", null ],
+    [ "BezierShellForceFieldInternalData< DataTypes >", "classsofa_1_1component_1_1forcefield_1_1_bezier_shell_force_field_internal_data.html", null ],
+    [ "BezierShellInterpolation< DataTypes >", "classsofa_1_1component_1_1fem_1_1_bezier_shell_interpolation.html", null ],
+    [ "BezierShellMechanicalMapping< TIn, TOut >", "classsofa_1_1component_1_1mapping_1_1_bezier_shell_mechanical_mapping.html", null ],
+    [ "BezierTriangleMechanicalMapping< TIn, TOut >", "classsofa_1_1component_1_1mapping_1_1_bezier_triangle_mechanical_mapping.html", null ],
+    [ "BezierTriangularBendingFEMForceFieldInternalData< DataTypes >", "classsofa_1_1component_1_1forcefield_1_1_bezier_triangular_bending_f_e_m_force_field_internal_data.html", null ],
+    [ "FindClosePoints< DataTypes >", "classsofa_1_1component_1_1engine_1_1_find_close_points.html", null ],
+    [ "ForceField", "classcore_1_1behavior_1_1_force_field.html", [
+      [ "BezierShellForceField< DataTypes >", "classsofa_1_1component_1_1forcefield_1_1_bezier_shell_force_field.html", null ],
+      [ "BezierTriangularBendingFEMForceField< DataTypes >", "classsofa_1_1component_1_1forcefield_1_1_bezier_triangular_bending_f_e_m_force_field.html", null ],
+      [ "NewShellForceFieldAndMass< DataTypes >", "classsofa_1_1component_1_1forcefield_1_1_new_shell_force_field_and_mass.html", null ],
+      [ "TriangularBendingFEMForceField< DataTypes >", "classsofa_1_1component_1_1forcefield_1_1_triangular_bending_f_e_m_force_field.html", null ],
+      [ "TriangularShellForceField< DataTypes >", "classsofa_1_1component_1_1forcefield_1_1_triangular_shell_force_field.html", null ]
+    ] ],
+    [ "JoinMeshPoints< DataTypes >", "classsofa_1_1component_1_1engine_1_1_join_mesh_points.html", null ],
+    [ "MeshChangedEvent", "classsofa_1_1core_1_1objectmodel_1_1_mesh_changed_event.html", null ],
+    [ "MeshInterpolator< DataTypes >", "classsofa_1_1component_1_1controller_1_1_mesh_interpolator.html", null ],
+    [ "BezierShellInterpolation< DataTypes >::PointInfoHandler", "classsofa_1_1component_1_1fem_1_1_bezier_shell_interpolation_1_1_point_info_handler.html", null ],
+    [ "BezierShellInterpolation< DataTypes >::PointInformation", "classsofa_1_1component_1_1fem_1_1_bezier_shell_interpolation_1_1_point_information.html", null ],
+    [ "BezierShellForceField< DataTypes >::TriangleHandler", "classsofa_1_1component_1_1forcefield_1_1_bezier_shell_force_field_1_1_triangle_handler.html", null ],
+    [ "BezierShellInterpolation< DataTypes >::TriangleInfoHandler", "classsofa_1_1component_1_1fem_1_1_bezier_shell_interpolation_1_1_triangle_info_handler.html", null ],
+    [ "NewShellForceFieldAndMass< DataTypes >::TriangleInformation", "classsofa_1_1component_1_1forcefield_1_1_new_shell_force_field_and_mass_1_1_triangle_information.html", null ],
+    [ "BezierTriangularBendingFEMForceField< DataTypes >::TriangleInformation", "classsofa_1_1component_1_1forcefield_1_1_bezier_triangular_bending_f_e_m_force_field_1_1_triangle_information.html", null ],
+    [ "BezierShellMechanicalMapping< TIn, TOut >::TriangleInformation", "structsofa_1_1component_1_1mapping_1_1_bezier_shell_mechanical_mapping_1_1_triangle_information.html", null ],
+    [ "TriangularShellForceField< DataTypes >::TriangleInformation", "classsofa_1_1component_1_1forcefield_1_1_triangular_shell_force_field_1_1_triangle_information.html", null ],
+    [ "BezierShellInterpolation< DataTypes >::TriangleInformation", "classsofa_1_1component_1_1fem_1_1_bezier_shell_interpolation_1_1_triangle_information.html", null ],
+    [ "BezierShellForceField< DataTypes >::TriangleInformation", "classsofa_1_1component_1_1forcefield_1_1_bezier_shell_force_field_1_1_triangle_information.html", null ],
+    [ "BezierTriangleMechanicalMapping< TIn, TOut >::TriangleInformation", "structsofa_1_1component_1_1mapping_1_1_bezier_triangle_mechanical_mapping_1_1_triangle_information.html", null ],
+    [ "TriangularBendingFEMForceField< DataTypes >::TriangleInformation", "classsofa_1_1component_1_1forcefield_1_1_triangular_bending_f_e_m_force_field_1_1_triangle_information.html", null ],
+    [ "TriangleSwitchExample< DataTypes >", "classsofa_1_1component_1_1controller_1_1_triangle_switch_example.html", null ],
+    [ "TriangularBendingFEMForceFieldInternalData< DataTypes >", "classsofa_1_1component_1_1forcefield_1_1_triangular_bending_f_e_m_force_field_internal_data.html", null ],
+    [ "TriangularShellForceFieldInternalData< DataTypes >", "classsofa_1_1component_1_1forcefield_1_1_triangular_shell_force_field_internal_data.html", null ],
+    [ "TriangularShellForceField< DataTypes >::TRQSTriangleHandler", "classsofa_1_1component_1_1forcefield_1_1_triangular_shell_force_field_1_1_t_r_q_s_triangle_handler.html", null ],
+    [ "BezierTriangularBendingFEMForceField< DataTypes >::TRQSTriangleHandler", "classsofa_1_1component_1_1forcefield_1_1_bezier_triangular_bending_f_e_m_force_field_1_1_t_r_q_s_triangle_handler.html", null ],
+    [ "TriangularBendingFEMForceField< DataTypes >::TRQSTriangleHandler", "classsofa_1_1component_1_1forcefield_1_1_triangular_bending_f_e_m_force_field_1_1_t_r_q_s_triangle_handler.html", null ]
+];
