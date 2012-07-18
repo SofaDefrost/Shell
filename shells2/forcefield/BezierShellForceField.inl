@@ -469,32 +469,19 @@ template <class DataTypes>
 void BezierShellForceField<DataTypes>::interpolateRefFrame(TriangleInformation *tinfo,
     const Vec2& /*baryCoord*/)
 {
-    sofa::helper::fixed_array<Vec3,10> X_bezierPoints;
-    // get the position of the bezier Points
-    bsInterpolation->getBezierNodes(tinfo->elementID, X_bezierPoints);
+#if 0 // Reference frame by rotation at the center of the bezier triangle
 
-#if 0 //Reference frame by rotation at the center of the bezier triangle
+    Vec3 bc(1 - baryCoord[0] - baryCoord[1], baryCoord[0], baryCoord[1]);
+    Vec3 pt, normal, X1, Y1;
 
-        TODO use BezierShellInterpolation for this
+    bsInterpolation->interpolateOnBTriangle(tinfo->elementID, bc, pt, normal, X1, Y1);
+    tinfo->frameCenter = pt;
 
-    // use the bezier functions to interpolate the positions
-    sofa::helper::fixed_array<Real,10> f_bezier;
-    this->bezierFunctions(baryCoord, f_bezier);
-    interpolatedFrame.getCenter().clear();
-    for (unsigned int i=0;i<10;i++){
-        interpolatedFrame.getCenter() += X_bezierPoints[i]*f_bezier[i];
-        //sout << " add pos = "<<X_bezierPoints[i]*f_bezier[i]<<" f_bezier["<<i<<"]="<<f_bezier[i]<<"  X_bezierPoints="<<X_bezierPoints[i]<<sendl;
-    }
-
-    // compute the derivative of the interpolation for the rotation of the RefFrame
-    sofa::helper::fixed_array<Real,10> df_dx_bezier,df_dy_bezier;
-    this->bezierDerivateFunctions(baryCoord, df_dx_bezier, df_dy_bezier);
-    Vec3 X1(0.0,0.0,0.0),Y1(0.0,0.0,0.0);
-    for (unsigned int i=0;i<10;i++){
-        X1 += X_bezierPoints[i]*df_dx_bezier[i];
-        Y1 += X_bezierPoints[i]*df_dy_bezier[i];
-    }
 #else // Reference frame by the corner nodes
+
+    // Get the position of Bézier points
+    sofa::helper::fixed_array<Vec3,10> X_bezierPoints;
+    bsInterpolation->getBezierNodes(tinfo->elementID, X_bezierPoints);
 
     tinfo->frameCenter = (X_bezierPoints[0] + X_bezierPoints[1] + X_bezierPoints[2])/3;
 
@@ -1246,20 +1233,21 @@ void BezierShellForceField<DataTypes>::computeStrainDisplacementMatrixBending(Tr
     matrixSDB(tinfo.strainDisplacementMatrixB2, gaussPoint2, tinfo);
     matrixSDB(tinfo.strainDisplacementMatrixB3, gaussPoint3, tinfo);
 #else
-    matrixSDB(tinfo.strainDisplacementMatrixB1, Vec3(0.211324865, 0.166666667, 0), tinfo);
-    matrixSDB(tinfo.strainDisplacementMatrixB2, Vec3(0.211324865, 0.622008467, 0), tinfo);
-    matrixSDB(tinfo.strainDisplacementMatrixB3, Vec3(0.788675134, 0.044658198, 0), tinfo);
-    matrixSDB(tinfo.strainDisplacementMatrixB4, Vec3(0.788675134, 0.166666667, 0), tinfo);
+    for (int i=0; i<Gn; i++)
+        matrixSDB(tinfo.strainDisplacementMatrixB[i], Vec3(GX[i], GY[i], 0), tinfo);
 #endif
 
     if (this->f_printLog.getValue()) {
+#ifndef GAUSS4
         sout << "Bb: " << tinfo.strainDisplacementMatrixB1 <<
             "\n    " << tinfo.strainDisplacementMatrixB2 <<
             "\n    " << tinfo.strainDisplacementMatrixB3 <<
-#ifdef GAUSS4
-            "\n    " << tinfo.strainDisplacementMatrixB4 <<
-#endif
             "\n";
+#else
+        sout << "Bb:";
+        for (int i=0; i<Gn; i++)
+            sout << "\t" << tinfo.strainDisplacementMatrixB[i] << "\n";
+#endif
     }
 }
 
@@ -1461,23 +1449,25 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixMembrane(
 template <class DataTypes>
 void BezierShellForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMatrixBending &K, const TriangleInformation &tinfo)
 {
+#ifndef GAUSS4
     Mat<9, 3, Real> J1t, J2t, J3t;
     J1t.transpose(tinfo.strainDisplacementMatrixB1);
     J2t.transpose(tinfo.strainDisplacementMatrixB2);
     J3t.transpose(tinfo.strainDisplacementMatrixB3);
 
-#ifndef GAUSS4
     K = J1t * materialMatrixBending * tinfo.strainDisplacementMatrixB1 +
         J2t * materialMatrixBending * tinfo.strainDisplacementMatrixB2 +
         J3t * materialMatrixBending * tinfo.strainDisplacementMatrixB3;
     K /= 3.0;
 #else
-    Mat<9, 3, Real> J4t;
-    J4t.transpose(tinfo.strainDisplacementMatrixB4);
-    K =  J1t * materialMatrixBending * tinfo.strainDisplacementMatrixB1*0.197168783 +
-         J2t * materialMatrixBending * tinfo.strainDisplacementMatrixB2*0.197168783 +
-         J3t * materialMatrixBending * tinfo.strainDisplacementMatrixB3*0.052831216 +
-         J4t * materialMatrixBending * tinfo.strainDisplacementMatrixB4*0.052831216;
+    Mat<9, 3, Real> Jt;
+    K.clear();
+    for (int i=0; i<Gn; i++)
+    {
+        Jt.transpose(tinfo.strainDisplacementMatrixB[i]); 
+        K += Jt * materialMatrixBending * tinfo.strainDisplacementMatrixB[i] * GW[i];
+    }
+
     K *= tinfo.area2;
 #endif
 
@@ -1497,23 +1487,23 @@ void BezierShellForceField<DataTypes>::computeMaterialMatrix()
     Real t = f_thickness.getValue();
 
     // Material matrix for plain stress
-    materialMatrix[0][0] = 1;
+    materialMatrix[0][0] = 1.0;
     materialMatrix[0][1] = f_poisson.getValue();
     materialMatrix[0][2] = 0;
     materialMatrix[1][0] = f_poisson.getValue();
-    materialMatrix[1][1] = 1;
+    materialMatrix[1][1] = 1.0;
     materialMatrix[1][2] = 0;
     materialMatrix[2][0] = 0;
     materialMatrix[2][1] = 0;
-    materialMatrix[2][2] = (1 - f_poisson.getValue())/2;
+    materialMatrix[2][2] = ((Real)1.0 - f_poisson.getValue())/(Real)2.0;
 
     materialMatrix *= f_young.getValue() / (
-        1 - f_poisson.getValue() * f_poisson.getValue());
+        (Real)1.0 - f_poisson.getValue() * f_poisson.getValue());
 
     materialMatrix *= t; // consider the thickness
 
     // Material matrix for plane bending (a.k.a. flextural rigidity/bending stiffness)
-    materialMatrixBending = materialMatrix * t*t / 12;
+    materialMatrixBending = materialMatrix * t*t / (Real)12.0;
 }
 
 
@@ -1782,10 +1772,6 @@ void BezierShellForceField<DataTypes>::convertStiffnessMatrixToGlobalSpace(Stiff
     */
     // Then we put the stifness matrix into the global frame
     K_gs = Rt18x18 * K_18x18 * R18x18;
-
-    std::cout<<" K_gs="<<K_gs<<std::endl;
-
-
 }
 
 #define ASSEMBLED_K
@@ -1807,9 +1793,7 @@ void BezierShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams
 
     double kFactor = mparams->kFactor();
 
-    std::cout<<"***\n kFactor ="<<kFactor<<" \n***"<<std::endl;
-
-
+    //std::cout<<"***\n kFactor ="<<kFactor<<" \n***"<<std::endl;
 
     for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
@@ -1818,7 +1802,6 @@ void BezierShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams
 
             convertStiffnessMatrixToGlobalSpace(K_gs, tinfo);
 
-            std::cout<<"ADDK=[";
             // find index of node 1
             for (n1=0; n1<3; n1++)
             {
@@ -1839,13 +1822,10 @@ void BezierShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams
                                             column = 6*n2+j;
                                             r.matrix->add(ROW, COLUMN, - K_gs[row][column] * kFactor);
 
-                                            std::cout<<" "<<r.matrix->element(ROW, COLUMN);
                                     }
                             }
-                            std::cout<<" ; "<<std::endl;
                     }
             }
-            std::cout<<"];"<<std::endl;
     }
 
 

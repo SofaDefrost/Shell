@@ -171,6 +171,7 @@ public:
                 StrainDisplacement strainDisplacementMatrix4;
 
                 StrainDisplacement strainDisplacementMatrix[Gn];
+                StrainDisplacement strainDisplacementMatrixB[Gn];
 
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacementBending strainDisplacementMatrixB1;
