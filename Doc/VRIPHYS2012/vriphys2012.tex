@@ -61,6 +61,16 @@
   \caption{\label{fig-#2}#3}
 \end{figure}}
 
+% For large/wide figures
+%\FigureW{width}{name}{caption}
+\newcommand{\FigureW}[3]{%
+\begin{figure*}[htb]
+  \centering
+  \includegraphics[width=#1]{#2}
+  \caption{\label{fig-#2}#3}
+\end{figure*}}
+
+
 
 \title[Short title]%
       {Fill in the Title} % TODO
@@ -120,51 +130,56 @@
 
 \section{Introduction} % {{{
 
-Objects with thin structure form a very specific field of research. Because
-they have high ratio between width and thickness methods from volumetric
-deformation modeling cannot be immediately used. Such object occur in many
-places e.g. textiles, paper or leaves. They are also very common in
-anatomical structures for example in form of tubular objects like blood
-vessels or colon, in the form of thin membranes, but also many others
-(lens, skin, \ldots).
+Objects with thin structure occur in many forms e.g. textiles, paper,
+leaves etc. Such objects are also very common in anatomical structures for
+example in the form of tubular objects like blood vessels or colon, in the
+form of thin membranes, but also many others (lens, skin, \ldots). Because
+they have high ratio between width and thickness methods for volumetric
+deformation modeling cannot be immediately used. For this reason they form
+a very specific field of research.
 
 Methods based on continuum mechanics and namely theory of elasticity gained
-on popularity ever since Terzopoulos \cite{Terzopoulos1987} presented his
-work on elastic deformation modeling. While the methods using finite
-elements and theory of elasticity are fairly popular in volumetric modeling
-\footnote{TODO: do we need ref. here?} of deformations, they are still
-frowned upon in the area of thin structures. Instead either the
-mass-spring models \cite{Volino2009} or bending models
-\cite{Grinspun2003,Choi2007} are preferred. Unfortunately they have the
-disadvantage that physical parameters of a material (like Young's modulus
-and Poisson's ratio) cannot be used directly.
+on popularity in computer graphics and real-time simulators ever since
+Terzopoulos \cite{Terzopoulos1987} presented his work on elastic
+deformation modeling. While the methods using finite elements and theory of
+elasticity are fairly popular in volumetric modeling \footnote{TODO: do we
+need ref. here?} of deformations, they are still frowned upon in the area
+of thin structures. Instead either the mass-spring models \cite{Volino2009}
+or bending models \cite{Grinspun2003,Choi2007} are preferred. Unfortunately
+they have the disadvantage that physical parameters of a material (like
+Young's modulus and Poisson's ratio) cannot be used directly.
 
-The usual argument against FEM based methods being that they are too slow.
-This is indeed true if lots of elements are used to discretize the object.
-However, exploiting the bending property of the shell elements allows us to
-achieve good results even with relatively small number of elements. We can
-use high-polygonal mesh only for rendering or collision detection and
-response. Similar idea has been already presented in the work of Bouthors
-et al. \cite{Bouthors2007}. They used twinned meshes for animation of mesh
-defined by implicit surface. Simple low-polygonal mesh was used for
-mechanical FEM model and the mesh was subdivided in areas with high
-curvature after every step of the simulation to produce finer mesh for
-rendering. The underlaying FEM model is however not aware of the implicit
-surface used. We build upon the work of Comas \cite{Comas2010c} who used a
-simple cubic polynomial to describe the element geometry and derived the
-shell model from it.
+The usual argument against FEM based methods is that they are
+computationally too expensive. This is indeed true if lots of elements are
+used to discretize the object or non-linear models are used. However,
+exploiting the bending property of the shell elements allows us to achieve
+good results even with relatively small number of elements. We can use
+high-polygonal mesh only for rendering or collision detection and response.
+Similar idea has been already presented in the work of Bouthors et al.
+\cite{Bouthors2007}. They used twinned meshes for animation of mesh defined
+by implicit surface. Simple low-polygonal mesh was used for mechanical FEM
+model and the mesh was subdivided in areas with high curvature after every
+step of the simulation to produce finer mesh for rendering. The underlaying
+FEM model is however not aware of the implicit surface used. We build upon
+the work of Comas \cite{Comas2010c} who used a simple cubic polynomial to
+describe the element geometry and derived the shell model from it. Comas's
+element has several drawbacks that we needed to address. Namely it produces
+discontinuities between the elements on the edges, it is missing one
+rotational degree of freedom and is not completely symmetric in context of
+deformations.
 
-The Comas's element has several drawbacks that we needed to address. Namely
-it produces discontinuities between the elements on the edges, it is
-missing one rotational degree of freedom and is not completely symmetric in
-context of deformations.
+% TODO: integrate better to the rest of the section
+Ubach and Oñate \cite{Ubach2010} also present a shell element based on
+Bézier triangles. The element is however free from rotational degrees of
+freedom which is unsuitable for physical simulators. It also reduces the
+sparsity of stiffness matrix because of increased interconnection between
+nodes.
 
-% TODO: cite Ubach & Oñate
-TODO: cite \cite{Ubach2010}: rotation-free shell elements, also based on
-Bézier triangle
-
-In this paper we present a new shell element based on the formulation of
-Bézier triangle.
+% In this paper we present a new shell element based on the
+% formulation of Bézier triangle.
+%
+% TODO: paper structure
+TODO: paper structure
 
 \subsection{Contribution}
 
@@ -174,25 +189,23 @@ The main contributions of the paper are following:
     % not really novel, similar model already in Ubach2010
     %\item shell element based on Bézier triangles
     \item Our element solves the problems of the element presented by Comas
-        \cite{Comas2010c}.
+        \cite{Comas2010c}: it is continuous on the element boundary and has
+        all rotational degrees of freedom.
 
     % TODO: needs better explanation
-    % + two stage interpolation => Nodes (6DOFS) => bezier points => bezier
-    %   triangle
     \item Two stage interpolation: 6DOF nodes -> bezier points -> bezier
         triangle
 
     % + separation between nodes and dofs
-    \item The model separates nodes of the mesh from degrees of freedom of the
-        control mesh. This allows mapping a surface on deformable skeleton.
+    %\item The model separates nodes of the mesh from degrees of freedom of the
+    %    control mesh. This allows mapping a surface on deformable skeleton.
 
     % + mapping: smooth surface results with less shells + collision response
-    %   on smooth surface +  [? if I have time]  deformable on deformable:
-    %   conjonctiva 2D motion on the surface of the shells
-    \item Smooth maping of high resolution mesh on the curved surface of the
-        shell. The mapped surfce can be used for collision detection and
-        allows the propagation of proper collision response back onto the
-        (low resolution) mechanical mesh.
+    %   on smooth surface 
+    \item Mapping of high resolution mesh on the curved surface of the
+        shell. The smooth mapped surface can be used for collision
+        detection and allows the propagation of proper collision response
+        back onto the (low resolution) mechanical mesh.
 
 \end{itemize}
 
@@ -202,26 +215,33 @@ The main contributions of the paper are following:
 
 \subsection{Shell Element}
 
-Shell element combines two types of deformations:
+Shell element is a combination of two simpler elements describing two types
+of deformations:
 
 \begin{itemize}
 
-    \item Elastic membrane: deformation in the plane of the element,
-        described by in-plane displacements $u_x, u_y$ and rotation
-        $\theta_z$ around the axis perpendicular to the plane of the
-        element (Figure \ref{fig-membrane}).
-
-    \item Bending plate: out of the plane deformation described by rotation
-        around two in-plane axes $\theta_x, \theta_z$ and out of plane
-        displacmenent $u_z$ (Figure \ref{fig-plate}).
-
-\end{itemize}
+    \item Elastic membrane defining deformations in plane of the
+    element. It encompasses deformations like stretching and shearing and
+    is described by 3 degrees of freedom: in-plane displacements $u_x, u_y$
+    and rotation $\theta_z$ around the axis perpendicular to the plane of
+    the element (Figure \ref{fig-membrane}).
 
 \Figure{0.8\linewidth}{membrane}
 {DOFs of elastic membrane element.}
 
+
+    \item Bending plate defining out of plane bending deformation. It is
+    described by 3 degrees of freedom: rotation around two axes $\theta_x,
+    \theta_z$ and out of plane displacement $u_z$ (Figure \ref{fig-plate}).
+
+\end{itemize}
+
 \Figure{0.8\linewidth}{plate}
 {DOFs of bending plate element.}
+
+Combining both elements we make use of all 6 degrees of freedom available
+at each node of the element.
+
 
 \subsection{Bézier Triangle} % {{{
 
@@ -231,7 +251,11 @@ In the rest of the document we define the surface over the triangle:
         \mathrm{~and~} \xi_1+\xi_2 \le 1 \right\}
 \end{equation}
 
-The general $n$-th order Bézier triangle is defined as:
+Bézier triangles were designed in sixties by French mathematician de
+Casteljau. As with other Bézier or B-spline surfaces the Bézier triangle is
+defined by a mesh of control points that do not necessarily lie on the
+surface. The general $n$-th order Bézier triangle requires $(n + 1)(n +
+2)/2$ control points and it's surface is defined as:
 
 \begin{equation}
     T(\xi_1, \xi_2) = \sum_{0 \le i + j \le n} B^n_{i,j}(\xi_1,\xi_2) P_{i,j}
@@ -252,14 +276,17 @@ Bernstein basis functions defined as:
 \noindent
 where $ 0 \le i+j \le n $.
 
-Specificaly the cubic Bézier triangle ($n=3$) used in our model is
-described by 10 control points and the surface is explicitly defined as (see
-fig. \ref{fig-bezier}):
+In our work we use cubic Bézier triangle ($n=3$). Triangle of smaller order
+would fail to describe all possible deformations of the element and
+triangles of higher order cannot be described unambiguously with only 18
+DOFs available to us without adding further constraints on the control
+mesh. Cubic triangle is described by 10 control points and the surface is
+explicitly defined as (see fig. \ref{fig-bezier}):
 
 \begin{equation}\label{eq-cubicbez}
   \begin{split}
   T(\xi_1,\xi_2) & =
-           + \xi_1^3\ P_1
+             \xi_1^3\ P_1
            + \xi_2^3\ P_2
            + \xi_3^3\ P_3 \\
          & + 3\ \xi_1^2 \xi_2\ P_4
@@ -273,38 +300,40 @@ fig. \ref{fig-bezier}):
 \end{equation}
 
 \noindent
-where $ \xi_3 = 1 - \xi_1 - \xi_2 $. By naming the respective values of
-the Bernstein basis functions $n_i$ we can shortly express
-\eqref{eq-cubicbez} as:
+where $ \xi_3 = 1 - \xi_1 - \xi_2 $. By naming $n_i$ the respective values
+of the Bernstein basis functions linked to control point $P_i$ we can
+shortly express \eqref{eq-cubicbez} as:
 
 \begin{equation}\label{eq-cubicbez2}
     T = \sum_{i=1}^{10} n_i P_i
 \end{equation}
 
 \Figure{0.8\linewidth}{bezier}
-{Cubic Bézier triangle with net of 10 control points.}
+{Cubic Bézier triangle with mesh of 10 control points.}
 
 % }}}
 
 % }}}
+
 
 \section{Bézier Shell Element} % {{{
 
+
 \subsection{Control Points} % {{{
 
-The Bézier triangles are defined by a net of control points, however the
+The Bézier triangles are defined by a mesh of control points, however the
 simulated object is usually described by a triangular mesh. We construct
 the Bézier mesh by taking into account the curvature of the triangular
 mesh. When constructing the mesh a special care has to be taken to maintain
-the continuity accross the nodes and edges. During the initialization phase
-we partialy employ the method described in \cite{Ubach2010} to maintain
+the continuity across the nodes and edges. During the initialization phase
+we partially employ the method described in \cite{Ubach2010} to maintain
 $C^0$ continuity on the edges. Each of the control points on the edge is
 computed as the intersection of:
 
 \begin{enumerate}
     \item The plane perpendicular to the normal at the vertex.
     \item The plane that contains the curve of triangle's contour. The
-        choise is arbitrary, but necessary to maintain $C^0$ continuity. 
+        choice is arbitrary, but necessary to maintain $C^0$ continuity. 
         We choose the plane defined by the edge of the flat triangle and
         average of the two normals at vertices of the edge. 
     \item The plane perpendicular to the edge of the flat triangle placed at
@@ -336,8 +365,9 @@ simplicity we compute the central point followingly:
 
 % TODO: explain the equation eq-central? would require an image
 
-That way the central point is slightly elevated and not in the plane of
-other nodes thus keeping the curvature of the element.
+That way if the element is not flat the central point is slightly elevated
+and not in the plane of other nodes thus keeping the curvature of the
+element.
 
 %}}}
 
@@ -678,14 +708,14 @@ and isn't parallel, which means only single CPU core was used for the
 simulation. The values reported are for the raw physical simulation with
 and without the frame fixing method described in subsection
 \ref{sec-corot}. We also present results including the mapping of
-high-resolution mesh onto the physical mesh for visualisation purposes or
+high-resolution mesh onto the mechanical mesh for visualisation purposes or
 collisions.
 
 \Figure{\linewidth}{fps}
 {Performance in frames per seconds for different number of elements. Shows
 values for element with frame fixing (B) method described in subsection
 \ref{sec-corot} and without it (A), and with high-resolution mesh of 2048
-(C) or 3200 (D) triangles mapped onto the physical mesh.}
+(C) or 3200 (D) triangles mapped onto the mechanical mesh.}
 
 We can see that the frame fixing technique is really fast and we are able
 to simulate up to 1000 elements and still maintain visual refresh rate of
@@ -693,22 +723,35 @@ to simulate up to 1000 elements and still maintain visual refresh rate of
 because it consumes most of the computation time, but it is still able to
 provide good results for more than 600 elements.
 
+\subsection{Applications}
+
+The presented element has been successfully implemented in SOFA framework
+\cite{Faure2012} for real-time surgical simulations. It has been evaluated
+on several applications.
+
+% TODO: !!! When ANONYMISING do something with the citation !!!
+One being a tool for pre-operative planning of corrective surgery of
+congenital heart diseases in infants \cite{Kislinskiy2012}. The cardiac
+surgery is a complicated process where several arterial vessels have to be
+cut, patched and reconnected. The element has been used for to model
+deformations of blood vessels after suturing and/or applying a artificial
+patch. Figure \ref{fig-chd} presents a screenshots of the application
+prototype.
+
+\FigureW{0.75\linewidth}{chd}
+{Screenshots of the simulation system prototype for different surgical
+procedures used to repair a coarctation of an aortic arch. The screenshots
+are enriched with overlay delineations.}
+
+Another designed application is simulation of women reproductive organs
+(vagaina/uterus/\ldots). 
+The simulation is so as to evaluate
+stress on a tissue during a birth.
+
+
 % }}}
 
 \section{Discussion and Limitations} % {{{
-
-The element has been successfully tested in SOFA framework for surgical
-simulations. The applications being for example simulation pre-operative
-planning of cardiac surgery on arterial vessels \cite{Kislinskiy2012}, or
-{\em something, something} of vagina/uterus.
-
-% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-%
-% TODO
-% Other Applications:
-% + cataract surgery
-%
-
 
 Currently, due to the technical decisions the element has two limitations.
 The first limitation is that the element does not provide $C^1$ continuity
@@ -727,7 +770,11 @@ stretching.
 On the other hand the choices provide a good trade-off between continuity
 and simplicity. Only $ 3 \times 6~\mathrm{DOFs} = 18~\mathrm{DOFs}$ are
 necessary while the Bézier triangle has theoretically $ 10 \times
-3~\mathrm{DOFs} = 30~\mathrm{DOFs}$.
+3~\mathrm{DOFs} = 30~\mathrm{DOFs}$. For complex elements with high number
+of nodes the interconnection between nodes increases, especially on the
+vertices where the size of nodes involved depends also on number of
+neighbouring elements. By keeping the element simple the sparsity of
+stiffness matrix is not violated.
 
 % }}}
 
@@ -741,7 +788,7 @@ of the previous model \cite{Comas2010c}, namely:
 
     \item It is continuous on the edges and provides $C^1$ continuity in
     corners of the element. This is essential for good visual experience if
-    high-resolution mesh is mapped on the physical mesh.
+    high-resolution mesh is mapped on the mechanical mesh.
 
     \item Deformations of the element are symmetric. A method of improving
     the corotational frame to keep the deformation symmetric is also
@@ -758,7 +805,7 @@ of the previous model \cite{Comas2010c}, namely:
 Because of the formulation of Bézier triangle that is intrinsically present
 there is a clean and obvious way of mapping high-resolution mesh for
 better visualisation. We also provide a mapping of forces and velocities
-between simulation mesh and physical mesh for collision detection/response
+between simulation mesh and mechanical mesh for collision detection/response
 and interaction with the mesh which are essential component for the surgical
 simulator.
 

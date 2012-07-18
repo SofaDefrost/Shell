@@ -8,10 +8,11 @@
 FILE:=vriphys2012
 SUBFILES:=
 BIBFILE:=vriphys2012
-
+IMGS=bezier.png fps.pdf hemisphere.pdf membrane.png plate.png roof.pdf segments.png
 
 TMPDIR=tmp
 LATEXARGS=-halt-on-error -interaction=nonstopmode -file-line-error -output-directory="$(TMPDIR)"
+RARGS=--vanilla
 
 LATEX=/usr/bin/latex $(LATEXARGS)
 PDFLATEX=/usr/bin/pdflatex $(LATEXARGS)
@@ -64,7 +65,7 @@ all: $(PDFFILES) #$(PSFILES)
 %.ps: %.dvi
 	HOME=`pwd` $(DVIPS) -o $@ $<
 
-%.pdf: %.tex $(TEXFILES) $(BIBFILE).bib
+%.pdf: %.tex $(TEXFILES) $(BIBFILE).bib $(IMGS)
 	export HOME=`pwd`; \
 	export TEXMFLOCAL=`pwd`/texmf:`kpsexpand '$$TEXMFLOCAL'`; \
 	mkdir -p "$(TMPDIR)" && \
@@ -85,9 +86,11 @@ all: $(PDFFILES) #$(PSFILES)
 	$(CP) $(TMPDIR)/$@ .
 
 # TODO: pdf doesn't work? 
-%.eps %.png: %.asy
-	asy -f png $<
-	asy -f eps $<
+%.png: %.asy
+	asy -nothreads -f png $<
+
+%.eps: %.asy
+	asy -nothreads -f eps $<
 
 %.eps %.png: %.dia
 	dia -t eps $<
@@ -95,6 +98,9 @@ all: $(PDFFILES) #$(PSFILES)
 
 %.eps: %.png
 	convert $< $@
+
+%.pdf: %.R %.csv
+	R CMD BATCH $(RARGS) $< /dev/stdout
 
 ##  Other targets  #############################################################
 
@@ -133,3 +139,6 @@ in-time:
 	done
 
 .PHONY: all clean rebuild view view-dvi view-ps in-time
+
+# Keep these intermediate files
+.PRECIOUS: $(IMGS)
