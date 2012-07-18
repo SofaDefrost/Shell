@@ -73,7 +73,7 @@
 
 
 \title[Short title]%
-      {Fill in the Title} % TODO
+      {Bezier shell finite element for interactive medical simulation} % TODO
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
@@ -130,52 +130,47 @@
 
 \section{Introduction} % {{{
 
-Objects with thin structure occur in many forms e.g. textiles, paper,
-leaves etc. Such objects are also very common in anatomical structures for
-example in the form of tubular objects like blood vessels or colon, in the
-form of thin membranes, but also many others (lens, skin, \ldots). Because
-they have high ratio between width and thickness methods for volumetric
-deformation modeling cannot be immediately used. For this reason they form
-a very specific field of research.
+Thin objects are very frequent in our every-day life. % thin wall objects ?
+%Objects with thin structure occur in many forms 
+e.g. textiles, paper, leaves etc. 
+Such objects are also very common in anatomical or pathological structures for example tubular structures (like blood vessels, colon \ldots), thin bag structures (%vessie, 
+Glisson capsule, aneurysms,  \ldots), and also many others (eyes, skin, \ldots). 
+In the field of surgical simulation, we try to reproduce or anticipate the mechanical behavior of these structures during the surgery.
+Thus, it is very important to capture accurately the physical behavior of these structure.
+However, in the same time, it is also very important to maintain fast computation rates, in order to be compatible with the targeted applications (interactive simulation for education and for planning).
 
-Methods based on continuum mechanics and namely theory of elasticity gained
-on popularity in computer graphics and real-time simulators ever since
-Terzopoulos \cite{Terzopoulos1987} presented his work on elastic
-deformation modeling. While the methods using finite elements and theory of
-elasticity are fairly popular in volumetric modeling \footnote{TODO: do we
-need ref. here?} of deformations, they are still frowned upon in the area
-of thin structures. Instead either the mass-spring models \cite{Volino2009}
-or bending models \cite{Grinspun2003,Choi2007} are preferred. Unfortunately
-they have the disadvantage that physical parameters of a material (like
-Young's modulus and Poisson's ratio) cannot be used directly.
+This problem has been faced by the computer graphics community but for different applications.
+For instance, many related work faces the problem of the simulation of cloth using mass-spring models \cite{Volino2009} or bending models \cite{Grinspun2003,Choi2007}. %% Todo verify.... 
+However, these models are discrete so their behavior depends on the mesh and their parameters are not easily measurable.
+This is completely acceptable for some computer graphics application, where the parameters can be tuned to obtain a realistic animation.
+In the case of medical simulation, more physics-based modeling is needed.
 
-The usual argument against FEM based methods is that they are
-computationally too expensive. This is indeed true if lots of elements are
-used to discretize the object or non-linear models are used. However,
-exploiting the bending property of the shell elements allows us to achieve
-good results even with relatively small number of elements. We can use
-high-polygonal mesh only for rendering or collision detection and response.
-Similar idea has been already presented in the work of Bouthors et al.
-\cite{Bouthors2007}. They used twinned meshes for animation of mesh defined
-by implicit surface. Simple low-polygonal mesh was used for mechanical FEM
-model and the mesh was subdivided in areas with high curvature after every
-step of the simulation to produce finer mesh for rendering. The underlaying
-FEM model is however not aware of the implicit surface used. We build upon
-the work of Comas \cite{Comas2010c} who used a simple cubic polynomial to
-describe the element geometry and derived the shell model from it. Comas's
-element has several drawbacks that we needed to address. Namely it produces
-discontinuities between the elements on the edges, it is missing one
-rotational degree of freedom and is not completely symmetric in context of
-deformations.
 
-% TODO: integrate better to the rest of the section
-Ubach and Oñate \cite{Ubach2010} also present a shell element based on
-Bézier triangles. The element is however free from rotational degrees of
-freedom which is unsuitable for physical simulators. It also reduces the
-sparsity of stiffness matrix because of increased interconnection between
-nodes.
+Methods based on continuum mechanics and namely theory of elasticity gained on popularity in computer graphics and real-time simulators ever sinceTerzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.  %% Do we
+While the methods using finite elements and theory of elasticity are fairly popular in volumetric modeling \footnote{TODO: do we need ref. here?  yes but for medical applications} of deformations, they are still frowned upon in the area of thin structures. 
+Yet, a special field of continuum mechanics has studied the deformations of these objects, and has proposed models based on shell theory.
+This theory can be integrated using Finite Elements, but there is two drawbacks: (i) the continuum equations requires square spatial derivations that can not be handled with linear interpolation and (ii) the final system of equations that describes the mechanics is non-linear (if the deformations are not small).
 
-% In this paper we present a new shell element based on the
+The usual argument against non-linear FEM based methods is that they are computationally too expensive. 
+This is indeed true if lots of elements are used to discretize the object.
+A classical strategy, is to use high-polygonal mesh for rendering or collision detection and response, while maintaing a reasonably low number of elements for the mechanics.
+The work of Bouthors et al.\cite{Bouthors2007} is a good application example of this strategy for surface deformations.
+But this strategy is not sufficient in our case because the problem of performance is also greatly impacted when using elements that have an interpolation with high order polynoms.
+This type of interpolation is necessary because bending continuum model (based on Kirchhoff-Love theory for thin plates)  requires the computation of square spatial derivatives.
+In \cite{Comas2010c}, Comas and al.  use an hybrid interpolation: linear interpolation is used for in-plane deformations and cubic polynomials for bending deformations.
+The element is piloted by 3 nodes on which 6 degrees of freedom are defined. 
+From this point of view, our work is derived from this approach but we address several noted drawbacks: the formulation misses one rotational degree of freedom, the cubic interpolation is not symmetric and produces $C^0$  discontinuities between elements on edges.
+Ubach and al. \cite{Ubach2010}  present a shell element based on B\'ezier triangles that allows for a better behavior.
+However, the B\'ezier interpolation defined on each triangle element is based on the motion computed on adjacent triangles.
+So the stiffness forces computed on each element not only depends on nodes of the element but also on all the adjacent nodes. 
+This greatly reduces the sparsity of the global stiffness matrix and consequently increases the computation time.
+
+
+
+
+
+
+hell element based on the
 % formulation of Bézier triangle.
 %
 % TODO: paper structure
