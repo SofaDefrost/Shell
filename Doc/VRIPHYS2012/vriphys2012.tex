@@ -146,17 +146,18 @@ This is completely acceptable for some computer graphics application, where the 
 In the case of medical simulation, more physics-based modeling is needed.
 
 
-Methods based on continuum mechanics and namely theory of elasticity gained on popularity in computer graphics and real-time simulators ever sinceTerzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.  %% Do we
+Methods based on continuum mechanics and namely theory of elasticity gained on popularity in computer graphics and real-time simulators ever since Terzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.  %% Do we
 While the methods using finite elements and theory of elasticity are fairly popular in volumetric modeling \footnote{TODO: do we need ref. here?  yes but for medical applications} of deformations, they are still frowned upon in the area of thin structures. 
 Yet, a special field of continuum mechanics has studied the deformations of these objects, and has proposed models based on shell theory.
-This theory can be integrated using Finite Elements, but there is two drawbacks: (i) the continuum equations requires square spatial derivations that can not be handled with linear interpolation and (ii) the final system of equations that describes the mechanics is non-linear (if the deformations are not small).
+This theory can be integrated using Finite Elements, but there are two drawbacks: (i) the continuum equations requires second spatial derivations that can not be handled with linear interpolation and (ii) the final system of equations that describes the mechanics is non-linear (if the deformations are not small).
 
 The usual argument against non-linear FEM based methods is that they are computationally too expensive. 
 This is indeed true if lots of elements are used to discretize the object.
 A classical strategy, is to use high-polygonal mesh for rendering or collision detection and response, while maintaing a reasonably low number of elements for the mechanics.
 The work of Bouthors et al.\cite{Bouthors2007} is a good application example of this strategy for surface deformations.
 But this strategy is not sufficient in our case because the problem of performance is also greatly impacted when using elements that have an interpolation with high order polynoms.
-This type of interpolation is necessary because bending continuum model (based on Kirchhoff-Love theory for thin plates)  requires the computation of square spatial derivatives.
+This type of interpolation is necessary because bending continuum model
+(based on Kirchhoff-Love theory for thin plates)  requires the computation of second spatial derivatives.
 In \cite{Comas2010c}, Comas and al.  use an hybrid interpolation: linear interpolation is used for in-plane deformations and cubic polynomials for bending deformations.
 The element is piloted by 3 nodes on which 6 degrees of freedom are defined. 
 From this point of view, our work is derived from this approach but we address several noted drawbacks: the formulation misses one rotational degree of freedom, the cubic interpolation is not symmetric and produces $C^0$  discontinuities between elements on edges.
@@ -166,13 +167,6 @@ So the stiffness forces computed on each element not only depends on nodes of th
 This greatly reduces the sparsity of the global stiffness matrix and consequently increases the computation time.
 
 
-
-
-
-
-hell element based on the
-% formulation of Bézier triangle.
-%
 % TODO: paper structure
 TODO: paper structure
 
@@ -204,41 +198,12 @@ The main contributions of the paper are following:
 
 \end{itemize}
 
- % }}}
-
-\section{Preliminaries} % {{{
-
-\subsection{Shell Element}
-
-Shell element is a combination of two simpler elements describing two types
-of deformations:
-
-\begin{itemize}
-
-    \item Elastic membrane defining deformations in plane of the
-    element. It encompasses deformations like stretching and shearing and
-    is described by 3 degrees of freedom: in-plane displacements $u_x, u_y$
-    and rotation $\theta_z$ around the axis perpendicular to the plane of
-    the element (Figure \ref{fig-membrane}).
-
-\Figure{0.8\linewidth}{membrane}
-{DOFs of elastic membrane element.}
+% }}}
 
 
-    \item Bending plate defining out of plane bending deformation. It is
-    described by 3 degrees of freedom: rotation around two axes $\theta_x,
-    \theta_z$ and out of plane displacement $u_z$ (Figure \ref{fig-plate}).
+\section{Element Geometry} % {{{
 
-\end{itemize}
-
-\Figure{0.8\linewidth}{plate}
-{DOFs of bending plate element.}
-
-Combining both elements we make use of all 6 degrees of freedom available
-at each node of the element.
-
-
-\subsection{Bézier Triangle} % {{{
+\subsection{B\'ezier Triangle} % {{{
 
 In the rest of the document we define the surface over the triangle:
 \begin{equation}
@@ -246,10 +211,10 @@ In the rest of the document we define the surface over the triangle:
         \mathrm{~and~} \xi_1+\xi_2 \le 1 \right\}
 \end{equation}
 
-Bézier triangles were designed in sixties by French mathematician de
-Casteljau. As with other Bézier or B-spline surfaces the Bézier triangle is
+B\'ezier triangles were designed in sixties by French mathematician de
+Casteljau. As with other B\'ezier or B-spline surfaces the B\'ezier triangle is
 defined by a mesh of control points that do not necessarily lie on the
-surface. The general $n$-th order Bézier triangle requires $(n + 1)(n +
+surface. The general $n$-th order B\'ezier triangle requires $(n + 1)(n +
 2)/2$ control points and it's surface is defined as:
 
 \begin{equation}
@@ -271,7 +236,7 @@ Bernstein basis functions defined as:
 \noindent
 where $ 0 \le i+j \le n $.
 
-In our work we use cubic Bézier triangle ($n=3$). Triangle of smaller order
+In our work we use cubic B\'ezier triangle ($n=3$). Triangle of smaller order
 would fail to describe all possible deformations of the element and
 triangles of higher order cannot be described unambiguously with only 18
 DOFs available to us without adding further constraints on the control
@@ -304,22 +269,17 @@ shortly express \eqref{eq-cubicbez} as:
 \end{equation}
 
 \Figure{0.8\linewidth}{bezier}
-{Cubic Bézier triangle with mesh of 10 control points.}
+{Cubic B\'ezier triangle with mesh of 10 control points.}
 
 % }}}
-
-% }}}
-
-
-\section{Bézier Shell Element} % {{{
-
 
 \subsection{Control Points} % {{{
 
-The Bézier triangles are defined by a mesh of control points, however the
-simulated object is usually described by a triangular mesh. We construct
-the Bézier mesh by taking into account the curvature of the triangular
-mesh. When constructing the mesh a special care has to be taken to maintain
+The B\'ezier triangles are defined by a mesh of control points, however the
+simulated object is usually described by a triangular mesh with 6 degrees of freedom per node (position \& rotation).
+We construct
+the initial B\'ezier mesh by taking into account the curvature of the triangular
+mesh. Note that special care has to be taken to maintain
 the continuity across the nodes and edges. During the initialization phase
 we partially employ the method described in \cite{Ubach2010} to maintain
 $C^0$ continuity on the edges. Each of the control points on the edge is
@@ -338,21 +298,37 @@ computed as the intersection of:
 Notice that the points on the edge will be same for both triangles sharing
 the edge.
 
-We do not repeat this procedure during the simulation. For faster update of
-the control points we rigidly attach the edge points to corner points. We
-remember the position and orientation of the edge point relative to the
-nearest corner point and use this information together with the rotation on
-the corner points to reconstruct new position of control points. See Figure
+We do not repeat this procedure during the simulation. For fast update of
+the control points we rigidly attach each edge point to nearest corner point (see Figure
 \ref{fig-segments} for the correspondence between edge points and
-associated corner points.
+associated corner points).
 
 \Figure{0.8\linewidth}{segments}
 {Correspondence between edge points and associated corner points shown in
 blue.}
 
+In the initialization phase we remember the position of edge point relative to the position and orientation of the corner node:
+
+\begin{equation}
+    \overline{P_{i-j}} = (R_i^0)^T P_{i-j}^0
+\end{equation}
+
+\noindent
+where $P_{i-j}^0 = P_j^0 - P_i^0$, with $j \in [4;10]$ being index of the edge node and $i \in [1;3]$ the index of associated corner node, is the segment at the beginning of the simulation and $R_i^0$ the orientation of node $P_i$.
+
+In each step of the simulation we recompute the new position based on 
+current orientation of the corner node:
+
+\begin{equation}
+    P_j = P_i + P_{i-j} = P_i + R_i \overline{P_{i-j}}
+\end{equation}
+
+\noindent
+where $P_i$ is the current position of corner node and $R_i$ its orientation.
+
 $C^1$ continuity on the edges can also be maintained if special care is taken
 when computing the position of the central point (see \cite{Ubach2010}). For
-simplicity we compute the central point followingly:
+simplicity we compute the central point like this:
 
 \begin{equation}\label{eq-central}
     P_{10} = \frac{1}{3}(\sum_{i=4}^9 P_i - \sum_{i=1}^3 P_i)
@@ -366,42 +342,104 @@ element.
 
 %}}}
 
-% TODO - nodes + DOFs (local + global position)
+\subsection{Deflection function} % {{{
 
-\subsection{Mechanics} % {{{
+% TODO: we need to justify how we decide to move the control points
 
-Our definition of the displacement field $u$ is based on the formulation of the
-Bézier triangle \eqref{eq-cubicbez}:
+We recall the equation for central node \eqref{eq-central} and
+considering how are the edge points of control mesh connected to corner points with
+segments $P_{i-j}$:
 
-\begin{equation}\label{eq-bezU}
-\begin{split}
-  u & = U_1 ( \xi_1^3 + 3 \xi_1^2 \xi_2 + 3 \xi_1^2 \xi_3
-        + 2 \xi_1 \xi_2 \xi_3 ) \\
-    & + U_2 ( \xi_2^3 + 3 \xi_1 \xi_2^2 + 3 \xi_2^2 \xi_3
-        + 2 \xi_1 \xi_2 \xi_3 ) \\
-    & + U_3 ( \xi_3^3 + 3 \xi_1 \xi_3^2 + 3 \xi_2 \xi_3^3
-        + 2 \xi_1 \xi_2 \xi_3 ) \\
-    & + 3 \xi_1^2 \xi_2 (P_{4-1} \times \theta_1) \\
-    & + 3 \xi_1^2 \xi_3 (P_{5-1} \times \theta_1) \\
-    & + 3 \xi_1 \xi_2^2 (P_{7-2} \times \theta_2) \\
-    & + 3 \xi_2^2 \xi_3 (P_{6-2} \times \theta_2) \\
-    & + 3 \xi_1 \xi_3^2 (P_{8-3} \times \theta_3) \\
-    & + 3 \xi_2 \xi_3^2 (P_{9-3} \times \theta_3) \\
-    & + 2 \xi_1 \xi_2 \xi_3 (P_{10-1} \times \theta_1 +
-        P_{10-2} \times \theta_2 +
-        P_{10-3} \times \theta_3)
-\end{split}
+\begin{equation}
+    P_{i-j} = P_j - P_i, \quad j \in [4;9], i \in [1;3].
+\end{equation}
+
+We now add small variation to the position ($U_1, U_2, U_3$) and orientation ($\theta_1, \theta_2, \theta_3$) of corner nodes to the equation of the element \eqref{eq-cubicbez}:
+
+\begin{equation}
+    \begin{split}
+        & n_1 (P_1 + U_1)
+        + n_2 (P_2 + U_2)
+        + n_3 (P_3 + U_3) \\
+        & + n_4 (P_1 + U_1 + P_{1-4} + P_{1-4} \times \theta_1)
+        + n_5 (P_1 + U_1 + P_{1-5} + P_{1-5} \times \theta_1) \\
+        & + n_6 (P_2 + U_2 + P_{2-6} + P_{2-6} \times \theta_2)
+        + n_7(P_2 + U_2 + P_{2-7} + P_{2-7} \times \theta_2) \\
+        & + n_8 (P_3 + U_3 + P_{3-8} + P_{3-8} \times \theta_3)
+        + n_9 (P_3 + U_3 + P_{3-9} + P_{3-9} \times \theta_3) \\
+        & + n_{10} \frac{1}{3} \left(
+        \sum_{j=4}^9 (P_i + U_i + P_{i-j} + P_{i-j} \times \theta_i) - \sum_{i=1}^3 (P_i + U_i)
+        \right) \\
+%
+        & = 
+    \sum_{i=1}^{10} n_i P_i
+      + n_1 U_1
+      + n_2 U_2
+      + n_3 U_3 \\
+      & + n_4 (U_1 + P_{1-4} \times \theta_1)
+      + n_5 (U_1 + P_{1-5} \times \theta_1)
+      + n_6 (U_2 + P_{2-6} \times \theta_2) \\
+      & + n_7 (U_2 + P_{2-7} \times \theta_2)
+      + n_8 (U_3 + P_{3-8} \times \theta_3)
+      + n_9 (U_3 + P_{3-9} \times \theta_3) \\
+      & + n_{10} \frac{1}{3} (U_1 + U_2 + U_3 + \sum_{j=4}^9 P_{i-j} \times \theta_i) \\
+%
+      & = T + U_1 (n_1 + n_4 + n_5 + \frac{1}{3} n_{10}) \\
+      & + U_2 (n_2 + n_6 + n_7 + \frac{1}{3} n_{10}) \\
+      & + U_3 (n_3 + n_8 + n_9 + \frac{1}{3} n_{10}) \\
+      & + \sum_{j=4}^9 n_j P_{i-j} \times \theta_i
+      + n_{10} \frac{1}{3} \sum_{j=4}^9 P_{i-j} \times \theta_i \\
+%
+      & = T + u
+  \end{split}
 \end{equation}
 
 \noindent
-where $U_1, U_2, U_3$ are the translational displacment vectors of the
-corner nodes of the element, $\theta_1, \theta_2, \theta_3$ are the angular
-displacements of the corner nodes and $P_{i-j}$ are the segments from
-corner nodes to other nodes of the control mesh:
+thus computing the function of deflection $u$.
 
-\begin{equation}
-    P_{i-j} = P_j-P_i %, \quad i \in [4;10], j \in [1;3]
-\end{equation}
+We have simplified the notation by leaving the variable $i$ free in the above sums involving $P_{i-j}$.
+Note however that the expressions are sound and unambiguous because there is only one possible $i$ for each $j$ depending on the connection of segments to the corner nodes (see fig. \ref{fig-segments}).
+
+% }}}
+
+% }}}
+
+
+\section{...} % {{{
+
+\subsection{Shell Element}
+
+Shell element is a combination of two simpler elements describing two types
+of deformations:
+
+\begin{itemize}
+
+    \item Elastic membrane defining deformations in plane of the
+    element. It encompasses deformations like stretching and shearing and
+    is described by 3 degrees of freedom: in-plane displacements $u_x, u_y$
+    and rotation $\theta_z$ around the axis perpendicular to the plane of
+    the element (Figure \ref{fig-membrane}).
+
+\Figure{0.8\linewidth}{membrane}
+{DOFs of elastic membrane element.}
+
+
+    \item Bending plate defining out of plane bending deformation. It is
+    described by 3 degrees of freedom: rotation around two axes $\theta_x,
+    \theta_z$ and out of plane displacement $u_z$ (Figure \ref{fig-plate}).
+
+\end{itemize}
+
+\Figure{0.8\linewidth}{plate}
+{DOFs of bending plate element.}
+
+Combining both elements we make use of all 6 degrees of freedom available
+at each node of the element.
+
+
+\subsection{Mechanics} % {{{
+
+...
 
 Using the plate theory we can now compute the strain-displacement matrices
 from the displacement field. From the Cauchy's strain tensor for the
@@ -537,6 +575,7 @@ and performing any more iterations is unnecessary.
 
 % }}}
 
+
 \section{Visual and Mechanical Mapping} % {{{
 
 Because of the bending property of the shells relatively few elements are
@@ -552,7 +591,7 @@ resolution mesh back onto the mechanical mesh.
 \subsection{Mapping the Surface Mesh}
 
 We use the fact that the geometry of the shell is based on the formulation
-of cubic Bézier triangle \eqref{eq-cubicbez}. For every vertex of the high
+of cubic B\'ezier triangle \eqref{eq-cubicbez}. For every vertex of the high
 resolution mesh we first find the corresponding triangle on the mechanical
 mesh that is closest to the vertex and assign barycentric coordinates on
 the triangle to this vertex. After every step of the simulation the high
@@ -652,7 +691,7 @@ the central control points by:
 % inconsistent).
 
 In next two subsections we present tests to validate the convergence of our
-Bézier shell element. The results are compared with the shell element
+B\'ezier shell element. The results are compared with the shell element
 composed of DKT element and optimal ANDES element \cite{Felippa2003}. The
 last subsection presents evaluation of the computational complexity of our
 solution.
@@ -673,7 +712,7 @@ edge.
 
 \Figure{\linewidth}{roof}
 {Convergence for modified Scordelis-Lo roof test of DKT+ANDES element and
-our Bézier shell element.}
+our B\'ezier shell element.}
 
 
 \subsection{Hemisphere Test}
@@ -691,7 +730,7 @@ displacement for one point with applied load is shown in Figure
 
 \Figure{\linewidth}{hemisphere}
 {Convergence for test on hemisphere with 18° hole for the DKT+ANDES element and
-our Bézier shell element.}
+our B\'ezier shell element.}
 
 \subsection{Computation Speed}
 
@@ -764,7 +803,7 @@ stretching.
 
 On the other hand the choices provide a good trade-off between continuity
 and simplicity. Only $ 3 \times 6~\mathrm{DOFs} = 18~\mathrm{DOFs}$ are
-necessary while the Bézier triangle has theoretically $ 10 \times
+necessary while the B\'ezier triangle has theoretically $ 10 \times
 3~\mathrm{DOFs} = 30~\mathrm{DOFs}$. For complex elements with high number
 of nodes the interconnection between nodes increases, especially on the
 vertices where the size of nodes involved depends also on number of
@@ -776,7 +815,7 @@ stiffness matrix is not violated.
 \subsection{Conclusion} % {{{
 
 This paper presents new shell element with geometry and displacement
-function based on the formulation of Bézier triangle. It fixes problems
+function based on the formulation of B\'ezier triangle. It fixes problems
 of the previous model \cite{Comas2010c}, namely:
 
 \begin{itemize}
@@ -797,7 +836,7 @@ of the previous model \cite{Comas2010c}, namely:
 
 \end{itemize}
 
-Because of the formulation of Bézier triangle that is intrinsically present
+Because of the formulation of B\'ezier triangle that is intrinsically present
 there is a clean and obvious way of mapping high-resolution mesh for
 better visualisation. We also provide a mapping of forces and velocities
 between simulation mesh and mechanical mesh for collision detection/response
@@ -817,4 +856,4 @@ Finally examples showing the convergence to the optimal solution were also provi
 
 \end{document}
 
-% vim: fdm=marker tw=75
+% vim: fdm=marker
