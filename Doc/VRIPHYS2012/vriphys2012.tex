@@ -71,9 +71,13 @@
 \end{figure*}}
 
 
+%%% ADD COMMENTS=
+\usepackage{color} 
+\newcommand{\CD}[1]{{\color{magenta}{\textbf{C: #1}}}}
+
 
 \title[Short title]%
-      {Bezier shell finite element for interactive medical simulation} % TODO
+      {Bezier shell finite element for interactive surgical simulation} % TODO
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
@@ -140,20 +144,22 @@ Thus, it is very important to capture accurately the physical behavior of these 
 However, in the same time, it is also very important to maintain fast computation rates, in order to be compatible with the targeted applications (interactive simulation for education and for planning).
 
 This problem has been faced by the computer graphics community but for different applications.
-For instance, many related work faces the problem of the simulation of cloth using mass-spring models \cite{Volino2009} or bending models \cite{Grinspun2003,Choi2007}. %% Todo verify.... 
+For instance, many related work addresses the problem of the simulation of cloth using mass-spring models \cite{Volino2009} or bending models \cite{Grinspun2003,Choi2007}. %% Todo verify.... 
 However, these models are discrete so their behavior depends on the mesh and their parameters are not easily measurable.
-This is completely acceptable for some computer graphics application, where the parameters can be tuned to obtain a realistic animation.
+This is completely acceptable for some computer graphics application, where the parameters can be tuned manually to obtain a realistic animation.
 In the case of medical simulation, more physics-based modeling is needed.
 
 
 Methods based on continuum mechanics and namely theory of elasticity gained on popularity in computer graphics and real-time simulators ever since Terzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.  %% Do we
 While the methods using finite elements and theory of elasticity are fairly popular in volumetric modeling \footnote{TODO: do we need ref. here?  yes but for medical applications} of deformations, they are still frowned upon in the area of thin structures. 
 Yet, a special field of continuum mechanics has studied the deformations of these objects, and has proposed models based on shell theory.
-This theory can be integrated using Finite Elements, but there are two drawbacks: (i) the continuum equations requires second spatial derivations that can not be handled with linear interpolation and (ii) the final system of equations that describes the mechanics is non-linear (if the deformations are not small).
+This theory was integrated numerically \CD{Todo citation of a shell book} using Finite Elements, but there are two issues for obtaining interactive frame rates: 
+(i) the continuum equations requires second spatial derivations that can not be handled with linear interpolation and 
+(ii) the final system of equations that describes the mechanics is non-linear (if the deformations are not small).
 
 The usual argument against non-linear FEM based methods is that they are computationally too expensive. 
 This is indeed true if lots of elements are used to discretize the object.
-A classical strategy, is to use high-polygonal mesh for rendering or collision detection and response, while maintaing a reasonably low number of elements for the mechanics.
+A classical strategy, is to use high-polygonal meshes for rendering or collision detection and response, while maintaing a reasonably low number of elements for the mechanics.
 The work of Bouthors et al.\cite{Bouthors2007} is a good application example of this strategy for surface deformations.
 But this strategy is not sufficient in our case because the problem of performance is also greatly impacted when using elements that have an interpolation with high order polynoms.
 This type of interpolation is necessary because bending continuum model
@@ -201,9 +207,14 @@ The main contributions of the paper are following:
 % }}}
 
 
-\section{Element Geometry} % {{{
+\section{Element kinematics} % {{{
 
-\subsection{B\'ezier Triangle} % {{{
+\CD{intro: we propose an interpolation with a high degree of derivability while maintaining a reasonably low number of degrees of Freedom.
+We introduce a new way of building the interpolation by using two stages: 
+(i) a B\'ezier interpolation is defined with cubic polynomial functions 
+(ii) a kinematic relation between nodes (6DOFs) defined at the vertices and the control points of the B\'ezier Triangle}
+
+\subsection{B\'ezier Triangle Interpolation} % {{{
 
 In the rest of the document we define the surface over the triangle:
 \begin{equation}
@@ -211,8 +222,8 @@ In the rest of the document we define the surface over the triangle:
         \mathrm{~and~} \xi_1+\xi_2 \le 1 \right\}
 \end{equation}
 
-B\'ezier triangles were designed in sixties by French mathematician de
-Casteljau. As with other B\'ezier or B-spline surfaces the B\'ezier triangle is
+B\'ezier triangles were designed in sixties by French mathematician de Casteljau.  % SURE ? What about Bezier himself ?
+As with other B\'ezier or B-spline surfaces the B\'ezier triangle is
 defined by a mesh of control points that do not necessarily lie on the
 surface. The general $n$-th order B\'ezier triangle requires $(n + 1)(n +
 2)/2$ control points and it's surface is defined as:
@@ -273,17 +284,20 @@ shortly express \eqref{eq-cubicbez} as:
 
 % }}}
 
-\subsection{Control Points} % {{{
+\subsection{Kinematic between Nodes and Control Points } % {{{
 
 The B\'ezier triangles are defined by a mesh of control points, however the
 simulated object is usually described by a triangular mesh with 6 degrees of freedom per node (position \& rotation).
-We construct
-the initial B\'ezier mesh by taking into account the curvature of the triangular
+%
+\CD{I would not say that it is "usual"... => I would say that 10 points x 3 Dofs  = 30 Dofs for a bezier triangle $\rightarrow$ it's quite a lot ! 
+We propose to reduce the degrees of freedom by using 3 nodes with 6 dofs = 18 Dofs }
+%
+We constructthe initial B\'ezier mesh by taking into account the curvature of the triangular
 mesh. Note that special care has to be taken to maintain
 the continuity across the nodes and edges. During the initialization phase
 we partially employ the method described in \cite{Ubach2010} to maintain
 $C^0$ continuity on the edges. Each of the control points on the edge is
-computed as the intersection of:
+computed as the intersection of (\CD{Need to do a figure of this}):
 
 \begin{enumerate}
     \item The plane perpendicular to the normal at the vertex.
@@ -298,37 +312,51 @@ computed as the intersection of:
 Notice that the points on the edge will be same for both triangles sharing
 the edge.
 
-We do not repeat this procedure during the simulation. For fast update of
+We do not repeat this procedure during the simulation. 
+\CD{Why ?... do we argue that it is only for having fast update ?  } 
+For fast update of
 the control points we rigidly attach each edge point to nearest corner point (see Figure
 \ref{fig-segments} for the correspondence between edge points and
 associated corner points).
 
 \Figure{0.8\linewidth}{segments}
 {Correspondence between edge points and associated corner points shown in
-blue.}
+blue. \CD{Not clear !!}}
 
 In the initialization phase we remember the position of edge point relative to the position and orientation of the corner node:
+
 
 \begin{equation}
     \overline{P_{i-j}} = (R_i^0)^T P_{i-j}^0
 \end{equation}
+
 
 \noindent
 where $P_{i-j}^0 = P_j^0 - P_i^0$, with $j \in [4;10]$ being index of the edge node and $i \in [1;3]$ the index of associated corner node, is the segment at the beginning of the simulation and $R_i^0$ the orientation of node $P_i$.
 
 In each step of the simulation we recompute the new position based on 
 current orientation of the corner node:
+\CD{Other possible explanation: we apply the rigid transformation of frame $i$ on control point $j$ }
 
 \begin{equation}
     P_j = P_i + P_{i-j} = P_i + R_i \overline{P_{i-j}}
 \end{equation}
 
+\CD{To be consitent with what I write in following, we could introduce a notation for the dofs of the nodes:  $\mathbf{x}_i$ for the position and $\theta_i$ for the rotation of the node $i$
+Then, the previous equation would be:
+\begin{equation}
+    P_j = \mathbf{x}_i + P_{i-j} = P_i + R(\theta_i) \overline{P_{i-j}}
+\end{equation}
+where $ R(\theta_i)$ is the rotation matrix for the angular position of node $i$...
+}
+
 \noindent
 where $P_i$ is the current position of corner node and $R_i$ its orientation.
 
 $C^1$ continuity on the edges can also be maintained if special care is taken
-when computing the position of the central point (see \cite{Ubach2010}). For
-simplicity we compute the central point like this:
+when computing the position of the central point (see \cite{Ubach2010}). 
+For simplicity we compute the central point like this: 
+\CD{Here it is not clear that with this formulation we do not maintain $C^1$ Continuity...}
 
 \begin{equation}\label{eq-central}
     P_{10} = \frac{1}{3}(\sum_{i=4}^9 P_i - \sum_{i=1}^3 P_i)
@@ -346,6 +374,8 @@ element.
 
 % TODO: we need to justify how we decide to move the control points
 
+\CD{It's more about derivatives of the kinematic relation, right ?} 
+
 We recall the equation for central node \eqref{eq-central} and
 considering how are the edge points of control mesh connected to corner points with
 segments $P_{i-j}$:
@@ -353,6 +383,9 @@ segments $P_{i-j}$:
 \begin{equation}
     P_{i-j} = P_j - P_i, \quad j \in [4;9], i \in [1;3].
 \end{equation}
+
+
+
 
 We now add small variation to the position ($U_1, U_2, U_3$) and orientation ($\theta_1, \theta_2, \theta_3$) of corner nodes to the equation of the element \eqref{eq-cubicbez}:
 
@@ -394,8 +427,39 @@ We now add small variation to the position ($U_1, U_2, U_3$) and orientation ($\
   \end{split}
 \end{equation}
 
+
+
+\CD{I would use the following notation: small variation of the node $j$ position:   $\delta \mathbf{x}_j$ for the translation and $\delta \boldsymbol{\theta}_j$ for the rotation.
+This small variation of the position creates a small variation of the control points $i$ position $\delta P_i$ that are on the edges:
+$$
+\delta P_i =  \delta \mathbf{x}_j +  P_{i-j} \times \delta \boldsymbol{\theta}_j
+$$
+ Variation of node $10$ will be:
+$$
+\delta P_{10} =  \sum_{j=1}^3  \frac{1}{3}(\delta \mathbf{x}_j +  P_{10-i} \times \delta \boldsymbol{\theta}_i)
+$$
+%
+Thus, finally, it will creates a variation of the point position on the surface $\delta T$...
+$$
+\delta T =   \sum_{i=1}^{10} n_i  \delta P_i
+$$
+which makes:
+\begin{equation}
+    \begin{split}
+\delta T =  (n_1 + n_4 + n_5 + \frac{1}{3} n_{10})  \delta \mathbf{x}_1 \\
+ + (n_2 + n_6 + n_7 + \frac{1}{3} n_{10})  \delta \mathbf{x}_2 \\
+ + (n_3 + n_8 + n_9 + \frac{1}{3} n_{10})  \delta \mathbf{x}_3 \\
++  \sum_{i=4}^9  \sum_{j=1}^3 n_i P_{i-j} \times \delta \theta_j \\
+ +  n_{10} \frac{1}{3} \sum_{j=1}^3 P_{10-j} \times \theta_j
+  \end{split}
+\end{equation}
+%
+}
+
+
 \noindent
-thus computing the function of deflection $u$.
+thus computing the function of deflection $u$ 
+\CD{ or $\delta T$ }.
 
 We have simplified the notation by leaving the variable $i$ free in the above sums involving $P_{i-j}$.
 Note however that the expressions are sound and unambiguous because there is only one possible $i$ for each $j$ depending on the connection of segments to the corner nodes (see fig. \ref{fig-segments}).
