@@ -107,21 +107,13 @@
 \maketitle
 
 \begin{abstract} % TODO
-   The ABSTRACT is to be in fully-justified italicized text, 
-   between two horizontal lines,
-   in one-column format, 
-   below the author and affiliation information. 
-   Use the word ``Abstract'' as the title, in 9-point Times, boldface type, 
-   left-aligned to the text, initially capitalized. 
-   The abstract is to be in 9-point, single-spaced type.
-   The abstract may be up to 3 inches (7.62 cm) long. \\
-   Leave one blank line after the abstract, 
-   then add the subject categories according to the ACM Classification Index 
-   (see http://www.acm.org/class/1998/).
+    TODO: Abstract.
 
-% TODO
 \begin{classification} % according to http://www.acm.org/class/1998/
-\CCScat{Computer Graphics}{I.3.3}{Picture/Image Generation}{Line and curve generation}
+    \CCScat{Computer Graphics}{I.3.5}{Computational Geometry and Object Modeling}{Physically based modelling};
+    \CCScat{Computer Graphics}{I.3.7}{Three-Dimensional Graphics and Realism}{Animation}.
+    %\CCScat{Simulation and Modeling}{I.6.8}{Types of Simulation}{Animation}
+    %\CCScat{Life and Medical Sciences}{J.3}{Health}{}
 \end{classification}
 
 \end{abstract}
@@ -151,7 +143,7 @@ In the case of medical simulation, more physics-based modeling is needed.
 
 
 Methods based on continuum mechanics and namely theory of elasticity gained on popularity in computer graphics and real-time simulators ever since Terzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.  %% Do we
-While the methods using finite elements and theory of elasticity are fairly popular in volumetric modeling \footnote{TODO: do we need ref. here?  yes but for medical applications} of deformations, they are still frowned upon in the area of thin structures. 
+While the methods using finite elements and theory of elasticity are fairly popular in volumetric modeling of deformations \cite{Cotin1999,Nesme2006,Miller2007}, they are still frowned upon in the area of thin structures. 
 Yet, a special field of continuum mechanics has studied the deformations of these objects, and has proposed models based on shell theory.
 This theory was integrated numerically \CD{Todo citation of a shell book} using Finite Elements, but there are two issues for obtaining interactive frame rates: 
 (i) the continuum equations requires second spatial derivations that can not be handled with linear interpolation and 
@@ -207,12 +199,14 @@ The main contributions of the paper are following:
 % }}}
 
 
-\section{Element kinematics} % {{{
+\section{Element Kinematics} % {{{
 
-\CD{intro: we propose an interpolation with a high degree of derivability while maintaining a reasonably low number of degrees of Freedom.
-We introduce a new way of building the interpolation by using two stages: 
-(i) a B\'ezier interpolation is defined with cubic polynomial functions 
-(ii) a kinematic relation between nodes (6DOFs) defined at the vertices and the control points of the B\'ezier Triangle}
+In this subsection we propose an element featuring interpolation with high degree of flexibility while still maintaining low number of degrees of freedom.
+We introduce a new way of building the interpolation by using two stages:
+\begin{enumerate}
+    \item A B\'ezier interpolation with cubic polynomial functions is defined on a triangle.
+    \item A kinematic relation between nodes (6DOFs) defined at the vertices and the control points of the B\'ezier triangle.
+\end{enumerate}
 
 \subsection{B\'ezier Triangle Interpolation} % {{{
 
@@ -222,7 +216,7 @@ In the rest of the document we define the surface over the triangle:
         \mathrm{~and~} \xi_1+\xi_2 \le 1 \right\}
 \end{equation}
 
-B\'ezier triangles were designed in sixties by French mathematician de Casteljau.  % SURE ? What about Bezier himself ?
+B\'ezier triangles were first designed in early sixties by French mathematician de Casteljau.
 As with other B\'ezier or B-spline surfaces the B\'ezier triangle is
 defined by a mesh of control points that do not necessarily lie on the
 surface. The general $n$-th order B\'ezier triangle requires $(n + 1)(n +
@@ -284,19 +278,16 @@ shortly express \eqref{eq-cubicbez} as:
 
 % }}}
 
-\subsection{Kinematic between Nodes and Control Points } % {{{
+\subsection{Initial Construction of Control Points} % {{{
 
-The B\'ezier triangles are defined by a mesh of control points, however the
-simulated object is usually described by a triangular mesh with 6 degrees of freedom per node (position \& rotation).
-%
-\CD{I would not say that it is "usual"... => I would say that 10 points x 3 Dofs  = 30 Dofs for a bezier triangle $\rightarrow$ it's quite a lot ! 
-We propose to reduce the degrees of freedom by using 3 nodes with 6 dofs = 18 Dofs }
-%
-We constructthe initial B\'ezier mesh by taking into account the curvature of the triangular
+The cubic B\'ezier triangles are defined by a mesh of 10 control points each, however the
+simulated object is usually described by a triangular mesh possibly with normals.
+A procedure for construction of initial Bézier mesh is necessary.
+We construct the initial B\'ezier mesh by taking into account the curvature of the triangular
 mesh. Note that special care has to be taken to maintain
-the continuity across the nodes and edges. During the initialization phase
+the continuity between elements across the nodes and edges, 
 we partially employ the method described in \cite{Ubach2010} to maintain
-$C^0$ continuity on the edges. Each of the control points on the edge is
+$C^0$ continuity. Each of the control points on the edge is
 computed as the intersection of (\CD{Need to do a figure of this}):
 
 \begin{enumerate}
@@ -312,61 +303,62 @@ computed as the intersection of (\CD{Need to do a figure of this}):
 Notice that the points on the edge will be same for both triangles sharing
 the edge.
 
-We do not repeat this procedure during the simulation. 
-\CD{Why ?... do we argue that it is only for having fast update ?  } 
-For fast update of
-the control points we rigidly attach each edge point to nearest corner point (see Figure
-\ref{fig-segments} for the correspondence between edge points and
-associated corner points).
-
-\Figure{0.8\linewidth}{segments}
-{Correspondence between edge points and associated corner points shown in
-blue. \CD{Not clear !!}}
-
-In the initialization phase we remember the position of edge point relative to the position and orientation of the corner node:
-
-
-\begin{equation}
-    \overline{P_{i-j}} = (R_i^0)^T P_{i-j}^0
-\end{equation}
-
-
-\noindent
-where $P_{i-j}^0 = P_j^0 - P_i^0$, with $j \in [4;10]$ being index of the edge node and $i \in [1;3]$ the index of associated corner node, is the segment at the beginning of the simulation and $R_i^0$ the orientation of node $P_i$.
-
-In each step of the simulation we recompute the new position based on 
-current orientation of the corner node:
-\CD{Other possible explanation: we apply the rigid transformation of frame $i$ on control point $j$ }
-
-\begin{equation}
-    P_j = P_i + P_{i-j} = P_i + R_i \overline{P_{i-j}}
-\end{equation}
-
-\CD{To be consitent with what I write in following, we could introduce a notation for the dofs of the nodes:  $\mathbf{x}_i$ for the position and $\theta_i$ for the rotation of the node $i$
-Then, the previous equation would be:
-\begin{equation}
-    P_j = \mathbf{x}_i + P_{i-j} = P_i + R(\theta_i) \overline{P_{i-j}}
-\end{equation}
-where $ R(\theta_i)$ is the rotation matrix for the angular position of node $i$...
-}
-
-\noindent
-where $P_i$ is the current position of corner node and $R_i$ its orientation.
-
-$C^1$ continuity on the edges can also be maintained if special care is taken
-when computing the position of the central point (see \cite{Ubach2010}). 
-For simplicity we compute the central point like this: 
-\CD{Here it is not clear that with this formulation we do not maintain $C^1$ Continuity...}
+$C^1$ continuity between elements on the edges can also be maintained if special care is taken
+when computing the position of the central point
+(see \cite{Ubach2010} or refer to the work of Farin \cite{Farin2002} for continuity conditions). 
+For simplicity we decided to keep the edge boundary only $C^0$ continuous and we compute the central point as a function of other 9 points: 
 
 \begin{equation}\label{eq-central}
     P_{10} = \frac{1}{3}(\sum_{i=4}^9 P_i - \sum_{i=1}^3 P_i)
 \end{equation}
 
+\noindent
+where the points $P_i$ are named as in Figure \ref{fig-bezier}.
+
 % TODO: explain the equation eq-central? would require an image
 
 That way if the element is not flat the central point is slightly elevated
-and not in the plane of other nodes thus keeping the curvature of the
+and not in the plane of other points thus keeping the curvature of the
 element.
+
+% }}}
+
+\subsection{Kinematic Between Nodes and Control Points } % {{{
+
+With 10 control points and 3 DOFs per point it is a total of 30 DOFs for triangle.
+This puts ... blah blah.
+We propose a reduction of the number of degrees of freedom by using 3 nodes with 6 degrees of freedom
+by creating a kinematic link between the control points.
+Each of the edge control points is attached to nearest corner node. See Figure
+\ref{fig-segments} for the correspondence between edge points and
+associated corner nodes. 
+In the following text the index $j \in [4;10]$ refers to edge points and index $i \in [1;3]$ to the associated corner point/node.
+
+\Figure{0.8\linewidth}{segments}
+{Correspondence between edge points and associated corner points shown in
+blue. \CD{Not clear !!}}
+
+In the initialization phase we remember the position of edge point $j$ in the frame of corner point $i$:
+
+\begin{equation}
+    \overline{P_{i-j}} = R(\theta_i^0)^T P_{i-j}^0
+\end{equation}
+
+\noindent
+where
+$\mathbf{x}_i$ and $\theta_i$ are the position and angular position of the node $i$,
+$R(\theta_i^0)$ is the rotation matrix for the angular position of node $i$ at the beginning of the simulation and
+$P_{i-j}^0 = P_j^0 - \mathbf{x}_i^0 = P_j^0 - P_i^0$ the attachment segment.
+
+In each step of the simulation we
+%recompute the new position based on current orientation of the corner node:
+apply the rigid transformation of frame $i$ on control point $j$:
+
+\begin{equation}
+    P_j = \mathbf{x}_i + P_{i-j} = P_i + R(\theta_i) \overline{P_{i-j}}.
+\end{equation}
+
+For the central point we again apply interpolation of \eqref{eq-central}.
 
 %}}}
 
