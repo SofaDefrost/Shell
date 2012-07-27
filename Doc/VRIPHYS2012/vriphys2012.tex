@@ -75,12 +75,12 @@
 \usepackage{color} 
 \newcommand{\CD}[1]{{\color{magenta}{\textbf{C: #1}}}}
 
-
-\title[Short title]%
-      {Bezier shell finite element for interactive surgical simulation} % TODO
+\title[B\'ezier Shell FE]%
+      {B\'ezier Shell Finite Element for Interactive Surgical Simulation}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
+% TODO: anonymize
 \author[...]
        {...} % TODO
 
@@ -136,13 +136,13 @@ Thus, it is very important to capture accurately the physical behavior of these 
 However, in the same time, it is also very important to maintain fast computation rates, in order to be compatible with the targeted applications (interactive simulation for education and for planning).
 
 This problem has been faced by the computer graphics community but for different applications.
-For instance, many related work addresses the problem of the simulation of cloth using mass-spring models \cite{Volino2009} or bending models \cite{Grinspun2003,Choi2007}. %% Todo verify.... 
+For instance, many related works address the problem of the simulation of cloth using mass-spring models \cite{Volino2009} or bending models \cite{Grinspun2003}. %% Todo Choi2007?
 However, these models are discrete so their behavior depends on the mesh and their parameters are not easily measurable.
 This is completely acceptable for some computer graphics application, where the parameters can be tuned manually to obtain a realistic animation.
 In the case of medical simulation, more physics-based modeling is needed.
 
 
-Methods based on continuum mechanics and namely theory of elasticity gained on popularity in computer graphics and real-time simulators ever since Terzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.  %% Do we
+Methods based on continuum mechanics and namely theory of elasticity gained on popularity in real-time simulations ever since Terzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.
 While the methods using finite elements and theory of elasticity are fairly popular in volumetric modeling of deformations \cite{Cotin1999,Nesme2006,Miller2007}, they are still frowned upon in the area of thin structures. 
 Yet, a special field of continuum mechanics has studied the deformations of these objects, and has proposed models based on shell theory.
 This theory was integrated numerically \CD{Todo citation of a shell book} using Finite Elements, but there are two issues for obtaining interactive frame rates: 
@@ -151,15 +151,16 @@ This theory was integrated numerically \CD{Todo citation of a shell book} using 
 
 The usual argument against non-linear FEM based methods is that they are computationally too expensive. 
 This is indeed true if lots of elements are used to discretize the object.
-A classical strategy, is to use high-polygonal meshes for rendering or collision detection and response, while maintaing a reasonably low number of elements for the mechanics.
+A classical strategy, is to use high-polygonal meshes for rendering or collision detection and response, while maintaining a reasonably low number of elements for the mechanics.
 The work of Bouthors et al.\cite{Bouthors2007} is a good application example of this strategy for surface deformations.
-But this strategy is not sufficient in our case because the problem of performance is also greatly impacted when using elements that have an interpolation with high order polynoms.
+But this strategy is not sufficient in our case because the problem of performance is also greatly impacted when using elements that have an interpolation with high order polynomials.
 This type of interpolation is necessary because bending continuum model
 (based on Kirchhoff-Love theory for thin plates)  requires the computation of second spatial derivatives.
-In \cite{Comas2010c}, Comas and al.  use an hybrid interpolation: linear interpolation is used for in-plane deformations and cubic polynomials for bending deformations.
+On the other hand, elements common in mechanics (e.g. Discrete Kirchhoff Triangles) are based on shape functions that are impractical for real-time simulations or don't have explicitly defined shape functions at all.
+In \cite{Comas2010c}, Comas et al. use a hybrid interpolation: linear interpolation is used for in-plane deformations and cubic polynomials for bending deformations.
 The element is piloted by 3 nodes on which 6 degrees of freedom are defined. 
 From this point of view, our work is derived from this approach but we address several noted drawbacks: the formulation misses one rotational degree of freedom, the cubic interpolation is not symmetric and produces $C^0$  discontinuities between elements on edges.
-Ubach and al. \cite{Ubach2010}  present a shell element based on B\'ezier triangles that allows for a better behavior.
+Ubach et al. \cite{Ubach2010}  present a shell element based on B\'ezier triangles that allows for a better behavior.
 However, the B\'ezier interpolation defined on each triangle element is based on the motion computed on adjacent triangles.
 So the stiffness forces computed on each element not only depends on nodes of the element but also on all the adjacent nodes. 
 This greatly reduces the sparsity of the global stiffness matrix and consequently increases the computation time.
@@ -354,7 +355,7 @@ In each step of the simulation we
 apply the rigid transformation of frame $i$ on control point $j$:
 
 \begin{equation}
-    P_j = \mathbf{x}_i + P_{i-j} = P_i + R(\theta_i) \overline{P_{i-j}}.
+    P_j = \mathbf{x}_i + P_{i-j} = P_i + R(\theta_i) \overline{P_{i-j}}
 \end{equation}
 
 For the central point we again apply interpolation of \eqref{eq-central} which is kind of skinning function:
@@ -445,7 +446,7 @@ Thus, finally, it creates a variation of the point position on the surface $\del
 \noindent
 or:
 
-\begin{equation}
+\begin{equation}\label{bez-delta}
     \begin{split}
         \delta T = &   (n_1 + n_4 + n_5 + \frac{1}{3} n_{10})  \delta \mathbf{x}_1 + \\
                    & + (n_2 + n_6 + n_7 + \frac{1}{3} n_{10})  \delta \mathbf{x}_2 + \\
@@ -511,7 +512,6 @@ elastic membrane is defined as:
         \deriv{u_x}{y} + \deriv{u_y}{x}
     \end{matrix} \right]
 \end{equation}
-.
 
 We apply Kirchhoff-Love theory for thin plates to obtain strain-displacement matrix for bending plate element:
 
@@ -538,8 +538,8 @@ and bending plate respectively:
 where $M$ is the material matrix. To keep the system simple we use linear
 Hooke's law for isotropic materials.
 
-Because the deformation field for the shell is non-linear \eqref{eq-bezU}
-the integrals \eqref{eq-Km} and \eqref{eq-Kb} have to be computed using
+Because the deflection field for the element is non-linear \eqref{eq-delta}
+in position the integrals \eqref{eq-Km} and \eqref{eq-Kb} have to be computed using
 numerical integration. In our implementation we employ 6-point Gaussian
 quadrature for integration over triangle area.
 % TODO: add ref
@@ -572,7 +572,7 @@ TODO: how we compute frame?
 %edge of the element. \footnote{add image}
 
 
-%The displacement field defined in \eqref{eq-bezU} is clearly symmetric in
+%The displacement field defined in \eqref{eq-delta} is clearly symmetric in
 %respect to deformations, but ...
 
 This choice of the frame aligns one axis of the frame with one of the edges
@@ -750,10 +750,11 @@ the central control points by:
 % inconsistent).
 
 In next two subsections we present tests to validate the convergence of our
-B\'ezier shell element. The results are compared with the shell element
-composed of DKT element and optimal ANDES element \cite{Felippa2003}. The
-last subsection presents evaluation of the computational complexity of our
-solution.
+B\'ezier shell element. We use a combination of two elements that are very well
+established in the area of mechanical modelling.
+Our results are compared with the shell element
+composed of Discrete Kirchoff Triangle (DKT) element \cite{Batoz1980} for bending plate and optimal ANDES element \cite{Felippa2003} for membrane.
+The last subsection presents evaluation of the computational complexity of our solution.
 
 \subsection{Roof Test}
 
@@ -816,30 +817,64 @@ to simulate up to 1000 elements and still maintain visual refresh rate of
 because it consumes most of the computation time, but it is still able to
 provide good results for more than 600 elements.
 
-\subsection{Applications}
+\subsection{Application on Congenital Heart Disease Correction Planning}
 
-The presented element has been successfully implemented in SOFA framework
-\cite{Faure2012} for real-time surgical simulations. It has been evaluated
-on several applications.
+Surgical interventions in infants with congenitally malformed great arteries
+and hearts are extremely challenging due to the complex and heterogeneous
+nature of their disease patterns. At present, cardiac surgeons rely on
+non-invasive imaging for patient-specific examination and a set of preoperative
+sketches with varying approaches to the surgical procedure. However, the most
+promising approach is often chosen during the actual open-heart surgery, when
+surgeons get a more concrete idea of possible outcomes. Finalizing this
+decision during an on-pump cardiac surgery is further complicated by deflated
+blood vessels since it is difficult to imagine their exact change of shape
+caused by the intervention. The important decisions have to be made in very
+short time and are strongly dependent on the surgeon's experience.
 
-% TODO: !!! When ANONYMISING do something with the citation !!!
-One being a tool for pre-operative planning of corrective surgery of
-congenital heart diseases in infants \cite{Kislinskiy2012}. The cardiac
-surgery is a complicated process where several arterial vessels have to be
-cut, patched and reconnected. The element has been used for to model
-deformations of blood vessels after suturing and/or applying a artificial
-patch. Figure \ref{fig-chd} presents a screenshots of the application
-prototype.
+The planning process can be improved by employing surgical simulation system
+using three-dimensional heart models based on patient-specific images as input.
+Most present simulation systems focus on execution of low-level surgical
+procedures, e.g. incising and suturing. In these reactive simulation systems it
+is more important to enable simulations in real-time than accurate simulation
+of tissue and blood vessel deformation in response to simulated interventions.
+
+To be able to predict results of complex surgical procedures a physically more
+accurate approach is necessary. Using our shell finite element model we have
+developed a prototype \cite{Kislinskiy2012} of new surgical simulation system
+for preoperative planning. The element has been used to model deformations of
+blood vessels and artificial patch. By performing a set of topological changes
+we simulate the process of incising the vessel and suturing on a pre-specified
+boundary. By iteratively adjusting the underlaying mesh we search for the
+elastic equilibrium. Figure \ref{fig-chd} presents a screenshots of the
+application prototype.
+
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%
+%% TODO: is this OK for anonymity?
+%The presented element has been successfully implemented in SOFA framework
+%\cite{Faure2012} for real-time surgical simulations. It has been evaluated
+%on several applications.
+%
+%% TODO: !!! When ANONYMISING do something with the citation !!!
+%One being a tool for pre-operative planning of corrective surgery of
+%congenital heart diseases in infants \cite{Kislinskiy2012}. The cardiac
+%surgery is a complicated process where several arterial vessels have to be
+%cut, patched and reconnected. The element has been used for to model
+%deformations of blood vessels after suturing and/or applying a artificial
+%patch. Figure \ref{fig-chd} presents a screenshots of the application
+%prototype.
 
 \FigureW{0.75\linewidth}{chd}
 {Screenshots of the simulation system prototype for different surgical
 procedures used to repair a coarctation of an aortic arch. The screenshots
 are enriched with overlay delineations.}
 
-Another designed application is simulation of women reproductive organs
-(vagaina/uterus/\ldots). 
-The simulation is so as to evaluate
-stress on a tissue during a birth.
+% TODO?
+%Another designed application is simulation of women reproductive organs
+%(vagaina/uterus/\ldots). 
+%The simulation is so as to evaluate
+%stress on a tissue during a birth.
 
 
 % }}}
@@ -873,27 +908,33 @@ stiffness matrix is not violated.
 
 \subsection{Conclusion} % {{{
 
-This paper presents new shell element with geometry and displacement
-function based on the formulation of B\'ezier triangle. It fixes problems
-of the previous model \cite{Comas2010c}, namely:
+In this paper we presents new shell element with interpolation functions
+based on B\'ezier triangle which is more suitable for real-time simulations than elements common in mechanics with complex, obscure or unclear interpolation functions.
+It fixes problems of the previous model \cite{Comas2010c} based on cubic polynomials, namely:
 
 \begin{itemize}
 
-    \item It is continuous on the edges and provides $C^1$ continuity in
-    corners of the element. This is essential for good visual experience if
-    high-resolution mesh is mapped on the mechanical mesh.
+    \item Element is based on all 6 DOFs, including the drilling degree of
+        freedom, not just 5 DOFs. Therefore it doesn't have the problem of
+        undefined z-rotations.
 
     \item Deformations of the element are symmetric. A method of improving
     the corotational frame to keep the deformation symmetric is also
     presented in the paper.
 
-    \item TODO: anything else \ldots? % TODO
+    \item It is $C^0$ continuous on the edges and provides $C^1$ continuity in
+    corners of the element. This is essential for good visual experience if
+    high-resolution mesh is mapped on the mechanical mesh.
 
     % TODO: check this:
     % + Better conditioning (comparison between Comas model and ours in term of
     %   convergence of CG...) 
 
 \end{itemize}
+
+Unified formulation of the deformation allows for derivation of three-dimensional 
+stress tensor. This however remains as topic for future work and
+we have kept the computation of membrane stresses separate from bending stresses.
 
 Because of the formulation of B\'ezier triangle that is intrinsically present
 there is a clean and obvious way of mapping high-resolution mesh for
