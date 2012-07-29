@@ -172,7 +172,8 @@ TODO: paper structure
 \subsection{Contribution}
 
 % TODO
-The main contributions of the paper are following:
+The main contributions of the paper are following \CD{- Tomas, you need to write sentences here -}
+
 \begin{itemize}
     % not really novel, similar model already in Ubach2010
     %\item shell element based on Bézier triangles
@@ -194,6 +195,7 @@ The main contributions of the paper are following:
         shell. The smooth mapped surface can be used for collision
         detection and allows the propagation of proper collision response
         back onto the (low resolution) mechanical mesh.
+      
 
 \end{itemize}
 
@@ -203,11 +205,13 @@ The main contributions of the paper are following:
 \section{Element Kinematics} % {{{
 
 In this subsection we propose an element featuring interpolation with high degree of flexibility while still maintaining low number of degrees of freedom.
-We introduce a new way of building the interpolation by using two stages:
+We introduce a new way of building the interpolation by using two stages 
+\CD{ - Need a figure here - }:
 \begin{enumerate}
     \item A B\'ezier interpolation with cubic polynomial functions is defined on a triangle.
     \item A kinematic relation between nodes (6DOFs) defined at the vertices and the control points of the B\'ezier triangle.
 \end{enumerate}
+
 
 \subsection{B\'ezier Triangle Interpolation} % {{{
 
@@ -358,7 +362,8 @@ apply the rigid transformation of frame $i$ on control point $j$:
     P_j = \mathbf{x}_i + P_{i-j} = P_i + R(\theta_i) \overline{P_{i-j}}
 \end{equation}
 
-For the central point we again apply interpolation of \eqref{eq-central} which is kind of skinning function:
+For the central point we again apply interpolation of \eqref{eq-central} which is kind of skinning function \CD{Why so complicated ?
+You can compute  some rules to chose the first location of point $P_{10}$ (i.e. to compute $P_{i-10}$) but then use something more simple for the kinematics}:
 
 \begin{equation}\label{eq-central}
     \begin{split}
@@ -369,8 +374,24 @@ For the central point we again apply interpolation of \eqref{eq-central} which i
     \end{split}
 \end{equation}
 
+\CD{I would have put (but that is maybe the same result...)}
+
+\begin{equation}\label{eq-central}
+    \begin{split}
+        P_{10} =  \frac{1}{3}\left( \sum_{i=1}^3 \mathbf{x}_i + R(\theta_i) \overline{P_{i-10}} \right)
+    \end{split}
+\end{equation}
 
 %}}}
+
+\CD{and it could be possible to write down (and this is helpful for the formulation of the spacial derivative):}
+\begin{equation}\label{global-transform}
+    \begin{split}
+ T(\xi_1,\xi_2, \xi_3) = \sum_{i=1}^{10} n_i(\xi_1,\xi_2, \xi_3)P_i = \\
+ 	\sum_{i=1}^{3} n_i(\xi_1,\xi_2, \xi_3) \mathbf{x}_i +  \sum_{j=4}^9 n_j (\xi_1,\xi_2, \xi_3)( \mathbf{x}_i +  R(\theta_i) \overline{P_{i-j}}) + \\  \frac{n_{10}(\xi_1,\xi_2, \xi_3)}{3}\left( \sum_{i=1}^3 \mathbf{x}_i + R(\theta_i) \overline{P_{i-10}} \right) 
+    \end{split}
+\end{equation}
+
 
 \subsection{Deflection Function} % {{{
 
@@ -432,7 +453,7 @@ A small variation $\delta \mathbf{x}_i$ of the node $i$ position and $\delta \ma
 \end{eqnarray}
 
 \noindent
-and variation of central point $\delta P_{10}$:
+and variation of central point $\delta P_{10}$ \CD{ this formulation would be simplified...} :
 
 \begin{equation}
     \delta P_{10} = \frac{1}{3} (\sum_{i=1}^3 \delta \mathbf{x}_i + \sum_{j=4}^9 P_{i-j} \times \delta \mathbf{\theta}_i)
@@ -452,7 +473,7 @@ or:
                    & + (n_2 + n_6 + n_7 + \frac{1}{3} n_{10})  \delta \mathbf{x}_2 + \\
                    & + (n_3 + n_8 + n_9 + \frac{1}{3} n_{10})  \delta \mathbf{x}_3 + \\
                    & + \sum_{j=4}^9 P_{i-j} \times \delta \mathbf{\theta}_j + \\
-                   & + n_{10} \frac{1}{3} \sum_{j=4}^9 P_{i-j} \times \mathbf{\theta}_i
+                   & + n_{10} \frac{1}{3} \sum_{j=4}^9 P_{i-j} \times \delta \mathbf{\theta}_i 
     \end{split}
 \end{equation}
 
@@ -466,8 +487,30 @@ Note however that the expressions are sound and unambiguous because there is onl
 
 % }}}
 
+%%%%%%%%%%%%%%%%%%%%%%%%% SECTION 3 %%%%%%%%%%%%%%%
 
-\section{...} % {{{
+
+\section{Finite element formulation} % {{{
+
+In the previous section we present an interpolation based on cubic B\'ezier triangles and a kinematic link between the control points and the element 6DoF Nodes.
+In this section we show how this interpolation can be used to compute a finite element formulation of the shell equations.
+
+
+\subsection{Computation of the strain tensor}
+
+We define a local system of coordinates $(x,y,z)$ in which the axis z is oriented along the thickness of the element. (\CD{TODO: figure}) 
+For the shell formulation, there is no need to compute the derivatives along axis $z$.
+
+The 2D tensor of deformation can be defined as a $2\times2$ matrix in which the components $k=\{x,y\}$ and $l=\{x,y\}$are:
+\begin{equation}
+F_{kl} = \frac{\delta T^k}{\delta l}   
+\end{equation}
+
+
+
+
+
+
 
 \subsection{Shell Element}
 
@@ -634,6 +677,7 @@ and performing any more iterations is unnecessary.
 
 % }}}
 
+%%%%%%%%%%%%%%%%%%%%%%%%% SECTION 4 %%%%%%%%%%%%%%%
 
 \section{Visual and Mechanical Mapping} % {{{
 
@@ -748,6 +792,7 @@ the central control points by:
 % seems to converge to wrong value (but it converges! :)). Thus showing
 % results for plain membrane deformations doesn't make sense (it would be
 % inconsistent).
+  \CD{ - On this section,  we can maybe add some results from the CBM paper you did with Stephan especially  the figure 9 that illustrates the 3d contribution we list in the intro: i.e. Mapping of high resolution mesh on the curved surface of the shell.}
 
 In next two subsections we present tests to validate the convergence of our
 B\'ezier shell element. We use a combination of two elements that are very well
