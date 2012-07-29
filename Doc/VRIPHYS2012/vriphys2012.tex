@@ -70,6 +70,16 @@
   \caption{\label{fig-#2}#3}
 \end{figure*}}
 
+% For large/wide figures
+%\FigureW{width}{name}{caption}
+\newcommand{\FigureWI}[3]{%
+\begin{figure*}[htb]
+  \centering
+  \input{#1.pdf_tex}
+  \caption{\label{fig-#1}#2}
+\end{figure*}}
+
+
 
 %%% ADD COMMENTS=
 \usepackage{color} 
@@ -81,8 +91,8 @@
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
 % TODO: anonymize
-\author[...]
-       {...} % TODO
+\author[Authors]
+       {Authors} % TODO
 
 % ------------------------------------------------------------------------
 
@@ -532,6 +542,11 @@ For the shell formulation, there is no need to compute the derivatives along dir
 Shell element is a combination of two simpler elements describing two types
 of deformations:
 
+\FigureWI{deformations}{Plate deformations:%
+a) membrane deformations like stretching or shearing;
+b) undeformed;
+c) bending deformation}
+
 \begin{itemize}
 
     \item Elastic membrane defining deformations in plane of the
@@ -540,18 +555,11 @@ of deformations:
     and rotation $\theta_z$ around the axis perpendicular to the plane of
     the element (Figure \ref{fig-membrane}).
 
-\Figure{0.8\linewidth}{membrane}
-{DOFs of elastic membrane element.}
-
-
     \item Bending plate defining out of plane bending deformation. It is
     described by 3 degrees of freedom: rotation around two axes $\theta_x,
     \theta_z$ and out of plane displacement $u_z$ (Figure \ref{fig-plate}).
 
 \end{itemize}
-
-\Figure{0.8\linewidth}{plate}
-{DOFs of bending plate element.}
 
 Combining both elements we make use of all 6 degrees of freedom available
 at each node of the element.
