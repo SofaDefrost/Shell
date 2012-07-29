@@ -498,14 +498,29 @@ In this section we show how this interpolation can be used to compute a finite e
 
 \subsection{Computation of the strain tensor}
 
-We define a local system of coordinates $(x,y,z)$ in which the axis z is oriented along the thickness of the element. (\CD{TODO: figure}) 
-For the shell formulation, there is no need to compute the derivatives along axis $z$.
+(\CD{TODO add a figure to illustrate the explanation})
 
-The 2D tensor of deformation can be defined as a $2\times2$ matrix in which the components $k=\{x,y\}$ and $l=\{x,y\}$are:
+We define a local system of coordinates $(x,y,z)$ in which the axis z is oriented along the thickness of the element\footnote{The computation of the frame of each element will be detailed in section \ref{sec-corot}. }. 
+Given the initial position of the triangle points in this system of coordinate, $\{x_1^0, y_1^0\}$,  $\{x_2^0, y_2^0\}$, and  $\{x_3^0, y_3^0\}$, we can compute a linear relation between $\{\xi_1,\xi_2, \xi_3\}$ and $\{ x,y \}$:
+
 \begin{equation}
-F_{kl} = \frac{\delta T^k}{\delta l}   
+\left[ \begin{array}[c]{c} \xi_1(x,y) \\ \xi_2(x,y) \\ \xi_3(x,y) \end{array} \right] =
+\left[ \begin{array}[c]{ccc}
+1 & 1 &  1 \\
+x_1^0 & x_2^0 & x_3^0 \\
+y_1^0 & y_2^0 & y_3^0
+\end{array} \right] ^{-1} 
+\left[ \begin{array}[c]{c} 1 \\ x \\ y \end{array} \right] 
 \end{equation}
 
+
+Thus, we can locally compute some spacial derivatives, along $x$ and $y$ on the interpolation function vector $T$ (which has three components $(T^x, T^y, T^z)$ .
+The 2D tensor $F$ of the in-plane deformations can be computed as a $2\times2$ matrix where the line $k$ and the column $l$ alternatively represent $x$ and $y$\footnote{It can be noted $k=\{x,y\}$ and $l=\{x,y\}$}:
+\begin{equation}
+F_{kl} = \frac{\delta T^k}{\delta l}  =  \sum_{j=1}^3 \frac{\delta T^k}{\delta \xi_i} \frac{\delta \xi_i}{\delta l}  
+\end{equation}
+
+For the shell formulation, there is no need to compute the derivatives along direction $z$, but the second derivatives derivatives $\frac{\delta T^z}{\delta kl}$...
 
 
 
@@ -817,7 +832,7 @@ edge.
 
 \Figure{\linewidth}{roof}
 {Convergence for modified Scordelis-Lo roof test of DKT+ANDES element and
-our B\'ezier shell element.}
+our B\'ezier shell element. \CD{Can you do the same test with the model used by Comas ?}}
 
 
 \subsection{Hemisphere Test}
@@ -835,7 +850,7 @@ displacement for one point with applied load is shown in Figure
 
 \Figure{\linewidth}{hemisphere}
 {Convergence for test on hemisphere with 18° hole for the DKT+ANDES element and
-our B\'ezier shell element.}
+our B\'ezier shell element. \CD{Same question: can you do the same test with the model we used with O.Comas ? Hopefully, it will show that our model has a better convergence ... }}
 
 \subsection{Computation Speed}
 
