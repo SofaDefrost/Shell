@@ -526,7 +526,7 @@ y_1^0 & y_2^0 & y_3^0
 \end{equation}
 
 
-Thus, we can locally compute some spacial derivatives, along $x$ and $y$ on the interpolation function vector $T$ (which has three components $(T^x, T^y, T^z)$ .
+Thus, we can locally compute some spacial derivatives, along $x$ and $y$ on the interpolation function vector $T$ (which has three components $(T^x, T^y, T^z)$) .
 The 2D tensor $F$ of the in-plane deformations can be computed as a $2\times2$ matrix where the line $k$ and the column $l$ alternatively represent $x$ and $y$\footnote{It can be noted $k=\{x,y\}$ and $l=\{x,y\}$}:
 \begin{equation}
 F_{kl} = \frac{\partial T^k}{\partial l}  =  \sum_{i=1}^3 \frac{\partial T^k}{\partial \xi_i} \frac{\partial \xi_i}{\partial l}  
@@ -539,10 +539,14 @@ The in-plane displacement gradient can be obtained with tensor $F$:
 \frac{\partial u^k}{\partial l} = F_{kl} - I_{kl} 
 \end{equation}
 where $I$ is the identity matrix ($I_{kl}  = \{1$ if $l=k$ ;  $0$ if $l \neq k \} $). 
-The in-plane displacement gradient can be linked to the degrees of freedom of the shell using the expression of the displacement of a point $\delta T$ (see equation  (\ref{bez-delta})) on the shell surface:
+%
+%
+% Remark: the sentence can be suppr..
+\CD{The following  sentencd I let you chose: keep or not...}The in-plane displacement gradient can be linked to the degrees of freedom of the shell using the expression of the displacement of a point $\delta T$ (see equation  (\ref{bez-delta})) on the shell surface:
 $$
 \frac{\partial u^k}{\partial l} = \frac{\partial (\delta T^k)}{\partial l}
-$$
+$$ 
+% end of Remark 
 
 In the local frame of the element, we rely on infinitesimal strain theory, thus the expression of the strain tensor (using Voigt notations) is:
 \begin{equation}
@@ -575,7 +579,7 @@ As the term  $\frac{\partial \xi_i}{\partial l}$ provides a constant value, the 
 \subsection{Shell Element}
 
 As previously describes, the shell element's strain is a combination of two types of deformations, as shown in figure \ref{deformations}.
-If we assume that the initial out-plane deflections are negligible and that the frame of the shell element nodes are aligned with local $z$ axis, we can distribute these two deformations into two groups of degrees of freedom at the nodes' level.
+If we assume that the initial out-plane deflections are negligible and that the frame of the shell element nodes are aligned with local $z$ axis, we can distribute these two deformations into two groups of degrees of freedom  at the nodes' level.
 
 \FigureWI{deformations}
 {Plate deformations:%
@@ -592,7 +596,7 @@ c) bending deformation, due to out-plane displacements
     At the nodes' level, it corresponds to in-plane displacements $\delta\mathbf{x}_x, \delta\mathbf{x}_y$ and rotation $\theta_z$.
 (Figure \ref{fig-membrane}).
     \item Bending plate defining deformation due to out of plane bending displacement $u_z$. It is
-    described by 3 degrees of freedom: rotation around two axes $\theta_x,
+    influenced by 3 degrees of freedom: rotation around two axes $\theta_x,
     \theta_z$ and out of plane displacement $\delta\mathbf{x}_z$ (Figure \ref{fig-plate}).
 
 \end{itemize}
@@ -620,13 +624,15 @@ where $\left[ \mathbf{J}_m \right]$ maps the membrane in-plane displacements and
 where $\left[ \mathbf{J}_b \right]$ maps the bending out-plane displacements.
 
 To compute the values in matrices $\left[ \mathbf{J}_m \right]$ and $\left[ \mathbf{J}_b \right]$,  we can reuse equation (\ref{bez-delta}) and apply the spacial derivatives.
-To illustrate, let's take one value of the matrix $\left[ \mathbf{J}_m \right]$  (first line, fourth column), we first take the kinematic between $\delta T_x$ and the concerned degree of freedom $ \delta \mathbf{x}_{2x}$:
+To illustrate, let's take one value of the matrix $\left[ \mathbf{J}_m \right]$  (first line, fourth column), we first take the kinematic between $\delta T_x$ and the concerned degree of freedom $ \delta \mathbf{x}_{2x}$ from equation (\ref{bez-delta}):
 $$
    \frac{ \delta T_x}{ \delta \mathbf{x}_{2x}} = (n_2 + n_6 + n_7 + \frac{1}{3} n_{10})
 $$
-Then, we apply the spacial derivatives to compute the variation of $\epsilon_{xx}$ when 
+Then, we apply the spacial derivatives to compute the variation of $\epsilon_{xx}$ due to a variation of $\mathbf{x}_{2x}$.
 $$
-\delta \epsilon_{xx} += \underbrace{\sum_{i=1}^{3} (\frac{\partial n_2}{\xi_i} + \frac{\partial n_6}{\xi_i} + \frac{\partial n_9}{\xi_i} + \frac{1}{3}\frac{\partial n_{10}}{\xi_i})\frac{\partial \xi_i}{\partial x}}_{\left[ \mathbf{J}_m \right](1,4)}  {\delta \mathbf{x}_{2x}}
+\delta \epsilon_{xx} += 
+\underbrace{\left( \sum_{i=1}^{3} (\frac{\partial n_2}{\xi_i} + \frac{\partial n_6}{\xi_i} + \frac{\partial n_7}{\xi_i} + \frac{1}{3}\frac{\partial n_{10}}{\xi_i})\frac{\partial \xi_i}{\partial x} \right) }_{\left[ \mathbf{J}_m \right](1,4)}  
+{\delta \mathbf{x}_{2x}}
 $$
 
 Assuming constant thickness $t$ of the element and integrating over the volume
@@ -653,7 +659,7 @@ Hooke's law for isotropic materials.
 Because the deflection field for the element is non-linear \eqref{eq-delta}
 in position the integrals \eqref{eq-Km} and \eqref{eq-Kb} have to be computed using
 numerical integration. In our implementation we employ 6-point Gaussian
-quadrature for integration over triangle area.
+quadrature for integration over triangle area \CD{TODO: figure + gives the formula of the quadrature...}
 % TODO: add ref
 % TODO: add abscissas/weights?
 
