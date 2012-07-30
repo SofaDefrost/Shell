@@ -463,7 +463,7 @@ A small variation $\delta \mathbf{x}_i$ of the node $i$ position and $\delta \ma
 \end{eqnarray}
 
 \noindent
-and variation of central point $\delta P_{10}$ \CD{ this formulation would be simplified...} :
+and variation of central point $\delta P_{10}$ \CD{ this formulation would be modified...} :
 
 \begin{equation}
     \delta P_{10} = \frac{1}{3} (\sum_{i=1}^3 \delta \mathbf{x}_i + \sum_{j=4}^9 P_{i-j} \times \delta \mathbf{\theta}_i)
@@ -504,6 +504,7 @@ Note however that the expressions are sound and unambiguous because there is onl
 
 In the previous section we present an interpolation based on cubic B\'ezier triangles and a kinematic link between the control points and the element 6DoF Nodes.
 In this section we show how this interpolation can be used to compute a finite element formulation of the shell equations.
+The model relies on large transformation formulation: the geometrical non-linearities are handled using a corotational formulation, whereas, in the frame of the element, infinitesimal strain theory is used.
 
 
 \subsection{Computation of the strain tensor}
@@ -514,6 +515,7 @@ We define a local system of coordinates $(x,y,z)$ in which the axis z is oriente
 Given the initial position of the triangle points in this system of coordinate, $\{x_1^0, y_1^0\}$,  $\{x_2^0, y_2^0\}$, and  $\{x_3^0, y_3^0\}$, we can compute a linear relation between $\{\xi_1,\xi_2, \xi_3\}$ and $\{ x,y \}$:
 
 \begin{equation}
+\label{shape-vector}
 \left[ \begin{array}[c]{c} \xi_1(x,y) \\ \xi_2(x,y) \\ \xi_3(x,y) \end{array} \right] =
 \left[ \begin{array}[c]{ccc}
 1 & 1 &  1 \\
@@ -527,37 +529,68 @@ y_1^0 & y_2^0 & y_3^0
 Thus, we can locally compute some spacial derivatives, along $x$ and $y$ on the interpolation function vector $T$ (which has three components $(T^x, T^y, T^z)$ .
 The 2D tensor $F$ of the in-plane deformations can be computed as a $2\times2$ matrix where the line $k$ and the column $l$ alternatively represent $x$ and $y$\footnote{It can be noted $k=\{x,y\}$ and $l=\{x,y\}$}:
 \begin{equation}
-F_{kl} = \frac{\delta T^k}{\delta l}  =  \sum_{j=1}^3 \frac{\delta T^k}{\delta \xi_i} \frac{\delta \xi_i}{\delta l}  
+F_{kl} = \frac{\partial T^k}{\partial l}  =  \sum_{i=1}^3 \frac{\partial T^k}{\partial \xi_i} \frac{\partial \xi_i}{\partial l}  
 \end{equation}
 
-For the shell formulation, there is no need to compute the derivatives along direction $z$, but the second derivatives derivatives $\frac{\delta T^z}{\delta kl}$...
+The term $\frac{\partial T^k}{\partial \xi_i}$ can be derived from the expression of $T(\xi_1,\xi_2, \xi_3)$ in equation (\ref{global-transform}) and 
+$\frac{\partial \xi_i}{\partial l}$ from equation (\ref{shape-vector}). 
+The in-plane displacement gradient can be obtained with tensor $F$:
+\begin{equation}
+\frac{\partial u^k}{\partial l} = F_{kl} - I_{kl} 
+\end{equation}
+where $I$ is the identity matrix ($I_{kl}  = \{1$ if $l=k$ ;  $0$ if $l \neq k \} $). 
+The in-plane displacement gradient can be linked to the degrees of freedom of the shell using the expression of the displacement of a point $\delta T$ (see equation  (\ref{bez-delta})) on the shell surface:
+$$
+\frac{\partial u^k}{\partial l} = \frac{\partial (\delta T^k)}{\partial l}
+$$
 
+In the local frame of the element, we rely on infinitesimal strain theory, thus the expression of the strain tensor (using Voigt notations) is:
+\begin{equation}
+\label{in-plane-strain}
+\left[ \begin{array}[c]{c} \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx} \end{array} \right] = 
+\left[ \begin{array}[c]{c} \frac{\partial u^x}{\partial x}  \vspace{1mm}\\ \frac{\partial u^y}{\partial y}   \\ \frac{\partial u^x}{\partial y}  + \frac{\partial u^y}{\partial x}  \end{array} \right]
+\end{equation}
 
+For the bending formulation, the shell theory uses a measure of the out-of-plane-displacement $u^z(x,y)$. 
+The strain tensor has additional contributions based on Kirchhoff-Love theory for thin plates:
+\begin{equation}
+\label{out-plane-strain}
+\left[ \begin{array}[c]{c} \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx} \end{array} \right] +=
+\left[ \begin{array}[c]{c} -z \frac{\partial^2 u^z}{\partial x^2}  \vspace{1mm}\\ -z \frac{\partial^2 u^z}{\partial y^2}   \vspace{1mm}\\ - 2z \frac{\partial^2 u^z}{\partial xy}    \end{array} \right]
+\end{equation}
+where $z$ is the local coordinate along $z$-axis of the point on which the strain is measured.
+\CD{This is something that is maybe wrong in our formulation... as the bending adds a contribution on the deformation tensor, maybe we should not separate the contribution from membrane and bending as we do now ($K_m$ and $K_b$ are computed separately) }
 
+As the term  $\frac{\partial \xi_i}{\partial l}$ provides a constant value, the second derivatives can be computed quite easily, for instance, for $\epsilon_{xx}$:
+\begin{equation}
+\frac{\partial^2 u^z}{\partial x^2}  = \sum_{i=1}^3\frac{\partial}{\partial \xi_i}\left(\sum_{j=1}^3 \frac{\partial T^z}{\partial \xi_j} \frac{\partial \xi_j}{\partial x}\right) \frac{\partial \xi_i}{\partial x} 
+=  \sum_{i=1}^3  \sum_{j=1}^3 \frac{\partial^2 T^z}{\partial \xi_i\xi_j}   \frac{\partial \xi_j}{\partial x} \frac{\partial \xi_i}{\partial x}  
+\end{equation}
 
 
 
 \subsection{Shell Element}
 
-Shell element is a combination of two simpler elements describing two types
-of deformations:
+As previously describes, the shell element's strain is a combination of two types of deformations, as shown in figure \ref{deformations}.
+If we assume that the initial out-plane deflections are negligible and that the frame of the shell element nodes are aligned with local $z$ axis, we can distribute these two deformations into two groups of degrees of freedom at the nodes' level.
 
-\FigureWI{deformations}{Plate deformations:%
-a) membrane deformations like stretching or shearing;
+\FigureWI{deformations}
+{Plate deformations:%
+a) membrane deformations like stretching or shearing, due to in-plane displacements
 b) undeformed;
-c) bending deformation}
+c) bending deformation, due to out-plane displacements
+\label{deformations}}
 
 \begin{itemize}
 
     \item Elastic membrane defining deformations in plane of the
-    element. It encompasses deformations like stretching and shearing and
-    is described by 3 degrees of freedom: in-plane displacements $u_x, u_y$
-    and rotation $\theta_z$ around the axis perpendicular to the plane of
-    the element (Figure \ref{fig-membrane}).
-
-    \item Bending plate defining out of plane bending deformation. It is
+    element. It encompasses deformations like stretching and shearing.
+    It corresponds to the in-plane displacements $u_x, u_y$. 
+    At the nodes' level, it corresponds to in-plane displacements $\delta\mathbf{x}_x, \delta\mathbf{x}_y$ and rotation $\theta_z$.
+(Figure \ref{fig-membrane}).
+    \item Bending plate defining deformation due to out of plane bending displacement $u_z$. It is
     described by 3 degrees of freedom: rotation around two axes $\theta_x,
-    \theta_z$ and out of plane displacement $u_z$ (Figure \ref{fig-plate}).
+    \theta_z$ and out of plane displacement $\delta\mathbf{x}_z$ (Figure \ref{fig-plate}).
 
 \end{itemize}
 
@@ -565,7 +598,17 @@ Combining both elements we make use of all 6 degrees of freedom available
 at each node of the element.
 
 
-\subsection{Mechanics} % {{{
+\subsection{Stiffness matrix} % {{{
+
+In order to compute FEM-based stiffness for the shell element, we need to compute the jacobian matrix between strains and nodes' displacements.
+For that we can reuse equation (\ref{bez-delta}) and apply the derivatives. For instance, for the in-plane displacement:
+$$
+\frac{\delta \epsilon_{xx}} {\delta \mathbf{x}_{2}} = \sum_{i=1}^{3} (\frac{\partial n_2}{\xi_i} + \frac{\partial n_6}{\xi_i} + \frac{\partial n_9}{\xi_i} + \frac{1}{3}\frac{\partial n_{10}}{\xi_i})\frac{\partial \xi_i}{\partial x}  
+$$
+
+
+
+
 
 Using the plate theory we now can compute the strain-displacement matrices
 from the displacement field $u$. The Cauchy's strain tensor for the
@@ -599,6 +642,8 @@ and bending plate respectively:
     \label{eq-Kb}
     K_b & = \iiint_V J_b^T M J_b \, \mathrm{d} V
 \end{align}
+
+\CD{or... $K =  \iiint_V \left[\begin{matrix} J_m & J_b \end{matrix} \right]^T  M \left[\begin{matrix} J_m & J_b \end{matrix} \right]$. Could we test that option easily in the code, or is it a nightmare ??}
 
 \noindent
 where $M$ is the material matrix. To keep the system simple we use linear
