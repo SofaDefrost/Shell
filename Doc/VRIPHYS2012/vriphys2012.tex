@@ -558,8 +558,11 @@ The strain tensor has additional contributions based on Kirchhoff-Love theory fo
 \left[ \begin{array}[c]{c} \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx} \end{array} \right] +=
 \left[ \begin{array}[c]{c} -z \frac{\partial^2 u^z}{\partial x^2}  \vspace{1mm}\\ -z \frac{\partial^2 u^z}{\partial y^2}   \vspace{1mm}\\ - 2z \frac{\partial^2 u^z}{\partial xy}    \end{array} \right]
 \end{equation}
+%% comment
+\CD{Here, if you want to keep a separate computation for bending and membrane (see the folllowing), use $=$ instead of $+=$ !!}
+%%
 where $z$ is the local coordinate along $z$-axis of the point on which the strain is measured.
-\CD{This is something that is maybe wrong in our formulation... as the bending adds a contribution on the deformation tensor, maybe we should not separate the contribution from membrane and bending as we do now ($K_m$ and $K_b$ are computed separately) }
+
 
 As the term  $\frac{\partial \xi_i}{\partial l}$ provides a constant value, the second derivatives can be computed quite easily, for instance, for $\epsilon_{xx}$:
 \begin{equation}
@@ -601,36 +604,30 @@ at each node of the element.
 \subsection{Stiffness matrix} % {{{
 
 In order to compute FEM-based stiffness for the shell element, we need to compute the jacobian matrix between strains and nodes' displacements.
-For that we can reuse equation (\ref{bez-delta}) and apply the derivatives. For instance, for the in-plane displacement:
-$$
-\frac{\delta \epsilon_{xx}} {\delta \mathbf{x}_{2}} = \sum_{i=1}^{3} (\frac{\partial n_2}{\xi_i} + \frac{\partial n_6}{\xi_i} + \frac{\partial n_9}{\xi_i} + \frac{1}{3}\frac{\partial n_{10}}{\xi_i})\frac{\partial \xi_i}{\partial x}  
-$$
-
-
-
-
-
-Using the plate theory we now can compute the strain-displacement matrices
-from the displacement field $u$. The Cauchy's strain tensor for the
-elastic membrane is defined as:
-
-\begin{equation}\label{eq-cauchy}
-    J_m = \left[ \begin{matrix}
-        \deriv{u_x}{x} \\
-        \deriv{u_y}{y} \\
-        \deriv{u_x}{y} + \deriv{u_y}{x}
-    \end{matrix} \right]
+As we have separated the formulations for the in-plane and the out-plane displacements, it will result with the computation of two jacobian matrices (of size $3\times9$).
+\begin{equation}
+\delta \left[ \begin{array}[c]{c} \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx} \end{array} \right] = 
+\left[ \mathbf{J}_m \right] 
+\left[ \begin{array}[c]{c} \delta \mathbf{x}_{1x} \\ \delta \mathbf{x}_{1y} \\ \delta \theta_{1z} \\ \vdots    \end{array} \right]
 \end{equation}
-
-We apply Kirchhoff-Love theory for thin plates to obtain strain-displacement matrix for bending plate element:
-
-\begin{equation}\label{eq-kirchhoff}
-    J_b = \left[ \begin{matrix}
-        - z \deriv{^2 u_z}{x^2} \\
-        - z \deriv{^2 u_z}{y^2} \\
-        - 2z \deriv{^2 u_z}{xy}
-    \end{matrix} \right]
+where $\left[ \mathbf{J}_m \right]$ maps the membrane in-plane displacements and 
+%
+\begin{equation}
+\delta \left[ \begin{array}[c]{c} \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx} \end{array} \right] = 
+\left[ \mathbf{J}_b \right] 
+\left[ \begin{array}[c]{c} \delta \mathbf{x}_{1z} \\ \delta \theta_{1x} \\ \delta \theta_{1y} \\ \vdots    \end{array} \right]
 \end{equation}
+where $\left[ \mathbf{J}_b \right]$ maps the bending out-plane displacements.
+
+To compute the values in matrices $\left[ \mathbf{J}_m \right]$ and $\left[ \mathbf{J}_b \right]$,  we can reuse equation (\ref{bez-delta}) and apply the spacial derivatives.
+To illustrate, let's take one value of the matrix $\left[ \mathbf{J}_m \right]$  (first line, fourth column), we first take the kinematic between $\delta T_x$ and the concerned degree of freedom $ \delta \mathbf{x}_{2x}$:
+$$
+   \frac{ \delta T_x}{ \delta \mathbf{x}_{2x}} = (n_2 + n_6 + n_7 + \frac{1}{3} n_{10})
+$$
+Then, we apply the spacial derivatives to compute the variation of $\epsilon_{xx}$ when 
+$$
+\delta \epsilon_{xx} += \underbrace{\sum_{i=1}^{3} (\frac{\partial n_2}{\xi_i} + \frac{\partial n_6}{\xi_i} + \frac{\partial n_9}{\xi_i} + \frac{1}{3}\frac{\partial n_{10}}{\xi_i})\frac{\partial \xi_i}{\partial x}}_{\left[ \mathbf{J}_m \right](1,4)}  {\delta \mathbf{x}_{2x}}
+$$
 
 Assuming constant thickness $t$ of the element and integrating over the volume
 of the element we compute the stiffness matrices for the elastic membrane
@@ -638,12 +635,16 @@ and bending plate respectively:
 
 \begin{align}
     \label{eq-Km}
-    K_m & = \iiint_V J_m^T M J_m \, \mathrm{d} V \\
+    \mathbf{K}_m & = \iiint_V \mathbf{J}_m^T M \mathbf{J}_m \, \mathrm{d} V \\
     \label{eq-Kb}
-    K_b & = \iiint_V J_b^T M J_b \, \mathrm{d} V
+    \mathbf{K}_b & = \iiint_V \mathbf{J}_b^T M \mathbf{J}_b \, \mathrm{d} V
 \end{align}
+%% comment
+\CD{This is something that is maybe wrong in our formulation... as the bending adds a contribution on the deformation tensor, maybe we should not separate the contribution from membrane and bending as we do now ($K_m$ and $K_b$ are computed separately) }
+%% comment
+\CD{here, it would be... $\mathbf{K}_e =  \iiint_V \left[\begin{matrix} \mathbf{J}_m & \mathbf{J}_b \end{matrix} \right]^T  M \left[\begin{matrix} \mathbf{J}_m & \mathbf{J}_b \end{matrix} \right]$. Could we test that option easily in the code, or is it a nightmare ??}
+%%
 
-\CD{or... $K =  \iiint_V \left[\begin{matrix} J_m & J_b \end{matrix} \right]^T  M \left[\begin{matrix} J_m & J_b \end{matrix} \right]$. Could we test that option easily in the code, or is it a nightmare ??}
 
 \noindent
 where $M$ is the material matrix. To keep the system simple we use linear
