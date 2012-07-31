@@ -23,7 +23,10 @@ lines(n2e(hem$size[hem$name == n]), hem$d[hem$name == n], type="b", col="black",
 n<- "bezier2";
 lines(n2e(hem$size[hem$name == n]), hem$d[hem$name == n], type="b", col="black", pch=4);
 
-legend("bottomright", c("DKT","BSH"), pch=c(1,4), col=c("black","black"), bg="white");
+n<- "triangular";
+lines(n2e(hem$size[hem$name == n]), hem$d[hem$name == n], type="b", col="black", pch=5);
+
+legend("bottomright", c("DKT","BSH","PSH"), pch=c(1,4,5), col="black", bg="white");
 
 dev.off()
 par(p);

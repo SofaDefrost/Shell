@@ -155,7 +155,7 @@ In the case of medical simulation, more physics-based modeling is needed.
 Methods based on continuum mechanics and namely theory of elasticity gained on popularity in real-time simulations ever since Terzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.
 While the methods using finite elements and theory of elasticity are fairly popular in volumetric modeling of deformations \cite{Cotin1999,Nesme2006,Miller2007}, they are still frowned upon in the area of thin structures. 
 Yet, a special field of continuum mechanics has studied the deformations of these objects, and has proposed models based on shell theory.
-This theory was integrated numerically \CD{Todo citation of a shell book} using Finite Elements, but there are two issues for obtaining interactive frame rates: 
+This theory was integrated numerically using Finite Elements \cite{Reddy1993}, but there are two issues for obtaining interactive frame rates: 
 (i) the continuum equations requires second spatial derivations that can not be handled with linear interpolation and 
 (ii) the final system of equations that describes the mechanics is non-linear (if the deformations are not small).
 
@@ -181,33 +181,19 @@ TODO: paper structure
 
 \subsection{Contribution}
 
-% TODO
-The main contributions of the paper are following \CD{- Tomas, you need to write sentences here -}
-
-\begin{itemize}
-    % not really novel, similar model already in Ubach2010
-    %\item shell element based on Bézier triangles
-    \item Our element solves the problems of the element presented by Comas
-        \cite{Comas2010c}: it is continuous on the element boundary and has
-        all rotational degrees of freedom.
-
-    % TODO: needs better explanation
-    \item Two stage interpolation: 6DOF nodes -> bezier points -> bezier
-        triangle
-
-    % + separation between nodes and dofs
-    %\item The model separates nodes of the mesh from degrees of freedom of the
-    %    control mesh. This allows mapping a surface on deformable skeleton.
-
-    % + mapping: smooth surface results with less shells + collision response
-    %   on smooth surface 
-    \item Mapping of high resolution mesh on the curved surface of the
-        shell. The smooth mapped surface can be used for collision
-        detection and allows the propagation of proper collision response
-        back onto the (low resolution) mechanical mesh.
-      
-
-\end{itemize}
+Extending the work of Comas \cite{Comas2010c} we have designed a shell element that uses B\'ezier interpolation polynomials.
+Our element solves the problems of the element presented by Comas:
+(i) it uses all 6 degrees of freedom,
+(ii) the deformations are completly symmetric and
+(iii) the boundary between elements is continuous.
+We present a two stage interpolation:
+(i) first a kinematic link between 6 DOF nodes of element and nodes of B \'ezier control mesh is defined and
+(ii) interpolation function of cubic B\'ezier triangle is applied to interpolate on the surface of the element.
+Mapping of high resolution mesh on the curved surface of the shell.
+Finally from the kinematic link we derive formulas for
+(i) interpolating velocity on the element surface and for
+(ii) distribution of normal force applied on the element surface back to 6 DOF nodes of the element.
+This allows us to use smooth mapped surface for collision detection and allows the propagation of proper collision response back onto the mechanical mesh.
 
 % }}}
 
@@ -216,12 +202,15 @@ The main contributions of the paper are following \CD{- Tomas, you need to write
 
 In this subsection we propose an element featuring interpolation with high degree of flexibility while still maintaining low number of degrees of freedom.
 We introduce a new way of building the interpolation by using two stages 
-\CD{ - Need a figure here - }:
+
 \begin{enumerate}
     \item A B\'ezier interpolation with cubic polynomial functions is defined on a triangle.
     \item A kinematic relation between nodes (6DOFs) defined at the vertices and the control points of the B\'ezier triangle.
 \end{enumerate}
 
+\FigureWI{stages}
+{Two stages of interpolation: First, from triangular with 6DOF nodes (a) a mesh of control points (b) is computed.
+Then based on definition of the B\'ezier triangle a surface is interpolated.}
 
 \subsection{B\'ezier Triangle Interpolation} % {{{
 
@@ -288,7 +277,10 @@ shortly express \eqref{eq-cubicbez} as:
     T = \sum_{i=1}^{10} n_i P_i
 \end{equation}
 
-\Figure{0.8\linewidth}{bezier}
+%\Figure{0.8\linewidth}{bezier}
+%{Cubic B\'ezier triangle with mesh of 10 control points.}
+
+\Figure{0.8\linewidth}{bezier2}
 {Cubic B\'ezier triangle with mesh of 10 control points.}
 
 % }}}
@@ -348,9 +340,12 @@ Each of the edge control points is attached to nearest corner node. See Figure
 associated corner nodes. 
 In the following text the index $j \in [4;10]$ refers to edge points and index $i \in [1;3]$ to the associated corner point/node (unless $i$ is explicitly used differently).
 
-\Figure{0.8\linewidth}{segments}
-{Correspondence between edge points and associated corner points shown in
-blue. \CD{Not clear !!}}
+%\Figure{0.8\linewidth}{segments}
+%{Correspondence between edge points and associated corner points shown in
+%blue. \CD{Not clear !!}}
+
+\Figure{0.8\linewidth}{segments2}
+{Internal nodes of control mesh are connected to the corner nodes by kinematic link (shown in blue).}
 
 In the initialization phase we remember the position of edge point $j$ in the frame of corner point $i$:
 
@@ -891,9 +886,11 @@ where the edges are free to move in longitudinal direction. The Figure
 edge.
 
 \Figure{\linewidth}{roof}
-{Convergence for modified Scordelis-Lo roof test of DKT+ANDES element and
-our B\'ezier shell element. \CD{Can you do the same test with the model used by Comas ?}}
+{Convergence for modified Scordelis-Lo roof test of DKT+ANDES element, 
+our B\'ezier shell element (BSH) and elemnt of O. Comas (PSH) with polynomial shape function.}
 
+\Figure{\linewidth}{roof-img}
+{Coloured plot of vertical displacement in the roof test}
 
 \subsection{Hemisphere Test}
 
@@ -910,7 +907,10 @@ displacement for one point with applied load is shown in Figure
 
 \Figure{\linewidth}{hemisphere}
 {Convergence for test on hemisphere with 18° hole for the DKT+ANDES element and
-our B\'ezier shell element. \CD{Same question: can you do the same test with the model we used with O.Comas ? Hopefully, it will show that our model has a better convergence ... }}
+our B\'ezier shell element (BSH) and elemnt of O. Comas (PSH) with polynomial shape function.}
+
+\Figure{\linewidth}{hemisphere-img}
+{Coloured plot of radial displacement in the hemisphere test}
 
 \subsection{Computation Speed}
 

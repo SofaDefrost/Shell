@@ -22,7 +22,10 @@ lines(n2e(lo$size[lo$name == n]), lo$z[lo$name == n], type="b", col="black", pch
 n<- "bezier2";
 lines(n2e(lo$size[lo$name == n]), lo$z[lo$name == n], type="b", col="black", pch=4);
 
-legend("topright", c("DKT","BSH"), pch=c(1,4), col=c("black","black"), bg="white");
+n<- "triangular";
+lines(n2e(lo$size[lo$name == n]), lo$z[lo$name == n], type="b", col="black", pch=5);
+
+legend("topright", c("DKT","BSH", "PSH"), pch=c(1,4,5), col=c("black","black","black"), bg="white");
 
 dev.off()
 par(p);

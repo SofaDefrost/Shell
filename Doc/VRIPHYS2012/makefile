@@ -8,7 +8,7 @@
 FILE:=vriphys2012
 SUBFILES:=
 BIBFILE:=vriphys2012
-IMGS=bezier.png fps.pdf hemisphere.pdf membrane.png plate.png roof.pdf segments.png
+IMGS=bezier.png bezier2.pdf fps.pdf hemisphere.pdf membrane.png plate.png roof.pdf segments.png segments2.pdf stages.pdf_tex
 
 TMPDIR=tmp
 LATEXARGS=-halt-on-error -interaction=nonstopmode -file-line-error -output-directory="$(TMPDIR)"
@@ -101,6 +101,12 @@ all: $(PDFFILES) #$(PSFILES)
 
 %.pdf: %.R %.csv
 	R CMD BATCH $(RARGS) $< /dev/stdout
+
+%.pdf: %.svg
+	inkscape --export-background='#ffffff' --export-dpi=800 --export-pdf=$@ $<
+
+%.pdf_tex: %.svg
+	inkscape --export-background='#ffffff' --export-dpi=800 --export-latex --export-pdf=$*.pdf $<
 
 ##  Other targets  #############################################################
 
