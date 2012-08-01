@@ -52,6 +52,8 @@
 
 % Partial derivative
 \newcommand{\deriv}[2]{\frac{\partial #1}{\partial #2}}
+% Matrix
+\newcommand{\mat}[1]{\mathbf{#1}}
 
 %\Figure{width}{name}{caption}
 \newcommand{\Figure}[3]{%
@@ -201,7 +203,7 @@ This allows us to use smooth mapped surface for collision detection and allows t
 % }}}
 
 
-\section{Element Kinematics} % {{{
+\section{Element Kinematics}\label{sec-kinematics} % {{{
 
 In this subsection we propose an element featuring interpolation with high degree of flexibility while still maintaining low number of degrees of freedom.
 We introduce a new way of building the interpolation by using two stages 
@@ -452,7 +454,7 @@ Thus, finally, it creates a variation of the point position on the surface $\del
 %
 or:
 
-\begin{equation}\label{bez-delta}
+\begin{equation}\label{eq-bez-delta}
     \begin{split}
         \delta T = &   (n_1 + n_4 + n_5 + \frac{1}{3} n_{10})  \delta \mathbf{x}_1 + \\
                    & + (n_2 + n_6 + n_7 + \frac{1}{3} n_{10})  \delta \mathbf{x}_2 + \\
@@ -514,8 +516,8 @@ The in-plane displacement gradient can be obtained with tensor $F$:
 \deriv{u^k}{l} = F_{kl} - I_{kl} 
 \end{equation}
 %
-where $I$ is the identity matrix ($I_{kl}  = \{1$ if $l=k$ ;  $0$ if $l \neq k \} $). 
-The displacement gradient can be linked to the degrees of freedom of the shell using the expression of the displacement of a point $\delta T$ (see equation  (\ref{bez-delta})) on the shell surface:
+where $\mat{I}$ is the identity matrix ($I_{kl}  = \{1$ if $l=k$ ;  $0$ if $l \neq k \} $). 
+The displacement gradient can be linked to the degrees of freedom of the shell using the expression of the displacement of a point $\delta T$ (see equation  (\ref{eq-bez-delta})) on the shell surface:
 \begin{equation}
     \nabla u = \nabla(\delta T)
 \end{equation}
@@ -593,30 +595,43 @@ at each node of the element.
 In order to compute FEM-based stiffness for the shell element, we need to compute the jacobian matrix between strains and nodes' displacements.
 As we have separated the formulations for the in-plane and the out of plane displacements, it will result with the computation of two jacobian matrices (of size $3\times9$).
 \begin{equation}
-\delta \left[ \begin{array}[c]{c} \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx} \end{array} \right] = 
-\left[ \mathbf{J}_m \right] 
-\left[ \begin{array}[c]{c} \delta \mathbf{x}_{1x} \\ \delta \mathbf{x}_{1y} \\ \delta \theta_{1z} \\ \vdots    \end{array} \right]
+    \delta 
+    \begin{bmatrix}
+        \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx}
+    \end{bmatrix}
+    = \begin{bmatrix} \mat{J}_m \end{bmatrix}
+    \begin{bmatrix}
+        \delta \mat{x}_1^x \\ \delta \mat{x}_1^y \\ \delta \theta_1^z \\ \vdots
+    \end{bmatrix}
 \end{equation}
-where $\left[ \mathbf{J}_m \right]$ maps the membrane in-plane displacements and 
+where $\left[ \mat{J}_m \right]$ maps the membrane in-plane displacements and 
 %
 \begin{equation}
-\delta \left[ \begin{array}[c]{c} \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx} \end{array} \right] = 
-\left[ \mathbf{J}_b \right] 
-\left[ \begin{array}[c]{c} \delta \mathbf{x}_{1z} \\ \delta \theta_{1x} \\ \delta \theta_{1y} \\ \vdots    \end{array} \right]
+    \delta
+    \begin{bmatrix}
+        \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx}
+    \end{bmatrix}
+    = \begin{bmatrix} \mat{J}_b \end{bmatrix}
+    \begin{bmatrix}
+        \delta \mat{x}_1^z \\ \delta \theta_1^x \\ \delta \theta_1^y \\ \vdots
+    \end{bmatrix}
 \end{equation}
-where $\left[ \mathbf{J}_b \right]$ maps the bending out-plane displacements.
+where $\left[ \mat{J}_b \right]$ maps the bending displacements.
 
-To compute the values in matrices $\left[ \mathbf{J}_m \right]$ and $\left[ \mathbf{J}_b \right]$,  we can reuse equation (\ref{bez-delta}) and apply the spacial derivatives.
-To illustrate, let's take one value of the matrix $\left[ \mathbf{J}_m \right]$  (first line, fourth column), we first take the kinematic between $\delta T_x$ and the concerned degree of freedom $ \delta \mathbf{x}_{2x}$ from equation (\ref{bez-delta}):
-$$
-   \frac{ \delta T_x}{ \delta \mathbf{x}_{2x}} = (n_2 + n_6 + n_7 + \frac{1}{3} n_{10})
-$$
-Then, we apply the spacial derivatives to compute the variation of $\epsilon_{xx}$ due to a variation of $\mathbf{x}_{2x}$.
-$$
-\delta \epsilon_{xx} += 
-\underbrace{\left( \sum_{i=1}^{3} (\frac{\partial n_2}{\xi_i} + \frac{\partial n_6}{\xi_i} + \frac{\partial n_7}{\xi_i} + \frac{1}{3}\frac{\partial n_{10}}{\xi_i})\frac{\partial \xi_i}{\partial x} \right) }_{\left[ \mathbf{J}_m \right](1,4)}  
-{\delta \mathbf{x}_{2x}}
-$$
+To compute the values in matrices $\left[ \mat{J}_m \right]$ and $\left[ \mat{J}_b \right]$,  we can reuse equation (\ref{eq-bez-delta}) and apply the spatial derivatives.
+To illustrate, let's take one value of the matrix $\left[ \mat{J}_m \right]$  (first line, fourth column), we first take the kinematics between $\delta T_x$ and the concerned degree of freedom $ \delta \mathbf{x}_2^x$ from equation (\ref{eq-bez-delta}):
+\begin{equation}
+    \frac{ \delta T_x }{ \delta \mathbf{x}_2^x } = (n_2 + n_6 + n_7 + \frac{n_{10}}{3})
+\end{equation}
+
+Then, we apply the spatial derivatives to compute the variation of $\epsilon_{xx}$ due to a variation of $\mathbf{x}_{2x}$:
+\begin{equation}
+    \delta \epsilon_{xx} += 
+    \underbrace{\left(
+    \sum_{i=1}^{3} (\deriv{n_2}{\xi_i} + \deriv{n_6}{\xi_i} + \deriv{n_7}{\xi_i} + \frac{1}{3}\deriv{n_{10}}{\xi_i})
+    \deriv{\xi_i}{x} \right) }_{\begin{bmatrix} \mat{J}_m \end{bmatrix}_{14}}  
+ \delta \mathbf{x}_2^x 
+\end{equation}
 
 Assuming constant thickness $t$ of the element and integrating over the volume
 of the element we compute the stiffness matrices for the elastic membrane
@@ -624,25 +639,20 @@ and bending plate respectively:
 
 \begin{align}
     \label{eq-Km}
-    \mathbf{K}_m & = \iiint_V \mathbf{J}_m^T M \mathbf{J}_m \, \mathrm{d} V \\
+    \mat{K}_m & = \iiint_V \mat{J}_m^T \mat{M} \mat{J}_m \, \mathrm{d} V \\
     \label{eq-Kb}
-    \mathbf{K}_b & = \iiint_V \mathbf{J}_b^T M \mathbf{J}_b \, \mathrm{d} V
+    \mat{K}_b & = \iiint_V \mat{J}_b^T \mat{M} \mat{J}_b \, \mathrm{d} V
 \end{align}
-%% comment
-\CD{This is something that is maybe wrong in our formulation... as the bending adds a contribution on the deformation tensor, maybe we should not separate the contribution from membrane and bending as we do now ($K_m$ and $K_b$ are computed separately) }
-%% comment
-\CD{here, it would be... $\mathbf{K}_e =  \iiint_V \left[\begin{matrix} \mathbf{J}_m & \mathbf{J}_b \end{matrix} \right]^T  M \left[\begin{matrix} \mathbf{J}_m & \mathbf{J}_b \end{matrix} \right]$. Could we test that option easily in the code, or is it a nightmare ??}
-%%
-
 
 \noindent
-where $M$ is the material matrix. To keep the system simple we use linear
+where $\mat{M}$ is the material matrix. To keep the system simple we use linear
 Hooke's law for isotropic materials.
 
-Because the deflection field for the element is non-linear \eqref{eq-delta}
+Because the deflection field for the element is non-linear \eqref{eq-bez-delta}
 in position the integrals \eqref{eq-Km} and \eqref{eq-Kb} have to be computed using
 numerical integration. In our implementation we employ 6-point Gaussian
-quadrature for integration over triangle area \CD{TODO: figure + gives the formula of the quadrature...}
+quadrature for integration over triangle area.
+\CD{TODO: figure + gives the formula of the quadrature...}
 % TODO: add ref
 % TODO: add abscissas/weights?
 
@@ -651,81 +661,75 @@ quadrature for integration over triangle area \CD{TODO: figure + gives the formu
 \subsection{Corotational Formulation} % {{{
 \label{sec-corot}
 
-It is known that the Cauchy's strain tensor \eqref{eq-cauchy} is not
-rotation invariant \footnote{add ref} and produces ghost forces for rigid
-rotations. The alternative approach is to use Green's strain tensor,
-however it leads to nonlinear system. To keep the system linear and to deal
+It is known that the Cauchy's strain tensor \eqref{eq-in-plane-strain} is not
+rotation invariant \cite{Hauth2004,Muller2004} and produces ghost forces for rigid
+rotations. The alternative approach is to use non-linear Green's strain tensor but the non-linearity introduced into the system is costly and introduces instabilities.
+To keep the system linear and to deal
 with rigid body rotations we compute the displacements and forces in
 corotational frame. At each step of the simulation we compute the local
 frame for every element, the resulting internal force of deformed element
 is then computed relative to this frame:
-
+%
 \begin{equation}
-    F_e = R_e^T (K_e u) = R_e^T \left(K_e(R_e x - R_e^0 x^0)\right)
+    F_e = \mat{R}_e^T (\mat{K}_e u) = \mat{R}_e^T \left(\mat{K}_e(\mat{R}_e x - \mat{R}_e^0 x^0)\right)
 \end{equation}
-
-\noindent
-where $R$ and $R_0$ are rotation matrices of the frame for current and rest
+%
+where $\mat{R}$ and $\mat{R}_0$ are rotation matrices of the frame for current and rest
 mesh respectively.
 
-TODO: how we compute frame?
-%from the position of the corner nodes and we align one axis of the frame with one
-%edge of the element. \footnote{add image}
+The corotational frame is computed followingly: 
 
+\begin{itemize}
+    \item One axis is alligned to one edge of the element:\\
+    $\mathbf{e}_1 = \mathbf{x}_2 - \mathbf{x}_1$
+    \item A normal to the plane of the element is computed:\\
+    $\mathbf{e}_3 = \mathbf{e}_1 \times (\mathbf{x}_3 - \mathbf{x}_1)$
+    \item Second axis in the plane of the element is computed:\\
+    $\mathbf{e}_2 = \mathbf{e}_1 \times \mathbf{e}_3$
+\end{itemize}
 
-%The displacement field defined in \eqref{eq-delta} is clearly symmetric in
-%respect to deformations, but ...
-
-This choice of the frame aligns one axis of the frame with one of the edges
-of the triangle. Correct choice of the corotational frame is a tricky
+Correct choice of the corotational frame is a tricky
 problem \cite{Felippa2005} and incorrect frame for the membrane element can
-have adverse effects on the simulation. In our case we have experienced
+have adverse effects on the simulation.
+This choice of the frame where we align one axis with one of the edges
+of the triangle is not a perfect one and we have experienced
 nonnegligible difference in deformation of equilateral triangle depending
 on whether an axis was aligned to the edge favored by the deformation or to
 one of the two other edges.
 
-Performing a polar decomposition on the deformation gradient $F = \nabla u
-+ I$ can be used to extract a rotation component from the deformation of
-the element \cite{Ciarlet1994}. Because we are only fixing the membrane
+A polar decomposition on the deformation gradient $F = \nabla u
++ \mat{I}$ can be used to extract a rotation component from the deformation of
+the element \cite{Ciarlet1994,Hauth2004}. Because we are only fixing the membrane
 element we can perform the polar decomposition in 2D with the following
 formula:
-
+%
 \begin{equation}
-    R = F + \mathrm{sgn}(\mathrm{det}(F)) \begin{pmatrix}
+    \mat{R} = \mat{F} + \mathrm{sgn}(\mathrm{det}(\mat{F})) \begin{pmatrix}
         F_{22} & - F_{21} \\
         F_{12} & F_{11}
     \end{pmatrix}
 \end{equation}
-
-\noindent
+%
 and subsequently normalizing the columns. We then rotate the corotational
-frame in inverse direction. Even single step of this process improves the
+frame in opposite direction. Even single step of this process improves the
 final frame but more iterations of the polar decompositions are usually
-necessary (up to 20) which severely degrades the performance. But polar
+necessary (up to 20) which severely degrades the performance. Polar
 decomposition tends to "overshoot" the ideal rotation angle and each
-subsequent step performs a rotation in the opposite direction. By properly
+subsequent step performs a rotation in the direction opposite to the rotation in previous step. By properly
 scaling the rotation angle we are able to minimize the amount of needed
 iterations down to 5. The best value for the scaling factor depends on the
 simulated problem, but we have experimentally localized the best value to
 be somewhere between 0.6 and 0.65. We choose to use the value 0.61.
 
 We employ two stop conditions for the iteration process:
-\begin{itemize}
-    \item The change in rotation angle is less than $10^{-6}$,
-    \item and the maximum number of 5 iterations.
-\end{itemize}
+(i) the change in rotation angle is less than $10^{-6}$, and
+(ii) the maximum number of iterations is set to 5.
 
 If the first condition is not met in 5 iterations it can mean one of three
-things:
-
-\begin{enumerate}
-    \item We still have very good approximation of the ideal frame.
-    \item The convergence for the element is too slow.
-    \item The process is diverging.
-\end{enumerate}
-
-\noindent
-and performing any more iterations is unnecessary.
+things we still have very good approximation of the ideal frame. In some
+situations the process is not able to reach the ideal frame quickly because
+either the convergence for the element is too slow or the process is diverging.
+In either case performing more iterations is unnecessary.
 
 % TODO: maybe make a short table showing the convergence to the symmetric
 % solution.
@@ -737,7 +741,7 @@ and performing any more iterations is unnecessary.
 
 %%%%%%%%%%%%%%%%%%%%%%%%% SECTION 4 %%%%%%%%%%%%%%%
 
-\section{Visual and Mechanical Mapping} % {{{
+\section{Application of High Resolution Mesh} % {{{
 
 Because of the bending property of the shells relatively few elements are
 necessary to simulate curved surface. To enrich the visual experience from
@@ -745,106 +749,86 @@ the simulated object it is desirable to use more triangles in the areas
 with high curvature during rendering. Besides the visual accuracy the high
 resolution mesh correctly modeling the curved areas is needed for
 interaction and correct simulation of collisions and constraints. To handle
-these we have also to know how to map the velocities from the mechanical
+these we also need to know how to map the velocities from the mechanical
 mesh onto the high resolution mesh and how to map forces acting on the high
 resolution mesh back onto the mechanical mesh.
 
-\subsection{Mapping the Surface Mesh}
+\subsection{Surface Mesh}
 
-We use the fact that the geometry of the shell is based on the formulation
+To project vertices onto the surface of shells 
+we use the fact that the geometry of is based on the formulation
 of cubic B\'ezier triangle \eqref{eq-cubicbez}. For every vertex of the high
 resolution mesh we first find the corresponding triangle on the mechanical
 mesh that is closest to the vertex and assign barycentric coordinates on
-the triangle to this vertex. After every step of the simulation the high
+the triangle to this vertex. After every step of the simulation points of the
+control mesh are updated based on the kinematic link described in
+section \ref{sec-kinematics} and the high
 resolution mesh is updated using the assigned barycentric coordinates and
 the function of the surface \eqref{eq-cubicbez}.
 
-\subsection{Mapping Velocities}
+\subsection{Nodal Velocities of the Surface Mesh}
 
-In the 
-
+For contact modeling it is often necessary to know the velocity of each point.
+The values are directly available to us for the nodes of the mechanical mesh
+but they can also be computed for any point on the surface.
 Differentiating \eqref{eq-cubicbez2} by time we get:
-
+%
 \begin{equation}
     \dot{T} = \sum_{i=1}^{10} n_i \dot{P_i} = \sum_{i=1}^{10} n_i V_i
 \end{equation}
 
-Which means we use the same expression to interpolate the velocities only
+Which means we use the same expression to interpolate the velocity only by
 substituting the velocities at control points. For the corner nodes we
 already have the velocities $V_i$. For the internal nodes we need to compute
-them. In case of the edge nodes it is a problem of computing the velocity
-of a point attached to the moving rigid body:
-
+them. We again make use of the kinematic link between nodes and solve the
+problem of computing the velocity of a point attached to the moving rigid body.
+For the edge points we have:
+%
 \begin{eqnarray}
-    V_j = V_i + \omega_i \times (P_j - P_i)
+    V_j = V_i + \omega_i \times P_{i-j}
+\end{eqnarray}
+%
+where $i$ is the index of the corner node the edge node is attached to and
+$\omega_i$ is the angular velocity at the node. For the central node
+the formula is based on \eqref{eq-central2}:
+%
+\begin{eqnarray}
+    V_i = \frac{1}{3} \sum_{i=1}^3 \left( V_i + \omega_i \times P_{i-10} \right)
 \end{eqnarray}
 
-where $j$ is the index of the corner node this edge node is attached to and
-$\omega_j$ is the angular velocity at the node. For the central node we
-the formula is again similar to \eqref{eq-central2}:
-
-\begin{eqnarray}
-    V_i = \frac{1}{3} \sum_{i=1}^3 V_i + \omega_i \times (P_{10} - P_i)
-\end{eqnarray}
-
-\subsection{Mapping Forces}
+\subsection{Projection of Normal Forces}
 
 For physical interaction with the object one also requiers that the normal
-forces applied on the high resolution mesh are trasmitted back as forces
+forces applied on the object's surface are trasmitted back as forces
 and torques on the vertices of the mechanical mesh.
-
 We compute the influence of force $F$ on the corners through all the
 associated control points by the formula:
-
+%
 \begin{eqnarray}
-    F_1 & = & F \sum_{i \in \{1,4,5\}} n_i + \frac{1}{3} F n_{10} \\
-    F_2 & = & F \sum_{i \in \{2,6,7\}} n_i + \frac{1}{3} F n_{10} \\
-    F_3 & = & F \sum_{i \in \{3,8,9\}} n_i + \frac{1}{3} F n_{10}
+    F_1 & = & F \sum_{i \in \{1,4,5\}} n_i + \frac{n_{10}}{3} F \\
+    F_2 & = & F \sum_{i \in \{2,6,7\}} n_i + \frac{n_{10}}{3} F \\
+    F_3 & = & F \sum_{i \in \{3,8,9\}} n_i + \frac{n_{10}}{3} F 
 \end{eqnarray}
 
-%\begin{eqnarray}
-%    F_1 & = & F (n_1 + n_4 + n_5) + \frac{1}{3} F n_{10} \\
-%    F_2 & = & F (n_2 + n_6 + n_7) + \frac{1}{3} F n_{10} \\
-%    F_3 & = & F (n_3 + n_8 + n_9) + \frac{1}{3} F n_{10} \\
-%\end{eqnarray}
-
-Similarly we compute the torques applied through edge control points and
-the central control points by:
-
+Similarly we can compute the torques applied through edge control points and
+the central control points:
+%
 \begin{gather}
     \begin{split}
-        \theta_1 & = P_{1-4} \times (n_4 F) + P_{1-5} \times (n_5 F) + \\
-        & + \frac{1}{3} (P_{1-4} + P_{1-5}) \times (n_{10} F)
+        \theta_1 = & P_{1-4} \times (n_4 F) + P_{1-5} \times (n_5 F) + \\
+        & + \frac{1}{3} P_{1-10} \times (n_{10} F)
     \end{split}
     \\
     \begin{split}
-        \theta_2 & = P_{1-6} \times (n_6 F) + P_{1-7} \times (n_7 F) + \\
-        & + \frac{1}{3} (P_{1-6} + P_{1-7}) \times (n_{10} F) \\
+        \theta_2 = & P_{2-6} \times (n_6 F) + P_{2-7} \times (n_7 F) + \\
+        & + \frac{1}{3} P_{2-10} \times (n_{10} F) \\
     \end{split}
     \\
     \begin{split}
-        \theta_3 & = P_{1-8} \times (n_8 F) + P_{1-9} \times (n_9 F) + \\
-        & + \frac{1}{3} (P_{1-8} + P_{1-9}) \times (n_{10} F) \\
+        \theta_3 = & P_{3-8} \times (n_8 F) + P_{3-9} \times (n_9 F) + \\
+        & + \frac{1}{3} P_{3-10} \times (n_{10} F) \\
     \end{split}
 \end{gather}
-
-%\begin{eqnarray}
-%    \theta_1 & = & \sum_{i \in \{4,5\}} P_{1-i} \times (n_i F) \\
-%    & + &\frac{1}{3} (P_{1-4} + P_{1-5}) \times (n_{10} F) \\
-%    \theta_1 & = & \sum_{i \in \{6,7\}} P_{1-i} \times (n_i F) + \\
-%    & + &\frac{1}{3} (P_{1-6} + P_{1-7}) \times (n_{10} F) \\
-%    \theta_1 & = & \sum_{i \in \{8,9\}} P_{1-i} \times (n_i F) + \\
-%    & + &\frac{1}{3} (P_{1-8} + P_{1-9}) \times (n_{10} F) \\
-%\end{eqnarray}
-%
-%\begin{eqnarray}
-%    \theta_1 & = & \sum_{i \in \{4,5\}} P_{1-i} \times (n_i F) +
-%    \frac{1}{3} (P_{1-4} + P_{1-5}) \times (n_{10} F) \\
-%    \theta_1 & = & \sum_{i \in \{6,7\}} P_{1-i} \times (n_i F) +
-%    \frac{1}{3} (P_{1-6} + P_{1-7}) \times (n_{10} F) \\
-%    \theta_1 & = & \sum_{i \in \{8,9\}} P_{1-i} \times (n_i F) +
-%    \frac{1}{3} (P_{1-8} + P_{1-9}) \times (n_{10} F) \\
-%\end{eqnarray}
 
 % }}}
 
@@ -854,25 +838,32 @@ the central control points by:
 % seems to converge to wrong value (but it converges! :)). Thus showing
 % results for plain membrane deformations doesn't make sense (it would be
 % inconsistent).
-  \CD{ - On this section,  we can maybe add some results from the CBM paper you did with Stephan especially  the figure 9 that illustrates the 3d contribution we list in the intro: i.e. Mapping of high resolution mesh on the curved surface of the shell.}
 
-In next two subsections we present tests to validate the convergence of our
-B\'ezier shell element. We use a combination of two elements that are very well
-established in the area of mechanical modelling.
-Our results are compared with the shell element
-composed of Discrete Kirchoff Triangle (DKT) element \cite{Batoz1980} for bending plate and optimal ANDES element \cite{Felippa2003} for membrane.
-The last subsection presents evaluation of the computational complexity of our solution.
+% TODO:
+% \CD{ - On this section,  we can maybe add some results from the CBM paper you did with Stephan especially  the figure 9 that illustrates the 3d contribution we list in the intro: i.e. Mapping of high resolution mesh on the curved surface of the shell.}
+% Not enough space?
 
-\subsection{Roof Test}
+In subsections \ref{sec-roof} and \ref{sec-hemisphere} we present tests to
+validate the convergence of our B\'ezier shell element. As a reference we use a
+combination of two elements that are very well established in the area of
+mechanical modelling. Our results are compared with the shell element composed
+of Discrete Kirchoff Triangle (DKT) element \cite{Batoz1980} for bending plate
+and optimal ANDES element \cite{Felippa2003} for membrane. For comparison the
+results for the model of O. Comas are also presented. Subsection \ref{sec-fps}
+presents evaluation of the computational complexity of our solution. Last
+subsections are dedicated to presentation of application of our model.
+
+
+\subsection{Roof Test}\label{sec-roof}
 
 To validate the results of the element we have performed a modified version
 of a test known as Scordelis-Lo roof. It simulates a cylindrical roof under
 self-weight. The geometry is defined by 80° cylindrical patch of length
-$L=50$ and radius $r=25$ and thickness $t=0.25$ and is discretized into
-mesh of NxN nodes. The physical parameters are $E = 4.32 \times 10^8$ and
+$L=50$, radius $r=25$ and thickness $t=0.25$ and is discretized into
+mesh of NxN vertices. The physical parameters are $E = 4.32 \times 10^8$ and
 $\nu = 0$. The roof is loaded with uniformly distributed load $q = 90$ per
 unit area. The curved edges are clamped at both ends to avoid rigid body
-movement. This the only difference from the original Scordelis-Lo roof test
+movement. This is the only difference from the original Scordelis-Lo roof test
 where the edges are free to move in longitudinal direction. The Figure
 \ref{fig-roof} shows the vertical displacement of midpoint on the free
 edge.
@@ -884,12 +875,13 @@ our B\'ezier shell element (BSH) and elemnt of O. Comas (PSH) with polynomial sh
 \Figure{\linewidth}{roof-img}
 {Coloured plot of vertical displacement in the roof test}
 
-\subsection{Hemisphere Test}
+
+\subsection{Hemisphere Test}\label{sec-hemisphere}
 
 Second performed test is a hemisphere with hole subjected to two opposing
 forces at the base. The geometry is described by a hemisphere with radius
 $r=10$ and thickness $t=0.04$ with 18° hole at the top and the geometry is
-discretized into the grid of NxN nodes per quadrant. The physical
+discretized into the grid of NxN vertices per quadrant. The physical
 parameters are $E = 6.825 \times 10^7$ and $\nu = 0.3$. The hemisphere is
 at it's base subjected to two opposing outwards forces and two opposing
 inwards forces with magnitude $P = 4$. To avoid rigid body movement we have
@@ -904,15 +896,16 @@ our B\'ezier shell element (BSH) and elemnt of O. Comas (PSH) with polynomial sh
 \Figure{\linewidth}{hemisphere-img}
 {Coloured plot of radial displacement in the hemisphere test}
 
-\subsection{Computation Speed}
+
+\subsection{Computation Speed}\label{sec-fps} % {{{
 
 In figure \ref{fig-fps} we present performance of the element in terms of
-frames per second. All tests were performed on machine equipped Dual-Core
-AMD Opteron Processor 2218 and 3 GB of RAM and conjugate gradient solver
-has been to solve the system. Our implementation is without optimizations
+frames per second. All tests were performed on machine equipped with Dual-Core
+AMD Opteron Processor 2218 and 3~GB of RAM. We used a conjugate gradient solver
+to solve the system. Our implementation is without optimizations
 and isn't parallel, which means only single CPU core was used for the
-simulation. The values reported are for the raw physical simulation with
-and without the frame fixing method described in subsection
+simulation. The values reported are for the raw physical simulation with (b)
+and without (a) the frame fixing method described in subsection
 \ref{sec-corot}. We also present results including the mapping of
 high-resolution mesh onto the mechanical mesh for visualisation purposes or
 collisions.
@@ -920,16 +913,19 @@ collisions.
 \Figure{\linewidth}{fps}
 {Performance in frames per seconds for different number of elements. Shows
 values for element with frame fixing (B) method described in subsection
-\ref{sec-corot} and without it (A), and with high-resolution mesh of 2048
-(C) or 3200 (D) triangles mapped onto the mechanical mesh.}
+\ref{sec-corot} and without it (A), and with mesh of 3\,200
+(C) or 10\,082 (D) triangles mapped onto the mechanical mesh.}
 
 We can see that the frame fixing technique is really fast and we are able
-to simulate up to 1000 elements and still maintain visual refresh rate of
-25 FPS. Our implementation of mechanical mapping clearly needs improving
-because it consumes most of the computation time, but it is still able to
-provide good results for more than 600 elements.
+to simulate up to 1\,000 elements and still maintain visual refresh rate of
+25 FPS. While our implementation was only single-threaded and the mechanical mapping
+wasn't off-loaded to another CPU core we were still able to provide good
+results for more than 600 elements mesh with 10k triangles.
 
-\subsection{Application on Congenital Heart Disease Correction Planning}
+% }}}
+
+
+\subsection{Application on Congenital Heart Disease Correction Planning} % {{{
 
 Surgical interventions in infants with congenitally malformed great arteries
 and hearts are extremely challenging due to the complex and heterogeneous
@@ -960,7 +956,6 @@ boundary. By iteratively adjusting the underlaying mesh we search for the
 elastic equilibrium. Figure \ref{fig-chd} presents a screenshots of the
 application prototype.
 
-
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %
 %% TODO: is this OK for anonymity?
@@ -968,19 +963,13 @@ application prototype.
 %\cite{Faure2012} for real-time surgical simulations. It has been evaluated
 %on several applications.
 %
-%% TODO: !!! When ANONYMISING do something with the citation !!!
-%One being a tool for pre-operative planning of corrective surgery of
-%congenital heart diseases in infants \cite{Kislinskiy2012}. The cardiac
-%surgery is a complicated process where several arterial vessels have to be
-%cut, patched and reconnected. The element has been used for to model
-%deformations of blood vessels after suturing and/or applying a artificial
-%patch. Figure \ref{fig-chd} presents a screenshots of the application
-%prototype.
 
 \FigureW{0.75\linewidth}{chd}
 {Screenshots of the simulation system prototype for different surgical
 procedures used to repair a coarctation of an aortic arch. The screenshots
 are enriched with overlay delineations.}
+
+% }}}
 
 % TODO?
 %Another designed application is simulation of women reproductive organs
