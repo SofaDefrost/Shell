@@ -34,6 +34,7 @@
 
 \usepackage{egweblnk}
 \usepackage{cite}
+\usepackage{ulem}
 
 % For backwards compatibility to old LaTeX type font selection.
 % Uncomment if your document adheres to LaTeX2e recommendations.
@@ -204,7 +205,7 @@ We present a two stage interpolation:
 Mapping of high resolution mesh on the curved surface of the shell.
 Finally from the kinematic link we derive formulas for
 (i) interpolating velocity on the element surface and for
-(ii) distribution of normal force applied on the element surface back to 6 DOF nodes of the element.
+(ii) distribution of force applied on the element surface back to 6 DOF nodes of the element.
 This allows us to use smooth mapped surface for collision detection and allows the propagation of proper collision response back onto the mechanical mesh.
 
 % }}}
@@ -749,10 +750,10 @@ In either case performing more iterations is unnecessary.
 Because of the bending property of the shells relatively few elements are
 necessary to simulate curved surface. To enrich the visual experience from
 the simulated object it is desirable to use more triangles in the areas
-with high curvature during rendering. Besides the visual accuracy the high
-resolution mesh correctly modeling the curved areas is needed for
-interaction and correct simulation of collisions and constraints. To handle
-these we also need to know how to map the velocities from the mechanical
+with high curvature during rendering. 
+Besides the visual accuracy the high resolution mesh correctly modeling the curved areas is needed for
+interaction and correct simulation of collisions and constraints. 
+To handle these, we also need to know how to map the velocities from the mechanical
 mesh onto the high resolution mesh and how to map forces acting on the high
 resolution mesh back onto the mechanical mesh.
 
@@ -771,7 +772,7 @@ the function of the surface \eqref{eq-cubicbez}.
 
 \subsection{Nodal Velocities of the Surface Mesh}
 
-For contact modeling it is often necessary to know the velocity of each point.
+For contact modeling it is necessary to know the velocity of the contact points.
 The values are directly available to us for the nodes of the mechanical mesh
 but they can also be computed for any point on the surface.
 Differentiating \eqref{eq-cubicbez2} by time we get:
@@ -781,11 +782,12 @@ Differentiating \eqref{eq-cubicbez2} by time we get:
 \end{equation}
 
 Which means we use the same expression to interpolate the velocity only by
-substituting the velocities at control points. For the corner nodes we
-already have the velocities $V_i$. For the internal nodes we need to compute
-them. We again make use of the kinematic link between nodes and solve the
-problem of computing the velocity of a point attached to the moving rigid body.
-For the edge points we have:
+substituting the velocities at control points. 
+For the corner \CD{\sout{nodes} $\rightarrow$ control points}  we
+already have the velocities $V_i$. For the internal \CD{\sout{nodes} $\rightarrow$ control points}  we need to compute
+them. We again make use of the kinematic link between nodes and control points.
+%solve the problem of computing the velocity of a point attached to the moving rigid body.
+For the edge points we applied to motion of a rigid body:
 %
 \begin{eqnarray}
     V_j = V_i + \omega_i \times P_{i-j}
@@ -793,24 +795,24 @@ For the edge points we have:
 %
 where $i$ is the index of the corner node the edge node is attached to and
 $\omega_i$ is the angular velocity at the node. For the central node
-the formula is based on \eqref{eq-central2}:
+the formula is based on the derivate of equation \eqref{eq-central2}:
 %
 \begin{eqnarray}
-    V_i = \frac{1}{3} \sum_{i=1}^3 \left( V_i + \omega_i \times P_{i-10} \right)
+    V_{10} = \frac{1}{3} \sum_{i=1}^3 \left( V_i + \omega_i \times P_{i-10} \right)
 \end{eqnarray}
 
-\subsection{Projection of Normal Forces}
+\subsection{Projection of surface forces}
 
-For physical interaction with the object one also requires that the normal
+For physical interaction with the object one also requires that the
 forces applied on the object's surface are transmitted back as forces
 and torques on the vertices of the mechanical mesh.
 We compute the influence of force $F$ on the corners through all the
 associated control points by the formula:
 %
 \begin{eqnarray}
-    F_1 & = & F \sum_{i \in \{1,4,5\}} n_i + \frac{n_{10}}{3} F \\
-    F_2 & = & F \sum_{i \in \{2,6,7\}} n_i + \frac{n_{10}}{3} F \\
-    F_3 & = & F \sum_{i \in \{3,8,9\}} n_i + \frac{n_{10}}{3} F 
+    F_1 & = &  \sum_{i \in \{1,4,5\}} n_i F + \frac{n_{10}}{3} F \\
+    F_2 & = &  \sum_{i \in \{2,6,7\}} n_i F + \frac{n_{10}}{3} F \\
+    F_3 & = &  \sum_{i \in \{3,8,9\}} n_i F + \frac{n_{10}}{3} F 
 \end{eqnarray}
 
 Similarly we can compute the torques applied through edge control points and
@@ -818,20 +820,23 @@ the central control points:
 %
 \begin{gather}
     \begin{split}
-        \theta_1 = & P_{1-4} \times (n_4 F) + P_{1-5} \times (n_5 F) + \\
+        	\tau_1 = & P_{1-4} \times (n_4 F) + P_{1-5} \times (n_5 F) + \\
         & + \frac{1}{3} P_{1-10} \times (n_{10} F)
     \end{split}
     \\
     \begin{split}
-        \theta_2 = & P_{2-6} \times (n_6 F) + P_{2-7} \times (n_7 F) + \\
+       	\tau_2 = & P_{2-6} \times (n_6 F) + P_{2-7} \times (n_7 F) + \\
         & + \frac{1}{3} P_{2-10} \times (n_{10} F) \\
     \end{split}
     \\
     \begin{split}
-        \theta_3 = & P_{3-8} \times (n_8 F) + P_{3-9} \times (n_9 F) + \\
+        	\tau_3 = & P_{3-8} \times (n_8 F) + P_{3-9} \times (n_9 F) + \\
         & + \frac{1}{3} P_{3-10} \times (n_{10} F) \\
     \end{split}
 \end{gather}
+
+Note that these formula fulfill the physical principle of virtual power: $ P = \dot{T} \cdot F  = \sum_{i=1}^3 V_i \cdot F_i +  \omega_i  \cdot \tau_i$
+
 
 % }}}
 
@@ -1059,7 +1064,7 @@ It fixes problems of the previous model \cite{Comas2010c} based on cubic polynom
 Because of the formulation of B\'ezier triangle is intrinsically present
 there is a clean and obvious way of mapping high-resolution mesh for better
 visualization. We also provide a technique of computing velocities of any point
-on the surface and formula for back-projection of normal forces applied on the
+on the surface and formula for back-projection of forces applied on the
 surface onto the mechanical mesh. 
 Those are essential components for the surgical simulators that need accurate contact geometry modeling without an overflow of computation need
 The efficiency of the approach is demonstrated through convergence tests,  computation time benchmark and application to two different  simulation cases.
