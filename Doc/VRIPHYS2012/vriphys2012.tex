@@ -94,6 +94,8 @@
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
 % TODO: anonymize -- Submission ID
+%\author[paper1026]
+%       {paper1026}
 \author[T. Golembiovský \& C. Duriez]
        {Tomáš Golembiovský$^{1,2}$ and Christian Duriez$^{2}$\\
         $^1$Faculty of Informatics, Masaryk University, Czech Republic\\
@@ -122,19 +124,19 @@
 
 \maketitle
 
-\begin{abstract} % TODO
-There is a strong need, in surgical simulations, for physics-based deformable model of thin or hollow structures.
+\begin{abstract}
+There is a strong need, in surgical simulations, for physically based deformable model of thin or hollow structures.
 The use of shell theory allows to have a well-founded formulation resulting from continuum mechanics of thin objects.
 However, this formulation asks for second order spatial derivatives so requires the use of complex elements.
 In this paper, we present a new way of building the interpolation:
-First, we use the cubic B/'ezier shell triangle to allow for a good continuity inside and between the elements and second, we build a kinematic mapping to reduce the degrees of freedom of the element from 10 control points with 3 Degrees of Freedom ($=30$ DoFs) to only 3 nodes with 6 DoFs ($=18$ DoFs).
+First, we use the trianular cubic B\'ezier shell to allow for a good continuity inside and between the elements and second, we build a kinematic mapping to reduce the degrees of freedom of the element from 10 control points with 3 Degrees of Freedom ($=30$ DOFs) to only 3 nodes with 6 DOFs ($=18$ DOFs).
 This reduction allows for good computation performance.
-This new shell model description is also used to map a smooth surface (for the collision detection and response) on a coarse mechanical mesh to accounts for the complex contacts that take place during surgical procedures.
+This new shell model description is also used to map a smooth surface (for the collision detection and response) on a coarse mechanical mesh to account for the complex contacts that take place during surgical procedures.
 We demonstrate the convergence and the computational efficiency of our approach as well as its use in two different simulation cases: the planning of surgery for congenital heart disease correction and a preliminary simulation of childbirth.
 
 \begin{classification} % according to http://www.acm.org/class/1998/
-    \CCScat{Computer Graphics}{I.3.5}{Computational Geometry and Object Modeling}{Physically based modelling};
-    \CCScat{Computer Graphics}{I.3.7}{Three-Dimensional Graphics and Realism}{Animation}.
+    \CCScat{Computer Graphics}{I.3.5}{Computational Geometry and Object Modeling}{Physically based modelling}.
+    %\CCScat{Computer Graphics}{I.3.7}{Three-Dimensional Graphics and Realism}{Animation}.
     %\CCScat{Simulation and Modeling}{I.6.8}{Types of Simulation}{Animation}
     %\CCScat{Life and Medical Sciences}{J.3}{Health}{}
 \end{classification}
@@ -162,7 +164,7 @@ This problem has been faced by the computer graphics community but for different
 For instance, many related works address the problem of the simulation of cloth using mass-spring models \cite{Volino2009} or bending models \cite{Grinspun2003}. %% Todo Choi2007?
 However, these models are discrete so their behavior depends on the mesh and their parameters are not easily measurable.
 This is completely acceptable for some computer graphics application, where the parameters can be tuned manually to obtain a realistic animation.
-In the case of medical simulation, more physics-based modeling is needed.
+In the case of medical simulation, more physically based modeling is needed.
 
 
 Methods based on continuum mechanics and namely theory of elasticity gained on popularity in real-time simulations ever since Terzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.
@@ -801,7 +803,7 @@ the formula is based on the derivate of equation \eqref{eq-central2}:
     V_{10} = \frac{1}{3} \sum_{i=1}^3 \left( V_i + \omega_i \times P_{i-10} \right)
 \end{eqnarray}
 
-\subsection{Projection of surface forces}
+\subsection{Projection of Surface Forces}
 
 For physical interaction with the object one also requires that the
 forces applied on the object's surface are transmitted back as forces
@@ -887,7 +889,7 @@ our B\'ezier shell element (BSH) and element of O. Comas (PSH) with polynomial s
 
 \subsection{Hemisphere Test}\label{sec-hemisphere}
 
-Second performed test is an hemisphere with hole subjected to two opposing
+Second performed test is a hemisphere with hole subjected to two opposing
 forces at the base. The geometry is described by a hemisphere with radius
 $r=10$ and thickness $t=0.04$ with 18° hole at the top and the geometry is
 discretized into the grid of NxN vertices per quadrant. The physical
@@ -980,14 +982,7 @@ application prototype.
 
 % }}}
 
-% TODO?
-%Another designed application is simulation of women reproductive organs
-%(vagaina/uterus/\ldots). 
-%The simulation is so as to evaluate
-%stress on a tissue during a birth.
-
-
-\subsection{Simulation of uterus deformation during birth}
+\subsection{Simulation of Uterus Deformation During Birth}
 
 \FigureW{\linewidth}{birth}
 {Screenshots from the simulation of child head during birth. Full visualization (left) and the mechanical mesh (right).}
@@ -1003,6 +998,7 @@ Mechanically, the uterus is modeled with 127 shells that are solved by a direct 
 Up to 60 instantaneous contact spots need to be mapped on the shell elements. 
 The simulation frame-rate is relatively low (6 FPS) due to contact response computation.
 
+% }}}
 
 
 \section{Discussion and Limitations} % {{{
@@ -1037,13 +1033,14 @@ For complex deformation fields or material constitutive laws  this assumption is
 However, we could keep the same way of building the element even with more complex mechanics. 
 For instance the interpolation would allow for derivation of three-dimensional non-linear strain tensors.
 We will investigate this topic in our future work.
+
 % }}}
 
 \section{Conclusion} % {{{
 
 In this paper we presents new shell element with interpolation functions
 based on B\'ezier triangle which is  suitable for real-time simulations.
-Compared to  the elements commonly used in mechanics, the interpolation is less complex and ensure at least a $C^0$ continuity in the worst case. 
+Compared to  the elements commonly used in mechanics, the interpolation is less complex and ensures at least a $C^0$ continuity in the worst case. 
 (Many shell elements are not even $C^0$ when the initial shape is not flat).
 
 It fixes problems of the previous model \cite{Comas2010c} based on cubic polynomials, namely:
@@ -1069,7 +1066,7 @@ there is a clean and obvious way of mapping high-resolution mesh for better
 visualization. We also provide a technique of computing velocities of any point
 on the surface and formula for back-projection of forces applied on the
 surface onto the mechanical mesh. 
-Those are essential components for the surgical simulators that need accurate contact geometry modeling without an overflow of computation need
+Those are essential components for the surgical simulators that need accurate contact geometry modeling without an overflow of computation.
 The efficiency of the approach is demonstrated through convergence tests,  computation time benchmark and application to two different  simulation cases.
 
 In future work, we will investigate the use of more complex constitutive laws and also the use of GPU for parallel and faster compuation.
