@@ -189,7 +189,7 @@ TODO: paper structure
 Extending the work of Comas \cite{Comas2010c} we have designed a shell element that uses B\'ezier interpolation polynomials.
 Our element solves the problems of the element presented by Comas:
 (i) it uses all 6 degrees of freedom,
-(ii) the deformations are completly symmetric and
+(ii) the deformations are completely symmetric and
 (iii) the boundary between elements is continuous.
 We present a two stage interpolation:
 (i) first a kinematic link between 6 DOF nodes of element and nodes of B \'ezier control mesh is defined and
@@ -236,7 +236,7 @@ surface. The general $n$-th order B\'ezier triangle requires $(n + 1)(n +
     T(\xi_1, \xi_2) = \sum_{0 \le i + j \le n} B^n_{i,j}(\xi_1,\xi_2) P_{i,j}
 \end{equation}
 %
-where $P_{i,j}$ are the control points and $B^n_{i,j}$ are the bivairate
+where $P_{i,j}$ are the control points and $B^n_{i,j}$ are the bivariate
 Bernstein basis functions defined as:
 %
 \begin{equation}
@@ -289,7 +289,7 @@ shortly express \eqref{eq-cubicbez} as:
 
 The cubic B\'ezier triangles are defined by a mesh of 10 control points each, however the
 simulated object is usually described by a triangular mesh possibly with normals.
-A procedure for construction of initial Bézier mesh is necessary.
+A procedure for construction of initial B\'zier mesh is necessary.
 We construct the initial B\'ezier mesh by taking into account the curvature of the triangular
 mesh. Note that special care has to be taken to maintain
 the continuity between elements across the nodes and edges, 
@@ -360,13 +360,13 @@ apply the rigid transformation of frame $i$ on control point $j$:
     P_j = \mathbf{x}_i + P_{i-j} = P_i + R(\theta_i) \overline{P_{i-j}}
 \end{equation}
 
-Similarily for the central point we apply rigid transformation of all frames of the triangle and compute the mean:
+Similarly for the central point we apply rigid transformation of all frames of the triangle and compute the mean:
 %
 \begin{equation}\label{eq-central2}
     P_{10} =  \frac{1}{3}\left( \sum_{i=1}^3 \mathbf{x}_i + R(\theta_i) \overline{P_{i-10}} \right)
 \end{equation}
 
-Puting previous equations into \eqref{eq-cubicbez2} we get:
+Putting previous equations into \eqref{eq-cubicbez2} we get:
 %
 \begin{equation}\label{global-transform} \begin{split}
     & T = \sum_{i=1}^{10} n_i P_i = \sum_{i=1}^{3} n_i \mathbf{x}_i
@@ -476,7 +476,7 @@ Note however that the expressions are sound and unambiguous because there is onl
 
 \section{Finite Element Formulation} % {{{
 
-In the previous section we present an interpolation based on cubic B\'ezier triangles and a kinematic link between the control points and the element 6DoF Nodes.
+In the previous section we present an interpolation based on cubic B\'ezier triangles and a kinematic link between the control points and the element 6DOF nodes.
 In this section we show how this interpolation can be used to compute a finite element formulation of the shell equations.
 The model relies on large transformation formulation: the geometrical non-linearities are handled using a corotational formulation, whereas, in the frame of the element, infinitesimal strain theory is used.
 
@@ -677,10 +677,10 @@ is then computed relative to this frame:
 where $\mat{R}$ and $\mat{R}_0$ are rotation matrices of the frame for current and rest
 mesh respectively.
 
-The corotational frame is computed followingly: 
+The corotational frame is computed using following steps: 
 
 \begin{itemize}
-    \item One axis is alligned to one edge of the element:\\
+    \item One axis is aligned to one edge of the element:\\
     $\mathbf{e}_1 = \mathbf{x}_2 - \mathbf{x}_1$
     \item A normal to the plane of the element is computed:\\
     $\mathbf{e}_3 = \mathbf{e}_1 \times (\mathbf{x}_3 - \mathbf{x}_1)$
@@ -693,7 +693,7 @@ problem \cite{Felippa2005} and incorrect frame for the membrane element can
 have adverse effects on the simulation.
 This choice of the frame where we align one axis with one of the edges
 of the triangle is not a perfect one and we have experienced
-nonnegligible difference in deformation of equilateral triangle depending
+non-negligible difference in deformation of equilateral triangle depending
 on whether an axis was aligned to the edge favored by the deformation or to
 one of the two other edges.
 
@@ -798,8 +798,8 @@ the formula is based on \eqref{eq-central2}:
 
 \subsection{Projection of Normal Forces}
 
-For physical interaction with the object one also requiers that the normal
-forces applied on the object's surface are trasmitted back as forces
+For physical interaction with the object one also requires that the normal
+forces applied on the object's surface are transmitted back as forces
 and torques on the vertices of the mechanical mesh.
 We compute the influence of force $F$ on the corners through all the
 associated control points by the formula:
@@ -870,7 +870,7 @@ edge.
 
 \Figure{\linewidth}{roof}
 {Convergence for modified Scordelis-Lo roof test of DKT+ANDES element, 
-our B\'ezier shell element (BSH) and elemnt of O. Comas (PSH) with polynomial shape function.}
+our B\'ezier shell element (BSH) and element of O. Comas (PSH) with polynomial shape function.}
 
 \Figure{\linewidth}{roof-img}
 {Coloured plot of vertical displacement in the roof test}
@@ -891,7 +891,7 @@ displacement for one point with applied load is shown in Figure
 
 \Figure{\linewidth}{hemisphere}
 {Convergence for test on hemisphere with 18° hole for the DKT+ANDES element and
-our B\'ezier shell element (BSH) and elemnt of O. Comas (PSH) with polynomial shape function.}
+our B\'ezier shell element (BSH) and element of O. Comas (PSH) with polynomial shape function.}
 
 \Figure{\linewidth}{hemisphere-img}
 {Coloured plot of radial displacement in the hemisphere test}
@@ -925,7 +925,7 @@ results for more than 600 elements mesh with 10k triangles.
 % }}}
 
 
-\subsection{Application on Congenital Heart Disease Correction Planning} % {{{
+\subsection{Planning of Congenital Heart Disease Correction Surgery} % {{{
 
 Surgical interventions in infants with congenitally malformed great arteries
 and hearts are extremely challenging due to the complex and heterogeneous
