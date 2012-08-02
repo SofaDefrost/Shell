@@ -122,7 +122,14 @@
 \maketitle
 
 \begin{abstract} % TODO
-    TODO: Abstract.
+There is a strong need, in surgical simulations, for physics-based deformable model of thin or hollow structures.
+The use of shell theory allows to have a well-founded formulation resulting from continuum mechanics of thin objects.
+However, this formulation asks for second order spatial derivatives so requires the use of complex elements.
+In this paper, we present a new way of building the interpolation:
+First, we use the cubic B/'ezier shell triangle to allow for a good continuity inside and between the elements and second, we build a kinematic mapping to reduce the degrees of freedom of the element from 10 control points with 3 Degrees of Freedom ($=30$ DoFs) to only 3 nodes with 6 DoFs ($=18$ DoFs).
+This reduction allows for good computation performance.
+This new shell model description is also used to map a smooth surface (for the collision detection and response) on a coarse mechanical mesh to accounts for the complex contacts that take place during surgical procedures.
+We demonstrate the convergence and the computational efficiency of our approach as well as its use in two different simulation cases: the planning of surgery for congenital heart disease correction and a preliminary simulation of childbirth.
 
 \begin{classification} % according to http://www.acm.org/class/1998/
     \CCScat{Computer Graphics}{I.3.5}{Computational Geometry and Object Modeling}{Physically based modelling};
