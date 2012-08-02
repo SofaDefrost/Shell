@@ -857,7 +857,8 @@ combination of two elements that are very well established in the area of
 mechanical modelling. Our results are compared with the shell element composed
 of Discrete Kirchoff Triangle (DKT) element \cite{Batoz1980} for bending plate
 and optimal ANDES element \cite{Felippa2003} for membrane. For comparison the
-results for the model of O. Comas are also presented. Subsection \ref{sec-fps}
+results for the model of O. Comas \cite{Comas2010c} are also presented. 
+Subsection \ref{sec-fps}
 presents evaluation of the computational complexity of our solution. Last
 subsections are dedicated to presentation of application of our model.
 
@@ -886,7 +887,7 @@ our B\'ezier shell element (BSH) and element of O. Comas (PSH) with polynomial s
 
 \subsection{Hemisphere Test}\label{sec-hemisphere}
 
-Second performed test is a hemisphere with hole subjected to two opposing
+Second performed test is an hemisphere with hole subjected to two opposing
 forces at the base. The geometry is described by a hemisphere with radius
 $r=10$ and thickness $t=0.04$ with 18° hole at the top and the geometry is
 discretized into the grid of NxN vertices per quadrant. The physical
@@ -986,21 +987,23 @@ application prototype.
 %stress on a tissue during a birth.
 
 
-\subsection{Simulation of a Birth}
+\subsection{Simulation of uterus deformation during birth}
 
 \FigureW{\linewidth}{birth}
-{Screenshots from the simulation of child head during birth. Full visualisation (left) and the mechanical mesh (right).}
+{Screenshots from the simulation of child head during birth. Full visualization (left) and the mechanical mesh (right).}
 
-The purpose of another simulator kkk 
-- Simulation of birth ! (Try to see where the tissue' stress is the highest)
+The purpose of this simulator is to reproduce the tissue deformations that are encountered during a delivery.
+The goal is to evaluate the mechanical stresses which are applied on the anatomical structures (like the uterus but also like the ligaments that sustain the uterus).
+
+The data comes from a MRI of a 8 months pregnant woman. 
+The trajectory of the baby-head during the birth was predefined with gynecologists. 
+The model is limited to uterus deformations but will soon account for the vaginal tissues deformation.
+The collisions response drives the deformations of the uterus.
+Mechanically, the uterus is modeled with 127 shells that are solved by a direct solver (LDL factorization).
+Up to 60 instantaneous contact spots need to be mapped on the shell elements. 
+The simulation frame-rate is relatively low (6 FPS) due to contact response computation.
 
 
-The trajectory of the baby-head during the birth is predefined. The collisions response drives the deformations of the uterus.
-Mechanically, the uterus is modeled with 127 shells solved by a direct solver (LDL factorization).
-Up to 60 instantaneous contact spots, simulated at 6 FPS.
-The goal is to reproduce the mechanical solicitations on the anatomical structure during the birth.         
-
-% }}}
 
 \section{Discussion and Limitations} % {{{
 
@@ -1068,6 +1071,8 @@ on the surface and formula for back-projection of forces applied on the
 surface onto the mechanical mesh. 
 Those are essential components for the surgical simulators that need accurate contact geometry modeling without an overflow of computation need
 The efficiency of the approach is demonstrated through convergence tests,  computation time benchmark and application to two different  simulation cases.
+
+In future work, we will investigate the use of more complex constitutive laws and also the use of GPU for parallel and faster compuation.
 
 % }}}
 
