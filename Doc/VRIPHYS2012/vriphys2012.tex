@@ -1003,15 +1003,17 @@ Currently, due to the technical decisions the element has two limitations.
 The first limitation is that the element does not provide $C^1$ continuity
 across edges. It is $C^1$ continuous at corners but only $C^0$ on the
 edges. This may prove to be an issue for example if curvature needs to be
-computed not only inside the element but also on the edges.
+computed not only inside the element but also across the edges.
 
-The second limitation is the choice of rigidly attached control
-points. While it greatly simplifies the formulation the rigidity may cause
-issues. In case of large compression of the element the results may be
+The second limitation is the choice of rigidly attached control points. 
+While it greatly simplifies the formulation the rigidity may cause issues.
+In case of large compression of the element the results may be
 unpredictable. This is however unlikely to occur because the element will
 bend before reaching such configuration. It may, however, fail to maintain
 even curvature of the surface if the element is subjected to large
 stretching.
+We could investigate more complex kinematic links between nodes and control points 
+and also more continuous surface descriptions.
 
 On the other hand the choices provide a good trade-off between continuity
 and simplicity. Only $ 3 \times 6~\mathrm{DOFs} = 18~\mathrm{DOFs}$ are
@@ -1022,16 +1024,20 @@ vertices where the size of nodes involved depends also on number of
 neighbouring elements. By keeping the element simple the sparsity of
 stiffness matrix is not violated.
 
-Unified formulation of the deformation allows for derivation of three-dimensional 
-stress tensor. This however remains as topic for future work and
-we have kept the computation of membrane stresses separate from bending stresses.
-
+Our study relies on the assumption that the in-plane and the bending deformation energies can be separated.
+For complex deformation fields or material constitutive laws  this assumption is no more valid.
+However, we could keep the same way of building the element even with more complex mechanics. 
+For instance the interpolation would allow for derivation of three-dimensional non-linear strain tensors.
+We will investigate this topic in our future work.
 % }}}
 
 \section{Conclusion} % {{{
 
 In this paper we presents new shell element with interpolation functions
-based on B\'ezier triangle which is more suitable for real-time simulations than elements common in mechanics with complex, obscure or unclear interpolation functions.
+based on B\'ezier triangle which is  suitable for real-time simulations.
+Compared to  the elements commonly used in mechanics, the interpolation is less complex and ensure at least a $C^0$ continuity in the worst case. 
+(Many shell elements are not even $C^0$ when the initial shape is not flat).
+
 It fixes problems of the previous model \cite{Comas2010c} based on cubic polynomials, namely:
 
 \begin{itemize}
@@ -1044,23 +1050,19 @@ It fixes problems of the previous model \cite{Comas2010c} based on cubic polynom
     the corotational frame to keep the deformation symmetric is also
     presented in the paper.
 
-    \item It is $C^0$ continuous on the edges and provides $C^1$ continuity in
+    \item It is $C^1$ for the case of initial flat shape and, on the other cases, it is $C^0$ continuous on the edges and provides $C^1$ continuity in
     corners of the element. This is essential for good visual experience if
     high-resolution mesh is mapped on the mechanical mesh.
 
 \end{itemize}
 
-Because of the formulation of B\'ezier triangle that is intrinsically present
+Because of the formulation of B\'ezier triangle is intrinsically present
 there is a clean and obvious way of mapping high-resolution mesh for better
-visualisation. We also provide a technique of computing velocities of any point
+visualization. We also provide a technique of computing velocities of any point
 on the surface and formula for back-projection of normal forces applied on the
-surface onto the mechanical mesh. Those are form an essential component for the
-surgical simulator as they are necessary if contact modeling between simulation
-mesh and mechanical mesh is desired or other interaction with the mesh is
-required.
-
-At the end we present examples showing the convergence to the optimal solution
-and the application of the model for several simulation tools. 
+surface onto the mechanical mesh. 
+Those are essential components for the surgical simulators that need accurate contact geometry modeling without an overflow of computation need
+The efficiency of the approach is demonstrated through convergence tests,  computation time benchmark and application to two different  simulation cases.
 
 % }}}
 
