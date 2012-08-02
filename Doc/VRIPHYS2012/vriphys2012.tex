@@ -731,10 +731,6 @@ situations the process is not able to reach the ideal frame quickly because
 either the convergence for the element is too slow or the process is diverging.
 In either case performing more iterations is unnecessary.
 
-% TODO: maybe make a short table showing the convergence to the symmetric
-% solution.
-
-
 % }}}
 
 % }}}
@@ -841,7 +837,7 @@ the central control points:
 
 % TODO:
 % \CD{ - On this section,  we can maybe add some results from the CBM paper you did with Stephan especially  the figure 9 that illustrates the 3d contribution we list in the intro: i.e. Mapping of high resolution mesh on the curved surface of the shell.}
-% Not enough space?
+% -- Not enough space?
 
 In subsections \ref{sec-roof} and \ref{sec-hemisphere} we present tests to
 validate the convergence of our B\'ezier shell element. As a reference we use a
@@ -927,6 +923,11 @@ results for more than 600 elements mesh with 10k triangles.
 
 \subsection{Planning of Congenital Heart Disease Correction Surgery} % {{{
 
+\FigureW{0.75\linewidth}{chd}
+{Screenshots of the simulation system prototype for different surgical
+procedures used to repair a coarctation of an aortic arch. The screenshots
+are enriched with overlay delineations.}
+
 Surgical interventions in infants with congenitally malformed great arteries
 and hearts are extremely challenging due to the complex and heterogeneous
 nature of their disease patterns. At present, cardiac surgeons rely on
@@ -950,7 +951,7 @@ To be able to predict results of complex surgical procedures a physically more
 accurate approach is necessary. Using our shell finite element model we have
 developed a prototype \cite{Kislinskiy2012} of new surgical simulation system
 for preoperative planning. The element has been used to model deformations of
-blood vessels and artificial patch. By performing a set of topological changes
+blood vessels and artificial patches. By performing a set of topological changes
 we simulate the process of incising the vessel and suturing on a pre-specified
 boundary. By iteratively adjusting the underlaying mesh we search for the
 elastic equilibrium. Figure \ref{fig-chd} presents a screenshots of the
@@ -964,11 +965,6 @@ application prototype.
 %on several applications.
 %
 
-\FigureW{0.75\linewidth}{chd}
-{Screenshots of the simulation system prototype for different surgical
-procedures used to repair a coarctation of an aortic arch. The screenshots
-are enriched with overlay delineations.}
-
 % }}}
 
 % TODO?
@@ -977,6 +973,20 @@ are enriched with overlay delineations.}
 %The simulation is so as to evaluate
 %stress on a tissue during a birth.
 
+
+\subsection{Simulation of a Birth}
+
+\FigureW{\linewidth}{birth}
+{Screenshots from the simulation of child head during birth. Full visualisation (left) and the mechanical mesh (right).}
+
+The purpose of another simulator kkk 
+- Simulation of birth ! (Try to see where the tissue' stress is the highest)
+
+
+The trajectory of the baby-head during the birth is predefined. The collisions response drives the deformations of the uterus.
+Mechanically, the uterus is modeled with 127 shells solved by a direct solver (LDL factorization).
+Up to 60 instantaneous contact spots, simulated at 6 FPS.
+The goal is to reproduce the mechanical solicitations on the anatomical structure during the birth.         
 
 % }}}
 
@@ -988,7 +998,7 @@ across edges. It is $C^1$ continuous at corners but only $C^0$ on the
 edges. This may prove to be an issue for example if curvature needs to be
 computed not only inside the element but also on the edges.
 
-The second limitation is the choice of rigidly attached edge control
+The second limitation is the choice of rigidly attached control
 points. While it greatly simplifies the formulation the rigidity may cause
 issues. In case of large compression of the element the results may be
 unpredictable. This is however unlikely to occur because the element will
@@ -1005,9 +1015,13 @@ vertices where the size of nodes involved depends also on number of
 neighbouring elements. By keeping the element simple the sparsity of
 stiffness matrix is not violated.
 
+Unified formulation of the deformation allows for derivation of three-dimensional 
+stress tensor. This however remains as topic for future work and
+we have kept the computation of membrane stresses separate from bending stresses.
+
 % }}}
 
-\subsection{Conclusion} % {{{
+\section{Conclusion} % {{{
 
 In this paper we presents new shell element with interpolation functions
 based on B\'ezier triangle which is more suitable for real-time simulations than elements common in mechanics with complex, obscure or unclear interpolation functions.
@@ -1027,24 +1041,19 @@ It fixes problems of the previous model \cite{Comas2010c} based on cubic polynom
     corners of the element. This is essential for good visual experience if
     high-resolution mesh is mapped on the mechanical mesh.
 
-    % TODO: check this:
-    % + Better conditioning (comparison between Comas model and ours in term of
-    %   convergence of CG...) 
-
 \end{itemize}
 
-Unified formulation of the deformation allows for derivation of three-dimensional 
-stress tensor. This however remains as topic for future work and
-we have kept the computation of membrane stresses separate from bending stresses.
-
 Because of the formulation of B\'ezier triangle that is intrinsically present
-there is a clean and obvious way of mapping high-resolution mesh for
-better visualisation. We also provide a mapping of forces and velocities
-between simulation mesh and mechanical mesh for collision detection/response
-and interaction with the mesh which are essential component for the surgical
-simulator.
+there is a clean and obvious way of mapping high-resolution mesh for better
+visualisation. We also provide a technique of computing velocities of any point
+on the surface and formula for back-projection of normal forces applied on the
+surface onto the mechanical mesh. Those are form an essential component for the
+surgical simulator as they are necessary if contact modeling between simulation
+mesh and mechanical mesh is desired or other interaction with the mesh is
+required.
 
-Finally examples showing the convergence to the optimal solution were also provided. 
+At the end we present examples showing the convergence to the optimal solution
+and the application of the model for several simulation tools. 
 
 % }}}
 
