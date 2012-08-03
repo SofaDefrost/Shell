@@ -84,10 +84,6 @@
 
 
 
-%%% ADD COMMENTS=
-\usepackage{color} 
-\newcommand{\CD}[1]{{\color{magenta}{\textbf{C: #1}}}}
-
 \title[B\'ezier Shell FE]%
       {B\'ezier Shell Finite Element for Interactive Surgical Simulation}
 
@@ -223,7 +219,7 @@ We introduce a new way of building the interpolation by using two stages
     \item A kinematic relation between nodes (6DOFs) defined at the vertices and the control points of the B\'ezier triangle.
 \end{enumerate}
 
-\FigureWI{stages}
+\FigureW{0.8\linewidth}{stages}
 {Two stages of interpolation: First, from triangular with 6DOF nodes (a) a mesh of control points (b) is computed.
 Then based on definition of the B\'ezier triangle a surface (c) is interpolated.}
 
@@ -290,7 +286,7 @@ shortly express \eqref{eq-cubicbez} as:
     T = \sum_{i=1}^{10} n_i P_i
 \end{equation}
 
-\Figure{0.8\linewidth}{bezier2}
+\Figure{0.6\linewidth}{bezier2}
 {Cubic B\'ezier triangle with mesh of 10 control points.}
 
 % }}}
@@ -305,7 +301,7 @@ mesh. Note that special care has to be taken to maintain
 the continuity between elements across the nodes and edges, 
 we partially employ the method described in \cite{Ubach2010} to maintain
 $C^0$ continuity. Each of the control points on the edge is
-computed as the intersection of (\CD{Need to do a figure of this}):
+computed as the intersection of:
 
 \begin{enumerate}
     \item The plane perpendicular to the normal at the vertex.
@@ -348,7 +344,7 @@ Each of the edge control points is attached to nearest corner node. See Figure
 associated corner nodes. 
 In the following text the index $j \in [4;10]$ refers to edge points and index $i \in [1;3]$ to the associated corner point/node (unless $i$ is explicitly used differently).
 
-\Figure{0.8\linewidth}{segments2}
+\Figure{0.6\linewidth}{segments2}
 {Internal nodes of control mesh are connected to the corner nodes by kinematic link (shown in blue).}
 
 In the initialization phase we remember the position of edge point $j$ in the frame of corner point $i$:
@@ -492,8 +488,6 @@ The model relies on large transformation formulation: the geometrical non-linear
 
 
 \subsection{Computation of the Strain Tensor} % {{{
-
-(\CD{TODO add a figure to illustrate the explanation})
 
 We define a local system of coordinates $(x,y,z)$ in which the axis z is oriented along the thickness of the element (the computation of the frame of each element will be detailed in section \ref{sec-corot}). 
 Given the initial position of the triangle points in this system of coordinate, $\{x_1^0, y_1^0\}$,  $\{x_2^0, y_2^0\}$, and  $\{x_3^0, y_3^0\}$, we can compute a linear relation between $\{\xi_1,\xi_2, \xi_3\}$ and $\{ x,y \}$:
@@ -662,7 +656,7 @@ Because the deflection field for the element is non-linear \eqref{eq-bez-delta}
 in position the integrals \eqref{eq-Km} and \eqref{eq-Kb} have to be computed using
 numerical integration. In our implementation we employ 6-point Gaussian
 quadrature for integration over triangle area.
-\CD{TODO: figure + gives the formula of the quadrature...}
+TODO: figure + gives the formula of the quadrature...
 % TODO: add ref
 % TODO: add abscissas/weights?
 
@@ -785,9 +779,9 @@ Differentiating \eqref{eq-cubicbez2} by time we get:
 
 Which means we use the same expression to interpolate the velocity only by
 substituting the velocities at control points. 
-For the corner \CD{\sout{nodes} $\rightarrow$ control points}  we
-already have the velocities $V_i$. For the internal \CD{\sout{nodes} $\rightarrow$ control points}  we need to compute
-them. We again make use of the kinematic link between nodes and control points.
+For the corner control points  we
+already have the velocities $V_i$. For the internal control points  we need to compute
+them. We again make use of the kinematic link between control points and control points.
 %solve the problem of computing the velocity of a point attached to the moving rigid body.
 For the edge points we applied to motion of a rigid body:
 %
@@ -848,10 +842,6 @@ Note that these formula fulfill the physical principle of virtual power: $ P = \
 % seems to converge to wrong value (but it converges! :)). Thus showing
 % results for plain membrane deformations doesn't make sense (it would be
 % inconsistent).
-
-% TODO:
-% \CD{ - On this section,  we can maybe add some results from the CBM paper you did with Stephan especially  the figure 9 that illustrates the 3d contribution we list in the intro: i.e. Mapping of high resolution mesh on the curved surface of the shell.}
-% -- Not enough space?
 
 In subsections \ref{sec-roof} and \ref{sec-hemisphere} we present tests to
 validate the convergence of our B\'ezier shell element. As a reference we use a
@@ -938,7 +928,7 @@ results for more than 600 elements mesh with 10k triangles.
 
 \subsection{Planning of Congenital Heart Disease Correction Surgery} % {{{
 
-\FigureW{0.75\linewidth}{chd}
+\FigureW{\linewidth}{chd}
 {Screenshots of the simulation system prototype for different surgical
 procedures used to repair a coarctation of an aortic arch. The screenshots
 are enriched with overlay delineations.}
@@ -949,10 +939,8 @@ nature of their disease patterns. At present, cardiac surgeons rely on
 non-invasive imaging for patient-specific examination and a set of preoperative
 sketches with varying approaches to the surgical procedure. However, the most
 promising approach is often chosen during the actual open-heart surgery, when
-surgeons get a more concrete idea of possible outcomes. Finalizing this
-decision during an on-pump cardiac surgery is further complicated by deflated
-blood vessels since it is difficult to imagine their exact change of shape
-caused by the intervention. The important decisions have to be made in very
+surgeons get a more concrete idea of possible outcomes.
+The important decisions have to be made in very
 short time and are strongly dependent on the surgeon's experience.
 
 The planning process can be improved by employing surgical simulation system
@@ -971,14 +959,6 @@ we simulate the process of incising the vessel and suturing on a pre-specified
 boundary. By iteratively adjusting the underlaying mesh we search for the
 elastic equilibrium. Figure \ref{fig-chd} presents a screenshots of the
 application prototype.
-
-%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-%
-%% TODO: is this OK for anonymity?
-%The presented element has been successfully implemented in SOFA framework
-%\cite{Faure2012} for real-time surgical simulations. It has been evaluated
-%on several applications.
-%
 
 % }}}
 
@@ -1043,23 +1023,14 @@ based on B\'ezier triangle which is  suitable for real-time simulations.
 Compared to  the elements commonly used in mechanics, the interpolation is less complex and ensures at least a $C^0$ continuity in the worst case. 
 (Many shell elements are not even $C^0$ when the initial shape is not flat).
 
-It fixes problems of the previous model \cite{Comas2010c} based on cubic polynomials, namely:
-
-\begin{itemize}
-
-    \item Element is based on all 6 DOFs, including the drilling degree of
-        freedom, not just 5 DOFs. Therefore it doesn't have the problem of
-        undefined z-rotations.
-
-    \item Deformations of the element are symmetric. A method of improving
-    the corotational frame to keep the deformation symmetric is also
-    presented in the paper.
-
-    \item It is $C^1$ for the case of initial flat shape and, on the other cases, it is $C^0$ continuous on the edges and provides $C^1$ continuity in
-    corners of the element. This is essential for good visual experience if
-    high-resolution mesh is mapped on the mechanical mesh.
-
-\end{itemize}
+It fixes problems of the previous model \cite{Comas2010c} based on cubic
+polynomials, namely: element is based on all 6 DOFs, deformations of the
+element are symmetric, it is $C^1$ for the case of initial flat shape and, on
+the other cases, it is $C^0$ continuous on the edges and provides $C^1$
+continuity in corners of the element. This is essential for good visual
+experience if high-resolution mesh is mapped on the mechanical mesh. A method
+of improving the corotational frame to keep the deformation symmetric is also
+presented in the paper.
 
 Because of the formulation of B\'ezier triangle is intrinsically present
 there is a clean and obvious way of mapping high-resolution mesh for better
