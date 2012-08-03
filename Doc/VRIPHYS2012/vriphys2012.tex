@@ -90,13 +90,13 @@
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
 % TODO: anonymize -- Submission ID
-%\author[paper1026]
-%       {paper1026}
-\author[T. Golembiovský \& C. Duriez]
-       {Tomáš Golembiovský$^{1,2}$ and Christian Duriez$^{2}$\\
-        $^1$Faculty of Informatics, Masaryk University, Czech Republic\\
-        $^2$INRIA Lille, France
-       } % TODO: ask Christian how to specify affiliation
+       \author[paper1026]
+              {paper1026}
+%\author[T. Golembiovský \& C. Duriez]
+%       {Tomáš Golembiovský$^{1,2}$ and Christian Duriez$^{2}$\\
+%        $^1$Faculty of Informatics, Masaryk University, Czech Republic\\
+%        $^2$INRIA Lille, France
+%       } % TODO: ask Christian how to specify affiliation
 
 % ------------------------------------------------------------------------
 
@@ -187,8 +187,15 @@ So the stiffness forces computed on each element not only depends on nodes of th
 This greatly reduces the sparsity of the global stiffness matrix and consequently increases the computation time.
 
 
-% TODO: paper structure
-TODO: paper structure
+We start by reviewing the definition of B\'ezir triangle. Then the construction
+of initial control mesh is described and  kinematic link between control points
+is defined. In Section 3 the FE model is derived and the method of computing
+the corotational frame is described. In Section 4 we specify how to map a high
+resolution surface mesh onto the mechanical mesh and give formulas for
+computing velocities of points on the surface and projecting of forces. Section
+5 presents test of convergence, speed analysis and two created applications
+that use the described shell model. We conclude with discussion of present
+limitations.
 
 \subsection{Contribution}
 
@@ -656,7 +663,7 @@ Because the deflection field for the element is non-linear \eqref{eq-bez-delta}
 in position the integrals \eqref{eq-Km} and \eqref{eq-Kb} have to be computed using
 numerical integration. In our implementation we employ 6-point Gaussian
 quadrature for integration over triangle area.
-TODO: figure + gives the formula of the quadrature...
+%TODO: figure + gives the formula of the quadrature...
 % TODO: add ref
 % TODO: add abscissas/weights?
 
@@ -777,8 +784,6 @@ Differentiating \eqref{eq-cubicbez2} by time we get:
     \dot{T} = \sum_{i=1}^{10} n_i \dot{P_i} = \sum_{i=1}^{10} n_i V_i
 \end{equation}
 
-Which means we use the same expression to interpolate the velocity only by
-substituting the velocities at control points. 
 For the corner control points  we
 already have the velocities $V_i$. For the internal control points  we need to compute
 them. We again make use of the kinematic link between control points and control points.
@@ -904,7 +909,7 @@ In figure \ref{fig-fps} we present performance of the element in terms of
 frames per second. All tests were performed on machine equipped with Dual-Core
 AMD Opteron Processor 2218 and 3~GB of RAM. We used a conjugate gradient solver
 to solve the system. Our implementation is without optimizations
-and isn't parallel, which means only single CPU core was used for the
+and only single CPU core was used for the
 simulation. The values reported are for the raw physical simulation with (b)
 and without (a) the frame fixing method described in subsection
 \ref{sec-corot}. We also present results including the mapping of
@@ -928,11 +933,6 @@ results for more than 600 elements mesh with 10k triangles.
 
 \subsection{Planning of Congenital Heart Disease Correction Surgery} % {{{
 
-\FigureW{\linewidth}{chd}
-{Screenshots of the simulation system prototype for different surgical
-procedures used to repair a coarctation of an aortic arch. The screenshots
-are enriched with overlay delineations.}
-
 Surgical interventions in infants with congenitally malformed great arteries
 and hearts are extremely challenging due to the complex and heterogeneous
 nature of their disease patterns. At present, cardiac surgeons rely on
@@ -943,29 +943,18 @@ surgeons get a more concrete idea of possible outcomes.
 The important decisions have to be made in very
 short time and are strongly dependent on the surgeon's experience.
 
-The planning process can be improved by employing surgical simulation system
-using three-dimensional heart models based on patient-specific images as input.
-Most present simulation systems focus on execution of low-level surgical
-procedures, e.g. incising and suturing. In these reactive simulation systems it
-is more important to enable simulations in real-time than accurate simulation
-of tissue and blood vessel deformation in response to simulated interventions.
-
-To be able to predict results of complex surgical procedures a physically more
-accurate approach is necessary. Using our shell finite element model we have
-developed a prototype \cite{Kislinskiy2012} of new surgical simulation system
+To be able to predict results of complex surgical procedures a surgical simulation system can be employed.
+We have
+developed a prototype \cite{Anonymous2012} of new surgical simulation system
 for preoperative planning. The element has been used to model deformations of
 blood vessels and artificial patches. By performing a set of topological changes
 we simulate the process of incising the vessel and suturing on a pre-specified
 boundary. By iteratively adjusting the underlaying mesh we search for the
-elastic equilibrium. Figure \ref{fig-chd} presents a screenshots of the
-application prototype.
+elastic equilibrium.
 
 % }}}
 
 \subsection{Simulation of Uterus Deformation During Birth}
-
-\FigureW{\linewidth}{birth}
-{Screenshots from the simulation of child head during birth. Full visualization (left) and the mechanical mesh (right).}
 
 The purpose of this simulator is to reproduce the tissue deformations that are encountered during a delivery.
 The goal is to evaluate the mechanical stresses which are applied on the anatomical structures (like the uterus but also like the ligaments that sustain the uterus).
@@ -978,14 +967,21 @@ Mechanically, the uterus is modeled with 127 shells that are solved by a direct 
 Up to 60 instantaneous contact spots need to be mapped on the shell elements. 
 The simulation frame-rate is relatively low (6 FPS) due to contact response computation.
 
+\FigureW{\linewidth}{chd}
+{Screenshots of the simulation system prototype for different surgical
+procedures used to repair a coarctation of an aortic arch. The screenshots
+are enriched with overlay delineations.}
+
+\FigureW{\linewidth}{birth}
+{Screenshots from the simulation of child head during birth. Full visualization (left) and the mechanical mesh (right).}
+
 % }}}
 
 
 \section{Discussion and Limitations} % {{{
 
 Currently, due to the technical decisions the element has two limitations.
-The first limitation is that the element does not provide $C^1$ continuity
-across edges. It is $C^1$ continuous at corners but only $C^0$ on the
+It is $C^1$ continuous at corners but only $C^0$ on the
 edges. This may prove to be an issue for example if curvature needs to be
 computed not only inside the element but also across the edges.
 
@@ -1032,8 +1028,8 @@ experience if high-resolution mesh is mapped on the mechanical mesh. A method
 of improving the corotational frame to keep the deformation symmetric is also
 presented in the paper.
 
-Because of the formulation of B\'ezier triangle is intrinsically present
-there is a clean and obvious way of mapping high-resolution mesh for better
+The formulation of B\'ezier triangle provides
+a clean way of mapping high-resolution mesh for better
 visualization. We also provide a technique of computing velocities of any point
 on the surface and formula for back-projection of forces applied on the
 surface onto the mechanical mesh. 
