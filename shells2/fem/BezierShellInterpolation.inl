@@ -565,27 +565,42 @@ void BezierShellInterpolation<DataTypes>::getDOFtoLocalTransform(
     DOF2_H_local2.clear();
 }
 
+template <class DataTypes>
+void BezierShellInterpolation<DataTypes>::computeShapeFunctions(const Vec3& baryCoord, ShapeFunctions &N)
+{
+    N[0] = baryCoord[0]*baryCoord[0]*baryCoord[0];
+    N[1] = baryCoord[1]*baryCoord[1]*baryCoord[1];
+    N[2] = baryCoord[2]*baryCoord[2]*baryCoord[2];
+    N[3] = 3*baryCoord[0]*baryCoord[0]*baryCoord[1];
+    N[4] = 3*baryCoord[0]*baryCoord[0]*baryCoord[2];
+    N[5] = 3*baryCoord[1]*baryCoord[1]*baryCoord[2];
+    N[6] = 3*baryCoord[0]*baryCoord[1]*baryCoord[1];
+    N[7] = 3*baryCoord[0]*baryCoord[2]*baryCoord[2];
+    N[8] = 3*baryCoord[1]*baryCoord[2]*baryCoord[2];
+    N[9] = 6*baryCoord[0]*baryCoord[1]*baryCoord[2];
+}
+
 //
 // Interpolate point on Bézier triangle
 //
 template <class DataTypes>
 void BezierShellInterpolation<DataTypes>::interpolateOnBTriangle(
     Index triID, const VecVec3d& nodes,
-    const Vec3& baryCoord,
+    const ShapeFunctions& N,
     Vec3& point)
 {
     const BTri& btri = getBezierTriangle(triID);
     point =
-        nodes[btri[0]] * baryCoord[0]*baryCoord[0]*baryCoord[0] +
-        nodes[btri[1]] * baryCoord[1]*baryCoord[1]*baryCoord[1] +
-        nodes[btri[2]] * baryCoord[2]*baryCoord[2]*baryCoord[2] +
-        nodes[btri[3]] * 3*baryCoord[0]*baryCoord[0]*baryCoord[1] +
-        nodes[btri[4]] * 3*baryCoord[0]*baryCoord[0]*baryCoord[2] +
-        nodes[btri[5]] * 3*baryCoord[1]*baryCoord[1]*baryCoord[2] +
-        nodes[btri[6]] * 3*baryCoord[0]*baryCoord[1]*baryCoord[1] +
-        nodes[btri[7]] * 3*baryCoord[0]*baryCoord[2]*baryCoord[2] +
-        nodes[btri[8]] * 3*baryCoord[1]*baryCoord[2]*baryCoord[2] +
-        nodes[btri[9]] * 6*baryCoord[0]*baryCoord[1]*baryCoord[2];
+        nodes[btri[0]] * N[0] +
+        nodes[btri[1]] * N[1] +
+        nodes[btri[2]] * N[2] +
+        nodes[btri[3]] * N[3] +
+        nodes[btri[4]] * N[4] +
+        nodes[btri[5]] * N[5] +
+        nodes[btri[6]] * N[6] +
+        nodes[btri[7]] * N[7] +
+        nodes[btri[8]] * N[8] +
+        nodes[btri[9]] * N[9];
 }
 
 //
@@ -693,30 +708,32 @@ void BezierShellInterpolation<DataTypes>::interpolateOnBTriangle(
 // @projElements   element index for each barycentric coordinate
 template <class DataTypes>
 void BezierShellInterpolation<DataTypes>::applyOnBTriangle(
-    VecVec3 projBaryCoords, VecIndex projElements,
-               helper::vector<Vec3>& out)
+    VecShapeFunctions projN, VecIndex projElements,
+    helper::WriteAccessor< Data<VecVec3> > &out)
 {
-    if (projBaryCoords.size() != projElements.size())
+    if (projN.size() != projElements.size())
     {
-        serr << "projBaryCoords.size() != projElements.size()" << sendl;
+        serr << "projN.size() != projElements.size()" << sendl;
         return;
     }
+
+    const VecVec3d& nodes = *mStateNodes->getX();
 
     out.resize(projElements.size());
     for (Index i=0; i<projElements.size(); i++)
     {
-        interpolateOnBTriangle(projElements[i], projBaryCoords[i], out[i]);
+        interpolateOnBTriangle(projElements[i], nodes, projN[i], out[i]);
     }
 }
 
 template <class DataTypes>
 void BezierShellInterpolation<DataTypes>::applyJOnBTriangle(
-    VecVec3 projBaryCoords, VecIndex projElements,
-    const VecDeriv& in, VecVec3& out)
+    VecShapeFunctions projN, VecIndex projElements,
+    const VecDeriv& in,  helper::WriteAccessor< Data<VecVec3> > &out)
 {
-    if (projBaryCoords.size() != projElements.size())
+    if (projN.size() != projElements.size())
     {
-        serr << "projBaryCoords.size() != projElements.size()" << sendl;
+        serr << "projN.size() != projElements.size()" << sendl;
         return;
     }
 
@@ -794,18 +811,18 @@ void BezierShellInterpolation<DataTypes>::applyJOnBTriangle(
     out.resize(projElements.size());
     for (Index i=0; i<projElements.size(); i++)
     {
-        interpolateOnBTriangle(projElements[i], v, projBaryCoords[i], out[i]);
+        interpolateOnBTriangle(projElements[i], v, projN[i], out[i]);
     }
 }
 
 template <class DataTypes>
 void BezierShellInterpolation<DataTypes>::applyJTOnBTriangle(
-    VecVec3 projBaryCoords, VecIndex projElements,
-    const VecVec3& in, VecDeriv& out)
+    VecShapeFunctions projN, VecIndex projElements,
+    const VecVec3& in, helper::WriteAccessor< Data<VecDeriv> > &out)
 {
-    if (projBaryCoords.size() != projElements.size())
+    if (projN.size() != projElements.size())
     {
-        serr << "projBaryCoords.size() != projElements.size()" << sendl;
+        serr << "projN.size() != projElements.size()" << sendl;
         return;
     }
 
@@ -831,58 +848,58 @@ void BezierShellInterpolation<DataTypes>::applyJTOnBTriangle(
             Vec3 f1r, f2r, f3r; // resulting torques
             Vec3 fn;
 
-            const Vec3& bc = projBaryCoords[i];
+            const ShapeFunctions& N = projN[i];
 
             // Compute the influence on the corner nodes
-            f1 = in[i] * (bc[0]*bc[0]*bc[0]);
-            f2 = in[i] * (bc[1]*bc[1]*bc[1]);
-            f3 = in[i] * (bc[2]*bc[2]*bc[2]);
+            f1 = in[i] * N[0];
+            f2 = in[i] * N[1];
+            f3 = in[i] * N[2];
 
             // Now the influence through other nodes
 
-            fn = in[i] * (3*bc[0]*bc[0]*bc[1]);
+            fn = in[i] * N[3];
             if (fn != Vec3(0,0,0))
             {
                 f1 += fn;
                 f1r += cross((x[ bTri[3] ] - x[ bTri[0] ]), fn);
             }
 
-            fn = in[i] * (3*bc[0]*bc[0]*bc[2]);
+            fn = in[i] * N[4];
             if (fn != Vec3(0,0,0))
             {
                 f1 += fn;
                 f1r += cross((x[ bTri[4] ] - x[ bTri[0] ]), fn);
             }
 
-            fn = in[i] * (3*bc[1]*bc[1]*bc[2]);
+            fn = in[i] * N[5];
             if (fn != Vec3(0,0,0))
             {
                 f2 += fn;
                 f2r += cross((x[ bTri[5] ] - x[ bTri[1] ]), fn);
             }
 
-            fn = in[i] * (3*bc[0]*bc[1]*bc[1]);
+            fn = in[i] * N[6];
             if (fn != Vec3(0,0,0))
             {
                 f2 += fn;
                 f2r += cross((x[ bTri[6] ] - x[ bTri[1] ]), fn);
             }
 
-            fn = in[i] * (3*bc[0]*bc[2]*bc[2]);
+            fn = in[i] * N[7];
             if (fn != Vec3(0,0,0))
             {
                 f3 += fn;
                 f3r += cross((x[ bTri[7] ] - x[ bTri[2] ]), fn);
             }
 
-            fn = in[i] * (3*bc[1]*bc[2]*bc[2]);
+            fn = in[i] * N[8];
             if (fn != Vec3(0,0,0))
             {
                 f3 += fn;
                 f3r += cross((x[ bTri[8] ] - x[ bTri[2] ]), fn);
             }
 
-            fn = in[i] * (2*bc[0]*bc[1]*bc[2]);
+            fn = in[i] * N[9]/3;
             if (fn != Vec3(0,0,0))
             {
                 f1 += fn;

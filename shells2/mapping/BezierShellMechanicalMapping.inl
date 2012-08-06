@@ -29,10 +29,14 @@
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 #include <sofa/component/collision/MinProximityIntersection.h>
 #include <sofa/simulation/common/Simulation.h>
+//#include <sofa/helper/system/thread/CTime.h>
 
 #include <sofa/component/forcefield/ConstantForceField.h>
 
 
+// We have own code to check the getJ() because checkJacobian sucks (at this
+// point in time).
+//#define CHECK_J
 
 namespace sofa
 {
@@ -103,6 +107,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
     // Iterates over 'in' triangles
     triangleInfo.resize(inTriangles.size());
     projBaryCoords.clear();
+    projN.clear();
     projElements.clear();
     for (unsigned int t=0; t<inTriangles.size(); t++) {
         TriangleInformation &tinfo = triangleInfo[t];
@@ -188,6 +193,9 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
             barycentricCoordinates[i] = vertexBaryCoord;
 
             projBaryCoords.push_back(vertexBaryCoord);
+            ShapeFunctions N;
+            bsInterpolation->computeShapeFunctions(projBaryCoords.back(), N);
+            projN.push_back(N);
             projElements.push_back(triangleID);
         }
     }
@@ -609,13 +617,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParams
     //
     //start = timer.getTime();
 
-    // TODO: fix this type madness
-    helper::vector<Vec3> rout;
-    bsInterpolation->applyOnBTriangle(projBaryCoords, projElements, rout);
-    out.resize(rout.size());
-    for (unsigned int i=0; i<rout.size(); i++) {
-        out[i] = rout[i];
-    }
+    bsInterpolation->applyOnBTriangle(projN, projElements, out);
 
     //stop = timer.getTime();
     //std::cout << "time apply = " << stop-start << std::endl;
@@ -636,14 +638,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParam
 
     //start = timer.getTime();
 
-    // TODO: fix this type madness
-    helper::vector<Vec3> rout;
-    bsInterpolation->applyJOnBTriangle(projBaryCoords, projElements, dIn.getValue(), rout);
-    out.resize(rout.size());
-    for (unsigned int i=0; i<rout.size(); i++) {
-        out[i] = rout[i];
-    }
-
+    bsInterpolation->applyJOnBTriangle(projN, projElements, dIn.getValue(), out);
 
     // The following code compares the result with results obtained using
     // getJ() because checkJacobian sucks (at this point in time).
@@ -879,10 +874,10 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPara
 
     //std::cout << "---------------- ApplyJT ----------------------------" << std::endl;
 
-//    sofa::helper::system::thread::ctime_t start, stop;
-//    sofa::helper::system::thread::CTime timer;
-//
-//    start = timer.getTime();
+    //sofa::helper::system::thread::ctime_t start, stop;
+    //sofa::helper::system::thread::CTime timer;
+
+    //start = timer.getTime();
 
     if (!inputTopo || !outputTopo)
     {
@@ -914,13 +909,8 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPara
     }
 #endif
 
-    helper::vector<Vec3> rin;
-    rin.resize(in.size());
-    for (unsigned int i=0; i<in.size(); i++) {
-        rin[i] = in[i];
-    }
-    bsInterpolation->applyJTOnBTriangle(projBaryCoords, projElements,
-        rin, *dOut.beginEdit());
+    bsInterpolation->applyJTOnBTriangle(projN, projElements,
+        in.ref(), out);
 
     // The following code compares the result with results obtained using
     // getJ() because checkJacobian sucks (at this point in time).
@@ -960,8 +950,8 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPara
     }
 #endif
 
-//    stop = timer.getTime();
-//    std::cout << "time applyJT = " << stop-start << std::endl;
+    //stop = timer.getTime();
+    //std::cout << "time applyJT = " << stop-start << std::endl;
 }
 
 //template <class TIn, class TOut>

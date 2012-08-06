@@ -38,21 +38,12 @@
 
 #include <sofa/component/linearsolver/CompressedRowSparseMatrix.h>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
-//#include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
 #include <sofa/simulation/common/AnimateBeginEvent.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 
-#include <sofa/helper/system/thread/CTime.h>
-
-//#include "../forcefield/BezierShellForceField.h"
 #include "../fem/BezierShellInterpolation.h"
 
-// Use quaternions for rotations
-//#define ROTQ
-// We have own code to check the getJ() because checkJacobian sucks (at this
-// point in time).
-//#define CHECK_J
 
 namespace sofa
 {
@@ -65,7 +56,6 @@ namespace mapping
 
 using namespace sofa::defaulttype;
 using namespace sofa::component::topology;
-using namespace sofa::helper::system::thread;
 using namespace core::topology;
 using namespace sofa::core::behavior;
 
@@ -99,6 +89,8 @@ public:
 
     typedef helper::Quater<Real> Quat;
 
+    typedef typename sofa::component::fem::BezierShellInterpolation<TIn>::ShapeFunctions ShapeFunctions;
+    typedef typename sofa::component::fem::BezierShellInterpolation<TIn>::VecShapeFunctions VecShapeFunctions;
 
     typedef sofa::core::topology::BaseMeshTopology::index_type Index;
     //typedef BaseMeshTopology::Edge              Edge;
@@ -118,8 +110,6 @@ public:
     , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
-    , verticesTarget(OutVecCoord()) // dummy initialization
-    , trianglesTarget(SeqTriangles()) // dummy initialization
     , matrixJ()
     , updateJ(false)
     {
@@ -190,8 +180,6 @@ protected:
     , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
-    , verticesTarget(OutVecCoord()) // dummy initialization
-    , trianglesTarget(SeqTriangles()) // dummy initialization
     , matrixJ()
     , updateJ(false)
     {
@@ -222,8 +210,6 @@ protected:
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
 
         TriangleSetTopologyContainer* topologyTarget;
-        const OutVecCoord& verticesTarget;
-        const SeqTriangles& trianglesTarget;
 
         helper::vector<Vec3> colourMapping;
         helper::vector<Vec3> coloursPerVertex;
@@ -231,7 +217,8 @@ protected:
         helper::vector<Real> vectorErrorTarget;
 
         helper::vector<TriangleInformation> triangleInfo;
-        helper::vector<Vec3> projBaryCoords;
+        helper::vector<Vec3> projBaryCoords;    // Barycentric coordinates
+        VecShapeFunctions projN;                // Precomputed shape functions
         helper::vector<Index> projElements;
 
         std::auto_ptr<MatrixType> matrixJ;

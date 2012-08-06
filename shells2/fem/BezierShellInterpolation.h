@@ -67,14 +67,10 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         // These vector is related to Bézier nodes
         typedef helper::vector<sofa::defaulttype::Vec<3, double> > VecVec3d;
 
-        //for newton iterations
-        //typedef Mat<2,2,Real> Mat22;
-        //bezier segment
-        //typedef sofa::defaulttype::Vec<4,Index> BSeg;
-        //typedef helper::vector<BSeg> VecBSeg;
-        //bezier triangle
-        typedef sofa::defaulttype::Vec<10,Index> BTri;
-        typedef helper::vector<BTri> VecBTri;
+        typedef sofa::defaulttype::Vec<10,Real>     ShapeFunctions;
+        typedef sofa::defaulttype::Vec<10,Index>    BTri;
+        typedef helper::vector<ShapeFunctions>      VecShapeFunctions;
+        typedef helper::vector<BTri>                VecBTri;
 
         class PointInformation
         {
@@ -253,25 +249,49 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         void getDOFtoLocalTransform(sofa::core::topology::Triangle tri,
             Transform DOF0_H_local0, Transform DOF1_H_local1, Transform DOF2_H_local2);
 
-        // simple interpolation of a point:
-        void interpolateOnBTriangle(Index triID, const VecVec3d& nodes, const Vec3& baryCoord,
+        void computeShapeFunctions(const Vec3& baryCoord, ShapeFunctions &N);
+
+        //
+        // Simple interpolation of a point:
+        //
+        void interpolateOnBTriangle(Index triID, const VecVec3d& nodes, const ShapeFunctions& N,
             Vec3& point);
+
+        void interpolateOnBTriangle(Index triID, const VecVec3d& nodes, const Vec3& baryCoord,
+            Vec3& point)
+        {
+            ShapeFunctions N;
+            computeShapeFunctions(baryCoord, N);
+            interpolateOnBTriangle(triID, nodes, N, point);
+        }
+
+        void interpolateOnBTriangle(Index triID, const ShapeFunctions& N, Vec3& point) {
+            interpolateOnBTriangle(triID, *mStateNodes->getX(), N, point);
+        }
+
         void interpolateOnBTriangle(Index triID, const Vec3& baryCoord, Vec3& point) {
             interpolateOnBTriangle(triID, *mStateNodes->getX(), baryCoord, point);
         }
 
-        // interpolation + normal
+        //
+        // Interpolation + normal
+        //
         void interpolateOnBTriangle(Index triID, const VecVec3d& nodes, const Vec3& baryCoord,
             Vec3& point, Vec3& normal, Vec3& t0, Vec3 &t1);
+        void interpolateOnBTriangle(Index triID, const Vec3& baryCoord,
+            Vec3& point, Vec3& normal, Vec3& t0, Vec3 &t1) {
+            interpolateOnBTriangle(triID, *mStateNodes->getX(), baryCoord,
+                point, normal, t0, t1);
+        }
 
         // interpolation + normal + second derivatives
         //void interpolateOnBTriangle(Index triID, const VecVec3d& nodes, const Vec3& baryCoord,
         //    Vec3& point, Vec3& normal, Vec3& t0, Vec3 &t1,
         //    Vec3& D2t0, Vec3& D2t01, Vec3& D2t1);
 
-        void applyOnBTriangle(VecVec3 projBaryCoords, VecIndex projElements, VecVec3& out);
-        void applyJOnBTriangle(VecVec3 projBaryCoords, VecIndex projElements, const VecDeriv& in, VecVec3& out);
-        void applyJTOnBTriangle(VecVec3 projBaryCoords, VecIndex projElements, const VecVec3& in, VecDeriv& out);
+        void applyOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, helper::WriteAccessor< Data<VecVec3> > &out);
+        void applyJOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, const VecDeriv& in, helper::WriteAccessor< Data<VecVec3> > &out);
+        void applyJTOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, const VecVec3& in, helper::WriteAccessor< Data<VecDeriv> > &out);
 
     protected:
         // pointer on mechanical state of the simulation

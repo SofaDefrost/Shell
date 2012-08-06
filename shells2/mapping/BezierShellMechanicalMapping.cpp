@@ -53,8 +53,8 @@ int BezierShellMechanicalMappingClass = core::RegisterObject("Mechanical mapping
 #endif
 #ifndef SOFA_FLOAT
 #ifndef SOFA_DOUBLE
-.add< BezierShellMechanicalMapping< Rigid3dTypes, Vec3fTypes > >()
-.add< BezierShellMechanicalMapping< Rigid3fTypes, Vec3dTypes > >()
+//.add< BezierShellMechanicalMapping< Rigid3dTypes, Vec3fTypes > >()
+//.add< BezierShellMechanicalMapping< Rigid3fTypes, Vec3dTypes > >()
 #endif
 #endif
 ;
@@ -67,12 +67,12 @@ template class SOFA_SHELLS_API BezierShellMechanicalMapping< Rigid3dTypes, Vec3d
 template class SOFA_SHELLS_API BezierShellMechanicalMapping< Rigid3fTypes, Vec3fTypes >;
 #endif
 
-#ifndef SOFA_FLOAT
-#ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API BezierShellMechanicalMapping< Rigid3dTypes, Vec3fTypes >;
-template class SOFA_SHELLS_API BezierShellMechanicalMapping< Rigid3fTypes, Vec3dTypes >;
-#endif
-#endif
+//#ifndef SOFA_FLOAT
+//#ifndef SOFA_DOUBLE
+//template class SOFA_SHELLS_API BezierShellMechanicalMapping< Rigid3dTypes, Vec3fTypes >;
+//template class SOFA_SHELLS_API BezierShellMechanicalMapping< Rigid3fTypes, Vec3dTypes >;
+//#endif
+//#endif
 
 
 } // namespace mapping
