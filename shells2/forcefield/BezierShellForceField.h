@@ -34,6 +34,8 @@
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/component/topology/TopologyData.h>
 
+#include <sofa/helper/OptionsGroup.h>
+
 #include "../../controller/MeshInterpolator.h"
 #include "../../engine/JoinMeshPoints.h"
 #include "../fem/BezierShellInterpolation.h"
@@ -172,6 +174,8 @@ public:
 
                 StrainDisplacement strainDisplacementMatrix[Gn];
                 StrainDisplacement strainDisplacementMatrixB[Gn];
+                Vec3 measureM[Gn]; // measured stress or strain for membrane element
+                Vec3 measureB[Gn]; // measured stress or strain for bending plate
 
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacementBending strainDisplacementMatrixB1;
@@ -241,6 +245,9 @@ public:
         Data <Real> f_thickness;
         Data<unsigned int> f_polarMaxIters;
         Data<Real> f_polarMinTheta;
+        Data<bool> f_drawFrame;
+        Data<bool> f_drawNodes;
+        Data<sofa::helper::OptionsGroup> f_drawMeasure;
 
         // Allow transition between rest shapes
         SingleLink<BezierShellForceField<DataTypes>,
@@ -281,6 +288,9 @@ protected :
 
         Real polarMinSinTheta;
 
+        bool bMeasureStrain;
+        bool bMeasureStress;
+
         //unsigned int pditers;
 
         void initTriangleOnce(const int i, const Index&a, const Index&b, const Index&c);
@@ -318,6 +328,8 @@ protected :
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
 
         void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixGlobalSpace &K_gs, TriangleInformation *tinfo);
+
+        void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
 };
 
 

@@ -64,7 +64,10 @@ const double GW[] = { 0.05497587, 0.05497587, 0.05497587, 0.1116908, 0.1116908, 
 //const double GX[] = { 0.5014265,  0.2492867,  0.2492867,  0.8738220,  0.06308901, 0.06308901, 0.6365025,  0.6365025,  0.05314505, 0.05314505, 0.3103525,  0.3103525  };
 //const double GY[] = { 0.2492867,  0.5014265,  0.2492867,  0.06308901, 0.8738220,  0.06308901, 0.05314505, 0.3103525,  0.6365025,  0.3103525,  0.6365025,  0.05314505 };
 //const double GW[] = { 0.05839314, 0.05839314, 0.05839314, 0.02542245, 0.02542245, 0.02542245, 0.04142554, 0.04142554, 0.04142554, 0.04142554, 0.04142554, 0.04142554 };
-
+// n = 27, d = 11 (source: http://www.electromagnetics.biz/integration.htm)
+//const double GX[] = { 0.9352701,   0.03236495,  0.03236495,  0.7612982,  0.1193509,  0.1193509,  0.06922210,   0.5346110, 0.5346110, 0.5933802, 0.2033099, 0.2033099, 0.2020614, 0.3989693, 0.3989693, 0.05017814, 0.05017814, 0.5932012, 0.5932012, 0.3566206, 0.3566206, 0.02102202, 0.02102202, 0.8074890, 0.8074890, 0.1714890, 0.1714890 };
+//const double GY[] = { 0.03236495,  0.9352701,   0.03236495,  0.1193509,  0.7612982,  0.1193509,  0.5346110,    0.06922210, 0.5346110, 0.2033099, 0.5933802, 0.2033099, 0.3989693, 0.2020614, 0.3989693, 0.5932012, 0.3566206, 0.05017814, 0.3566206, 0.05017814, 0.5932012, 0.8074890, 0.1714890, 0.02102202, 0.1714890, 0.02102202, 0.8074890 };
+//const double GW[] = { 0.006829866, 0.006829866, 0.006829866, 0.01809227, 0.01809227, 0.01809227, 0.0004635032, 0.0004635032, 0.0004635032, 0.02966149, 0.02966149, 0.02966149, 0.03857477, 0.03857477, 0.03857477, 0.02616856, 0.02616856, 0.02616856, 0.02616856, 0.02616856, 0.02616856, 0.01035383, 0.01035383, 0.01035383, 0.01035383, 0.01035383, 0.01035383 };
 
 namespace sofa
 {
@@ -114,12 +117,23 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 , f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
 , f_polarMaxIters(initData(&f_polarMaxIters, 5U, "polarMaxIters", "Use this number of polar decomposition iterations to fix the corotational frames. We suggest at least 1 iteration."))
 , f_polarMinTheta(initData(&f_polarMinTheta, (Real)1e-6, "polarMinTheta", "Stop if the angle change by polar decomposition is smaller than the value"))
+, f_drawFrame(initData(&f_drawFrame, true, "drawFrame", "Draw the corotational frame"))
+, f_drawNodes(initData(&f_drawNodes, true, "drawNodes", "Draw the control points of Bézier triangle"))
+, f_drawMeasure(initData(&f_drawMeasure, "drawMeasure", "Draw the strain or stress"))
 , restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
 , mapTopology(false)
 , topologyMapper(initLink("topologyMapper","Component supplying different topology for the rest shape"))
 , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
+    f_drawMeasure.beginEdit()->setNames(3,
+        "None",     // Draw nothing
+        "Strain",   // L_2 norm of strain in x and y directions
+        "Stress"    // L_2 norm of stress in x and y directions
+        );
+    f_drawMeasure.beginEdit()->setSelectedItem("None");
+    f_drawMeasure.endEdit();
+
     triangleHandler = new TriangleHandler(this, &triangleInfo);
 }
 
@@ -168,6 +182,18 @@ void BezierShellForceField<DataTypes>::init()
 // --------------------------------------------------------------------------------------
 template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
 {
+    // Decode the selected draw method
+    if (f_drawMeasure.getValue().getSelectedItem() == "None") {
+        bMeasureStrain = false;  bMeasureStress = false;
+    } else if (f_drawMeasure.getValue().getSelectedItem() == "Strain") {
+        bMeasureStrain = true;  bMeasureStress = false;
+    } else if (f_drawMeasure.getValue().getSelectedItem() == "Stress") {
+        bMeasureStrain = false;  bMeasureStress = true;
+    } else {
+        serr << "Invalid value for drawMeasure'" << f_drawMeasure.getValue().getSelectedItem() << "'" << sendl;
+        return;
+    }
+
     _topology = this->getContext()->getMeshTopology();
 
     polarMinSinTheta = sin(f_polarMinTheta.getValue());
@@ -1596,6 +1622,19 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
     DisplacementBending F_bending;
     computeForceBending(F_bending, D_bending, elementIndex);
 
+    // Compute the measure to draw
+    if (bMeasureStrain) {
+        for (int i=0; i<Gn; i++) {
+            tinfo->measureM[i] = tinfo->strainDisplacementMatrix[i] * D;
+            tinfo->measureB[i] = tinfo->strainDisplacementMatrixB[i] * D_bending;
+        }
+    } else if (bMeasureStress) {
+        // TODO: material matrices are spoiled with preintegrated thickness
+        //for (int i=0; i<Gn; i++) {
+        //    tinfo->measure[i] = tinfo->strainDisplacementMatrix[i] * D;
+        //    tinfo->measure[i] = tinfo->strainDisplacementMatrixB[i] * D_bending;
+        //}
+    }
 
 
     // Transform forces back into global reference frame
@@ -1914,6 +1953,74 @@ void BezierShellForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Even
     }
 }
 
+// Given H,S,L in range of 0-1
+// Returns a RGB colour in range of 0-255
+// http://www.geekymonkey.com/Programming/CSharp/RGB2HSL_HSL2RGB.htm
+template <class DataTypes>
+void BezierShellForceField<DataTypes>::HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l)
+{
+    Real v;
+    Real r,g,b;
+
+    r = l;   // default to gray
+    g = l;
+    b = l;
+    v = (l <= 0.5) ? (l * (1.0 + sl)) : (l + sl - l * sl);
+    if (v > 0)
+    {
+          Real m;
+          Real sv;
+          int sextant;
+          Real fract, vsf, mid1, mid2;
+
+          m = l + l - v;
+          sv = (v - m ) / v;
+          h *= 6.0;
+          sextant = (int)h;
+          fract = h - sextant;
+          vsf = v * sv * fract;
+          mid1 = m + vsf;
+          mid2 = v - vsf;
+          switch (sextant)
+          {
+                case 0:
+                      r = v;
+                      g = mid1;
+                      b = m;
+                      break;
+                case 1:
+                      r = mid2;
+                      g = v;
+                      b = m;
+                      break;
+                case 2:
+                      r = m;
+                      g = v;
+                      b = mid1;
+                      break;
+                case 3:
+                      r = m;
+                      g = mid2;
+                      b = v;
+                      break;
+                case 4:
+                      r = mid1;
+                      g = m;
+                      b = v;
+                      break;
+                case 5:
+                      r = v;
+                      g = m;
+                      b = mid2;
+                      break;
+          }
+    }
+
+    rgb[0] = r;
+    rgb[1] = g;
+    rgb[2] = b;
+}
+
 
 template <class DataTypes>
 void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
@@ -1925,6 +2032,7 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
         helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
         // Render Bezier points
+        if (f_drawNodes.getValue()) {
 
         glPointSize(8);
         glDisable(GL_LIGHTING);
@@ -1949,8 +2057,10 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
 
         glEnd();
         glPointSize(1);
+        }
 
         // Render the frame of each element
+        if (f_drawFrame.getValue()) {
         for (int i=0; i<_topology->getNbTriangles(); ++i)
         {
             TriangleInformation *tinfo = &triangleInf[i];
@@ -1967,6 +2077,45 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
                 Vec3(tinfo->area2, tinfo->area2, tinfo->area2)/4);
 
         }
+        }
+
+        glPointSize(8);
+        glDisable(GL_LIGHTING);
+        glBegin(GL_POINTS);
+        // Draw measured strain or stress
+        if (bMeasureStrain || bMeasureStress) {
+            for (int i=0; i<_topology->getNbTriangles(); ++i)
+            {
+                TriangleInformation *tinfo = &triangleInf[i];
+                for (int i=0; i<Gn; i++) {
+                    Vec3 bc(GX[i], GY[i], 1 - GX[i] - GY[i]), pt;
+                    bsInterpolation->interpolateOnBTriangle(tinfo->elementID, bc, pt);
+                    Real m = sqrt( // NOTE: Shear strain is not included
+                        tinfo->measureM[i][0] * tinfo->measureM[i][0] +
+                        tinfo->measureM[i][1] * tinfo->measureM[i][1]);
+                    Real m1 = m;
+
+                    // Clip value to interval [-max; max]
+                    Real max = 0.2;
+                    if (m < -max) m = -max;
+                    else if (m > max) m = max;
+
+                    // Map value from [-max; max] to [0; 2/3] with zero at 1/3
+                    m = m/max/3 + 1/3;
+
+                    // Convert to colour
+                    Vec3 colour;
+                    HSL2RGB(colour, (float)2/3-m, 0.8, 0.5);
+
+                    std::cout << "Mapping " << m1 << " to " << m << " at " << pt << " with col. " << colour << "\n";
+
+                    glColor4f(colour[0], colour[1], colour[2], 1.0);
+                    glVertex3f(pt[0], pt[1], pt[2]);
+                }
+            }
+        }
+        glEnd();
+        glPointSize(1);
 
         triangleInfo.endEdit();
     } // if(getShowForceFields())
