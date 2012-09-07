@@ -284,7 +284,7 @@ protected :
 
         /// Material stiffness matrices for plane stress and bending
         MaterialStiffness materialMatrix;
-        MaterialStiffness materialMatrixBending;
+        //MaterialStiffness materialMatrixBending;
 
         Real polarMinSinTheta;
 

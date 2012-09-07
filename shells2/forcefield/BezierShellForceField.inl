@@ -1442,6 +1442,7 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixMembrane(
     K = Jt1 * materialMatrix * tinfo.strainDisplacementMatrix1 +
         Jt2 * materialMatrix * tinfo.strainDisplacementMatrix2 +
         Jt3 * materialMatrix * tinfo.strainDisplacementMatrix3;
+    K *= f_thickness.getValue();
     K /= 3.0;
 #else
     Mat<9, 3, Real> Jt;
@@ -1452,6 +1453,7 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixMembrane(
         K += Jt * (materialMatrix * GW[i]) * tinfo.strainDisplacementMatrix[i];
     }
 
+    K *= f_thickness.getValue();
     K *= tinfo.area2;
 #endif
 
@@ -1475,15 +1477,18 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixMembrane(
 template <class DataTypes>
 void BezierShellForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMatrixBending &K, const TriangleInformation &tinfo)
 {
+    Real t = f_thickness.getValue();
+
 #ifndef GAUSS4
     Mat<9, 3, Real> J1t, J2t, J3t;
     J1t.transpose(tinfo.strainDisplacementMatrixB1);
     J2t.transpose(tinfo.strainDisplacementMatrixB2);
     J3t.transpose(tinfo.strainDisplacementMatrixB3);
 
-    K = J1t * materialMatrixBending * tinfo.strainDisplacementMatrixB1 +
-        J2t * materialMatrixBending * tinfo.strainDisplacementMatrixB2 +
-        J3t * materialMatrixBending * tinfo.strainDisplacementMatrixB3;
+    K = J1t * materialMatrix * tinfo.strainDisplacementMatrixB1 +
+        J2t * materialMatrix * tinfo.strainDisplacementMatrixB2 +
+        J3t * materialMatrix * tinfo.strainDisplacementMatrixB3;
+    K *= t*t*t / (Real)12.0;
     K /= 3.0;
 #else
     Mat<9, 3, Real> Jt;
@@ -1491,9 +1496,12 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMa
     for (int i=0; i<Gn; i++)
     {
         Jt.transpose(tinfo.strainDisplacementMatrixB[i]); 
-        K += Jt * materialMatrixBending * tinfo.strainDisplacementMatrixB[i] * GW[i];
+        K += Jt * materialMatrix * tinfo.strainDisplacementMatrixB[i] * GW[i];
     }
 
+    materialMatrix *= t; // consider the thickness
+
+    K *= t*t*t / (Real)12.0;
     K *= tinfo.area2;
 #endif
 
@@ -1510,8 +1518,6 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMa
 template <class DataTypes>
 void BezierShellForceField<DataTypes>::computeMaterialMatrix()
 {
-    Real t = f_thickness.getValue();
-
     // Material matrix for plain stress
     materialMatrix[0][0] = 1.0;
     materialMatrix[0][1] = f_poisson.getValue();
@@ -1525,11 +1531,6 @@ void BezierShellForceField<DataTypes>::computeMaterialMatrix()
 
     materialMatrix *= f_young.getValue() / (
         (Real)1.0 - f_poisson.getValue() * f_poisson.getValue());
-
-    materialMatrix *= t; // consider the thickness
-
-    // Material matrix for plane bending (a.k.a. flextural rigidity/bending stiffness)
-    materialMatrixBending = materialMatrix * t*t / (Real)12.0;
 }
 
 
@@ -1630,10 +1631,10 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
         }
     } else if (bMeasureStress) {
         // TODO: material matrices are spoiled with preintegrated thickness
-        //for (int i=0; i<Gn; i++) {
-        //    tinfo->measure[i] = tinfo->strainDisplacementMatrix[i] * D;
-        //    tinfo->measure[i] = tinfo->strainDisplacementMatrixB[i] * D_bending;
-        //}
+        for (int i=0; i<Gn; i++) {
+            tinfo->measureM[i] = materialMatrix * tinfo->strainDisplacementMatrix[i] * D;
+            tinfo->measureB[i] = materialMatrix * tinfo->strainDisplacementMatrixB[i] * D_bending;
+        }
     }
 
 
