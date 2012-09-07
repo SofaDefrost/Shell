@@ -248,6 +248,7 @@ public:
         Data<bool> f_drawFrame;
         Data<bool> f_drawNodes;
         Data<sofa::helper::OptionsGroup> f_drawMeasure;
+        Data<Real> f_drawMeasureMax;
 
         // Allow transition between rest shapes
         SingleLink<BezierShellForceField<DataTypes>,

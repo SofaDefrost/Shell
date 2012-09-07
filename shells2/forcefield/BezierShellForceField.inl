@@ -120,6 +120,7 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 , f_drawFrame(initData(&f_drawFrame, true, "drawFrame", "Draw the corotational frame"))
 , f_drawNodes(initData(&f_drawNodes, true, "drawNodes", "Draw the control points of Bézier triangle"))
 , f_drawMeasure(initData(&f_drawMeasure, "drawMeasure", "Draw the strain or stress"))
+, f_drawMeasureMax(initData(&f_drawMeasureMax, (Real)0.2, "drawMeasureMax", "Maximal value to ma the colors to (suggested is 0.2 for strain and 0.4*youngModulus for stress)"))
 , restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
 , mapTopology(false)
 , topologyMapper(initLink("topologyMapper","Component supplying different topology for the rest shape"))
@@ -1498,9 +1499,6 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMa
         Jt.transpose(tinfo.strainDisplacementMatrixB[i]); 
         K += Jt * materialMatrix * tinfo.strainDisplacementMatrixB[i] * GW[i];
     }
-
-    materialMatrix *= t; // consider the thickness
-
     K *= t*t*t / (Real)12.0;
     K *= tinfo.area2;
 #endif
@@ -1630,7 +1628,6 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
             tinfo->measureB[i] = tinfo->strainDisplacementMatrixB[i] * D_bending;
         }
     } else if (bMeasureStress) {
-        // TODO: material matrices are spoiled with preintegrated thickness
         for (int i=0; i<Gn; i++) {
             tinfo->measureM[i] = materialMatrix * tinfo->strainDisplacementMatrix[i] * D;
             tinfo->measureB[i] = materialMatrix * tinfo->strainDisplacementMatrixB[i] * D_bending;
@@ -2084,6 +2081,7 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
         glDisable(GL_LIGHTING);
         glBegin(GL_POINTS);
         // Draw measured strain or stress
+        Real max = f_drawMeasureMax.getValue();;
         if (bMeasureStrain || bMeasureStress) {
             for (int i=0; i<_topology->getNbTriangles(); ++i)
             {
@@ -2097,7 +2095,6 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
                     Real m1 = m;
 
                     // Clip value to interval [-max; max]
-                    Real max = 0.2;
                     if (m < -max) m = -max;
                     else if (m > max) m = max;
 
