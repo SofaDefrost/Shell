@@ -121,6 +121,7 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 , f_drawNodes(initData(&f_drawNodes, true, "drawNodes", "Draw the control points of Bézier triangle"))
 , f_drawMeasure(initData(&f_drawMeasure, "drawMeasure", "Draw the strain or stress"))
 , f_drawMeasureMax(initData(&f_drawMeasureMax, (Real)0.2, "drawMeasureMax", "Maximal value to ma the colors to (suggested is 0.2 for strain and 0.4*youngModulus for stress)"))
+, f_drawPointSize(initData(&f_drawPointSize, (unsigned int)8, "drawPointSize", "Point size to use"))
 , restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
 , mapTopology(false)
 , topologyMapper(initLink("topologyMapper","Component supplying different topology for the rest shape"))
@@ -128,9 +129,9 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
     f_drawMeasure.beginEdit()->setNames(3,
-        "None",     // Draw nothing
-        "Strain",   // L_2 norm of strain in x and y directions
-        "Stress"    // L_2 norm of stress in x and y directions
+        "None",                 // Draw nothing
+        "Strain (norm)",        // L_2 norm of strain in x and y directions
+        "Von Mises stress"      // Von Mises stress criterion
         );
     f_drawMeasure.beginEdit()->setSelectedItem("None");
     f_drawMeasure.endEdit();
@@ -186,9 +187,9 @@ template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
     // Decode the selected draw method
     if (f_drawMeasure.getValue().getSelectedItem() == "None") {
         bMeasureStrain = false;  bMeasureStress = false;
-    } else if (f_drawMeasure.getValue().getSelectedItem() == "Strain") {
+    } else if (f_drawMeasure.getValue().getSelectedItem() == "Strain (norm)") {
         bMeasureStrain = true;  bMeasureStress = false;
-    } else if (f_drawMeasure.getValue().getSelectedItem() == "Stress") {
+    } else if (f_drawMeasure.getValue().getSelectedItem() == "Von Mises stress") {
         bMeasureStrain = false;  bMeasureStress = true;
     } else {
         serr << "Invalid value for drawMeasure'" << f_drawMeasure.getValue().getSelectedItem() << "'" << sendl;
@@ -1624,13 +1625,13 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
     // Compute the measure to draw
     if (bMeasureStrain) {
         for (int i=0; i<Gn; i++) {
-            tinfo->measureM[i] = tinfo->strainDisplacementMatrix[i] * D;
-            tinfo->measureB[i] = tinfo->strainDisplacementMatrixB[i] * D_bending;
+            tinfo->measure[i] = tinfo->strainDisplacementMatrix[i] * D
+                + tinfo->strainDisplacementMatrixB[i] * D_bending;
         }
     } else if (bMeasureStress) {
         for (int i=0; i<Gn; i++) {
-            tinfo->measureM[i] = materialMatrix * tinfo->strainDisplacementMatrix[i] * D;
-            tinfo->measureB[i] = materialMatrix * tinfo->strainDisplacementMatrixB[i] * D_bending;
+            tinfo->measure[i] = materialMatrix * tinfo->strainDisplacementMatrix[i] * D
+                + materialMatrix * tinfo->strainDisplacementMatrixB[i] * D_bending;
         }
     }
 
@@ -2032,7 +2033,7 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
         // Render Bezier points
         if (f_drawNodes.getValue()) {
 
-        glPointSize(8);
+        glPointSize(f_drawPointSize.getValue());
         glDisable(GL_LIGHTING);
         glBegin(GL_POINTS);
 
@@ -2077,43 +2078,68 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
         }
         }
 
-        glPointSize(8);
-        glDisable(GL_LIGHTING);
-        glBegin(GL_POINTS);
         // Draw measured strain or stress
-        Real max = f_drawMeasureMax.getValue();;
         if (bMeasureStrain || bMeasureStress) {
+            glPointSize(f_drawPointSize.getValue());
+            glDisable(GL_LIGHTING);
+            glBegin(GL_POINTS);
+
+            Real max = f_drawMeasureMax.getValue();;
+            max *= max; // To avoid sqrt()
+
             for (int i=0; i<_topology->getNbTriangles(); ++i)
             {
                 TriangleInformation *tinfo = &triangleInf[i];
                 for (int i=0; i<Gn; i++) {
                     Vec3 bc(GX[i], GY[i], 1 - GX[i] - GY[i]), pt;
+                    // TODO: precompute shapefunctions
                     bsInterpolation->interpolateOnBTriangle(tinfo->elementID, bc, pt);
-                    Real m = sqrt( // NOTE: Shear strain is not included
-                        tinfo->measureM[i][0] * tinfo->measureM[i][0] +
-                        tinfo->measureM[i][1] * tinfo->measureM[i][1]);
-                    Real m1 = m;
+
+                    Real m;
+                    if (bMeasureStrain) {
+                        // Norm from strain in x and y
+                        // NOTE: Shear strain is not included
+                        m = tinfo->measure[i][0] * tinfo->measure[i][0]
+                            + tinfo->measure[i][1] * tinfo->measure[i][1];
+                    } else {
+                        // Von Mises stress criterion (plane stress)
+                        m = tinfo->measure[i][0] * tinfo->measure[i][0]
+                            - tinfo->measure[i][0] * tinfo->measure[i][1]
+                            + tinfo->measure[i][1] * tinfo->measure[i][1]
+                            + 3 * tinfo->measure[i][2] * tinfo->measure[i][2];
+                    }
+
+                    //Real m1 = m;
 
                     // Clip value to interval [-max; max]
-                    if (m < -max) m = -max;
+                    //if (m < -max) m = -max;
+                    //else if (m > max) m = max;
+                    //
+                    // Map value from [-max; max] to [0; 2/3] with zero at 1/3
+                    //m = m/max /3.0 + 1.0/3.0;
+
+                    // Clip value to interval [0; max]
+                    if (m < 0.0) m = 0.0;
                     else if (m > max) m = max;
 
-                    // Map value from [-max; max] to [0; 2/3] with zero at 1/3
-                    m = m/max/3 + 1/3;
+                    // Map value from [0; max] to [0; 2/3]
+                    m = m/max * 2.0/3.0;
 
                     // Convert to colour
                     Vec3 colour;
                     HSL2RGB(colour, (float)2/3-m, 0.8, 0.5);
 
-                    std::cout << "Mapping " << m1 << " to " << m << " at " << pt << " with col. " << colour << "\n";
+                    //std::cout << "Mapping " << m1 << " to " << m << " at " << pt << " with col. " << colour
+                    //    << " meas=" << tinfo->measure << "\n";
 
                     glColor4f(colour[0], colour[1], colour[2], 1.0);
                     glVertex3f(pt[0], pt[1], pt[2]);
                 }
             }
+
+            glEnd();
+            glPointSize(1);
         }
-        glEnd();
-        glPointSize(1);
 
         triangleInfo.endEdit();
     } // if(getShowForceFields())

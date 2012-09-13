@@ -174,8 +174,7 @@ public:
 
                 StrainDisplacement strainDisplacementMatrix[Gn];
                 StrainDisplacement strainDisplacementMatrixB[Gn];
-                Vec3 measureM[Gn]; // measured stress or strain for membrane element
-                Vec3 measureB[Gn]; // measured stress or strain for bending plate
+                Vec3 measure[Gn]; // measured stress or strain
 
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacementBending strainDisplacementMatrixB1;
@@ -249,6 +248,7 @@ public:
         Data<bool> f_drawNodes;
         Data<sofa::helper::OptionsGroup> f_drawMeasure;
         Data<Real> f_drawMeasureMax;
+        Data<unsigned int> f_drawPointSize;
 
         // Allow transition between rest shapes
         SingleLink<BezierShellForceField<DataTypes>,
