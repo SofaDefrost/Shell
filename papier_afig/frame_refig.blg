@@ -2,46 +2,48 @@ This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
 The top-level auxiliary file: frame_refig.aux
 The style file: refig-alpha.bst
 Database file #1: biblio.bib
+Warning--string name "avr" is undefined
+--line 191 of file biblio.bib
 Warning--empty journal in Becker2009
-You've used 10 entries,
+You've used 11 entries,
             2855 wiz_defined-function locations,
-            703 strings with 6878 characters,
-and the built_in function-call counts, 4674 in all, are:
-= -- 457
-> -- 300
+            707 strings with 7008 characters,
+and the built_in function-call counts, 5079 in all, are:
+= -- 495
+> -- 330
 < -- 0
-+ -- 114
-- -- 114
-* -- 426
-:= -- 801
-add.period$ -- 20
-call.type$ -- 10
-change.case$ -- 80
-chr.to.int$ -- 10
-cite$ -- 11
-duplicate$ -- 130
-empty$ -- 287
-format.name$ -- 122
-if$ -- 897
++ -- 126
+- -- 126
+* -- 464
+:= -- 872
+add.period$ -- 22
+call.type$ -- 11
+change.case$ -- 88
+chr.to.int$ -- 11
+cite$ -- 12
+duplicate$ -- 142
+empty$ -- 309
+format.name$ -- 135
+if$ -- 973
 int.to.chr$ -- 1
 int.to.str$ -- 0
-missing$ -- 11
-newline$ -- 53
-num.names$ -- 32
-pop$ -- 65
+missing$ -- 12
+newline$ -- 58
+num.names$ -- 35
+pop$ -- 71
 preamble$ -- 1
-purify$ -- 91
+purify$ -- 100
 quote$ -- 0
-skip$ -- 109
+skip$ -- 120
 stack$ -- 0
-substring$ -- 248
-swap$ -- 19
+substring$ -- 255
+swap$ -- 21
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 85
+type$ -- 94
 warning$ -- 1
-while$ -- 45
-width$ -- 13
-write$ -- 121
-(There was 1 warning)
+while$ -- 48
+width$ -- 14
+write$ -- 132
+(There were 2 warnings)

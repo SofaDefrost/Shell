@@ -24,6 +24,11 @@
 \newblock In \emph{{Soft Tissue Biomechanical Modeling for Computer Assisted
   Surgery}}, Payan Y., (Ed.). Springer, juin 2012.
 
+\bibitem[GBFP11]{GilBouFauPai11}
+\textsc{Gilles B., Bousquet G., Faure F., Pai D.}:
+\newblock Frame-based elastic models.
+\newblock \emph{ACM Trans. Graph.. Vol. 30}, Num. 2 (2011).
+
 \bibitem[HMH07]{hosseini06}
 \textsc{Hosseini S.~M., Manzari M.~T., Hannani S.~K.}:
 \newblock {A fully explicit three-step SPH algorithm for simulation of
