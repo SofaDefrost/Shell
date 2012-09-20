@@ -17,9 +17,9 @@
 \else \usepackage[dvips]{graphicx} \fi
 
 
-\title[Simulation à base de Repères]{Simulation en Lagragien Total Implicite à base de Repères}
+\title[Modèle pour la Simulation de Tissus Connectifs]{Modèle pour la Simulation de Tissus Connectifs}
 
-\author[Julien Bosman]{Julien Bosman$^1$, Christian Duriez$^2$ \\ %
+\author[Julien Bosman]{Julien Bosman$^1$, Christian Duriez$^2$, Stéphane Cotin$^2$ \\ %
 	$^1$LIFL/INRIA ,$^2$INRIA
 }
 
@@ -34,7 +34,12 @@
 \keywords{Simulation, Méthodes sans maillage, Mécanique}
 %-------------------------------------------------------------------------
 \section{Introduction}
- A faire
+La simulation médicale est un domaine de plus en plus actif. Les simulateurs médicaux ont un champ d'application assez vaste allant du diagnostic à la
+formation des practiciens ou encore en aide à la chirurgie per et post opératoire. Jusqu'à maintenant, les organes simulés étaient directement en contact les
+uns avec les autres. Cependant, cette situation n'est pas conforme à la réalité. En effet, à l'intérieur du corps humains, les organes sont très rarement en
+contact direct. Ils sont généralement reliés entre eux par des fibres appelées \emph{tissus connectifs}. Ces tissus peuvent être présent en une couche très fine
+ou en un volume plus important. Ils sont difficiles à modéliser et à simuler car étant donné qu'ils occupent l'espace présent entre les organes, ils n'ont pas
+de topologie réellement définie.
 
 \section{Etat de l'art}
 
@@ -43,8 +48,8 @@ La simulation à base de méthodes sans maillage à été introduite en informatique 
 déformables. Les SPH demeurent une méthodes populaires pour l'animation de fluides et d'objets très déformables. Les travaux de \cite{Becker2009} apportent une
 réponse au problème des non-linéarités géométrique en proposant un modèle corotationnel dédié. La méthode des SPH permet également de simuler des matériaux
 non-newtoniens aux comportements plus complexes notamment dans \cite{Paiva2009} et \cite {hosseini06}. Cependant, Les SPH souffrent de certains problèmes qui
-limitent leur utilisation notamment leur failbe précision. Le traitement des frontières est également difficile en raison de la déficience en
-particule sur le frontières de l'objet. De plus, le phénomène connu sous le nom de \emph{tensile instability}, qui apparait lorsque l'objet est fortement
+limitent leur utilisation notamment leur faible précision. Le traitement des frontières est également difficile en raison de la déficience en
+particule sur le frontières de l'objet. De plus, le phénomène connu sous le nom de \emph{tensile instability}, qui apparaît lorsque l'objet est fortement
 étiré, rend son utilisation problématique dans le cadre de la simulation de grandes déformation. Parallèlement, d'autres méthodes d'animation sans maillage ont
 été développées. Des modèles basés sur la mécanique des milieux continus à l'instar de \cite{Keiser2004} et de \cite{Horton2010} où les champs de déplacement
 sont approximés grâce aux \emph{Moving} Least Squares (MLS). Cependant, l'approximation MLS est impossible si la distribution des n{\oe}uds est colinéaire ou
@@ -52,21 +57,48 @@ coplanaire. En effet, la  ``moment matrix'' devient alors singulière et les fonc
 Des techniques d'animation, non basées sur la physique,ont également été développées. Dans \cite{Muller2005}, les objets sont déformés grâce à un système masse
 ressort en utilisant la méthode dite de \emph{Shape Matching}, où les points de l'objet sont partitionnés en plusieurs groupes dont on estime une rotation
 optimale et une translation par rapport à la configuration non déformée. Cette idée est reprise dans \cite{Muller2011} à la différence près que chaque possède
-une orientation qui est estimée au grâce à un \emph{Shape Matching} généralisé.
+une orientation qui est estimée au grâce à un \emph{Shape Matching} généralisé. Enfin, dans \cite{GilBouFauPai11}, Gilles \textit{et al.} proposent un
+modèle compatible avec la mécanique des milieux continus basé sur des repères. Cependant, leur approche concerne essentiellement des objets faiblement
+échantillonnés. De fait, elle est difficile à utiliser pour modéliser des objets qui doivent se conformer étroitement à des surfaces.
 \section{Simulation}
 
+\subsection{Nomenclature}
+\begin{tabular}{|c|p{5.5cm}|}
+	\hline
+	\raisebox{-1ex}{$\bar{\mathbf{x}}_i$, $\mathbf{x}_i$} & coordonnées du n{\oe}uds $i$ dans la configuration au repos et déformée\\
+	\hline
+	\raisebox{-1ex}{$\bar{\mathbf{r}}_i$, $\mathbf{r}_i$} & orientation du n{\oe}ud $i$ dans la configuration au repos et déformée\\
+	\hline
+	\raisebox{-1ex}{$\bar{\mathbf{p}}_s$, $\mathbf{p}_s$} & coordonnées globales du point d'intégration $s$ dans la configuration au repos et déformée\\
+	\hline
+	\raisebox{-2ex}{$\bar{\mathbf{l}}_s^i$, $\mathbf{l}_s^i$} & coordonnées du point d'intégration $s$ dans le repère $i$ dans la configuration au repos et
+déformée. \\
+	\hline
+	\raisebox{-2ex}{$[\bar{\mathbf{R}}_i]$, $[\mathbf{R}_i]$} & matrice de rotation associée à l'orientation du n{\oe}ud $i$ dans la configuration au repos et
+déformée \\
+	\hline
+	\raisebox{-1ex}{$[\mathbf{v}^{\text{\tiny{$\wedge$}}}]$} & matrice antisymétrique associée au produit vectoriel de $\mathbf{v}$\\
+	\hline
+	\raisebox{-0.1ex}{$[\mathbf{M}]^{i,}$} & $i^{\text{ème}}$ ligne de la matrice $\mathbf{M}$ \\
+	\hline
+	\raisebox{-0.1ex}{$[\mathbf{M}]^{,j}$} & $j^{\text{ème}}$ ligne de la matrice $\mathbf{M}$ \\
+	\hline
+\end{tabular}
+
+
 \subsection{Cinématique}
-Les objets déformables sont discrétisés par un ensemble de n{\oe}uds et de points d'intégration. Les n{\oe}uds sont des repères à six degrés de liberté (DDL) :
+Les objets déformables sont discrétisés par un ensemble de n{\oe}uds et de points d'intégration (figure \ref{fig:discrete}). Les n{\oe}uds sont des repères à
+six degrés de liberté (DDL) :
 \begin{equation}
 \mathbf{q}_i = \left[ x_1 \ x_2 \ x_3 \ r_1 \ r_2 \ r_3 \right]^t = \left[ \mathbf{x}_i \ {\mathbf{r}_i} \right]^t
 \end{equation}
-
 où $\mathbf{x}_i$ sont les coordonnées du n{\oe}ud et $\mathbf{r}_i$ le vecteurs rotation correspondant à l'orientation du n{\oe}ud. Les points d'intégration ne
 possèdent que trois DDL. Dans la mesure où l'on utilise une formulation en lagragien total, la position globale des points d'intégration est exprimée en
 fonction de leur position dans chacun des repères dans la configuration non déformée. Les coordonnées d'un point d'intégration $s$ dans le repère $i$ dans la
 configuration non déformée est donné par :
 \begin{equation}
 	\bar{\mathbf{l}}_s^{i} = {[\bar{\mathbf{R}}}_i]^t \cdot \left[ \bar{\mathbf{p}}_s - \bar{\mathbf{x}}_i\right]
+	\label{eq:sample_rest_pos}
 \end{equation}
 où $\bar{\mathbf{R}}_i$ et $\bar{\mathbf{x}}_i$ sont la matrice de rotation et les coordonnées du repère $i$ et $\bar{\mathbf{p}}_s$ les coordonnées du point
 d'intégration $s$ dans la configuration non déformée. Ainsi, les coordonnées du point d'intégration $s$ dans la configuration déformée sont donnés par :
@@ -75,8 +107,15 @@ d'intégration $s$ dans la configuration non déformée. Ainsi, les coordonnées du 
 	\label{eq:sample_pos}
 \end{equation}
 où $w_s(\cdot)$ est une fonction de forme associée au point d'intégration $s$ et $\mathbf{x}_i$ et $\mathbf{R}_i$ les coordonnées et la rotation du repère $i$
-dans la configuration déformée. La fonction de forme $w_s(\cdot)$ peut être à support compact (du type \emph{fonction de Wendland}) ou non (fonction de Shepard
-par ex).
+dans la configuration déformée. La fonction de forme $w_s(\cdot)$ peut être à support compact (du type \emph{fonction de Wendland}) ou non (\emph{fonction de
+Shepard} par ex).
+
+\begin{figure}[htb]
+	\center \includegraphics[width=6.5cm]{discrete}
+	\caption{\label{fig:discrete}Discrétisation des objets}
+\end{figure}
+
+
 De la même façon, la cinématique des repères est influencée par le mouvement des points d'intégration qui lui sont associés. La variation de l'orientation du
 repère $i$ dans en fonction des déplacements des points d'intégration est donné par  :
 \begin{equation}
@@ -88,11 +127,12 @@ où $\mathbf{l}_s^i$ sont les coordonnées du point d'intégration $s$ dans le repè
 \subsection{Dynamique}
 \subsubsection{Expression des forces internes}
 L'approche employée dans ces travaux se base sur la mécanique des milieux continus (MMC). Les matériaux étudiés sont considérés comme continus, c'est-à-dire
-qu'ils sont étudiés à une échelle suffisament petite, mais aussi suffisament grande pour négliger les espaces inter-moléculaires. La MMC permet de mettre en
+qu'ils sont étudiés à une échelle microscopique, mais une échelle suffisament grande pour négliger les espaces inter-moléculaires. La MMC permet de
+mettre en
 relation un déplacement (\textit{i.e.} les déformations subies par un point) avec une force de rappel selon le schéma suivant :
 \begin{equation*}
 	\underbrace{\mathbf{u}_i}_{\text{déplacements}} \rightarrow \underbrace{\mathbf{F}_i}_{\substack{\text{gradient de} \\ \text{déformation}}} \rightarrow
-\underbrace{\epsilon_i}_{\substack{\text{tenseur de} \\ \text{déformation}}} \rightarrow \underbrace{\sigma_i}_{\substack{\text{tenseur de} \\
+\underbrace{\L_i}_{\substack{\text{tenseur de} \\ \text{déformation}}} \rightarrow \underbrace{\S_i}_{\substack{\text{tenseur de} \\
 \text{contrainte}}} \rightarrow \underbrace{\mathbf{f}_i}_{\text{force}}
 \end{equation*}
 La méthode décrite dans cet article utilise une formulation en lagrangien total. Dans une formulation en lagrangien total les déplacements sont évalués par
@@ -103,55 +143,66 @@ Le calcul des forces internes fait appel au principe des \emph{travaux virtuels}
 	\delta W = \delta \mathbf{q} \cdot \mathbf{f} = \int_{\Omega}{ \frac{\partial \mathbf{L}^t}{\partial \mathbf{q}} \{\mathbf{S}\}d\Omega }
 	\label{eq:virtual_work}
 \end{equation}
-où $L = \frac{1}{2}(F^t F - I)$ est le tenseur de déformation de \emph{Green-Lagrange} où $F$ est le gradient de déformation. $S$ le second tenseur de
-contrainte de \emph{Piola-Kirchoff} dans la notation de \emph{Voigt}. La dérivée du tenseur de Green-Lagrange par rapport au degrés de liberté
-des repères est donné par :
+avec $\mathbf{L} = \frac{1}{2}(\mathbf{F}^t \mathbf{F} - \mathbf{I})$ est le tenseur de déformation de \emph{Green-Lagrange} où $F$ est le gradient de
+déformation. $\mathbf{S}$ est le second tenseur de contrainte de \emph{Piola-Kirchoff} dans la notation de \emph{Voigt}. La dérivée du tenseur de Green-Lagrange
+par rapport au degrés de liberté des repères est donné par :
 \begin{equation}
-	\frac{\partial L}{\partial q} = \frac{1}{2}\left(\frac{\partial F^t}{\partial q} F + F^t \frac{\partial F}{\partial q} \right)
+	\frac{\partial \mathbf{L}}{\partial \mathbf{q}} = \frac{1}{2}\left(\frac{\partial \mathbf{F}^t}{\partial \mathbf{q}} \mathbf{F} + \mathbf{F}^t
+\frac{\partial \mathbf{F}}{\partial \mathbf{q}} \right)
 	\label{eq:green_lagrange_der}
 \end{equation}
 
 La première étape consiste à calculer le tenseur de déformation en un point d'intégration $s$ c'est-à-dire $\mathbf{F}_s = \nabla \mathbf{u}_s$. Il faut donc
-calculer la dérivée spatiale de l'équation (\ref{eq:sample_pos})
+calculer la dérivée spatiale de l'équation (\ref{eq:sample_pos}). On remarque alors que seul les termes $w_s(\mathbf{x}_i)$ et $\bar{\mathbf{l}}_s^i$ sont
+concernés. Or, en reprenant l'équation (\ref{eq:sample_rest_pos}) on remarque que :
 \begin{equation}
-	F_s = \frac{\partial \mathbf{p}_s}{\partial \mathbf{X}} = \sum_{i}{\left[ \frac{\partial w_{is})}{\partial X} \left(\mathbf{x}_i + [\mathbf{R}_i] 
-\bar{\mathbf{p}}_s^{l,i} \right) + w_s(\mathbf{x}_i)[\mathbf{R}_i] [\mathbf{R}_i^0]^t \right] } 
+	\frac{\partial \bar{\mathbf{l}}_s^i}{\partial X} = \frac{\partial([\bar{\mathbf{R}}_i]^t \cdot \left[ \bar{\mathbf{p}}_s -
+\bar{\mathbf{x}}_i\right])}{\partial X} = [\bar{\mathbf{R}}_i]^t
+\end{equation}
+on obtient alors le gradient de déformation au point d'intégration $s$ :
+\begin{equation}
+	\mathbf{F}_s = \frac{\partial \mathbf{p}_s}{\partial \mathbf{X}} = \sum_{i}{\left[ \frac{\partial w_{is}}{\partial X} \left(\mathbf{x}_i + [\mathbf{R}_i]
+\cdot
+\bar{\mathbf{l}}_s^{i} \right) + w_{is}[\mathbf{R}_i] [\bar{\mathbf{R}}_i]^t \right] } 
 %& = \sum_{i}{\left[ \nabla w_s(\mathbf{x}_i) \left(\mathbf{x}_i + \mathbf{R}_i \times \bar{\mathbf{p}}_s^{l,i} \right) + w_s(\mathbf{x}_i)\mathbf{R}_i
 %\mathbf{R}_i^{0t} \right] }
 \end{equation}
-Afin d'obtenir la dérivée du tenseur de \emph{Green-Lagrange} de l'équation (\ref{eq:green_lagrange_der}) il est nécessaire de calculer la dérivée du tenseur de
-déformation :
+où $w_{is} = w_s(\mathbf{x}_i)$. Afin d'obtenir la dérivée du tenseur de \emph{Green-Lagrange} de l'équation (\ref{eq:green_lagrange_der}) il est nécessaire de
+calculer la dérivée du tenseur de déformation par rapport à $\delta \mathbf{q}$ qui est une matrice $3\times 3$. On exprime alors ces neuf valeurs en fonction
+d'une variation infinitésimale de déplacement et d'orientation, c'est-à-dire en fonction de $\delta \mathbf{x}$ et $\delta \mathbf{r}$ :
 \begin{equation}
 \begin{split}
-	\delta F_{IJ}^{s} =& \sum_{i}{\left(\delta \mathbf{x}_i + [-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{I,}\cdot \delta
-\mathbf{r}_i\right) \frac{\partial w_s(\mathbf{x}_i)}{\mathbf{X}_j}} \ + \\
-& [-\mathbf{R}_{i}(r^0_{,J})^{\text{\tiny{$\wedge$}}}]^{I,} \cdot \delta \mathbf{r_i} w_s(\mathbf{x}_i)
+	\delta \mathbf{F}_{IJ}^{s} =& \sum_{i}{\left(\delta \mathbf{x}_i + [-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{I,}\cdot \delta
+\mathbf{r}_i\right) \frac{\partial w_{is}}{\mathbf{X}_j}} \ + \\
+& [-\mathbf{R}_{i}(r^0_{,J})^{\text{\tiny{$\wedge$}}}]^{I,} \cdot \delta \mathbf{r_i} w_{is}
 \end{split}
 \label{eq:def_grad_der}
 \end{equation}
-avec $\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})$ la rotation de $\mathbf{\bar{p}}_s^{l,i}$ par $\mathbf{R}_i$, $[\mathbf{v}^{\text{\tiny{$\wedge$}}}]$la
+avec $\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})$ la rotation de $\mathbf{\bar{l}}_s^{i}$ par $\mathbf{R}_i$, $[\mathbf{v}^{\text{\tiny{$\wedge$}}}]$la
 matrice antisymétrique $3\times 3$ associée au produit vectoriel, $[\mathbf{M}]^{i,}$ et $[\mathbf{M}]^{,j}$ correspondent respectivement à la $i^{\text{ème}}$
 ligne et à la
 $j^{\text{ème}}$ colonne de la matrice $\mathbf{M}$ et $r^0_{,J} = [\mathbf{R}_i^0]^{J,}$.
-En réécrivant les 9 valeurs de $\delta F^{s}$ sous forme d'un vecteur colonne, l'équation (\ref{eq:def_grad_der}) peut être exprimée sous la forme d'un produit
+En réécrivant les neuf valeurs de $\delta \mathbf{F}^{s}$ sous forme d'un vecteur colonne, l'équation (\ref{eq:def_grad_der}) peut être exprimée sous la forme
+d'un produit
 matrice-vecteur :
 \begin{equation}
 	\left[
 	\begin{array}{c}
-		\delta F_{xx}^s \\
-		\delta F_{xy}^s \\
+		\delta \mathbf{F}_{11}^s \\
+		\delta \mathbf{F}_{12}^s \\
 		\vdots \\
-		\delta F_{zz}^s
+		\delta \mathbf{F}_{33}^s
 	\end{array}
 	\right] = \sum_{i}{\mathbf{B}^{i,s} \cdot \delta \mathbf{q}_i}
 	\label{eq:delta_F}
 \end{equation}
-avec $\delta \mathbf{q}_i^t = [\delta \mathbf{x}_i \ \delta \mathbf{r}_i]^t$. La matrice $B$ est donnée en annexe. De la même façon, il est également possible
+avec $\delta \mathbf{q}_i^t = [\delta \mathbf{x}_i \ \delta \mathbf{r}_i]^t$. La matrice $\mathbf{B}$ est donnée en annexe. De la même façon, il est également
+possible
 d'écrire $\partial L / \partial q$ sous la forme d'un produit matrice-vecteur. En effet :
 \begin{equation}
 \begin{split}
-	\delta L_{xy} &= \frac{1}{2}\left([\delta F^t]^{1,}\cdot[F]^{,2} + [F^t]^{1,}\cdot[\delta F]^{,2}\right) \\
-	&= \frac{1}{2}\left([\delta F_{xx} \ \delta F_{yx} \ \delta F_{zx}]\cdot[F]^{,2} + [F^t]^{1,}\cdot[\delta F_{xy} \ \delta F_{yy} \ \delta F_{zy}]\right)
+	\delta \mathbf{L}_{12} &= \frac{1}{2}\left([\delta F^t]^{1,}\cdot[F]^{,2} + [F^t]^{1,}\cdot[\delta F]^{,2}\right) \\
+	&= \frac{1}{2}\left([\delta F_{11} \ \delta F_{21} \ \delta F_{31}]\cdot[F]^{,2} + [F^t]^{1,}\cdot[\delta F_{12} \ \delta F_{22} \ \delta F_{32}]\right)
 \end{split}
 \end{equation}
 Or, d'après l'équation (\ref{eq:delta_F}) :
@@ -160,44 +211,62 @@ Or, d'après l'équation (\ref{eq:delta_F}) :
 \end{equation}
 avec $B_{i,}$ la $i^{\text{ème}}$ ligne de la matrice $B$ d'où :
 \begin{equation}
-	\delta L_{xy} = \frac{1}{2}\left[F_{xy}B_{1,} +  F_{yy}B_{4,} + F_{zy}B_{7,} + F_{xx}B_{2,} + F_{yx}B_{5,} + F_{zx}B_{8,} \right] \cdot \delta q
+\begin{split}
+	&\delta L_{xy} =  \\
+	&\frac{1}{2}\left[F_{xy}B_{1,} +  F_{yy}B_{4,} + F_{zy}B_{7,} + F_{xx}B_{2,} + F_{yx}B_{5,} + F_{zx}B_{8,} \right] \cdot \delta q
+\end{split}	
 \end{equation}
 On a donc : 
 \begin{equation}
 	\left[
 	\begin{array}{c}
-		\delta L_{xx}^s \\
-		\delta L_{xy}^s \\
+		\delta L_{11}^s \\
+		\delta L_{12}^s \\
 		\vdots \\
-		\delta L_{zz}^s
+		\delta L_{33}^s
 	\end{array}
-	\right] = \sum_{i}{\mathbf{M}^{i;s} \cdot \delta \mathbf{q}_i}
+	\right] = \sum_{i}{\mathbf{M}^{i,s} \cdot \delta \mathbf{q}_i}
 	\label{eq:delta_L}	
 \end{equation}
-En substituant l'équation (\ref{eq:delta_L}) à l'équation (\ref{eq:virtual_work}) et en divisant par $\delta q$ on obtient :
+En substituant l'équation (\ref{eq:delta_L}) à l'équation (\ref{eq:virtual_work}) et en divisant par $\delta \mathbf{q}$ on obtient :
 \begin{equation}
-	f = \int_{\Omega}{\mathbf{M}^t\{\mathbf{S}\}}d\Omega
+	\mathbf{f} = \int_{\Omega}{\mathbf{M}^t\{\mathbf{S}\}}d\Omega
+	\label{eq:force_continuous}
 \end{equation}
-ou, en version discrète : 
+Cependant, l'équation (\ref{eq:force_continuous}) nous donne l'expression de la force dans le cas continu. Etant donné que cette intégrale ne peut être résolue
+analytiquement, hormis pour des cas simples, il est nécessaire de passer à une version discrète. L'intégrale de l'équation (\ref{eq:force_continuous}) doit être
+évaluée sur la totalité du domaine $\Omega$ occupé par l'objet. Pour ce faire, sous la forme discrète, on utilise les points d'intégration, aussi appelés
+\emph{points de Gauss} qui échantillonnent l'objet. On obtient ainsi l'expression discrète de la force en un n{\oe}ud :
 \begin{equation}
 	f_i = \sum_{s}{\mathbf{M}^{i,s}\{\mathbf{S}^s\}w_s(\mathbf{x}_i)}
 	\label{eq:force_discrete}
 \end{equation}
-avec $S$ calculé grâce à la \emph{loi de Hooke}:
+où $\mathbf{S}$ en notation de Voigt est calculé grâce à la \emph{loi de Hooke} qui est une loi de comportement décrivant des matériaux parfaitement élastiques
+(\textit{i.e.} qui reviennent parfaitement à leur forme d'origine). Cette loi est linéaire, c'est-à-dire que la force de rappel est proportionnelle à
+l'élongation. Ainsi :
 \begin{equation}
 	\mathbf{S} = \lambda \ tr(\mathbf{L})\mathbf{I} + 2 \mu \mathbf{L}
 \end{equation}
-en notation de Voigt où $\lambda$ et $\mu$ sont les \emph{coefficients de Lamé}
+avec $\lambda$ et $\mu$ qui sont les \emph{coefficients de Lamé}
 
 \subsubsection{Formulation implicite}
-La formulation précédente (équation \ref{eq:force_discrete}) est utilisable avec un solveur explicite. Cependant, bien qu'ils soient rapides, les solveurs
-explicites présentent certains désavantages, notamment l'instabilité. Les oscillations et l'introduction d'énergie supplémentaire conduisent la simulation à
-``exploser''. Un solution courament employée pour répondre à ce problème consiste à utiliser des pas de temps très court avec pour effet de ralentir la
+La formulation précédente (équation \ref{eq:force_discrete}) est utilisable avec un solveur explicite. En effet, en utilisant le principe fondamental de la
+dynamique (seconde loi de Newton) :
+\begin{equation}
+	m\mathbf{a} = \sum{\mathbf{f}^{int} + \mathbf{f}^{ext}}
+\end{equation}
+puis en effectuant successivement deux intégrations sur le temps, on peut obtenir les nouvelles positions et les nouvelles vitesses de chaque n{\oe}ud au pas
+de temps suivant.
+
+Cependant, bien qu'ils soient rapides, les solveurs explicites présentent certains désavantages, notamment l'instabilité. Les oscillations et l'introduction
+d'énergie supplémentaire conduisent la simulation à
+``exploser''. Un solution couramment employée pour répondre à ce problème consiste à utiliser des pas de temps très court avec pour effet de ralentir la
 simulation.
-Pour ces raisons, on utilise un solveur implicte qui est inconditionnellement stable -- une proprièté intéressante dans le cadre de la simulation
+Pour ces raisons, on utilise un solveur implicite qui est inconditionnellement stable -- une propriété intéressante dans le cadre de la simulation
 d'objets déformables. Les solveurs implicites permettent de résoudre un problème non-linéaire de manière itérative selon la méthode de \emph{Newton-Raphson}
 \cite{faure:hal-00681539}. Pour permettre au solveur de résoudre l'équation du mouvement, il est nécessaire de linéariser la force, c'est-à-dire dériver
-l'expression de la force par rapport aux repères. D'après \cite{NFECS} on a :
+l'expression de la force par rapport aux repères. Cela revient à exprimer la variation de la force en fonction d'une variation infinitésimale de la
+contrainte. En effet, d'après \cite{NFECS} on a :
 \begin{equation}
 	\delta f = \int_{\Omega}{\mathbf{M^t}\{\delta \mathbf{S}\}d\Omega}
 	\label{eq:force_der}
@@ -206,21 +275,22 @@ avec :
 \begin{equation}
 	\{\delta \mathbf{S}\} = \mathbf{C}\{\delta \mathbf{L}\}
 \end{equation}
-ou la matrice $\mathbf{C}$ donnée en annexe est la matrice des coefficients elastiques associés à la loi de Hooke. En substituant l'équation (\ref{eq:delta_L})
+ou la matrice $\mathbf{C}$ donnée en annexe est la matrice des coefficients élastiques associés à la loi de Hooke. En substituant l'équation (\ref{eq:delta_L})
 à l'équation (\ref{eq:force_der}) on obtient :
 \begin{equation}
-	\delta f = \int_{\Omega}{\mathbf{M^t}\mathbf{C}\mathbf{M}} \cdot \delta \mathbf{q} d\Omega
+	\delta \mathbf{f} = \int_{\Omega}{\mathbf{M^t}\mathbf{C}\mathbf{M}} \cdot \delta \mathbf{q} d\Omega
+	\label{eq:deltaF_continuous}
 \end{equation}
-on obtient alors, en version discrète :
+De même qu'avec l'équation (\ref{eq:force_continuous}), il est nécessaire de passer à une formulation discrète afin d'être capable d'intégrer l'équation
+(\ref{eq:deltaF_continuous})
 \begin{equation}
-	\delta f_i = \sum_{s}{\mathbf{M}^{i,s}\cdot \Delta \mathbf{S}^s}
+	\delta \mathbf{f}_i = \sum_{s}{\mathbf{M}^{i,s}\cdot \Delta \mathbf{S}^s}
 \end{equation}
 avec : 
 \begin{equation}
 	\Delta \mathbf{S}^s = \sum_{i}{\mathbf{C}\mathbf{M}^{i,s}\cdot \delta \mathbf{q}_i}
 \end{equation}
-
-
+qui exprime la variation de la contrainte en un point d'intégration en fonction d'une variation des DDL différents n{\oe}uds.
 
 \subsection{Figures en couleur} Etant donné qu'il s'agit d'une publication électronique, il n'y a aucune censure à avoir sur les figures en couleur (cf figure \ref{fig:ex3}. 
 

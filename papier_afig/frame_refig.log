@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=latex 2012.7.31)  20 SEP 2012 15:36
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=latex 2012.7.31)  20 SEP 2012 18:43
 entering extended mode
  %&-line parsing enabled.
 **frame_refig.tex
@@ -272,44 +272,55 @@ File: umsb.fd 2009/06/22 v3.00 AMS symbols B
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <9> not available
 (Font)              Font shape `T1/ptm/b/n' tried instead on input line 30.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 64.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 68.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 64.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 68.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <5> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 64.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 68.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <6> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 80.
+
+Overfull \hbox (7.59949pt too wide) in paragraph at lines 66--87
+[][] 
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
 File: REFIG_logo_final_sans_titre_petit_format.eps Graphic file (type eps)
 
 <REFIG_logo_final_sans_titre_petit_format.eps>
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 76.
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 89.
 
 (/usr/share/texmf-texlive/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <6> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 76.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 89.
  [1
 
 
 ]
 File: discrete.eps Graphic file (type eps)
  <discrete.eps>
-LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <6> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 148.
 
-Overfull \hbox (5.91498pt too wide) in paragraph at lines 176--176
+LaTeX Warning: Command \L invalid in math mode on input line 135.
+
+[2]
+Overfull \hbox (9.80301pt too wide) in paragraph at lines 208--208
 [] 
  []
 
-[2]
-Overfull \hbox (22.3985pt too wide) detected at line 184
-\OML/ptmcm/m/it/9 ^^NL[] \OT1/ptmcm/m/n/9 = [] [] \OMS/cmsy/m/n/9 ^^A \OML/ptmc
-m/m/it/9 ^^Nq
+
+Overfull \hbox (8.43723pt too wide) in paragraph at lines 221--221
+[] 
  []
 
+[3]
 File: logoafig.eps Graphic file (type eps)
-<logoafig.eps>
+ <logoafig.eps>
 File: logoafig.eps Graphic file (type eps)
- <logoafig.eps> [3] (./frame_refig.bbl
+ <logoafig.eps> (./frame_refig.bbl
 Underfull \hbox (badness 1009) in paragraph at lines 5--7
 []\T1/ptm/m/sc/9 Becker M., Ihm-sen M., Teschner M. \T1/ptm/m/n/9 :
  []
@@ -335,24 +346,26 @@ Underfull \hbox (badness 1264) in paragraph at lines 63--66
  []
 
 ) [4]
-Overfull \hbox (18.0614pt too wide) in paragraph at lines 327--327
+Overfull \hbox (18.0614pt too wide) in paragraph at lines 364--364
 [] 
  []
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <17.28> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 347.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 384.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 347.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 384.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 347.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 384.
 
-Overfull \hbox (8.06038pt too wide) in paragraph at lines 348--348
+Overfull \hbox (8.06038pt too wide) in paragraph at lines 385--385
 [] 
  []
 
-[5
 
-] (./frame_refig.aux) ) 
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [5]
+(./frame_refig.aux) ) 
 Here is how much of TeX's memory you used:
  2743 strings out of 495062
  34065 string characters out of 1182644
@@ -360,6 +373,6 @@ Here is how much of TeX's memory you used:
  5872 multiletter control sequences out of 15000+50000
  48498 words of font info for 88 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
- 32i,28n,31p,227b,348s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 33i,28n,37p,227b,328s stack positions out of 5000i,500n,10000p,200000b,50000s
 
-Output written on frame_refig.dvi (5 pages, 30188 bytes).
+Output written on frame_refig.dvi (5 pages, 33196 bytes).

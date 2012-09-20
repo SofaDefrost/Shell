@@ -27,7 +27,7 @@ Mode=BibTeX
 ReadWrite=true
 
 [document-settings,item:frame_refig.tex]
-Bookmarks=68
+Bookmarks=77
 Encoding=ISO-8859-15
 FoldedColumns=
 FoldedLines=
@@ -78,10 +78,10 @@ order=-1
 
 [item:frame_refig.tex]
 archive=true
-column=72
+column=12
 encoding=ISO-8859-15
 highlight=LaTeX
-line=121
+line=63
 mode=LaTeX
 open=true
 order=1
@@ -123,7 +123,7 @@ JumpList=
 ViMarks=
 
 [view-settings,view=0,item:frame_refig.tex]
-CursorColumn=72
-CursorLine=121
+CursorColumn=12
+CursorLine=63
 JumpList=
-ViMarks=a,68,0
+ViMarks=a,77,0
