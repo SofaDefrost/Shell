@@ -1,0 +1,6 @@
+- Objets déformables discrétisé avec des repères tridimensionnels (six degrés de liberté, trois en translation et trois en rotation) et des points d'intégration (trois degrés de liberté)
+- Lagragien total donc la position globale des points d'intégration est exprimés à partir de la combinaison de leur positions locale aux repères dans la configuration non déformée.
+- Les points d'intégration influencent l'orientation des repères.
+- En lagragien total, on doit calculer le tenseur de déformation de Green-Lagrange et le second tenseur de contrainte de Piloa Kirchorff
+- géneralisable au modèles FEM (fonction de forme différentes).
+- ne fonctionne pas pour les structures linéiques.

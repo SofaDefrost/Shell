@@ -1,0 +1,62 @@
+\newcommand{\etalchar}[1]{$^{#1}$}
+\begin{thebibliography}{\uppercase{HWJM10}}
+
+\bibitem[BIT09]{Becker2009}
+\textsc{Becker M., Ihmsen M., Teschner M.}:
+\newblock {Corotated SPH for deformable solids}.
+
+\bibitem[BLM00]{NFECS}
+\textsc{Belytschko T., Liu W.~K., Moran B.}:
+\newblock \emph{Nonlinear Finite Elements for Continua ans Structures}.
+\newblock Wiley, 2000.
+
+\bibitem[DC96]{Desbrun1996}
+\textsc{Desbrun M., Cani M.}:
+\newblock {Smoothed particles: A new paradigm for animating highly deformable
+  bodies}.
+\newblock \emph{Proceedings of the Eurographics workshop on Computer animation
+  and simulation} (1996), 61--76.
+
+\bibitem[FDD{\etalchar{*}}12]{faure:hal-00681539}
+\textsc{Faure F., Duriez C., Delingette H., Allard J., Gilles B., Marchesseau
+  S., Talbot H., Courtecuisse H., Bousquet G., Peterlik I., Cotin S.}:
+\newblock {SOFA: A Multi-Model Framework for Interactive Physical Simulation}.
+\newblock In \emph{{Soft Tissue Biomechanical Modeling for Computer Assisted
+  Surgery}}, Payan Y., (Ed.). Springer, juin 2012.
+
+\bibitem[HMH07]{hosseini06}
+\textsc{Hosseini S.~M., Manzari M.~T., Hannani S.~K.}:
+\newblock {A fully explicit three-step SPH algorithm for simulation of
+  non-Newtonian fluid flow}.
+\newblock \emph{International Journal of Numerical Methods for Heat \&amp;\#38;
+  Fluid Flow. Vol. 17}, Num. 7 (2007), 715--735.
+
+\bibitem[HWJM10]{Horton2010}
+\textsc{Horton A., Wittek A., Joldes G.~R., Miller K.}:
+\newblock {A meshless Total Lagrangian explicit dynamics algorithm for surgical
+  simulation}.
+\newblock \emph{Integration The Vlsi Journal}, Num. March (2010), 977--998.
+
+\bibitem[KNP{\etalchar{*}}04]{Keiser2004}
+\textsc{Keiser R., Nealen A., Pauly M., Gross M., Alexa M.}:
+\newblock {Point Based Animation of Elastic, Plastic and Melting Objects}.
+\newblock \emph{Proceedings of the ACM SIGGRAPH/Eurographics symposium on
+  Computer animation} (2004), 141--151.
+
+\bibitem[MC11]{Muller2011}
+\textsc{M\"{u}ller M., Chentanez N.}:
+\newblock Solid simulation with oriented particles.
+\newblock \emph{ACM Trans. Graph.. Vol. 30}, Num. 4 (juillet 2011),
+  92:1--92:10.
+
+\bibitem[MHTG05]{Muller2005}
+\textsc{M\"{u}ller M., Heidelberger B., Teschner M., Gross M.}:
+\newblock Meshless deformations based on shape matching.
+\newblock \emph{ACM Trans. Graph.. Vol. 24}, Num. 3 (juillet 2005), 471--478.
+
+\bibitem[PPLT09]{Paiva2009}
+\textsc{Paiva A., Petronetto F., Lewiner T., Tavares G.}:
+\newblock Particle-based viscoplastic fluid/solid simulation.
+\newblock \emph{Comput. Aided Des.. Vol. 41}, Num. 4 (avril 2009), 306--314.
+
+\end{thebibliography}

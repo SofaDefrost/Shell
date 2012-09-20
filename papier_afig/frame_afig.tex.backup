@@ -1,0 +1,46 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+%opening
+\title{Simulation en lagrangien total basée sur des repères}
+\author{Julien Bosman}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\section{introduction}
+
+\section{Etat de l'art}
+
+L'utilisation de simulation à base de méthodes sans maillage en informatique
+graphique a débuté avec \cite{Desbrun1996} et l'utilisation des \emph{Smoothed
+Particle Hydrodynamics} (SPH) -- qui repose sur l'interaction réciproque d'un
+ensemble de particules -- pour l'animation de modèles très déformables. Les SPH
+demeurent une méthodes populaires pour l'animation de fluides et d'objets
+déformables. Les travaux de \cite{Becker2009} apportent une réponse au problème
+des non-linéarités géométrique en proposant un modèle corotationnel dédié. La
+méthode des SPH permet également de simuler des matériaux non-newtoniens aux
+comportements plus complexes \cite{Paiva2009}. Parallèlement, d'autres
+méthodes d'animation sans maillage ont été developpées. Des modèles basés sur
+la mécanique des milieux continus à l'instar de \cite{Keiser2004} et de
+\cite{Horton2010} où les champs de déplacement sont approximés grâce aux
+\emph{Moving} Least Squares (MLS). Des techniques d'animation, non basées sur la
+physique,ont également été développées. Dans \cite{Muller2005}, les objets sont
+déformés grâce à un système masse ressort en utilisant la méthode dite de
+\emph{Shape Matching}, où les points de l'objet sont partitionnés en plusieurs
+groupes dont on estime une rotation optimale et une translation.
+
+\bibliographystyle{alpha}
+\bibliography{biblio}
+
+\end{document}
