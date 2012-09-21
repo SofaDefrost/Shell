@@ -10,6 +10,13 @@
 \newblock \emph{Nonlinear Finite Elements for Continua ans Structures}.
 \newblock Wiley, 2000.
 
+\bibitem[CJA{\etalchar{*}}11]{CJADLC11}
+\textsc{Courtecuisse H., Jung H., Allard J., Duriez C., Lee D.~Y., Cotin S.}:
+\newblock Gpu-based real-time soft tissue deformation with cutting and haptic
+  feedback.
+\newblock \emph{Progress in Biophysics and Molecular Biology} (2011).
+\newblock Special Issue on Soft Tissue Modelling, to appear.
+
 \bibitem[DC96]{Desbrun1996}
 \textsc{Desbrun M., Cani M.}:
 \newblock {Smoothed particles: A new paradigm for animating highly deformable
@@ -17,12 +24,24 @@
 \newblock \emph{Proceedings of the Eurographics workshop on Computer animation
   and simulation} (1996), 61--76.
 
+\bibitem[DPP12]{DPP12}
+\textsc{Deram A., Payan Y., Promayon E.}:
+\newblock Towards a generic framework for evaluation and comparison of soft
+  tissue modeling.
+\newblock In \emph{Proceedings of the 19th Medicine Meets Virtual Reality
+  Conference} (Newport Beach, USA, 2012), pp.~116--122.
+
 \bibitem[FDD{\etalchar{*}}12]{faure:hal-00681539}
 \textsc{Faure F., Duriez C., Delingette H., Allard J., Gilles B., Marchesseau
   S., Talbot H., Courtecuisse H., Bousquet G., Peterlik I., Cotin S.}:
 \newblock {SOFA: A Multi-Model Framework for Interactive Physical Simulation}.
 \newblock In \emph{{Soft Tissue Biomechanical Modeling for Computer Assisted
   Surgery}}, Payan Y., (Ed.). Springer, juin 2012.
+
+\bibitem[FM04]{Fries04}
+\textsc{Fries T.-P., Matthies H.-G.}:
+\newblock \emph{Classification and Overview of Meshfree Methods}.
+\newblock Tech. rep., July 2004.
 
 \bibitem[GBFP11]{GilBouFauPai11}
 \textsc{Gilles B., Bousquet G., Faure F., Pai D.}:
@@ -36,11 +55,28 @@
 \newblock \emph{International Journal of Numerical Methods for Heat \&amp;\#38;
   Fluid Flow. Vol. 17}, Num. 7 (2007), 715--735.
 
+\bibitem[HNR{\etalchar{*}}10]{Hostettler2010169}
+\textsc{Hostettler A., Nicolau S., Rémond Y., Marescaux J., Soler L.}:
+\newblock A real-time predictive simulation of abdominal viscera positions
+  during quiet free breathing.
+\newblock \emph{Progress in Biophysics and Molecular Biology. Vol. 103}, Num.
+  2-3 (2010), 169 -- 184.
+\newblock <ce:title>Special Issue on Biomechanical Modelling of Soft Tissue
+  Motion</ce:title>.
+
 \bibitem[HWJM10]{Horton2010}
 \textsc{Horton A., Wittek A., Joldes G.~R., Miller K.}:
 \newblock {A meshless Total Lagrangian explicit dynamics algorithm for surgical
   simulation}.
 \newblock \emph{Integration The Vlsi Journal}, Num. March (2010), 977--998.
+
+\bibitem[HWM07]{Horton:2007}
+\textsc{Horton A., Wittek A., Miller K.}:
+\newblock Subject-specific biomechanical simulation of brain indentation using
+  a meshless method.
+\newblock In \emph{Proceedings of the 10th international conference on Medical
+  image computing and computer-assisted intervention - Volume Part I} (Berlin,
+  Heidelberg, 2007), MICCAI'07, Springer-Verlag, pp.~541--548.
 
 \bibitem[KNP{\etalchar{*}}04]{Keiser2004}
 \textsc{Keiser R., Nealen A., Pauly M., Gross M., Alexa M.}:
@@ -48,11 +84,26 @@
 \newblock \emph{Proceedings of the ACM SIGGRAPH/Eurographics symposium on
   Computer animation} (2004), 141--151.
 
+\bibitem[LPC{\etalchar{*}}12]{LPC+12}
+\textsc{Luboz V., Promayon E., Chagnon G., Alonso D., Favier C., Barthod C.,
+  Payan Y.}:
+\newblock Validation of a light aspiration device for in vivo soft {TI}ssue
+  characterization ({LASTIC}).
+\newblock In \emph{Soft Tissue Biomechanical Modeling for Computer Assisted
+  Surgery}, Payan Y., (Ed.). 2012, pp.~243--256.
+
 \bibitem[MC11]{Muller2011}
 \textsc{M\"{u}ller M., Chentanez N.}:
 \newblock Solid simulation with oriented particles.
 \newblock \emph{ACM Trans. Graph.. Vol. 30}, Num. 4 (juillet 2011),
   92:1--92:10.
+
+\bibitem[MHC{\etalchar{*}}10]{marchesseau}
+\textsc{Marchesseau S., Heimann T., Chatelin S., Willinger R., Delingette H.}:
+\newblock {Fast porous visco-hyperelastic soft tissue model for surgery
+  simulation: Application to liver surgery}.
+\newblock \emph{Progress in Biophysics and Molecular Biology / Progress in
+  Biophysics \& Molecular Biology. Vol. 103}, Num. 2-3 (2010), 185--196.
 
 \bibitem[MHTG05]{Muller2005}
 \textsc{M\"{u}ller M., Heidelberger B., Teschner M., Gross M.}:
@@ -63,5 +114,12 @@
 \textsc{Paiva A., Petronetto F., Lewiner T., Tavares G.}:
 \newblock Particle-based viscoplastic fluid/solid simulation.
 \newblock \emph{Comput. Aided Des.. Vol. 41}, Num. 4 (avril 2009), 306--314.
+
+\bibitem[RRD{\etalchar{*}}11]{LMLwww_2553}
+\textsc{Rivaux G., Rubod C., Dedet B., Brieu M., Gabriel B., De~Landsheere L.,
+  Devos P., Delmas V., Cosson M.}:
+\newblock Biomechanical characterisation of uterine ligaments. implications for
+  the pelvic floor.
+\newblock \emph{Pelvi-Perineologie. Vol. 6}, Num. 2 (2011), 67--74.
 
 \end{thebibliography}

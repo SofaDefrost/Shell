@@ -8,6 +8,8 @@
 \usepackage{cite}
 \usepackage[toc, page]{appendix}
 %\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{amsmath}
 \usepackage{amssymb}
 
@@ -19,8 +21,8 @@
 
 \title[Modèle pour la Simulation de Tissus Connectifs]{Modèle pour la Simulation de Tissus Connectifs}
 
-\author[Julien Bosman]{Julien Bosman$^1$, Christian Duriez$^2$, Stéphane Cotin$^2$ \\ %
-	$^1$LIFL/INRIA ,$^2$INRIA
+\author[Julien Bosman]{Julien Bosman, Christian Duriez, Stéphane Cotin \\ %
+	INRIA équipe SHACRA / LIFL - Université Lille 1
 }
 
 \begin{document}
@@ -28,38 +30,66 @@
 \maketitle
 
 \begin{abstract}
-   A faire
+Nous proposons un modèle de simulation de tissus organiques reposant sur des méthodes sans maillage basées sur des repères. Le réalisme des simulations
+repose sur une formulation des forces faisant appel à la mécanique des milieux continus. Notre approche permet de simuler des objets déformables aux topologies
+diverses (volumique, surfacique et linéiques). Dans le soucis de d'obtenir une simulation stable nous proposons un formulation implicite du problème.
 
 \end{abstract}
-\keywords{Simulation, Méthodes sans maillage, Mécanique}
+\keywords{Simulation médicale, Méthodes sans maillage, Mécanique, Solides déformables}
 %-------------------------------------------------------------------------
 \section{Introduction}
-La simulation médicale est un domaine de plus en plus actif. Les simulateurs médicaux ont un champ d'application assez vaste allant du diagnostic à la
-formation des practiciens ou encore en aide à la chirurgie per et post opératoire. Jusqu'à maintenant, les organes simulés étaient directement en contact les
-uns avec les autres. Cependant, cette situation n'est pas conforme à la réalité. En effet, à l'intérieur du corps humains, les organes sont très rarement en
-contact direct. Ils sont généralement reliés entre eux par des fibres appelées \emph{tissus connectifs}. Ces tissus peuvent être présent en une couche très fine
-ou en un volume plus important. Ils sont difficiles à modéliser et à simuler car étant donné qu'ils occupent l'espace présent entre les organes, ils n'ont pas
-de topologie réellement définie.
 
-\section{Etat de l'art}
+La simulation médicale est une domaine de recherche de plus en plus actif et les récents progrès ont permis d'ouvrir de nouveaux champs d'application.
+Initialement centrés sur la pratique chirurgicale ces travaux restent nécessaires car les simulateurs commerciaux actuels souffrent parfois d'un manque de
+réalisme. Cependant, les résultats obtenus en recherche permettent d'améliorer sensiblement la précision et l'efficacité des simulations tout en offrant la
+possibilité d'intégrer des données basées sur des patients réels \cite{DPP12}, \cite{LPC+12} ou encore \cite{Hostettler2010169}. Ces travaux permettent
+d'envisager de nouvelles applications, notamment la planification pré-opératoire ou encore la simulation comme assistance aux chirurgiens durant l'intervention.
 
-La simulation à base de méthodes sans maillage à été introduite en informatique graphique par Cani et Desbrun dans \cite{Desbrun1996} et l'utilisation des
-\emph{Smoothed Particle Hydrodynamics} (SPH) -- reposant sur l'interaction réciproque d'un ensemble de particules -- pour l'animation de modèles très
-déformables. Les SPH demeurent une méthodes populaires pour l'animation de fluides et d'objets très déformables. Les travaux de \cite{Becker2009} apportent une
-réponse au problème des non-linéarités géométrique en proposant un modèle corotationnel dédié. La méthode des SPH permet également de simuler des matériaux
-non-newtoniens aux comportements plus complexes notamment dans \cite{Paiva2009} et \cite {hosseini06}. Cependant, Les SPH souffrent de certains problèmes qui
-limitent leur utilisation notamment leur faible précision. Le traitement des frontières est également difficile en raison de la déficience en
-particule sur le frontières de l'objet. De plus, le phénomène connu sous le nom de \emph{tensile instability}, qui apparaît lorsque l'objet est fortement
-étiré, rend son utilisation problématique dans le cadre de la simulation de grandes déformation. Parallèlement, d'autres méthodes d'animation sans maillage ont
-été développées. Des modèles basés sur la mécanique des milieux continus à l'instar de \cite{Keiser2004} et de \cite{Horton2010} où les champs de déplacement
-sont approximés grâce aux \emph{Moving} Least Squares (MLS). Cependant, l'approximation MLS est impossible si la distribution des n{\oe}uds est colinéaire ou
-coplanaire. En effet, la  ``moment matrix'' devient alors singulière et les fonctions de forme ne peuvent être calculées.
-Des techniques d'animation, non basées sur la physique,ont également été développées. Dans \cite{Muller2005}, les objets sont déformés grâce à un système masse
-ressort en utilisant la méthode dite de \emph{Shape Matching}, où les points de l'objet sont partitionnés en plusieurs groupes dont on estime une rotation
-optimale et une translation par rapport à la configuration non déformée. Cette idée est reprise dans \cite{Muller2011} à la différence près que chaque possède
-une orientation qui est estimée au grâce à un \emph{Shape Matching} généralisé. Enfin, dans \cite{GilBouFauPai11}, Gilles \textit{et al.} proposent un
-modèle compatible avec la mécanique des milieux continus basé sur des repères. Cependant, leur approche concerne essentiellement des objets faiblement
-échantillonnés. De fait, elle est difficile à utiliser pour modéliser des objets qui doivent se conformer étroitement à des surfaces.
+Ces applications ont en commun la nécessité de continuer à fiabiliser la simulation et à améliorer l'interactivité, d'une part en améliorant les modèles
+biomécaniques et d'autre part en réduisant au maximum les temps de calcul. Parmi les travaux récents, nombreux sont ceux qui traitent d'organes spécifique
+tels que le foie \cite{marchesseau}, le cerveau \cite{Horton:2007} ou encore les organes du système pelvien \cite{LMLwww_2553}. Une des
+grande difficulté dans la chirurgie abdominale et de pouvoir fournir à ces modèles des conditions aux limites acceptables. Actuellement, peu de travaux ont
+cherché à modéliser les interactions mécaniques entre les organes. Dans \cite{CJADLC11}, ces interactions sont modélisés grâce à une loi de contact frottant
+associé à une méthode de résolution optimisée. Cependant, bien que constituant un progrès, ce modèle n'est pas totalement conforme à la réalité car les organes
+sont très rarement en contact direct.
+
+En effet, les organes sont généralement entourés et reliés entre eux par des fibres appelées \emph{tissus connectifs} ou \emph{fascias}. Ces tissus sont
+difficilement visibles par imagerie médicale, possèdent des géométries complexes et mal documentées. Pour ces raisons, ils sont très souvent négligés dans la
+plupart des simulations. Pourtant, ils jouent un rôle mécanique important étant donné qu'ils influencent les conditions aux limites des organes.
+
+Dans ce travail, nous cherche à développer une méthode numérique capable de simuler ces tissus. La principale difficulté réside dans le fait qu'ils ne possèdent
+pas une topologie uniforme dans la mesure où ils occupent l'espace présent entre les organes et qu'ils ont des géométries très variées (volumique, surfacique
+voire linéiques). Nous proposons donc une approche nouvelle, faisant appel aux techniques de simulation sans maillage, ici basées sur des repères capables
+d'être couplés avec d'autres modèles mécaniques simulant des organes.
+
+\subsection{Etat de l'art}
+
+Couramment employées en simulation mécanique, la simulation à base de méthodes sans maillage à été introduite en informatique graphique par Cani et Desbrun dans
+\cite{Desbrun1996} et l'utilisation des \emph{Smoothed Particle Hydrodynamics} (SPH) -- reposant sur l'interaction réciproque d'un ensemble de particules --
+pour l'animation de modèles très déformables. Les SPH demeurent une méthodes populaires pour l'animation de fluides et d'objets très déformables. Les travaux de
+\cite{Becker2009} apportent une réponse au problème des non-linéarités géométrique en proposant un modèle corotationnel dédié. La méthode des SPH permet
+également de simuler des matériaux non-newtoniens aux comportements plus complexes notamment dans \cite{Paiva2009} et \cite {hosseini06}. Cependant, Les SPH
+souffrent de certains problèmes qui limitent leur utilisation notamment leur faible précision. Le traitement des frontières est également difficile en raison de
+la déficience en particule sur le frontières de l'objet. De plus, le phénomène connu sous le nom de \emph{tensile instability}, qui apparaît lorsque l'objet est
+fortement étiré, rend son utilisation problématique dans le cadre de la simulation de grandes déformation. Parallèlement, d'autres méthodes d'animation sans
+maillage ont été développées. Des modèles basés sur la mécanique des milieux continus à l'instar de \cite{Keiser2004} et de \cite{Horton2010} où les champs de
+déplacement sont approximés grâce aux \emph{Moving} Least Squares (MLS), une méthode offrant une bonne précision, couramment employée en mécanique. Cependant,
+l'approximation MLS est impossible si la distribution des n{\oe}uds est colinéaire ou coplanaire. En effet, la  ``moment matrix'' devient alors singulière et
+les fonctions de forme ne peuvent être calculées. Des techniques d'animation, non basées sur la physique,ont également été développées. Dans \cite{Muller2005},
+les objets sont déformés grâce à un système masse ressort en utilisant la méthode dite de \emph{Shape Matching}, où les points de l'objet sont partitionnés en
+plusieurs groupes dont on estime une rotation optimale et une translation par rapport à la configuration non déformée. Cette idée est reprise dans
+\cite{Muller2011} à la différence près que chaque possède une orientation qui est estimée au grâce à un \emph{Shape Matching} généralisé. Cependant, malgré leur
+rapidité et leur simplicité d'utilisation, ces méthodes ne permettent pas, à proprement parler, une simulation basée sur les loi de la physique. Enfin, dans
+\cite{GilBouFauPai11}, Gilles \textit{et al.} proposent un modèle compatible avec la mécanique des milieux continus basé sur des repères. Cependant, leur
+approche vise essentiellement des objets faiblement échantillonnés. De fait, elle est difficile à utiliser pour modéliser des objets  qui doivent se
+conformer étroitement à des surfaces. Pour une nomenclature des méthodes sans maillage, le lecteur pourra se référer à \cite{Fries04}.
+
+\subsection{Contribution}
+Nos contributions sont multiples. Notre travail offre la possibilité de simuler les tissus connectifs grâce à une méthode permettant le couplage entre
+différents modèles mécaniques sans poser de problème de la discrétisation des objets dans la mesure où elle est basée sur des méthodes sans maillage. Notre
+approche permet également de simuler des structures aussi bien volumiques, surfaciques que linéiques. Enfin nous adaptons les formulation de la mécanique des
+milieux continus à des objets dont les n{\oe}uds possèdent six degrés de liberté.
+
 \section{Simulation}
 
 \subsection{Nomenclature}
@@ -92,10 +122,10 @@ six degrés de liberté (DDL) :
 \begin{equation}
 \mathbf{q}_i = \left[ x_1 \ x_2 \ x_3 \ r_1 \ r_2 \ r_3 \right]^t = \left[ \mathbf{x}_i \ {\mathbf{r}_i} \right]^t
 \end{equation}
-où $\mathbf{x}_i$ sont les coordonnées du n{\oe}ud et $\mathbf{r}_i$ le vecteurs rotation correspondant à l'orientation du n{\oe}ud. Les points d'intégration ne
-possèdent que trois DDL. Dans la mesure où l'on utilise une formulation en lagragien total, la position globale des points d'intégration est exprimée en
-fonction de leur position dans chacun des repères dans la configuration non déformée. Les coordonnées d'un point d'intégration $s$ dans le repère $i$ dans la
-configuration non déformée est donné par :
+où $\mathbf{x}_i$ représente les coordonnées du n{\oe}ud et $\mathbf{r}_i$ le vecteurs rotation correspondant à l'orientation du n{\oe}ud. Les points
+d'intégration ne possèdent que trois DDL. Dans la mesure où l'on utilise une formulation en lagragien total, la position globale des points d'intégration est
+exprimée en fonction de leur position dans chacun des repères dans la configuration non déformée. Les coordonnées d'un point d'intégration $s$ dans le repère
+$i$ dans la configuration non déformée est donné par : 
 \begin{equation}
 	\bar{\mathbf{l}}_s^{i} = {[\bar{\mathbf{R}}}_i]^t \cdot \left[ \bar{\mathbf{p}}_s - \bar{\mathbf{x}}_i\right]
 	\label{eq:sample_rest_pos}
@@ -120,19 +150,19 @@ De la même façon, la cinématique des repères est influencée par le mouvement des
 repère $i$ dans en fonction des déplacements des points d'intégration est donné par  :
 \begin{equation}
 	%\mathbf{r}_i = \sum_{s}{w_s(\mathbf{x}_i)\left( \mathbf{\bar{p}}_s^{l,i} \wedge \mathbf{u}_s^{l,i} \right)}
-	\frac{d\mathbf{r}_i}{d\mathbf{p}} = \sum_{s}{w_s(\mathbf{x}_i)(\mathbf{l}_s^i \wedge d\mathbf{p}_s)}
+	\frac{d\mathbf{r}_i}{d\mathbf{p}} = \sum_{s}{w_s(\bar{\mathbf{x}}_i)(\mathbf{l}_s^i \wedge d\mathbf{p}_s)}
 \end{equation}
 où $\mathbf{l}_s^i$ sont les coordonnées du point d'intégration $s$ dans le repère $i$
 
 \subsection{Dynamique}
 \subsubsection{Expression des forces internes}
 L'approche employée dans ces travaux se base sur la mécanique des milieux continus (MMC). Les matériaux étudiés sont considérés comme continus, c'est-à-dire
-qu'ils sont étudiés à une échelle microscopique, mais une échelle suffisament grande pour négliger les espaces inter-moléculaires. La MMC permet de
+qu'ils sont étudiés à une échelle microscopique, mais une échelle suffisamment grande pour négliger les espaces inter-moléculaires. La MMC permet de
 mettre en
 relation un déplacement (\textit{i.e.} les déformations subies par un point) avec une force de rappel selon le schéma suivant :
 \begin{equation*}
 	\underbrace{\mathbf{u}_i}_{\text{déplacements}} \rightarrow \underbrace{\mathbf{F}_i}_{\substack{\text{gradient de} \\ \text{déformation}}} \rightarrow
-\underbrace{\L_i}_{\substack{\text{tenseur de} \\ \text{déformation}}} \rightarrow \underbrace{\S_i}_{\substack{\text{tenseur de} \\
+\underbrace{\mathbf{L}_i}_{\substack{\text{tenseur de} \\ \text{déformation}}} \rightarrow \underbrace{\mathbf{S}_i}_{\substack{\text{tenseur de} \\
 \text{contrainte}}} \rightarrow \underbrace{\mathbf{f}_i}_{\text{force}}
 \end{equation*}
 La méthode décrite dans cet article utilise une formulation en lagrangien total. Dans une formulation en lagrangien total les déplacements sont évalués par
@@ -163,13 +193,11 @@ on obtient alors le gradient de déformation au point d'intégration $s$ :
 \begin{equation}
 	\mathbf{F}_s = \frac{\partial \mathbf{p}_s}{\partial \mathbf{X}} = \sum_{i}{\left[ \frac{\partial w_{is}}{\partial X} \left(\mathbf{x}_i + [\mathbf{R}_i]
 \cdot
-\bar{\mathbf{l}}_s^{i} \right) + w_{is}[\mathbf{R}_i] [\bar{\mathbf{R}}_i]^t \right] } 
-%& = \sum_{i}{\left[ \nabla w_s(\mathbf{x}_i) \left(\mathbf{x}_i + \mathbf{R}_i \times \bar{\mathbf{p}}_s^{l,i} \right) + w_s(\mathbf{x}_i)\mathbf{R}_i
-%\mathbf{R}_i^{0t} \right] }
+\bar{\mathbf{l}}_s^{i} \right) + w_{is}[\mathbf{R}_i] [\bar{\mathbf{R}}_i]^t \right] }
 \end{equation}
-où $w_{is} = w_s(\mathbf{x}_i)$. Afin d'obtenir la dérivée du tenseur de \emph{Green-Lagrange} de l'équation (\ref{eq:green_lagrange_der}) il est nécessaire de
-calculer la dérivée du tenseur de déformation par rapport à $\delta \mathbf{q}$ qui est une matrice $3\times 3$. On exprime alors ces neuf valeurs en fonction
-d'une variation infinitésimale de déplacement et d'orientation, c'est-à-dire en fonction de $\delta \mathbf{x}$ et $\delta \mathbf{r}$ :
+où $w_{is} = w_s(\bar{\mathbf{x}}_i)$. Afin d'obtenir la dérivée du tenseur de \emph{Green-Lagrange} de l'équation (\ref{eq:green_lagrange_der}) il est
+nécessaire de calculer la dérivée du tenseur de déformation par rapport à $\delta \mathbf{q}$ qui est une matrice $3\times 3$. On exprime alors ces neuf valeurs
+en fonction d'une variation infinitésimale de déplacement et d'orientation, c'est-à-dire en fonction de $\delta \mathbf{x}$ et $\delta \mathbf{r}$ :
 \begin{equation}
 \begin{split}
 	\delta \mathbf{F}_{IJ}^{s} =& \sum_{i}{\left(\delta \mathbf{x}_i + [-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{I,}\cdot \delta
@@ -201,7 +229,7 @@ possible
 d'écrire $\partial L / \partial q$ sous la forme d'un produit matrice-vecteur. En effet :
 \begin{equation}
 \begin{split}
-	\delta L_{12} &= \frac{1}{2}\left([\delta \mathbf{F}^t]^{1,}\cdot[\mathbf{F}]^{,2} + [\mathbf{F}^t]^{1,}\cdot[\delta \mathbf{F}]^{,2}\right) \\
+	\delta \mathbf{L}_{12} &= \frac{1}{2}\left([\delta \mathbf{F}^t]^{1,}\cdot[\mathbf{F}]^{,2} + [\mathbf{F}^t]^{1,}\cdot[\delta \mathbf{F}]^{,2}\right) \\
 	&= \frac{1}{2}\left([\delta \mathbf{F}_{11} \ \delta \mathbf{F}_{21} \ \delta \mathbf{F}_{31}]\cdot[\mathbf{F}]^{,2} + [\mathbf{F}^t]^{1,}\cdot[\delta
 \mathbf{F}_{12} \ \delta \mathbf{F}_{22} \ \delta \mathbf{F}_{32}]\right)
 \end{split}
@@ -211,7 +239,7 @@ Or, d'après l'équation (\ref{eq:delta_F}) :
 	[\delta \mathbf{F}_{11} \ \delta \mathbf{F}_{21} \ \delta \mathbf{F}_{31}] = [B_{1,}\cdot \delta \mathbf{q} \ B_{3,}\cdot \delta \mathbf{q} \  B_{7,}\cdot
 \delta \mathbf{q}]
 \end{equation}
-avec $B_{i,}$ la $i^{\text{ème}}$ ligne de la matrice $B$ d'où :
+avec $B_{i,}$ la $i^{\text{ème}}$ ligne de la matrice $\mathbf{B}$ d'où :
 \begin{equation}
 \begin{split}
 	&\delta \mathbf{L}_{12} =  \\
@@ -241,7 +269,7 @@ analytiquement, hormis pour des cas simples, il est nécessaire de passer à une v
 évaluée sur la totalité du domaine $\Omega$ occupé par l'objet. Pour ce faire, sous la forme discrète, on utilise les points d'intégration, aussi appelés
 \emph{points de Gauss} qui échantillonnent l'objet. On obtient ainsi l'expression discrète de la force en un n{\oe}ud :
 \begin{equation}
-	\mathbf{f}_i = \sum_{s}{\mathbf{M}^{i,s}\{\mathbf{S}^s\}w_s(\mathbf{x}_i)}
+	\mathbf{f}_i = \sum_{s}{\mathbf{M}^{i,s}\{\mathbf{S}^s\}w_s(\bar{\mathbf{x}}_i})
 	\label{eq:force_discrete}
 \end{equation}
 où $\mathbf{S}$ en notation de Voigt est calculé grâce à la \emph{loi de Hooke} qui est une loi de comportement décrivant des matériaux parfaitement élastiques
@@ -269,7 +297,12 @@ Pour ces raisons, on utilise un solveur implicite qui est inconditionnellement s
 d'objets déformables. Les solveurs implicites permettent de résoudre un problème non-linéaire de manière itérative selon la méthode de \emph{Newton-Raphson}
 \cite{faure:hal-00681539}. Pour permettre au solveur de résoudre l'équation du mouvement, il est nécessaire de linéariser la force, c'est-à-dire dériver
 l'expression de la force par rapport aux repères. Cela revient à exprimer la variation de la force en fonction d'une variation infinitésimale de la
-contrainte. En effet, d'après \cite{NFECS} on a :
+contrainte. En effet, d'après \cite{NFECS}(\S6.4.2) la dérivée des forces internes se décompose en deux parties :
+\begin{equation}
+	\delta \mathbf{f}^{int} = \delta \mathbf{f}^{mat} + \delta \mathbf{f}^{geo}
+\end{equation}
+où $\delta \mathbf{f}^{mat}$ est la ``material tangent stiffness'' et $\delta \mathbf{f}^{geo}$ est la ``geometric stiffness''. Dans notre cas nous nous
+limitons à l'utilisation de la première dont l'expression est :
 \begin{equation}
 	\delta \mathbf{f} = \int_{\Omega}{\mathbf{M^t}\{\delta \mathbf{S}\}d\Omega}
 	\label{eq:force_der}
@@ -287,7 +320,7 @@ ou la matrice $\mathbf{C}$ donnée en annexe est la matrice des coefficients élas
 De même qu'avec l'équation (\ref{eq:force_continuous}), il est nécessaire de passer à une formulation discrète afin d'être capable d'intégrer l'équation
 (\ref{eq:deltaF_continuous})
 \begin{equation}
-	\delta \mathbf{f}_i = \sum_{s}{\mathbf{M}^{i,s}\cdot \Delta \mathbf{S}^s}
+	\delta \mathbf{f}_i = \sum_{s}{\mathbf{M}^{i,s}\cdot \Delta \mathbf{S}^s}w_s(\bar{\mathbf{x}}_i)
 \end{equation}
 avec : 
 \begin{equation}
@@ -295,19 +328,84 @@ avec :
 \end{equation}
 qui exprime la variation de la contrainte en un point d'intégration en fonction d'une variation des DDL différents n{\oe}uds.
 
-\subsection{Figures en couleur} Etant donné qu'il s'agit d'une publication électronique, il n'y a aucune censure à avoir sur les figures en couleur (cf figure \ref{fig:ex3}. 
+\section{Résultats}
+Les tests de simulation de poutres modélisées avec notre méthode de la figure ({\ref{fig:beams}) montrent des résultats cohérents. Chaque test à été effectué
+avec un module de Young différent. On peut clairement observer que la rigidité de la poutre diminue avec le module de Young. La figure (\ref{fig:mod_beam})
+montre la discrétisation des poutres avec notre méthode. On peut observer que l'orientation des repères évolue conformément au fléchissement subi par la
+poutre. La figure (\ref{fig:torsion}) montre un test de torsion effectué sur une structure linéique. Le repère de gauche est fixé en rotation et translation et
+seul le repère le plus à droite à subi une rotation d'un demi tour. Initialement, tous les repères avaient la même orientation (identique à celle du repère
+fixé). On peut voir que tous les repères de la structure ont subi une torsion. La figure (\ref{fig:shells}) montre le résultat d`'un test de couplage entre
+notre méthode et d'autres modèles mécanique, en l'occurrence des éléments coque ou \emph{shells}. Ce cas test représente typiquement la situation où deux
+organes (en rouge) sont reliés par des tissus connectifs (en bleu). La surface supérieure est fixée sur deux bords opposés, les bords surface inférieure sont
+totalement libres et le centre des deux surfaces est attaché de part et d'autre de l'objet bleu. On peut observer que les conditions aux limites sont transmises
+d'un modèle à l'autre tandis que les déformations subies par les objets sont cohérentes.
+
+En terme de performances, notre modèle est moins rapide que la méthode des éléments finis à nombre d'éléments égal ($\approx 15$ itérations par seconde), comme
+généralement rapporté dans la littérature.
 
 
-\begin{figure*}[htb]
-  \centering
-  \mbox{} \hfill
-  \includegraphics[width=.3\linewidth]{logoafig}
-  \hfill
-  \includegraphics[width=.3\linewidth]{logoafig}
-  \hfill \mbox{}
-  \caption{\label{fig:ex3}
-           Les figures en couleurs ou en noir et blanc peuvent être placées n'importe ou dans le document. }
+\begin{figure*}[h]
+        \centering
+        \begin{subfigure}[b]{0.3\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{beam_E20000}
+                \caption{$E=20000$}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad etc. 
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.3\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{beam_E10000}
+                \caption{$E=10000$}
+        \end{subfigure}
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad etc. 
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.3\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{beam_E3000}
+                \caption{$E=3000$}
+        \end{subfigure}
+        \caption{Poutres simulées avec différents modules de Young}\label{fig:beams}
 \end{figure*}
+
+\section{Conclusion et travaux futurs}
+La méthode présentée permet de simuler des tissus connectifs sur des topologies variées. Elle permet également l'imposition des conditions aux limites entre
+des objets simulés grâce à différentes méthodes, offrant ainsi la possibilité de simuler les interactions entre les organes. Les travaux futurs seront orientés
+selon deux axes principaux : performances et précision. En effet, dans le but d'offrir à l'utilisateur un maximum d'interactivité, il est nécessaire de se
+rapprocher de performances temps-réel. Dans cette optique, les travaux porteront sur l'implémentation de cette méthode sur GPU. Il est raisonnable de penser
+qu'il est possible d'obtenir un gain de performance non négligeable car ce type de problème est bien adapté à la parallélisation. Concernant la précision, les
+futurs travaux s'attacheront développer une expression de la ``geometric stiffness'' adaptée à notre problème et ainsi fournir une expression plus complète de
+la dérivée des forces internes. Enfin, les travaux porteront également sur l'ajout de loi de comportement, notamment hyperélastique mais également anisotrope
+car la plupart des tissus organiques possèdent ces propriétés.
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=\columnwidth]{beam_frames}
+	\caption{Modélisation de la poutre avec notre méthode.}\label{fig:mod_beam}
+\end{figure}
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=\columnwidth]{torsion}
+	\caption{Test de torsion sur une structure linéique}\label{fig:torsion}
+\end{figure}
+
+\begin{figure*}{htb}
+	\centering\includegraphics[width=.7\textwidth]{shells}
+	\caption{Couplage multi-modèle}\label{fig:shells}
+\end{figure*}
+
+
+% \begin{figure*}[htb]
+%   \centering
+%   \mbox{} \hfill
+%   \includegraphics[width=.3\linewidth]{logoafig}
+%   \hfill
+%   \includegraphics[width=.3\linewidth]{logoafig}
+%   \hfill \mbox{}
+%   \caption{\label{fig:ex3}
+%            Les figures en couleurs ou en noir et blanc peuvent être placées n'importe ou dans le document. }
+% \end{figure*}
 
 
 \section{Conclusion}
@@ -333,37 +431,37 @@ A faire
 	&
 	\left[\begin{array}{cccc}
 		\frac{\partial w_{is}}{\partial x} & 0 & 0 & \left[\frac{\partial w_{is}}{\partial x}
-		[-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{x,} - [\mathbf{R}_{i}(r^0_{,x})^{\text{\tiny{$\wedge$}}}]^{x,}\ w_{is}
+		[-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{x,} - [\mathbf{R}_{i}(r^0_{,x})^{\text{\tiny{$\wedge$}}}]^{x,}\ w_{is}
 		\right]\\
 		\frac{\partial w_{is}}{\partial y} & 0 & 0 & \left[\frac{\partial w_{is}}{\partial y}
-		[-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{x,} - [\mathbf{R}_{i}(r^0_{,y})^{\text{\tiny{$\wedge$}}}]^{x,}\ w_{is}
+		[-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{x,} - [\mathbf{R}_{i}(r^0_{,y})^{\text{\tiny{$\wedge$}}}]^{x,}\ w_{is}
 		\right] \\
 		\frac{\partial w_{is}}{\partial z} & 0 & 0 & \left[\frac{\partial w_{is}}{\partial z}
-		[-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{x,} - [\mathbf{R}_{i}(r^0_{,z})^{\text{\tiny{$\wedge$}}}]^{x,}\ w_{is}
+		[-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{x,} - [\mathbf{R}_{i}(r^0_{,z})^{\text{\tiny{$\wedge$}}}]^{x,}\ w_{is}
 		\right]\\		
 		0 & \frac{\partial w_{is}}{\partial x} & 0 & \left[\frac{\partial w_{is}}{\partial x}
-		[-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{y,} - [\mathbf{R}_{i}(r^0_{,x})^{\text{\tiny{$\wedge$}}}]^{y,}\ w_{is}
+		[-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{y,} - [\mathbf{R}_{i}(r^0_{,x})^{\text{\tiny{$\wedge$}}}]^{y,}\ w_{is}
 		\right]\\
 		0 & \frac{\partial w_{is}}{\partial y} & 0 & \left[\frac{\partial w_{is}}{\partial y}
-		[-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{y,} - [\mathbf{R}_{i}(r^0_{,y})^{\text{\tiny{$\wedge$}}}]^{y,}\ w_{is}
+		[-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{y,} - [\mathbf{R}_{i}(r^0_{,y})^{\text{\tiny{$\wedge$}}}]^{y,}\ w_{is}
 		\right] \\
 		0 & \frac{\partial w_{is}}{\partial z} & 0 & \left[\frac{\partial w_{is}}{\partial z}
-		[-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{y,} - [\mathbf{R}_{i}(r^0_{,z})^{\text{\tiny{$\wedge$}}}]^{y,}\ w_{is}
+		[-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{y,} - [\mathbf{R}_{i}(r^0_{,z})^{\text{\tiny{$\wedge$}}}]^{y,}\ w_{is}
 		\right]\\		
 		0 & 0 & \frac{\partial w_{is}}{\partial x} & \left[\frac{\partial w_{is}}{\partial x}
-		[-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{z,} - [\mathbf{R}_{i}(r^0_{,x})^{\text{\tiny{$\wedge$}}}]^{z,}\ w_{is}
+		[-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{z,} - [\mathbf{R}_{i}(r^0_{,x})^{\text{\tiny{$\wedge$}}}]^{z,}\ w_{is}
 		\right]\\
 		0 & 0 & \frac{\partial w_{is}}{\partial y} & \left[\frac{\partial w_{is}}{\partial y}
-		[-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{z,} - [\mathbf{R}_{i}(r^0_{,y})^{\text{\tiny{$\wedge$}}}]^{z,}\ w_{is}
+		[-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{z,} - [\mathbf{R}_{i}(r^0_{,y})^{\text{\tiny{$\wedge$}}}]^{z,}\ w_{is}
 		\right] \\
 		0 & 0 & \frac{\partial w_{is}}{\partial z} & \left[\frac{\partial w_{is}}{\partial z}
-		[-\mathbf{R}_{i}(\mathbf{\bar{p}}_s^{l,i})^{\text{\tiny{$\wedge$}}}]^{z,} - [\mathbf{R}_{i}(r^0_{,z})^{\text{\tiny{$\wedge$}}}]^{z,}\ w_{is}
+		[-\mathbf{R}_{i}(\mathbf{\bar{l}}_s^{i})^{\text{\tiny{$\wedge$}}}]^{z,} - [\mathbf{R}_{i}(r^0_{,z})^{\text{\tiny{$\wedge$}}}]^{z,}\ w_{is}
 		\right]\\		
 	\end{array} \right]
 \end{split}
 \end{equation*}
 \renewcommand\arraystretch{1}
-avec $w_{is} = w_s(\mathbf{x}_i)$
+avec $w_{is} = w_s(\bar{\mathbf{x}}_i)$
 \section{Matrice de Hooke}
 \begin{equation*}
 \begin{split}

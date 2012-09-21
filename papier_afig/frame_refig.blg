@@ -5,45 +5,47 @@ Database file #1: biblio.bib
 Warning--string name "avr" is undefined
 --line 191 of file biblio.bib
 Warning--empty journal in Becker2009
-You've used 11 entries,
+Warning--empty institution in Fries04
+Warning--empty publisher in LPC+12
+You've used 19 entries,
             2855 wiz_defined-function locations,
-            707 strings with 7008 characters,
-and the built_in function-call counts, 5079 in all, are:
-= -- 495
-> -- 330
+            761 strings with 9190 characters,
+and the built_in function-call counts, 9394 in all, are:
+= -- 915
+> -- 605
 < -- 0
-+ -- 126
-- -- 126
-* -- 464
-:= -- 872
-add.period$ -- 22
-call.type$ -- 11
-change.case$ -- 88
-chr.to.int$ -- 11
-cite$ -- 12
-duplicate$ -- 142
-empty$ -- 309
-format.name$ -- 135
-if$ -- 973
++ -- 231
+- -- 230
+* -- 847
+:= -- 1575
+add.period$ -- 41
+call.type$ -- 19
+change.case$ -- 160
+chr.to.int$ -- 19
+cite$ -- 22
+duplicate$ -- 284
+empty$ -- 576
+format.name$ -- 242
+if$ -- 1840
 int.to.chr$ -- 1
 int.to.str$ -- 0
-missing$ -- 12
-newline$ -- 58
-num.names$ -- 35
-pop$ -- 71
+missing$ -- 19
+newline$ -- 100
+num.names$ -- 61
+pop$ -- 135
 preamble$ -- 1
-purify$ -- 100
+purify$ -- 180
 quote$ -- 0
-skip$ -- 120
+skip$ -- 244
 stack$ -- 0
-substring$ -- 255
-swap$ -- 21
+substring$ -- 475
+swap$ -- 61
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 94
-warning$ -- 1
-while$ -- 48
-width$ -- 14
-write$ -- 132
-(There were 2 warnings)
+type$ -- 166
+warning$ -- 3
+while$ -- 86
+width$ -- 22
+write$ -- 234
+(There were 4 warnings)
