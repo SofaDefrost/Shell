@@ -13,8 +13,8 @@
 % \JournalPaper         % uncomment for final version of Journal Paper
 %
 % --- for  EG Workshop Proceedings
-\WsSubmission    % uncomment for submission to EG Workshop
-% \WsPaper         % uncomment for final version of EG Workshop contribution
+%\WsSubmission    % uncomment for submission to EG Workshop
+\WsPaper         % uncomment for final version of EG Workshop contribution
 %
  \electronicVersion % can be used both for the printed and electronic version
 
@@ -64,6 +64,16 @@
   \caption{\label{fig-#2}#3}
 \end{figure}}
 
+%\FigureI{name}{caption}
+\newcommand{\FigureI}[2]{%
+\begin{figure}[htb]
+  \centering
+  \input{#1.pdf_tex}
+  \caption{\label{fig-#1}#2}
+\end{figure}}
+
+
+
 % For large/wide figures
 %\FigureW{width}{name}{caption}
 \newcommand{\FigureW}[3]{%
@@ -87,16 +97,11 @@
 \title[B\'ezier Shell FE]%
       {B\'ezier Shell Finite Element for Interactive Surgical Simulation}
 
-% for anonymous conference submission please enter your SUBMISSION ID
-% instead of the author's name (and leave the affiliation blank) !!
-% TODO: anonymize -- Submission ID
-       \author[paper1026]
-              {paper1026}
-%\author[T. Golembiovský \& C. Duriez]
-%       {Tomáš Golembiovský$^{1,2}$ and Christian Duriez$^{2}$\\
-%        $^1$Faculty of Informatics, Masaryk University, Czech Republic\\
-%        $^2$INRIA Lille, France
-%       } % TODO: ask Christian how to specify affiliation
+\author[T. Golembiovský \& C. Duriez]
+       {Tomáš Golembiovský$^{1,2}$ and Christian Duriez$^{2}$\\
+        $^1$Faculty of Informatics, Masaryk University, Czech Republic\\
+        $^2$INRIA Lille -- Nord Europe and University of Lille, France
+       }
 
 % ------------------------------------------------------------------------
 
@@ -131,7 +136,7 @@ This new shell model description is also used to map a smooth surface (for the c
 We demonstrate the convergence and the computational efficiency of our approach as well as its use in two different simulation cases: the planning of surgery for congenital heart disease correction and a preliminary simulation of childbirth.
 
 \begin{classification} % according to http://www.acm.org/class/1998/
-    \CCScat{Computer Graphics}{I.3.5}{Computational Geometry and Object Modeling}{Physically based modelling}.
+    \CCScat{Computer Graphics}{I.3.5}{Computational Geometry and Object Modeling}{Physically based modeling}.
     %\CCScat{Computer Graphics}{I.3.7}{Three-Dimensional Graphics and Realism}{Animation}.
     %\CCScat{Simulation and Modeling}{I.6.8}{Types of Simulation}{Animation}
     %\CCScat{Life and Medical Sciences}{J.3}{Health}{}
@@ -153,38 +158,45 @@ e.g. textiles, paper, leaves etc.
 Such objects are also very common in anatomical or pathological structures for example tubular structures (like blood vessels, colon \ldots), thin bag structures (%vessie, 
 Glisson capsule, aneurysms,  \ldots), and also many others (eyes, skin, \ldots). 
 In the field of surgical simulation, we try to reproduce or anticipate the mechanical behavior of these structures during the surgery.
-Thus, it is very important to capture accurately the physical behavior of these structure.
+Thus, it is very important to capture accurately their physical behavior.
 However, in the same time, it is also very important to maintain fast computation rates, in order to be compatible with the targeted applications (interactive simulation for education and for planning).
 
 This problem has been faced by the computer graphics community but for different applications.
-For instance, many related works address the problem of the simulation of cloth using mass-spring models \cite{Volino2009} or bending models \cite{Grinspun2003}. %% Todo Choi2007?
+For instance, many related works address the problem of the simulation of cloth using for example mass-spring models or bending models \cite{Volino2009,Grinspun2003}. %% Todo Choi2007?
 However, these models are discrete so their behavior depends on the mesh and their parameters are not easily measurable.
 This is completely acceptable for some computer graphics application, where the parameters can be tuned manually to obtain a realistic animation.
 In the case of medical simulation, more physically based modeling is needed.
 
 
 Methods based on continuum mechanics and namely theory of elasticity gained on popularity in real-time simulations ever since Terzopoulos \cite{Terzopoulos1987} presented his work on elastic deformation modeling.
-While the methods using finite elements and theory of elasticity are fairly popular in volumetric modeling of deformations \cite{Cotin1999,Nesme2006,Miller2007}, they are still frowned upon in the area of thin structures. 
+While the methods using finite elements and theory of elasticity are fairly popular in volumetric deformation modeling \cite{Cotin1999,Nesme2006,Miller2007}, they are still frowned upon in the area of thin structures. 
 Yet, a special field of continuum mechanics has studied the deformations of these objects, and has proposed models based on shell theory.
-This theory was integrated numerically using Finite Elements \cite{Reddy1993}, but there are two issues for obtaining interactive frame rates: 
-(i) the continuum equations requires second spatial derivations that can not be handled with linear interpolation and 
-(ii) the final system of equations that describes the mechanics is non-linear (if the deformations are not small).
+This theory is integrated numerically using Finite Elements \cite{Reddy1993}, but there are two issues for obtaining interactive frame rates: 
+(i) the continuum equations require second spatial derivatives that can not be handled with linear interpolation and 
+(ii) the final system of equations that describes the mechanics is non-linear if large deformations are present. 
 
 The usual argument against non-linear FEM based methods is that they are computationally too expensive. 
 This is indeed true if lots of elements are used to discretize the object.
 A classical strategy, is to use high-polygonal meshes for rendering or collision detection and response, while maintaining a reasonably low number of elements for the mechanics.
 The work of Bouthors et al.\cite{Bouthors2007} is a good application example of this strategy for surface deformations.
-But this strategy is not sufficient in our case because the problem of performance is also greatly impacted when using elements that have an interpolation with high order polynomials.
+But this strategy is not sufficient in our case because the problem of performance is also greatly impacted when using elements with interpolation based on high order polynomials.
 This type of interpolation is necessary because bending continuum model
 (based on Kirchhoff-Love theory for thin plates)  requires the computation of second spatial derivatives.
 On the other hand, elements common in mechanics (e.g. Discrete Kirchhoff Triangles) are based on shape functions that are impractical for real-time simulations or don't have explicitly defined shape functions at all.
 In \cite{Comas2010c}, Comas et al. use a hybrid interpolation: linear interpolation is used for in-plane deformations and cubic polynomials for bending deformations.
 The element is piloted by 3 nodes on which 6 degrees of freedom are defined. 
 From this point of view, our work is derived from this approach but we address several noted drawbacks: the formulation misses one rotational degree of freedom, the cubic interpolation is not symmetric and produces $C^0$  discontinuities between elements on edges.
-Ubach et al. \cite{Ubach2010}  present a shell element based on B\'ezier triangles that allows for a better behavior.
-However, the B\'ezier interpolation defined on each triangle element is based on the motion computed on adjacent triangles.
-So the stiffness forces computed on each element not only depends on nodes of the element but also on all the adjacent nodes. 
+
+B\'ezier based shell elements in their general form have been presented
+for both triangular \cite{Ainsworth2011} and quadrilateral \cite{Boumechra2006} elements. High number of simulated DOFs makes such formulations impractical for simulations.
+Ubach et al. \cite{Ubach2010} presented a rotation-free 3-node shell element based on B\'ezier triangles where the element geometry is estimated from all the neighbouring elements, not just those sharing an edge.
 This greatly reduces the sparsity of the global stiffness matrix and consequently increases the computation time.
+Also, the lack of rotational degrees of freedom limits the application in surgical simulations.
+
+%Ubach et al. \cite{Ubach2010}  present a shell element based on B\'ezier triangles that allows for a better behavior.
+%However, the B\'ezier interpolation defined on each triangle element is based on the motion computed on adjacent triangles.
+%So the stiffness forces computed on each element not only depends on nodes of the element but also on all the adjacent nodes. 
+%This greatly reduces the sparsity of the global stiffness matrix and consequently increases the computation time.
 
 
 We start by reviewing the definition of B\'ezir triangle. Then the construction
@@ -192,7 +204,7 @@ of initial control mesh is described and  kinematic link between control points
 is defined. In Section 3 the FE model is derived and the method of computing
 the corotational frame is described. In Section 4 we specify how to map a high
 resolution surface mesh onto the mechanical mesh and give formulas for
-computing velocities of points on the surface and projecting of forces. Section
+computing velocities of points on the surface and for projection of forces. Section
 5 presents test of convergence, speed analysis and two created applications
 that use the described shell model. We conclude with discussion of present
 limitations.
@@ -207,10 +219,9 @@ Our element solves the problems of the element presented by Comas:
 We present a two stage interpolation:
 (i) first a kinematic link between 6 DOF nodes of element and nodes of B \'ezier control mesh is defined and
 (ii) interpolation function of cubic B\'ezier triangle is applied to interpolate on the surface of the element.
-Mapping of high resolution mesh on the curved surface of the shell.
-Finally from the kinematic link we derive formulas for
-(i) interpolating velocity on the element surface and for
-(ii) distribution of force applied on the element surface back to 6 DOF nodes of the element.
+Finally from the kinematic link we derive equations for
+(i) interpolating velocity at arbitrary position on surface and for
+(ii) distribution of forces applied on the element surface back to 6 DOF nodes of the element.
 This allows us to use smooth mapped surface for collision detection and allows the propagation of proper collision response back onto the mechanical mesh.
 
 % }}}
@@ -239,7 +250,7 @@ In the rest of the document we define the surface over the triangle:
         \mathrm{~and~} \xi_1+\xi_2 \le 1 \right\}
 \end{equation}
 %
-B\'ezier triangles were first designed in early sixties by French mathematician de Casteljau.
+%B\'ezier triangles were first designed in early sixties by French mathematician de Casteljau.
 As with other B\'ezier or B-spline surfaces the B\'ezier triangle is
 defined by a mesh of control points that do not necessarily lie on the
 surface. The general $n$-th order B\'ezier triangle requires $(n + 1)(n +
@@ -272,25 +283,25 @@ explicitly defined as (see fig. \ref{fig-bezier2}):
 \begin{equation}\label{eq-cubicbez}
   \begin{split}
   T(\xi_1,\xi_2) & =
-             \xi_1^3\ P_1
-           + \xi_2^3\ P_2
-           + \xi_3^3\ P_3 \\
-         & + 3\ \xi_1^2 \xi_2\ P_4
-           + 3\ \xi_1^2 \xi_3\ P_5
-           + 3\ \xi_2^2 \xi_3\ P_6 \\
-         & + 3\ \xi_1 \xi_2^2\ P_7
-           + 3\ \xi_1 \xi_3^2\ P_8
-           + 3\ \xi_2 \xi_3^2\ P_9 \\
-         & + 6\ \xi_1 \xi_2 \xi_3\ P_{10} \\
+      \xi_1^3\ \mathbf{p}_1
+      + \xi_2^3\ \mathbf{p}_2
+      + \xi_3^3\ \mathbf{p}_3 \\
+      & + 3\ \xi_1^2 \xi_2\ \mathbf{p}_4
+      + 3\ \xi_1^2 \xi_3\ \mathbf{p}_5
+      + 3\ \xi_2^2 \xi_3\ \mathbf{p}_6 \\
+      & + 3\ \xi_1 \xi_2^2\ \mathbf{p}_7
+      + 3\ \xi_1 \xi_3^2\ \mathbf{p}_8
+      + 3\ \xi_2 \xi_3^2\ \mathbf{p}_9 \\
+      & + 6\ \xi_1 \xi_2 \xi_3\ \mathbf{p}_{10} \\
   \end{split}
 \end{equation}
 %
 where $ \xi_3 = 1 - \xi_1 - \xi_2 $. By naming $n_i$ the respective values
-of the Bernstein basis functions linked to control point $P_i$ we can
+of the Bernstein basis functions linked to control point $\mathbf{p}_i$ we can
 shortly express \eqref{eq-cubicbez} as:
 %
 \begin{equation}\label{eq-cubicbez2}
-    T = \sum_{i=1}^{10} n_i P_i
+    T = \sum_{i=1}^{10} n_i \mathbf{p}_i
 \end{equation}
 
 \Figure{0.6\linewidth}{bezier2}
@@ -300,11 +311,13 @@ shortly express \eqref{eq-cubicbez} as:
 
 \subsection{Initial Construction of Control Points} % {{{
 
-The cubic B\'ezier triangles are defined by a mesh of 10 control points each, however the
-simulated object is usually described by a triangular mesh possibly with normals.
-A procedure for construction of initial B\'zier mesh is necessary.
-We construct the initial B\'ezier mesh by taking into account the curvature of the triangular
-mesh. Note that special care has to be taken to maintain
+%The cubic B\'ezier triangles are defined by a mesh of 10 control points each, however the
+Since the
+simulated object is usually described by a triangular mesh,
+a procedure for construction of initial B\'zier mesh is necessary.
+%We construct the initial B\'ezier mesh by taking into account the curvature of the triangular
+%mesh.
+Note that special care has to be taken to maintain
 the continuity between elements across the nodes and edges, 
 we partially employ the method described in \cite{Ubach2010} to maintain
 $C^0$ continuity. Each of the control points on the edge is
@@ -320,19 +333,19 @@ computed as the intersection of:
         $1/3$ of the edge length.
 \end{enumerate}
 
-Notice that the points on the edge will be same for both triangles sharing
-the edge.
+%Notice that the points on the edge will be same for both triangles sharing
+%the edge.
 
 $C^1$ continuity between elements on the edges can also be maintained if special care is taken
 when computing the position of the central point
 (see \cite{Ubach2010} or refer to the work of Farin \cite{Farin2002} for continuity conditions). 
-For simplicity we decided to keep the edge boundary only $C^0$ continuous and we compute the central point as a function of other 9 points: 
+For simplicity we keep the edge boundary only $C^0$ and we compute the central point as a function of other 9 points: 
 %
 \begin{equation}\label{eq-central}
-    P_{10} = \frac{1}{3}(\sum_{i=4}^9 P_i - \sum_{i=1}^3 P_i)
+    \mathbf{p}_{10} = \frac{1}{3}(\sum_{i=4}^9 \mathbf{p}_i - \sum_{i=1}^3 \mathbf{p}_i)
 \end{equation}
 %
-where the points $P_i$ are named as in Figure \ref{fig-bezier2}.
+%where the points $P_i$ are named as in Figure \ref{fig-bezier2}.
 
 That way if the element is not flat the central point is slightly elevated
 and not in the plane of other points thus keeping the curvature of the
@@ -342,14 +355,13 @@ element.
 
 \subsection{Kinematic Between Nodes and Control Points } % {{{
 
-With 10 control points and 3 DOFs per point it is a total of 30 DOFs for triangle.
-Simulation of such complex system would significantly reduce the sparsity of stiffness matrix.
-We propose a reduction of the number of degrees of freedom by using 3 nodes with 6 degrees of freedom
-by creating a kinematic link between the control points.
-Each of the edge control points is attached to nearest corner node. See Figure
-\ref{fig-segments2} for the correspondence between edge points and
+With 10 control points and 3 DOFs per point it is a total of 30 DOFs for element.
+We propose a reduction of the number of DOFs by using 3 nodes with 6 degrees of freedom
+and a kinematic link between control points.
+Each of the edge control points is attached to nearest corner node. See Figure~\ref{fig-segments2} for the correspondence between edge points and
 associated corner nodes. 
-In the following text the index $j \in [4;10]$ refers to edge points and index $i \in [1;3]$ to the associated corner point/node (unless $i$ is explicitly used differently).
+In the following text the index $j \in [4;10]$ refers to internal points and index $i \in [1;3]$ to the associated corner point/node %(unless $i$ is explicitly used differently).
+if not stated otherwise.
 
 \Figure{0.6\linewidth}{segments2}
 {Internal nodes of control mesh are connected to the corner nodes by kinematic link (shown in blue).}
@@ -357,36 +369,37 @@ In the following text the index $j \in [4;10]$ refers to edge points and index $
 In the initialization phase we remember the position of edge point $j$ in the frame of corner point $i$:
 %
 \begin{equation}
-    \overline{P_{i-j}} = R(\theta_i^0)^T P_{i-j}^0
+    \overline{\mathbf{p}_{i-j}} = R(\theta_i^0)^T \mathbf{p}_{i-j}^0
 \end{equation}
 %
 where
 $\mathbf{x}_i$ and $\theta_i$ are the position and angular position of the node $i$,
 $R(\theta_i^0)$ is the rotation matrix for the angular position of node $i$ at the beginning of the simulation and
-$P_{i-j}^0 = P_j^0 - \mathbf{x}_i^0 = P_j^0 - P_i^0$ the attachment segment.
+$\mathbf{p}_{i-j}^0 = \mathbf{p}_j^0 - \mathbf{x}_i^0 = \mathbf{p}_j^0 - \mathbf{p}_i^0$ the attachment segment.
+The 0 in superscript denotes value in rest state.
 
 In each step of the simulation we
 %recompute the new position based on current orientation of the corner node:
 apply the rigid transformation of frame $i$ on control point $j$:
 %
 \begin{equation}
-    P_j = \mathbf{x}_i + P_{i-j} = P_i + R(\theta_i) \overline{P_{i-j}}
+    \mathbf{p}_j = \mathbf{x}_i + \mathbf{p}_{i-j} = \mathbf{p}_i + R(\theta_i) \overline{\mathbf{p}_{i-j}}
 \end{equation}
 
 Similarly for the central point we apply rigid transformation of all frames of the triangle and compute the mean:
 %
 \begin{equation}\label{eq-central2}
-    P_{10} =  \frac{1}{3}\left( \sum_{i=1}^3 \mathbf{x}_i + R(\theta_i) \overline{P_{i-10}} \right)
+    \mathbf{p}_{10} =  \frac{1}{3} \sum_{i=1}^3 \left( \mathbf{x}_i + R(\theta_i) \overline{\mathbf{p}_{i-10}} \right)
 \end{equation}
 
-Putting previous equations into \eqref{eq-cubicbez2} we get:
+Substituting previous equations into \eqref{eq-cubicbez2} we get:
 %
 \begin{equation}\label{global-transform} \begin{split}
-    & T = \sum_{i=1}^{10} n_i P_i = \sum_{i=1}^{3} n_i \mathbf{x}_i
+    & T = \sum_{i=1}^{10} n_i \mathbf{p}_i = \sum_{i=1}^{3} n_i \mathbf{x}_i
     + \sum_{j=4}^9 n_j  \left(
-        \mathbf{x}_i + R(\theta_i) \overline{P_{i-j}} \right) + \\
+    \mathbf{x}_i + R(\theta_i) \overline{\mathbf{p}_{i-j}} \right) + \\
     &\quad + \frac{n_{10}}{3}
-        \left( \sum_{i=1}^3 \mathbf{x}_i + R(\theta_i) \overline{P_{i-10}} \right)
+    \sum_{i=1}^3 \left( \mathbf{x}_i + R(\theta_i) \overline{\mathbf{p}_{i-10}} \right)
     \end{split}
 \end{equation}
 
@@ -445,40 +458,49 @@ Putting previous equations into \eqref{eq-cubicbez2} we get:
 %\end{equation}
 %}}}
 
-A small variation $\delta \mathbf{x}_i$ of the node $i$ position and $\delta \mathbf{\theta}_i$ for the rotation produces the following small variation of position corner points $\delta P_i$ and edge points $\delta P_j$:
+A small variation $\delta \mathbf{x}_i$ of the node $i$ position and $\delta \mathbf{\theta}_i$ for the rotation produces the following small variation of position corner points $\delta \mathbf{p}_i$ and edge points $\delta \mathbf{p}_j$:
 %
-\begin{eqnarray}
-    \delta P_i & = & \delta \mathbf{x}_i \\
-    \delta P_j & = & \delta \mathbf{x}_i +  P_{i-j} \times \delta \mathbf{\theta}_i
+\begin{eqnarray}\label{eq-point-rel}
+    \delta \mathbf{p}_i & = & \delta \mathbf{x}_i \\
+    \delta \mathbf{p}_j & = & \delta \mathbf{x}_i +  \mathbf{p}_{i-j} \times \delta \mathbf{\theta}_i
 \end{eqnarray}
 %
-and variation of central point $\delta P_{10}$:
+and variation of central point $\delta \mathbf{p}_{10}$:
 %
-\begin{equation}
-    \delta P_{10} = \frac{1}{3} \sum_{i=1}^3 \left(
-    \delta \mathbf{x}_i + P_{i-10} \times \delta \mathbf{\theta}_i \right)
+\begin{equation}\label{eq-point-rel2}
+    \delta \mathbf{p}_{10} = \frac{1}{3} \sum_{i=1}^3 \left(
+    \delta \mathbf{x}_i + \mathbf{p}_{i-10} \times \delta \mathbf{\theta}_i \right)
 \end{equation}
 
 Thus, finally, it creates a variation of the point position on the surface $\delta T$:
 %
-\begin{equation}
-    \delta T = \sum_{i=1}^{10} n_i  \delta P_i
+\begin{equation}\label{eq-bez-delta}
+    \delta T = \sum_{i=1}^{10} n_i  \delta \mathbf{p}_i
 \end{equation}
 %
 or:
 
-\begin{equation}\label{eq-bez-delta}
-    \begin{split}
-        \delta T = &   (n_1 + n_4 + n_5 + \frac{1}{3} n_{10})  \delta \mathbf{x}_1 + \\
-                   & + (n_2 + n_6 + n_7 + \frac{1}{3} n_{10})  \delta \mathbf{x}_2 + \\
-                   & + (n_3 + n_8 + n_9 + \frac{1}{3} n_{10})  \delta \mathbf{x}_3 + \\
-                   & + \sum_{j=4}^9 n_j P_{i-j} \times \delta \mathbf{\theta}_i + \\
-                   & + \frac{n_{10}}{3} \sum_{i=1}^3 P_{i-10} \times \delta \mathbf{\theta}_i 
-    \end{split}
+
+Substituting \eqref{eq-point-rel}-\eqref{eq-point-rel2} into \eqref{eq-bez-delta} 
+one can evaluate the equation in terms of matrix multiplication:
+
+\begin{equation}
+    \delta T = \mathbf{J}_t \left[ \delta\mathbf{x}^x_1, \hdots, \delta\mathbf{x}^z_3,
+        \delta\theta^x_1, \ldots, \delta\theta^z_3 \right]^T
 \end{equation}
 
-We have simplified the notation by leaving the variable $i$ free in the above sums ($\sum_{j=4}^9$) involving $P_{i-j}$.
-Note however that the expressions are sound and unambiguous because there is only one possible $i$ for each $j$ depending on the connection of segments to the corner nodes (see fig. \ref{fig-segments2}).
+%\begin{equation}\label{eq-bez-delta}
+%    \begin{split}
+%        \delta T = &   (n_1 + n_4 + n_5 + \frac{1}{3} n_{10})  \delta \mathbf{x}_1 + \\
+%                   & + (n_2 + n_6 + n_7 + \frac{1}{3} n_{10})  \delta \mathbf{x}_2 + \\
+%                   & + (n_3 + n_8 + n_9 + \frac{1}{3} n_{10})  \delta \mathbf{x}_3 + \\
+%                   & + \sum_{j=4}^9 n_j P_{i-j} \times \delta \mathbf{\theta}_i + \\
+%                   & + \frac{n_{10}}{3} \sum_{i=1}^3 P_{i-10} \times \delta \mathbf{\theta}_i 
+%    \end{split}
+%\end{equation}
+%
+%We have simplified the notation by leaving the variable $i$ free in the above sums ($\sum_{j=4}^9$) involving $P_{i-j}$.
+%Note however that the expressions are sound and unambiguous because there is only one possible $i$ for each $j$ depending on the connection of segments to the corner nodes (see fig. \ref{fig-segments2}).
 
 % }}}
 
@@ -496,7 +518,7 @@ The model relies on large transformation formulation: the geometrical non-linear
 
 \subsection{Computation of the Strain Tensor} % {{{
 
-We define a local system of coordinates $(x,y,z)$ in which the axis z is oriented along the thickness of the element (the computation of the frame of each element will be detailed in section \ref{sec-corot}). 
+We define a local system of coordinates $(x,y,z)$ in which the axis z is oriented along the thickness of the element (the computation of the element frame is covered in section \ref{sec-corot}). 
 Given the initial position of the triangle points in this system of coordinate, $\{x_1^0, y_1^0\}$,  $\{x_2^0, y_2^0\}$, and  $\{x_3^0, y_3^0\}$, we can compute a linear relation between $\{\xi_1,\xi_2, \xi_3\}$ and $\{ x,y \}$:
 %
 \begin{equation}
@@ -528,7 +550,7 @@ The in-plane displacement gradient can be obtained with tensor $F$:
 \end{equation}
 %
 where $\mat{I}$ is the identity matrix ($I_{kl}  = \{1$ if $l=k$ ;  $0$ if $l \neq k \} $). 
-The displacement gradient can be linked to the degrees of freedom of the shell using the expression of the displacement of a point $\delta T$ (see equation  (\ref{eq-bez-delta})) on the shell surface:
+The displacement gradient can be linked to the degrees of freedom of the shell using the expression of the displacement of a point $\delta T$ \eqref{eq-bez-delta} on the shell surface:
 \begin{equation}
     \nabla u = \nabla(\delta T)
 \end{equation}
@@ -555,7 +577,7 @@ The strain tensor is based on Kirchhoff-Love theory for thin plates:
         -z \deriv{^2 u^z}{x^2}  \\[1mm]  -z \deriv{^2 u^z}{y^2}  \\[1mm]  - 2z \deriv{^2 u^z}{xy}
     \end{bmatrix}
 \end{equation}
-where $z$ is the local coordinate along $z$-axis of the point on which the strain is measured.
+where $z$ is the local coordinate along z-axis of the point for which the strain is measured.
 
 
 As the term $\deriv{\xi_i}{l}$ provides a constant value, the second derivatives can be computed quite easily, for instance, for $\epsilon_{xx}$:
@@ -574,7 +596,8 @@ As the term $\deriv{\xi_i}{l}$ provides a constant value, the second derivatives
 \subsection{Shell Element} % {{{
 
 As previously described, the shell element's strain is a combination of two types of deformations, as shown in figure \ref{deformations}.
-If we assume that the initial out of plane deflections are negligible and that the frame of the shell element nodes are aligned with local $z$ axis, we can distribute these two deformations into two groups of degrees of freedom  at the nodes' level.
+%If we assume that the initial out of plane deflections are negligible and that the frame of the shell element nodes are aligned with local $z$ axis,
+We can distribute these two deformations into two groups of degrees of freedom  at the nodes' level.
 
 \FigureWI{deformations}
 {Plate deformations:
@@ -603,34 +626,34 @@ at each node of the element.
 
 \subsection{Stiffness Matrix} % {{{
 
-In order to compute FEM-based stiffness for the shell element, we need to compute the jacobian matrix between strains and nodes' displacements.
-As we have separated the formulations for the in-plane and the out of plane displacements, it will result with the computation of two jacobian matrices (of size $3\times9$).
+In order to compute FEM-based stiffness for the shell element, we need to compute the strain-displacement matrix between strains and nodes' displacements.
+As we have separated the formulations for the in-plane and the out of plane displacements, we obtain two strain-displacement matrices (of size $3\times9$).
 \begin{equation}
-    \delta 
+    %\delta 
     \begin{bmatrix}
         \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx}
     \end{bmatrix}
-    = \begin{bmatrix} \mat{J}_m \end{bmatrix}
+    = \mat{J}_m 
     \begin{bmatrix}
         \delta \mat{x}_1^x \\ \delta \mat{x}_1^y \\ \delta \theta_1^z \\ \vdots
     \end{bmatrix}
 \end{equation}
-where $\left[ \mat{J}_m \right]$ maps the membrane in-plane displacements and 
+where $\mat{J}_m $ maps the membrane in-plane displacements and 
 %
 \begin{equation}
-    \delta
+    %\delta
     \begin{bmatrix}
         \epsilon_{xx} \\ \epsilon_{yy}  \\ 2\epsilon_{yx}
     \end{bmatrix}
-    = \begin{bmatrix} \mat{J}_b \end{bmatrix}
+    = \mat{J}_b 
     \begin{bmatrix}
         \delta \mat{x}_1^z \\ \delta \theta_1^x \\ \delta \theta_1^y \\ \vdots
     \end{bmatrix}
 \end{equation}
-where $\left[ \mat{J}_b \right]$ maps the bending displacements.
+where $\mat{J}_b $ maps the bending displacements.
 
-To compute the values in matrices $\left[ \mat{J}_m \right]$ and $\left[ \mat{J}_b \right]$,  we can reuse equation (\ref{eq-bez-delta}) and apply the spatial derivatives.
-To illustrate, let's take one value of the matrix $\left[ \mat{J}_m \right]$  (first line, fourth column), we first take the kinematics between $\delta T_x$ and the concerned degree of freedom $ \delta \mathbf{x}_2^x$ from equation (\ref{eq-bez-delta}):
+To compute the values in matrices $\mat{J}_m$ and $\mat{J}_b $,  we can reuse equation \eqref{eq-bez-delta} and apply the spatial derivatives.
+To illustrate, let's take one value of the matrix $ \mat{J}_m $  (first line, fourth column), we first take the kinematics between $\delta T_x$ and the concerned degree of freedom $ \delta \mathbf{x}_2^x$ from equation \eqref{eq-bez-delta}:
 \begin{equation}
     \frac{ \delta T_x }{ \delta \mathbf{x}_2^x } = (n_2 + n_6 + n_7 + \frac{n_{10}}{3})
 \end{equation}
@@ -640,7 +663,7 @@ Then, we apply the spatial derivatives to compute the variation of $\epsilon_{xx
     \delta \epsilon_{xx} += 
     \underbrace{\left(
     \sum_{i=1}^{3} (\deriv{n_2}{\xi_i} + \deriv{n_6}{\xi_i} + \deriv{n_7}{\xi_i} + \frac{1}{3}\deriv{n_{10}}{\xi_i})
-    \deriv{\xi_i}{x} \right) }_{\begin{bmatrix} \mat{J}_m \end{bmatrix}_{14}}  
+    \deriv{\xi_i}{x} \right) }_{{J_m}_{14}}  
  \delta \mathbf{x}_2^x 
 \end{equation}
 
@@ -674,7 +697,7 @@ quadrature for integration over triangle area.
 
 It is known that the Cauchy's strain tensor \eqref{eq-in-plane-strain} is not
 rotation invariant \cite{Hauth2004,Muller2004} and produces ghost forces for rigid
-rotations. The alternative approach is to use non-linear Green's strain tensor but the non-linearity introduced into the system is costly and introduces instabilities.
+rotations.% The alternative approach is to use non-linear Green's strain tensor but the non-linearity introduced into the system is costly and introduces instabilities.
 To keep the system linear and to deal
 with rigid body rotations we compute the displacements and forces in
 corotational frame. At each step of the simulation we compute the local
@@ -722,8 +745,10 @@ formula:
 \end{equation}
 %
 and subsequently normalizing the columns. We then rotate the corotational
-frame in opposite direction. Even single step of this process improves the
-final frame but more iterations of the polar decompositions are usually
+frame in opposite direction.
+The deformation gradient depends on frame which means multiple iterations of polar decomposition can be performed.
+Even single iteration improves the
+final frame but more are usually
 necessary (up to 20) which severely degrades the performance. Polar
 decomposition tends to "overshoot" the ideal rotation angle and each
 subsequent step performs a rotation in the direction opposite to the rotation in previous step. By properly
@@ -736,10 +761,10 @@ We employ two stop conditions for the iteration process:
 (i) the change in rotation angle is less than $10^{-6}$, and
 (ii) the maximum number of iterations is set to 5.
 
-If the first condition is not met in 5 iterations it can mean one of three
-things we still have very good approximation of the ideal frame. In some
+If the first condition is not met in 5 iterations 
+we still have very good approximation of the ideal frame. In some
 situations the process is not able to reach the ideal frame quickly because
-either the convergence for the element is too slow or the process is diverging.
+either the convergence for the element is too slow or the process is oscilating around a certain configuration.
 In either case performing more iterations is unnecessary.
 
 % }}}
@@ -759,6 +784,7 @@ interaction and correct simulation of collisions and constraints.
 To handle these, we also need to know how to map the velocities from the mechanical
 mesh onto the high resolution mesh and how to map forces acting on the high
 resolution mesh back onto the mechanical mesh.
+This high resolution mesh may be obtained simply by refining the triangles of mechanical mesh.
 
 \subsection{Surface Mesh}
 
@@ -771,7 +797,8 @@ the triangle to this vertex. After every step of the simulation points of the
 control mesh are updated based on the kinematic link described in
 section \ref{sec-kinematics} and the high
 resolution mesh is updated using the assigned barycentric coordinates and
-the function of the surface \eqref{eq-cubicbez}.
+the function of the surface \eqref{eq-cubicbez}. An alternative approach is to
+subdivide the B\'ezier triangles as necessary.
 
 \subsection{Nodal Velocities of the Surface Mesh}
 
@@ -780,40 +807,49 @@ The values are directly available to us for the nodes of the mechanical mesh
 but they can also be computed for any point on the surface.
 Differentiating \eqref{eq-cubicbez2} by time we get:
 %
-\begin{equation}
-    \dot{T} = \sum_{i=1}^{10} n_i \dot{P_i} = \sum_{i=1}^{10} n_i V_i
+\begin{equation}\label{eq-velocity}
+    \dot{T} = \sum_{i=1}^{10} n_i \dot{\mathbf{p}_i} = \sum_{i=1}^{10} n_i \mathbf{v}_i
 \end{equation}
 
 For the corner control points  we
-already have the velocities $V_i$. For the internal control points  we need to compute
+already have the velocities $\mathbf{v}_i$. For the internal control points  we need to compute
 them. We again make use of the kinematic link between control points and control points.
 %solve the problem of computing the velocity of a point attached to the moving rigid body.
 For the edge points we applied to motion of a rigid body:
 %
-\begin{eqnarray}
-    V_j = V_i + \omega_i \times P_{i-j}
+\begin{eqnarray}\label{eq-velocity-pt}
+    \mathbf{v}_j = \mathbf{v}_i + \omega_i \times \mathbf{p}_{i-j}
 \end{eqnarray}
 %
 where $i$ is the index of the corner node the edge node is attached to and
 $\omega_i$ is the angular velocity at the node. For the central node
 the formula is based on the derivate of equation \eqref{eq-central2}:
 %
-\begin{eqnarray}
-    V_{10} = \frac{1}{3} \sum_{i=1}^3 \left( V_i + \omega_i \times P_{i-10} \right)
+\begin{eqnarray}\label{eq-velocity-pt2}
+    \mathbf{v}_{10} = \frac{1}{3} \sum_{i=1}^3 \left( \mathbf{v}_i + \omega_i \times \mathbf{p}_{i-10} \right)
 \end{eqnarray}
+
+Again after substitution of \eqref{eq-velocity-pt} and \eqref{eq-velocity-pt2} into
+\eqref{eq-velocity} one can evaluate $\dot{T}$ as
+%
+$%\begin{equation}
+\dot{T} = \mathbf{J}_t \left[ \mathbf{v}^x_1, \hdots, \mathbf{v}^z_3,
+        \omega^x_1, \ldots, \omega^z_3 \right]^T
+$.%\end{equation}
+
 
 \subsection{Projection of Surface Forces}
 
 For physical interaction with the object one also requires that the
 forces applied on the object's surface are transmitted back as forces
 and torques on the vertices of the mechanical mesh.
-We compute the influence of force $F$ on the corners through all the
-associated control points by the formula:
+The influence of force $\mathbf{f}$ acting on the fine mesh is transfered using the
+associated barycentric coordinates through the control points by the formula:
 %
 \begin{eqnarray}
-    F_1 & = &  \sum_{i \in \{1,4,5\}} n_i F + \frac{n_{10}}{3} F \\
-    F_2 & = &  \sum_{i \in \{2,6,7\}} n_i F + \frac{n_{10}}{3} F \\
-    F_3 & = &  \sum_{i \in \{3,8,9\}} n_i F + \frac{n_{10}}{3} F 
+    \mathbf{f}_1 & = &  \sum_{i \in \{1,4,5\}} n_i \mathbf{f} + \frac{n_{10}}{3} \mathbf{f} \\
+    \mathbf{f}_2 & = &  \sum_{i \in \{2,6,7\}} n_i \mathbf{f} + \frac{n_{10}}{3} \mathbf{f} \\
+    \mathbf{f}_3 & = &  \sum_{i \in \{3,8,9\}} n_i \mathbf{f} + \frac{n_{10}}{3} \mathbf{f} 
 \end{eqnarray}
 
 Similarly we can compute the torques applied through edge control points and
@@ -821,22 +857,29 @@ the central control points:
 %
 \begin{gather}
     \begin{split}
-        	\tau_1 = & P_{1-4} \times (n_4 F) + P_{1-5} \times (n_5 F) + \\
-        & + \frac{1}{3} P_{1-10} \times (n_{10} F)
+        \tau_1 = & \mathbf{p}_{1-4} \times (n_4 \mathbf{f}) + \mathbf{p}_{1-5} \times (n_5 \mathbf{f}) + \\
+                 & + \frac{1}{3} \mathbf{p}_{1-10} \times (n_{10} \mathbf{f})
     \end{split}
     \\
     \begin{split}
-       	\tau_2 = & P_{2-6} \times (n_6 F) + P_{2-7} \times (n_7 F) + \\
-        & + \frac{1}{3} P_{2-10} \times (n_{10} F) \\
+        \tau_2 = & \mathbf{p}_{2-6} \times (n_6 \mathbf{f}) + \mathbf{p}_{2-7} \times (n_7 \mathbf{f}) + \\
+                 & + \frac{1}{3} \mathbf{p}_{2-10} \times (n_{10} \mathbf{f}) \\
     \end{split}
     \\
     \begin{split}
-        	\tau_3 = & P_{3-8} \times (n_8 F) + P_{3-9} \times (n_9 F) + \\
-        & + \frac{1}{3} P_{3-10} \times (n_{10} F) \\
+        \tau_3 = & \mathbf{p}_{3-8} \times (n_8 \mathbf{f}) + \mathbf{p}_{3-9} \times (n_9 \mathbf{f}) + \\
+                 & + \frac{1}{3} \mathbf{p}_{3-10} \times (n_{10} \mathbf{f}) \\
     \end{split}
 \end{gather}
 
-Note that these formula fulfill the physical principle of virtual power: $ P = \dot{T} \cdot F  = \sum_{i=1}^3 V_i \cdot F_i +  \omega_i  \cdot \tau_i$
+Or again as
+%
+$
+\left[ \mathbf{f}^x_1, \hdots, \mathbf{f}^z_3, \tau^x_1, \hdots, \tau^z_3 \right]^T =
+\mathbf{J}^T_i \mathbf{f}
+$.
+%
+Note that these formula fulfill the physical principle of virtual power: $ P = \dot{T} \cdot f  = \sum_{i=1}^3 V_i \cdot f_i +  \omega_i  \cdot \tau_i$
 
 
 % }}}
@@ -851,10 +894,12 @@ Note that these formula fulfill the physical principle of virtual power: $ P = \
 In subsections \ref{sec-roof} and \ref{sec-hemisphere} we present tests to
 validate the convergence of our B\'ezier shell element. As a reference we use a
 combination of two elements that are very well established in the area of
-mechanical modelling. Our results are compared with the shell element composed
+mechanical modeling. Our results are compared with the shell element composed
 of Discrete Kirchoff Triangle (DKT) element \cite{Batoz1980} for bending plate
 and optimal ANDES element \cite{Felippa2003} for membrane. For comparison the
 results for the model of O. Comas \cite{Comas2010c} are also presented. 
+Implicit Euler integration scheme was used to solve the system. This allows us
+to use large time steps needed for real-time performance of at least 25 Hz.
 Subsection \ref{sec-fps}
 presents evaluation of the computational complexity of our solution. Last
 subsections are dedicated to presentation of application of our model.
@@ -870,12 +915,12 @@ mesh of NxN vertices. The physical parameters are $E = 4.32 \times 10^8$ and
 $\nu = 0$. The roof is loaded with uniformly distributed load $q = 90$ per
 unit area. The curved edges are clamped at both ends to avoid rigid body
 movement. This is the only difference from the original Scordelis-Lo roof test
-where the edges are free to move in longitudinal direction. The Figure
-\ref{fig-roof} shows the vertical displacement of midpoint on the free
+where the edges are free to move in longitudinal direction. The
+Figure~\ref{fig-roof} shows the vertical displacement of midpoint on the free
 edge.
 
 \Figure{\linewidth}{roof}
-{Convergence for modified Scordelis-Lo roof test of DKT+ANDES element, 
+{Convergence for modified Scordelis-Lo roof test of DKT+ANDES element (DKT), 
 our B\'ezier shell element (BSH) and element of O. Comas (PSH) with polynomial shape function.}
 
 \Figure{\linewidth}{roof-img}
@@ -892,11 +937,10 @@ parameters are $E = 6.825 \times 10^7$ and $\nu = 0.3$. The hemisphere is
 at it's base subjected to two opposing outwards forces and two opposing
 inwards forces with magnitude $P = 4$. To avoid rigid body movement we have
 constrained two opposite nodes at the top of the hemisphere. The radial
-displacement for one point with applied load is shown in Figure
-\ref{fig-hemisphere}.
+displacement for one point with applied load is shown in Figure~\ref{fig-hemisphere}.
 
 \Figure{\linewidth}{hemisphere}
-{Convergence for test on hemisphere with 18° hole for the DKT+ANDES element and
+{Convergence for test on hemisphere with 18° hole for the DKT+ANDES element (DKT) and
 our B\'ezier shell element (BSH) and element of O. Comas (PSH) with polynomial shape function.}
 
 \Figure{\linewidth}{hemisphere-img}
@@ -910,8 +954,8 @@ frames per second. All tests were performed on machine equipped with Dual-Core
 AMD Opteron Processor 2218 and 3~GB of RAM. We used a conjugate gradient solver
 to solve the system. Our implementation is without optimizations
 and only single CPU core was used for the
-simulation. The values reported are for the raw physical simulation with (b)
-and without (a) the frame fixing method described in subsection
+simulation. The values reported are for the raw physical simulation with (B)
+and without (A) the frame fixing method described in subsection
 \ref{sec-corot}. We also present results including the mapping of
 high-resolution mesh onto the mechanical mesh for visualisation purposes or
 collisions.
@@ -927,6 +971,11 @@ to simulate up to 1\,000 elements and still maintain visual refresh rate of
 25 FPS. While our implementation was only single-threaded and the mechanical mapping
 wasn't off-loaded to another CPU core we were still able to provide good
 results for more than 600 elements mesh with 10k triangles.
+
+Both DKT+ANDES and our element are purely linear which makes their raw
+simulation time comparable. The hybrid PSH element require evaluation of
+coefficients of the polynomial during simulation which makes it inferior in
+performance.
 
 % }}}
 
@@ -945,7 +994,7 @@ short time and are strongly dependent on the surgeon's experience.
 
 To be able to predict results of complex surgical procedures a surgical simulation system can be employed.
 We have
-developed a prototype \cite{Anonymous2012} of new surgical simulation system
+developed a prototype \cite{Kislinskiy2012} of new surgical simulation system
 for preoperative planning. The element has been used to model deformations of
 blood vessels and artificial patches. By performing a set of topological changes
 we simulate the process of incising the vessel and suturing on a pre-specified
@@ -957,7 +1006,7 @@ elastic equilibrium.
 \subsection{Simulation of Uterus Deformation During Birth}
 
 The purpose of this simulator is to reproduce the tissue deformations that are encountered during a delivery.
-The goal is to evaluate the mechanical stresses which are applied on the anatomical structures (like the uterus but also like the ligaments that sustain the uterus).
+The goal is to evaluate the mechanical stresses which are applied on the anatomical structures (like the uterus but also the ligaments that sustain the uterus).
 
 The data comes from a MRI of a 8 months pregnant woman. 
 The trajectory of the baby-head during the birth was predefined with gynecologists. 
@@ -981,9 +1030,10 @@ are enriched with overlay delineations.}
 \section{Discussion and Limitations} % {{{
 
 Currently, due to the technical decisions the element has two limitations.
-It is $C^1$ continuous at corners but only $C^0$ on the
-edges. This may prove to be an issue for example if curvature needs to be
-computed not only inside the element but also across the edges.
+It is $C^1$ continuous at corners and only $C^0$ on the
+edges. The lack of continuity may prove to be an issue for example if curvature needs to be
+computed not only inside the element but also across the corners/edges.
+In location with high initial curvature more elements may be necessary to properly model the surface.
 
 The second limitation is the choice of rigidly attached control points. 
 While it greatly simplifies the formulation the rigidity may cause issues.
@@ -1017,7 +1067,7 @@ We will investigate this topic in our future work.
 In this paper we presents new shell element with interpolation functions
 based on B\'ezier triangle which is  suitable for real-time simulations.
 Compared to  the elements commonly used in mechanics, the interpolation is less complex and ensures at least a $C^0$ continuity in the worst case. 
-(Many shell elements are not even $C^0$ when the initial shape is not flat).
+(Many shell elements are not even $C^0$ when the shape is not flat).
 
 It fixes problems of the previous model \cite{Comas2010c} based on cubic
 polynomials, namely: element is based on all 6 DOFs, deformations of the
@@ -1040,6 +1090,7 @@ In future work, we will investigate the use of more complex constitutive laws an
 
 % }}}
 
+\renewcommand{\bibfont}{\footnotesize}
 %-------------------------------------------------------------------------
 
 %\bibliographystyle{eg-alpha}
