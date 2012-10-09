@@ -8,7 +8,7 @@
 FILE:=vriphys2012
 SUBFILES:=
 BIBFILE:=vriphys2012
-IMGS=bezier.png bezier2.pdf fps.pdf hemisphere.pdf membrane.png plate.png roof.pdf segments.png segments2.pdf stages.pdf
+IMGS=bezier2.pdf fps.pdf hemisphere.pdf roof.pdf segments2.pdf stages.pdf
 
 TMPDIR=tmp
 LATEXARGS=-halt-on-error -interaction=nonstopmode -file-line-error -output-directory="$(TMPDIR)"
