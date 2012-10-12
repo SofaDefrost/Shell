@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<Node name="Root">
+    <VisualStyle displayFlags="showWireframe" />
+
+    <MeshObjLoader name="mesh" filename="../mesh/plane2048-noise.obj"/>
+    <TriangleSetTopologyContainer name="points" src="@mesh" />
+
+    <Test2DAdapter />
+    <MechanicalObject template="Vec3d" rest_position="@mesh.position" /> 
+
+    <Node name="Render">
+        <OglModel name="Visual" color="green"/>
+        <IdentityMapping input="@.." output="@Visual"/>
+    </Node>
+
+</Node>
