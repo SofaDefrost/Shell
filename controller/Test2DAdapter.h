@@ -118,6 +118,16 @@ private:
     helper::vector<bool> m_boundary; /// marks whether node lies on the boundary
 
     /**
+     * @brief Constrained Laplacian smoothing
+     *
+     * @param v         Vertex to move
+     * @param x         Current positions
+     * @param metrics   Current metrice values for elements
+     * @param normals   Original normals (to check for inversion)
+     */
+    bool smoothLaplacian(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals);
+
+    /**
      * @brief Detect which nodes lie on the boundary.
      */
     void detectBoundary();
