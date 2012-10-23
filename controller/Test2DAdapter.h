@@ -30,7 +30,11 @@ namespace controller
  * [CTS98] Canann, S. A.; Tristano, J. R. & Staten, M. L. An Approach to
  *         Combined Laplacian and Optimization-Based Smoothing for Triangular,
  *         Quadrilateral, and Quad-Dominant Meshes International Meshing
- *         Roundtable, 1998, 479-494
+ *         Roundtable, 1998, 479-494.
+ *
+ * [VL99] Y. Vasilevskii, K. Lipnikov, An adaptive algorithm for quasioptimal
+ *        mesh generation, Computational mathematics and mathematical physics
+ *        39 (9) (1999) 1468–1486.
  */
 template<class DataTypes>
 class Test2DAdapter : public Controller
@@ -80,10 +84,12 @@ public:
         return DataTypes::Name();
     }
 
-    virtual void onEndAnimationStep(const double dt);
+    void onEndAnimationStep(const double dt);
+    void onKeyPressedEvent(core::objectmodel::KeypressedEvent *key);
 
     /**
-     * @brief Distortion metric for a triangle. (From [CTS98])
+     * @brief Distortion metric for a triangle from [CTS98] (but probably due
+     * to somebody else)
      *
      * @param t         Triangle to compute the metric for.
      * @param x         Vertices.
@@ -110,12 +116,58 @@ public:
         return m;
     }
 
+    /**
+     * @brief Distortion metric for a triangle from [VL99] extended for
+     * handling of inverted triangles.
+     *
+     * @param t         Triangle to compute the metric for.
+     * @param x         Vertices.
+     * @param normal    Surface normal for the triangle (to check for inversion).
+     */
+    Real metricGeom2(const Triangle &t, const VecVec3 &x, const Vec3 &normal) {
+        // TODO: we can precompute these
+        Vec3 ab = x[ t[1] ] - x[ t[0] ];
+        Vec3 ca = x[ t[0] ] - x[ t[2] ];
+        Vec3 cb = x[ t[1] ] - x[ t[2] ];
+
+        Real p = ca.norm() + ab.norm() + cb.norm(); // perimeter
+        Real ip = 1.0/p; // inverse
+        // Normalizing factor so that the matric is 1 in maximum
+        // TODO: verify this, the maximum seems to be at 2
+        //Real m = 12 * sqrt(3);
+        Real m = 6 * helper::rsqrt(3);
+        m *= ca.cross(cb).norm(); // || CA × CB ||
+        m /= helper::rsqrt(p);
+        Real f;
+        if (p < ip) {
+            f = (p * (2-p));
+        } else {
+            f = (ip * (2-ip));
+        }
+
+        m *= ip * ip * ip;
+
+        // Is triangle inverted?
+        Vec3 nt;
+        computeTriangleNormal(t, x, nt);
+        if (dot(nt, normal) < 0) {
+            m *= -1.0;
+        }
+
+        return m;
+    }
+
 private:
 
-    //unsigned int stepCounter;
+    unsigned int stepCounter;
     sofa::component::topology::TriangleSetTopologyContainer*  m_container;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
     helper::vector<bool> m_boundary; /// marks whether node lies on the boundary
+
+    vector<Real> m_metrics;
+
+    Real sumgamma, mingamma, maxgamma;
+    int ngamma;
 
     /**
      * @brief Constrained Laplacian smoothing
@@ -126,6 +178,16 @@ private:
      * @param normals   Original normals (to check for inversion)
      */
     bool smoothLaplacian(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals);
+
+    /**
+     * @brief Optimization based smoothing
+     *
+     * @param v         Vertex to move
+     * @param x         Current positions
+     * @param metrics   Current metrice values for elements
+     * @param normals   Original normals (to check for inversion)
+     */
+    bool smoothOptimize(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals);
 
     /**
      * @brief Detect which nodes lie on the boundary.
