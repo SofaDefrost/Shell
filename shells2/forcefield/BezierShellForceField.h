@@ -174,7 +174,16 @@ public:
 
                 StrainDisplacement strainDisplacementMatrix[Gn];
                 StrainDisplacement strainDisplacementMatrixB[Gn];
-                Vec3 measure[Gn]; // measured stress or strain
+
+
+                // Measure stress or strain
+                struct MeasurePoint {
+                    Vec3 point;             // Barycentric coordinates
+                    StrainDisplacement B;   // Strain-displacement Matrix
+                    StrainDisplacement Bb;  // Strain-displacement Matrix bending
+                    Index id;               // Index into the result array
+                };
+                helper::vector<MeasurePoint> measure;
 
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacementBending strainDisplacementMatrixB1;
@@ -249,6 +258,7 @@ public:
         Data<sofa::helper::OptionsGroup> f_drawMeasure;
         Data<Real> f_drawMeasureMax;
         Data<unsigned int> f_drawPointSize;
+        Data<helper::vector<Real> > f_measuredValues;
 
         // Allow transition between rest shapes
         SingleLink<BezierShellForceField<DataTypes>,
