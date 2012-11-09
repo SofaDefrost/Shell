@@ -22,6 +22,17 @@ namespace controller
 {
 
 /**
+ * @brief Internal ata for Test2DAdapter.
+ *
+ * Internal data for Test2DAdapter. Can be overriden in class specializations.
+ */
+template<class DataTypes>
+class Test2DAdapterData
+{
+public:
+};
+
+/**
  *
  * @brief Component for adaptivity/smoothing of 2D triangular meshes.
  *
@@ -75,6 +86,8 @@ protected:
 
     virtual ~Test2DAdapter();
 
+    Test2DAdapterData<DataTypes> data;
+
 public:
 
     Data<Real> m_sigma; /// Minimal increase in functional to accept the change
@@ -103,7 +116,7 @@ public:
      * @param x         Vertices.
      * @param normal    Surface normal for the triangle (to check for inversion).
      */
-    Real funcTriangle(const Triangle &t, const VecVec3 &x, const Vec3 &normal) {
+    Real funcTriangle(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
         return metricGeom(t, x, normal);
     }
 
@@ -115,7 +128,7 @@ public:
      * @param x         Vertices.
      * @param normal    Surface normal for the triangle (to check for inversion).
      */
-    Real metricGeom(const Triangle &t, const VecVec3 &x, const Vec3 &normal) {
+    Real metricGeom(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
         // TODO: we can precompute these
         Vec3 ab = x[ t[1] ] - x[ t[0] ];
         Vec3 ca = x[ t[0] ] - x[ t[2] ];
@@ -144,7 +157,7 @@ public:
      * @param x         Vertices.
      * @param normal    Surface normal for the triangle (to check for inversion).
      */
-    Real metricGeom2(const Triangle &t, const VecVec3 &x, const Vec3 &normal) {
+    Real metricGeom2(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
         // TODO: we can precompute these
         Vec3 ab = x[ t[1] ] - x[ t[0] ];
         Vec3 ca = x[ t[0] ] - x[ t[2] ];
@@ -198,7 +211,7 @@ public:
      * @param x         Vertices.
      * @param normal    Surface normal for the triangle (to check for inversion).
      */
-    Real metricGeom3(const Triangle &t, const VecVec3 &x, const Vec3 &normal) {
+    Real metricGeom3(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
         // TODO: we can precompute these
         Vec3 vab = x[ t[1] ] - x[ t[0] ];
         Vec3 vca = x[ t[0] ] - x[ t[2] ];
@@ -257,7 +270,7 @@ private:
      * @param metrics   Current metrice values for elements
      * @param normals   Original normals (to check for inversion)
      */
-    bool smoothLaplacian(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals);
+    bool smoothLaplacian(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals);
 
     /**
      * @brief Optimization based smoothing
@@ -270,7 +283,7 @@ private:
      * @param metrics   Current metrice values for elements
      * @param normals   Original normals (to check for inversion)
      */
-    bool smoothOptimizeMax(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals);
+    bool smoothOptimizeMax(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals);
 
     /**
      * @brief Optimization based smoothing
@@ -283,7 +296,7 @@ private:
      * @param metrics   Current metrice values for elements
      * @param normals   Original normals (to check for inversion)
      */
-    bool smoothOptimizeMin(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals);
+    bool smoothOptimizeMin(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals);
 
     /**
      * @brief Smoothing based on method of Pain et al. [PUdOG01]
@@ -296,7 +309,7 @@ private:
      * @param metrics   Current metrice values for elements
      * @param normals   Original normals (to check for inversion)
      */
-    bool smoothPain2D(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals);
+    bool smoothPain2D(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals);
 
     /**
      * @brief Detect which nodes lie on the boundary.
@@ -313,7 +326,9 @@ private:
      *
      */
     // TODO: isn't this in geometry algorithms or CGAL?
-    void computeTriangleNormal(const Triangle &t, const VecVec3 &x, Vec3 &normal);
+    void computeTriangleNormal(const Triangle &t, const VecCoord &x, Vec3 &normal);
+
+    void colourGraph();
 };
 
 

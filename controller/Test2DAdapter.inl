@@ -2,6 +2,7 @@
 #define SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 
 #include <sofa/core/objectmodel/KeypressedEvent.h>
+#include <sofa/helper/system/thread/debug.h>
 
 #include "Test2DAdapter.h"
 
@@ -61,6 +62,8 @@ void Test2DAdapter<DataTypes>::reinit()
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 {
+    std::cout << "CPU step\n";
+
     if ((m_container == NULL) || (m_state == NULL))
         return;
 
@@ -71,18 +74,22 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     //stepCounter = 0;
 
-    Data<VecVec3>* datax = m_state->write(sofa::core::VecCoordId::position());
-    VecVec3& x = *datax->beginEdit();
+    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::position());
+    VecCoord& x = *datax->beginEdit();
 
     Index nTriangles = m_container->getNbTriangles();
     if (nTriangles == 0)
         return;
     
+    sofa::helper::system::thread::ctime_t start, stop;
+    sofa::helper::system::thread::CTime timer;
+    start = timer.getTime();
+
     m_functionals.resize(nTriangles);
     vector<Vec3> normals(nTriangles);
 
     // Compute initial metrics and normals
-   for (Index i=0; i < nTriangles; i++) {
+    for (Index i=0; i < nTriangles; i++) {
         Triangle t = m_container->getTriangle(i);
         computeTriangleNormal(t, x, normals[i]);
         m_functionals[i] = funcTriangle(t, x, normals[i]);
@@ -102,9 +109,9 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         }
 
         Vec3 xold = x[i];
-        //if (!smoothLaplacian(i, x, m_functionals, normals)) {
+        if (!smoothLaplacian(i, x, m_functionals, normals)) {
         //if (!smoothOptimizeMin(i, x, m_functionals, normals)) {
-        if (!smoothOptimizeMax(i, x, m_functionals, normals)) {
+        //if (!smoothOptimizeMax(i, x, m_functionals, normals)) {
         //if (!smoothPain2D(i, x, m_functionals, normals)) {
             x[i] = xold;
         } else {
@@ -115,6 +122,10 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
             }
         }
     }
+
+    stop = timer.getTime();
+    std::cout << "---------- CPU time = " << stop-start << "\n";
+
 
     // Evaluate improvement
     Real sum=0.0, sum2=0.0, min = 1.0;
@@ -156,7 +167,7 @@ void Test2DAdapter<DataTypes>::onKeyPressedEvent(core::objectmodel::KeypressedEv
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals)
+bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals)
 {
     Vec3 xold = x[v];
 
@@ -233,7 +244,7 @@ bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecVec3 &x, vector<Real>
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals)
+bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals)
 {
     Vec3 xold = x[v];
 
@@ -381,7 +392,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector<Rea
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothOptimizeMin(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals)
+bool Test2DAdapter<DataTypes>::smoothOptimizeMin(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals)
 {
     Vec3 xold = x[v];
 
@@ -530,7 +541,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMin(Index v, VecVec3 &x, vector<Rea
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothPain2D(Index v, VecVec3 &x, vector<Real>metrics, vector<Vec3> normals)
+bool Test2DAdapter<DataTypes>::smoothPain2D(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals)
 {
     Real w = 0.5, sigma = 0.01;
 
@@ -658,7 +669,7 @@ void Test2DAdapter<DataTypes>::detectBoundary()
 }
 
 template<class DataTypes>
-void Test2DAdapter<DataTypes>::computeTriangleNormal(const Triangle &t, const VecVec3 &x, Vec3 &normal)
+void Test2DAdapter<DataTypes>::computeTriangleNormal(const Triangle &t, const VecCoord &x, Vec3 &normal)
 {
     Vec3 A, B;
     A = x[ t[1] ] - x[ t[0] ];

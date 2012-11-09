@@ -3,7 +3,7 @@ includeOnce($$_FILE_) {
     #contains(DEFINES, SOFA_DEV) {
     #    declare(shells, applications/plugins/shells, sofa_component_base sofahelper sofa_base_topology sofa_misc_topology_dev)
     #} else {
-        declare(shells, applications/plugins/shells, sofa_component_base sofahelper sofa_base_topology sofa_user_interaction)
+        declare(shells, applications/plugins/shells, sofa_component_base sofahelper sofa_base_topology sofa_user_interaction SofaCUDA)
     #}
 	
 	enable(shells)
