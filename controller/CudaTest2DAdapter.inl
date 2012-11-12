@@ -178,9 +178,14 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::onEndAnimationStep(const double
                 triangles_gpu, points_gpu, data.colours[c].deviceWrite(),
                 m_sigma.getValue());
         }
+
         // Restore positions of unchanged nodes
         Test2DAdapterCuda3f_restoreUnchanged(nPoints, x.deviceWrite(),
             points_gpu, data.colours[c].deviceWrite());
+
+        // Re-evaluate functional
+        Test2DAdapterCuda3f_functionalGeom(nTriangles, x.deviceRead(),
+            triangles_gpu);
 
         // TODO: can we track count of accepted solutions to stop sooner (than
         // after 10 loops)? Or, does it even make sense? We expect large sets
