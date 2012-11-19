@@ -8,6 +8,15 @@
 #include <sofa/helper/system/thread/debug.h>
 #include <sofa/component/topology/TopologyData.inl>
 
+#include <sofa/component/collision/MouseInteractor.h>
+#include <sofa/component/collision/PointModel.h>
+#include <sofa/component/collision/LineModel.h>
+#include <sofa/component/collision/TriangleModel.h>
+
+#include <sofa/gui/GUIManager.h>
+#include <sofa/gui/BaseGUI.h>
+#include <sofa/gui/BaseViewer.h>
+
 #include "Test2DAdapter.h"
 
 
@@ -82,7 +91,6 @@ void Test2DAdapter<DataTypes>::TriangleInfoHandler::applyDestroyFunction(unsigne
     adapter->m_toUpdate[t[0]] = true;
     adapter->m_toUpdate[t[1]] = true;
     adapter->m_toUpdate[t[2]] = true;
-    assert(0);
 }
 
 template<class DataTypes>
@@ -123,12 +131,24 @@ Test2DAdapter<DataTypes>::Test2DAdapter()
 : m_sigma(initData(&m_sigma, (Real)0.01, "sigma", "Minimal increase in functional to accept the change"))
 , m_functionals(initData(&m_functionals, "functionals", "Current values of the functional for each triangle"))
 , stepCounter(0)
-, precision(1e-5)
+, m_precision(1e-8)
+, m_pickHandler(NULL)
+, m_pointId(InvalidID)
 , pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
 , triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
     pointHandler = new PointInfoHandler(this, &pointInfo);
     triHandler = new TriangleInfoHandler(this, &triInfo);
+
+    // Get PickHandler for mouse interaction
+    //sofa::gui::SofaGUI *currGui = sofa::gui::SofaGUI::CurrentGUI();
+    sofa::gui::BaseGUI *gui = sofa::gui::GUIManager::getGUI();
+    if(gui != NULL) {
+        sofa::gui::BaseViewer* viewer = gui->getViewer();
+        if (viewer != NULL) {
+            m_pickHandler = viewer->getPickHandler();
+        }
+    }
 }
 
 template<class DataTypes>
@@ -231,10 +251,6 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     stepCounter++;
 
-    if (stepCounter == 1) {
-        myPoint = Vec3(0.4, 0.3, 0.0);
-    }
-
     // Update boundary vertices
     helper::vector<PointInformation>& pts = *pointInfo.beginEdit();
     for (std::map<Index,bool>::const_iterator i=m_toUpdate.begin();
@@ -256,7 +272,40 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     Index nTriangles = m_container->getNbTriangles();
     if (nTriangles == 0)
         return;
-    
+
+    // See if there is any mouse interaction
+    m_pointId = InvalidID;
+    if (m_pickHandler) {
+        using namespace sofa::component::collision;
+        BodyPicked *picked;
+        if ((picked = m_pickHandler->getLastPicked()) != NULL) {
+            // TODO: check mstate
+            m_point = picked->point;
+
+            if(dynamic_cast<PointModel*>(picked->body)) {
+                // Point
+                m_pointId = picked->indexCollisionElement;
+            } else if(dynamic_cast<LineModel*>(picked->body)) {
+                // Edge
+                Edge e = m_container->getEdge(picked->indexCollisionElement);
+                Real d1 = (x[ e[0] ] - m_point).norm2();
+                Real d2 = (x[ e[1] ] - m_point).norm2();
+                m_pointId = (d1 < d2 ? e[0] : e[1]);
+            } else if(dynamic_cast<TriangleModel*>(picked->body)) {
+                // TODO: can we tell directly from bary coords?
+                Triangle t = m_container->getTriangle(
+                    picked->indexCollisionElement);
+                Real d1 = (x[ t[0] ] - m_point).norm2();
+                Real d2 = (x[ t[1] ] - m_point).norm2();
+                Real d3 = (x[ t[2] ] - m_point).norm2();
+                m_pointId = (d1 < d2) ?
+                    (d1 < d3 ? t[0] : t[2]) :
+                    (d2 < d3 ? t[1] : t[2]);
+            }
+            //std::cout << "picked " << m_point << " (" << m_pointId << ")\n";
+        }
+    }
+
     //sofa::helper::system::thread::ctime_t start, stop;
     //sofa::helper::system::thread::CTime timer;
     //start = timer.getTime();
@@ -297,7 +346,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
             helper::vector< helper::vector< double > > move_coefs;
 
             Index tId = m_algorithms->getTriangleInDirection(i, x[i] - xold);
-            if (tId == (Index)-1) {
+            if (tId == InvalidID) {
                 serr << "Unexpected triangle Id -1 for point " << i << "! Marking point as fixed." << sendl;
 
                 x[i] = xold;
@@ -410,7 +459,7 @@ void Test2DAdapter<DataTypes>::onKeyPressedEvent(core::objectmodel::KeypressedEv
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals)
+bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals)
 {
     Vec3 xold = x[v];
 
@@ -452,7 +501,7 @@ bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecCoord &x, vector<Real
         Real oldworst = 1.0, newworst = 1.0;
         for (Index it=0; it<N1.size(); it++) {
             Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[v]);
+                normals[ N1[it] ]);
 
             if (metrics[ N1[it] ] < oldworst) {
                 oldworst = metrics[ N1[it] ];
@@ -478,7 +527,7 @@ bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecCoord &x, vector<Real
         // Update metrics
         for (Index it=0; it<N1.size(); it++) {
             metrics[ N1[it] ] = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[v]);
+                normals[ N1[it] ]);
         }
     }
     // NOTE: Old position restore by caller (if needed).
@@ -487,14 +536,14 @@ bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecCoord &x, vector<Real
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Real>metrics)
+bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Real> &metrics)
 {
     Vec3 xold = x[v];
 
     // Compute gradients
     TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(v);
     helper::vector<Vec3> grad(N1.size());
-    Real delta = 1e-5;
+    Real delta = m_precision/10.0;
     // NOTE: Constrained to 2D!
     for (int component=0; component<2; component++) {
         x[v] = xold;
@@ -505,12 +554,11 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
             grad[it][component] = (m - metrics[ N1[it] ])/delta;
         }
     }
-    //std::cout << "grads: " << grad << "\n";
 
     // Find smallest metric with non-zero gradient
-    Index imin = 0;
+    Index imin = InvalidID;
     Real mmin = 1.0;
-    //std::cout << "metrics: ";
+    //std::cout << v << " metrics: ";
     for (Index it=0; it<N1.size(); it++) {
         if (metrics[ N1[it] ] < mmin && grad[it].norm2() > 1e-15) {
             imin = it;
@@ -519,12 +567,17 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
         //std::cout << metrics[ N1[it] ] << "(" << grad[it].norm() << "/"
         //    << grad[it].norm2()<< "), ";
     }
-    //std::cout << "\n";
+    if (imin == InvalidID) {
+        //std::cout << "   doing nothing" << "\n";
+        return false;
+    //} else {
+    //    std::cout << "   using " << imin << "\n";
+    }
 
     Vec3 step = grad[imin];
 
     // Find out step size
-    Real gamma = 0.05;
+    Real gamma = 0.01; // ≈ m_precision * 2^10
 
     //gamma *= step.norm();
     step.normalize();
@@ -582,7 +635,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
     bool bAccepted = false;
     for (int iter=10; iter>0 && !bAccepted; iter--) {
 
-        if ((xold - x[v]).norm2() < 1e-8) {
+        if ((xold - x[v]).norm2() < m_precision) {
             // No change in position
             //std::cout << "No change in position for " << v << "\n";
             break;
@@ -591,7 +644,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
         Real oldworst = 1.0, newworst = 1.0;
         for (Index it=0; it<N1.size(); it++) {
             Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
-                triInfo.getValue()[v].normal);
+                triInfo.getValue()[ N1[it] ].normal);
 
             if (metrics[N1[it]] < oldworst) {
                 oldworst = metrics[N1[it]];
@@ -626,7 +679,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
         // Update metrics
         for (Index it=0; it<N1.size(); it++) {
             metrics[ N1[it] ] = funcTriangle(m_container->getTriangle(N1[it]), x,
-                triInfo.getValue()[v].normal);
+                triInfo.getValue()[ N1[it] ].normal);
         }
     }
     // NOTE: Old position restore by caller (if needed).
@@ -635,7 +688,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothOptimizeMin(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals)
+bool Test2DAdapter<DataTypes>::smoothOptimizeMin(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals)
 {
     Vec3 xold = x[v];
 
@@ -740,7 +793,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMin(Index v, VecCoord &x, vector<Re
         Real oldworst = 0.0, newworst = 0.0;
         for (Index it=0; it<N1.size(); it++) {
             Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[v]);
+                normals[ N1[it] ]);
 
             if (metrics[N1[it]] > oldworst) {
                 oldworst = metrics[N1[it]];
@@ -775,7 +828,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMin(Index v, VecCoord &x, vector<Re
         // Update metrics
         for (Index it=0; it<N1.size(); it++) {
             metrics[ N1[it] ] = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[v]);
+                normals[ N1[it] ]);
         }
     }
     // NOTE: Old position restore by caller (if needed).
@@ -784,7 +837,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMin(Index v, VecCoord &x, vector<Re
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothPain2D(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals)
+bool Test2DAdapter<DataTypes>::smoothPain2D(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals)
 {
     Real w = 0.5, sigma = 0.01;
 
@@ -856,7 +909,7 @@ bool Test2DAdapter<DataTypes>::smoothPain2D(Index v, VecCoord &x, vector<Real>me
         Real oldworst = 1.0, newworst = 1.0;
         for (Index it=0; it<N1.size(); it++) {
             Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[v]);
+                normals[ N1[it] ]);
 
             if (metrics[N1[it]] < oldworst) {
                 oldworst = metrics[N1[it]];
@@ -952,10 +1005,15 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
             boundary.push_back(x[i]);
         }
     }
-    vparams->drawTool()->drawPoints(boundary, 8, sofa::defaulttype::Vec<4,float>(0.8, 0.0, 0.8, 1.0));
+    vparams->drawTool()->drawPoints(boundary, 8,
+        sofa::defaulttype::Vec<4,float>(0.8, 0.0, 0.8, 1.0));
 
-    helper::vector<defaulttype::Vector3> vv(1, defaulttype::Vector3(myPoint[0], myPoint[1], myPoint[2]));
-    vparams->drawTool()->drawPoints(vv, 4, sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
+    if (m_pointId != InvalidID) {
+        helper::vector<defaulttype::Vector3> vv(1,
+            defaulttype::Vector3(m_point[0], m_point[1], m_point[2]));
+        vparams->drawTool()->drawPoints(vv, 4,
+            sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
+    }
 }
 
 } // namespace controller

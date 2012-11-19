@@ -14,6 +14,8 @@
 #include <sofa/component/topology/TriangleSetGeometryAlgorithms.h>
 #include <sofa/component/topology/TopologyData.h>
 
+#include <sofa/gui/PickHandler.h>
+
 #include <sofa/helper/map.h>
 #include <sofa/helper/vector.h>
 
@@ -86,6 +88,8 @@ public:
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
     typedef sofa::component::topology::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
     typedef sofa::helper::vector<Index> VecIndex;
+
+    enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 
 protected:
 
@@ -213,27 +217,27 @@ public:
      */
     Real funcTriangle(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
         //return metricGeom(t, x, normal);
-        //return metricGeom(t, x, normal) + 4*metricDistance(t, x, normal);
-        return 4*metricDistance(t, x, normal);
+        return 0.01*helper::rsqrt(metricGeom(t, x, normal)) + 0.99*metricDistance(t, x, normal);
+        //return metricDistance(t, x, normal);
     }
 
     Real metricDistance(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) {
-
-        Index pt = 407;
+        if (m_pointId == (Index)-1) return 1.0;
 
         //Real scale = 1e-5;
-        Real precision = 1e-5;
+        //Real precision = 1e-5;
 
         Real d;
-        if (t[0] == pt) d = (myPoint - x[ t[0] ]).norm();
-        else if (t[1] == pt) d = (myPoint - x[ t[1] ]).norm();
-        else if (t[2] == pt) d = (myPoint - x[ t[2] ]).norm();
-        else return 0.0;
+        if (t[0] == m_pointId) d = (m_point - x[ t[0] ]).norm2();
+        else if (t[1] == m_pointId) d = (m_point - x[ t[1] ]).norm2();
+        else if (t[2] == m_pointId) d = (m_point - x[ t[2] ]).norm2();
+        else return 1.0;
 
         // Accept point if distance from target is less than this value.
-        if (d < precision) return 1.0;
+        if (d < m_precision) return 1.0;
 
-        return (Real)1.0 - helper::rsqrt(d);
+        return (Real)1.0 - d;
+        //return (Real)1.0 - helper::rsqrt(d);
     }
 
     /**
@@ -376,9 +380,12 @@ private:
 
     std::map<Index,bool> m_toUpdate; /// List of nodes that have to be rechecked if they are on the boundry.
 
-    Real precision;     /// Amount of precision that is acceptable for us
+    Real m_precision;     /// Amount of precision that is acceptable for us.
 
-    Vec3 myPoint;
+    sofa::gui::PickHandler *m_pickHandler;         // For mouse interaction.
+
+    Vec3 m_point;       /// A point on a surface to attract to.
+    Index m_pointId;    /// Closest point in the mstate.
 
     Real sumgamma, mingamma, maxgamma;
     int ngamma;
@@ -391,7 +398,7 @@ private:
      * @param metrics   Current metrice values for elements
      * @param normals   Original normals (to check for inversion)
      */
-    bool smoothLaplacian(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals);
+    bool smoothLaplacian(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals);
 
     /**
      * @brief Optimization based smoothing
@@ -404,7 +411,7 @@ private:
      * @param metrics   Current metrice values for elements
      * @param normals   Original normals (to check for inversion)
      */
-    bool smoothOptimizeMax(Index v, VecCoord &x, vector<Real>metrics);
+    bool smoothOptimizeMax(Index v, VecCoord &x, vector<Real> &metrics);
 
     /**
      * @brief Optimization based smoothing
@@ -417,7 +424,7 @@ private:
      * @param metrics   Current metrice values for elements
      * @param normals   Original normals (to check for inversion)
      */
-    bool smoothOptimizeMin(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals);
+    bool smoothOptimizeMin(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals);
 
     /**
      * @brief Smoothing based on method of Pain et al. [PUdOG01]
@@ -430,7 +437,7 @@ private:
      * @param metrics   Current metrice values for elements
      * @param normals   Original normals (to check for inversion)
      */
-    bool smoothPain2D(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals);
+    bool smoothPain2D(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals);
 
     /**
      * @brief Detect if nodes lie on the boundary.
