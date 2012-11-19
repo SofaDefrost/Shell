@@ -40,6 +40,7 @@ public:
     typedef gpu::cuda::CudaVec3fTypes DataTypes;
     typedef Test2DAdapter<DataTypes> Main;
     typedef DataTypes::Coord Coord;
+    typedef DataTypes::Deriv Deriv;
     typedef Coord::value_type Real;
 
     typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID     Index;
@@ -51,9 +52,12 @@ public:
         helper::fixed_array<Index,3> nodes;
         Coord normal;
         Real functional;
+        helper::fixed_array<Deriv,3> gradient;
     };
 
     struct PointData {
+
+        bool bBoundary;   /// Is the pont on a border?
 
         unsigned int nNeighboursPt;     /// Number of points in N1-ring.
         const Index *neighboursPt;      /// List of points in N1-ring.
@@ -65,6 +69,9 @@ public:
         Coord oldpos;   /// Temporary holder for original point position.
         Real oldworst;
         Real newworst;
+
+        Index mintri;           // Triangle from N1-ring with smallest functional
+        Deriv grad;    // Gradient for mintri
     };
 
     struct PointDataHost {
@@ -83,6 +90,12 @@ class Test2DAdapterData< gpu::cuda::CudaVec3fTypes >;
 
 template<>
 void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::onEndAnimationStep(const double dt);
+
+template<>
+void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::smoothLinear();
+
+template<>
+void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::smoothParallel();
 
 template<>
 void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::colourGraph();

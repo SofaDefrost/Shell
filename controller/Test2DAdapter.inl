@@ -1,10 +1,15 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 #define SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 
+#include "../initPluginShells.h"
+
 #include <sofa/core/objectmodel/KeypressedEvent.h>
+#include <sofa/core/visual/VisualParams.h>  
 #include <sofa/helper/system/thread/debug.h>
+#include <sofa/component/topology/TopologyData.inl>
 
 #include "Test2DAdapter.h"
+
 
 namespace sofa
 {
@@ -15,28 +20,157 @@ namespace component
 namespace controller
 {
 
+
+#if 1
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::PointInfoHandler::applyCreateFunction(
+    unsigned int pointIndex, PointInformation &/*pInfo*/,
+    const topology::Point& /*elem*/,
+    const sofa::helper::vector< unsigned int > &/*ancestors*/,
+    const sofa::helper::vector< double > &/*coeffs*/)
+{
+    std::cout << "pt " << __FUNCTION__ << pointIndex << std::endl;
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::PointInfoHandler::applyDestroyFunction(unsigned int pointIndex, PointInformation& /*pInfo*/)
+{
+    std::cout << "pt " << __FUNCTION__ << pointIndex << std::endl;
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::PointInfoHandler::swap(unsigned int i1,
+    unsigned int i2)
+{
+    std::cout << "pt " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
+    Inherited::swap(i1, i2);
+    // TODO: update indices in m_toUpdate
+}
+
+
+
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::TriangleInfoHandler::applyCreateFunction(
+    unsigned int triangleIndex, TriangleInformation &tInfo,
+    const topology::Triangle& elem,
+    const sofa::helper::vector< unsigned int > &/*ancestors*/,
+    const sofa::helper::vector< double > &/*coeffs*/)
+{
+    std::cout << "tri " << __FUNCTION__ << triangleIndex << " (" << elem << ") [" << adapter->m_container->getTriangle(triangleIndex) << "]" << std::endl;
+
+    // Check if vertices are on the boundary
+    // NOTE: We cannot do any complicated checking here because the topology
+    //       may be inconsistent.
+    const Triangle& t = adapter->m_container->getTriangle(triangleIndex);
+    adapter->m_toUpdate[t[0]] = true;
+    adapter->m_toUpdate[t[1]] = true;
+    adapter->m_toUpdate[t[2]] = true;
+
+    // Compute initial normal
+    adapter->computeTriangleNormal(elem, adapter->m_state->read(sofa::core::VecCoordId::restPosition())->getValue(), tInfo.normal);
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::TriangleInfoHandler::applyDestroyFunction(unsigned int triangleIndex, TriangleInformation &/*tInfo*/)
+{
+    std::cout << "tri " << __FUNCTION__ << triangleIndex << std::endl;
+    // Check if vertices are on the boundary
+    // NOTE: We cannot do any complicated checking here because the topology
+    //       may be inconsistent.
+    const Triangle& t = adapter->m_container->getTriangle(triangleIndex);
+    adapter->m_toUpdate[t[0]] = true;
+    adapter->m_toUpdate[t[1]] = true;
+    adapter->m_toUpdate[t[2]] = true;
+    assert(0);
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::TriangleInfoHandler::swap(unsigned int i1,
+    unsigned int i2)
+{
+    std::cout << "tri " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
+    Inherited::swap(i1, i2);
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::TriangleInfoHandler::addOnMovedPosition(const sofa::helper::vector<unsigned int> &indexList,
+    const sofa::helper::vector< topology::Triangle > & elems)
+{
+    std::cout << "tri " << __FUNCTION__ << " " << indexList << std::endl;
+    Inherited::addOnMovedPosition(indexList, elems);
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::TriangleInfoHandler::removeOnMovedPosition(const sofa::helper::vector<unsigned int> &indices)
+{
+    std::cout << "tri " << __FUNCTION__ << " " << indices << std::endl;
+    Inherited::removeOnMovedPosition(indices);
+}
+
+
+#endif
+
+
+
+
+
+
+
+
 template<class DataTypes>
 Test2DAdapter<DataTypes>::Test2DAdapter()
 : m_sigma(initData(&m_sigma, (Real)0.01, "sigma", "Minimal increase in functional to accept the change"))
+, m_functionals(initData(&m_functionals, "functionals", "Current values of the functional for each triangle"))
 , stepCounter(0)
+, precision(1e-5)
+, pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
+, triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
+    pointHandler = new PointInfoHandler(this, &pointInfo);
+    triHandler = new TriangleInfoHandler(this, &triInfo);
 }
 
 template<class DataTypes>
 Test2DAdapter<DataTypes>::~Test2DAdapter()
 {
+    if(pointHandler) delete pointHandler;
+    if(triHandler) delete triHandler;
 }
 
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::init()
 {
     m_state = dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes>*> (this->getContext()->getMechanicalState());
-    if (!m_state)
+    if (!m_state) {
         serr << "Unable to find MechanicalState" << sendl;
+        return;
+    }
 
     this->getContext()->get(m_container);
-    if (m_container == NULL)
+    if (m_container == NULL) {
         serr << "Unable to find triangular topology" << sendl;
+        return;
+    }
+
+    this->getContext()->get(m_modifier);
+    if (m_modifier == NULL) {
+        serr << "Unable to find TriangleSetTopologyModifier" << sendl;
+        return;
+    }
+
+    this->getContext()->get(m_algorithms);
+    if (m_algorithms == NULL) {
+        serr << "Unable to find TriangleSetGeometryAlgorithms" << sendl;
+        return;
+    }
+
+    pointInfo.createTopologicalEngine(m_container, pointHandler);
+    pointInfo.registerTopologicalData();
+
+    triInfo.createTopologicalEngine(m_container, triHandler);
+    triInfo.registerTopologicalData();
+
 
     reinit();
 }
@@ -53,7 +187,35 @@ void Test2DAdapter<DataTypes>::reinit()
         m_sigma.endEdit();
     }
     
-    detectBoundary();
+    m_functionals.beginEdit()->resize(m_container->getNbTriangles(), Real(0.0));
+    m_functionals.endEdit();
+
+    helper::vector<PointInformation>& pts = *pointInfo.beginEdit();
+    pts.resize(m_container->getNbPoints());
+    //for (int i=0; i<m_container->getNbPoints(); i++)
+    //{
+    //    pointHandler->applyCreateFunction(
+    //        i,
+    //        pts[i],
+    //        m_container->getPoint(i),
+    //        (const sofa::helper::vector< unsigned int > )0,
+    //        (const sofa::helper::vector< double >)0);
+    //}
+    pointInfo.endEdit();
+
+
+    helper::vector<TriangleInformation>& tris = *triInfo.beginEdit();
+    tris.resize(m_container->getNbTriangles());
+    for (int i=0; i<m_container->getNbTriangles(); i++)
+    {
+        triHandler->applyCreateFunction(
+            i,
+            tris[i],
+            m_container->getTriangle(i),
+            (const sofa::helper::vector< unsigned int > )0,
+            (const sofa::helper::vector< double >)0);
+    }
+    triInfo.endEdit();
 
     stepCounter = 0;
 }
@@ -62,39 +224,53 @@ void Test2DAdapter<DataTypes>::reinit()
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 {
-    std::cout << "CPU step\n";
+    //std::cout << "CPU step\n";
 
-    if ((m_container == NULL) || (m_state == NULL))
+    if ((m_container == NULL) || (m_modifier == NULL) || (m_state == NULL))
         return;
 
     stepCounter++;
+
+    if (stepCounter == 1) {
+        myPoint = Vec3(0.4, 0.3, 0.0);
+    }
+
+    // Update boundary vertices
+    helper::vector<PointInformation>& pts = *pointInfo.beginEdit();
+    for (std::map<Index,bool>::const_iterator i=m_toUpdate.begin();
+        i != m_toUpdate.end(); i++) {
+        pts[i->first].bBoundary =  detectBoundaryVertex(i->first);
+    }
+    pointInfo.endEdit();
+    m_toUpdate.clear();
 
     //if (stepCounter < f_interval.getValue())
     //    return; // Stay still for a few steps
 
     //stepCounter = 0;
 
-    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::position());
-    VecCoord& x = *datax->beginEdit();
+    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::restPosition());
+    //VecCoord& x = *datax->beginEdit();
+    VecCoord x = datax->getValue();
 
     Index nTriangles = m_container->getNbTriangles();
     if (nTriangles == 0)
         return;
     
-    sofa::helper::system::thread::ctime_t start, stop;
-    sofa::helper::system::thread::CTime timer;
-    start = timer.getTime();
+    //sofa::helper::system::thread::ctime_t start, stop;
+    //sofa::helper::system::thread::CTime timer;
+    //start = timer.getTime();
 
-    m_functionals.resize(nTriangles);
-    vector<Vec3> normals(nTriangles);
+    vector<Real> &functionals = *m_functionals.beginEdit();
 
-    // Compute initial metrics and normals
+    functionals.resize(nTriangles);
+
+    // Compute initial metrics
     for (Index i=0; i < nTriangles; i++) {
         Triangle t = m_container->getTriangle(i);
-        computeTriangleNormal(t, x, normals[i]);
-        m_functionals[i] = funcTriangle(t, x, normals[i]);
+        functionals[i] = funcTriangle(t, x, triInfo.getValue()[i].normal);
     }
-    //std::cout << "m: " << m_functionals << "\n";
+    //std::cout << "m: " << functionals << "\n";
 
     ngamma = 0;
     sumgamma = maxgamma = 0.0;
@@ -103,51 +279,112 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     Real maxdelta=0.0;
     unsigned int moved=0;
     for (Index i=0; i<x.size(); i++) {
-        if (m_boundary[i]) {
+        if (pointInfo.getValue()[i].bBoundary) {
             //std::cout << "skipping boundary " << i << "\n";
             continue;
         }
 
         Vec3 xold = x[i];
-        if (!smoothLaplacian(i, x, m_functionals, normals)) {
-        //if (!smoothOptimizeMin(i, x, m_functionals, normals)) {
-        //if (!smoothOptimizeMax(i, x, m_functionals, normals)) {
-        //if (!smoothPain2D(i, x, m_functionals, normals)) {
+        //if (!smoothLaplacian(i, x, functionals, normals))
+        //if (!smoothOptimizeMin(i, x, functionals, normals))
+        if (!smoothOptimizeMax(i, x, functionals))
+        //if (!smoothPain2D(i, x, functionals, normals))
+        {
             x[i] = xold;
         } else {
+            helper::vector <unsigned int> move_ids;
+            helper::vector< helper::vector< unsigned int > > move_ancestors;
+            helper::vector< helper::vector< double > > move_coefs;
+
+            Index tId = m_algorithms->getTriangleInDirection(i, x[i] - xold);
+            if (tId == (Index)-1) {
+                serr << "Unexpected triangle Id -1 for point " << i << "! Marking point as fixed." << sendl;
+
+                x[i] = xold;
+
+                (*pointInfo.beginEdit())[i].bBoundary = true;
+                pointInfo.endEdit();
+
+                //TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(i);
+                //for (Index it=0; it<N1.size(); it++) {
+                //    Index t;
+                //    bool ret = m_algorithms->isPointInsideTriangle(N1[it], false, x[i], t);
+                //    std::cout << N1[it] << ": ret " << ret << " sug " << t << "\n";
+                //}
+
+                //EdgesAroundVertex N1e = m_container->getEdgesAroundVertex(i);
+                //for (Index ip=0; ip<N1e.size(); ip++) {
+                //    Edge e = m_container->getEdge(N1e[ip]);
+                //    std::cout << m_container->getPointDataArray().getValue()[ e[0] ] << " " << m_container->getPointDataArray().getValue()[ e[1] ] << "\n";
+                //}
+            } else {
+                Triangle tri = m_container->getTriangle(tId);
+
+                move_ids.push_back(i);
+
+                move_ancestors.resize(move_ancestors.size()+1);
+                move_ancestors.back().push_back(tri[0]);
+                move_ancestors.back().push_back(tri[1]);
+                move_ancestors.back().push_back(tri[2]);
+
+                move_coefs.push_back(m_algorithms->compute3PointsBarycoefs(x[i], tri[0], tri[1], tri[2], true));
+
+                // Do the real work
+                m_modifier->movePointsProcess(move_ids, move_ancestors, move_coefs);
+                m_modifier->notifyEndingEvent();
+                m_modifier->propagateTopologicalChanges();
+
+
+                // Check
+                //const VecCoord& xnew = m_state->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
+                //std::cout << "requested " << x[i] << "\tgot " << xnew[i] << "\tdelta" << (x[i] - xnew[i]).norm() << "\n";
+
+            }
+
             moved++;
             Real delta = (x[i] - xold).norm2();
             if (delta > maxdelta) {
                 maxdelta = delta;
             }
+    
         }
     }
 
-    stop = timer.getTime();
-    std::cout << "---------- CPU time = " << stop-start << "\n";
-
+    //stop = timer.getTime();
+    //std::cout << "---------- CPU time = " << stop-start << "\n";
 
     // Evaluate improvement
     Real sum=0.0, sum2=0.0, min = 1.0;
     for (Index i=0; i < nTriangles; i++) {
-        if (m_functionals[i] < min) {
-            min = m_functionals[i];
+        if (functionals[i] < min) {
+            min = functionals[i];
         }
-        sum += m_functionals[i];
-        sum2 += m_functionals[i] * m_functionals[i];
+        sum += functionals[i];
+        sum2 += functionals[i] * functionals[i];
     }
     sum /= nTriangles;
     sum2 = helper::rsqrt(sum2/nTriangles);
 
-    std::cout << stepCounter << "] moved " << moved << " points, max delta=" << helper::rsqrt(maxdelta)
-        << " gamma min/avg/max: " << mingamma << "/" << sumgamma/ngamma
-        << "/" << maxgamma
+    //std::cout << stepCounter << "] moved " << moved << " points, max delta=" << helper::rsqrt(maxdelta)
+    //    << " gamma min/avg/max: " << mingamma << "/" << sumgamma/ngamma
+    //    << "/" << maxgamma
 
-        << " Quality min/avg/RMS: " << min << "/" << sum << "/" << sum2
+    //    << " Quality min/avg/RMS: " << min << "/" << sum << "/" << sum2
 
-        << "\n";
+    //    << "\n";
 
     datax->endEdit();
+
+    m_functionals.endEdit();
+
+    //// Write metrics to file
+    //std::ofstream of("/tmp/metrics.csv", std::ios::app);
+    //of << "geom," << stepCounter;
+    //for (Index i=0; i < m_functionals.getValue().size(); i++) {
+    //    of << "," << m_functionals.getValue()[i];
+    //}
+    //of << "\n";
+    //of.close();
 }
 
 template<class DataTypes>
@@ -156,13 +393,19 @@ void Test2DAdapter<DataTypes>::onKeyPressedEvent(core::objectmodel::KeypressedEv
     if (key->getKey() == 'M') { // Ctrl+M
         std::cout << "Writing metrics to file /tmp/metrics.csv\n";
         // Write metrics to file
-        std::ofstream of("/tmp/metrics.csv");
-        of << "geom";
-        for (Index i=0; i < m_functionals.size(); i++) {
-            of << "," << m_functionals[i];
+        std::ofstream of("/tmp/metrics.csv", std::ios::app);
+        of << "geom," << stepCounter;
+        for (Index i=0; i < m_functionals.getValue().size(); i++) {
+            of << "," << m_functionals.getValue()[i];
         }
         of << "\n";
         of.close();
+    }
+    else if (key->getKey() == 'T') {
+
+        for (Index i=0; i<(Index)m_container->getNbPoints(); i++) {
+            detectBoundaryVertex(i);
+        }
     }
 }
 
@@ -244,7 +487,7 @@ bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecCoord &x, vector<Real
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals)
+bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Real>metrics)
 {
     Vec3 xold = x[v];
 
@@ -258,7 +501,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
         x[v][component] += delta;
         for (Index it=0; it<N1.size(); it++) {
             Real m = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[N1[it]]);
+                triInfo.getValue()[ N1[it] ].normal);
             grad[it][component] = (m - metrics[ N1[it] ])/delta;
         }
     }
@@ -281,7 +524,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
     Vec3 step = grad[imin];
 
     // Find out step size
-    Real gamma = 0.5;
+    Real gamma = 0.05;
 
     //gamma *= step.norm();
     step.normalize();
@@ -307,23 +550,23 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
     //    }
     //}
     // Fixed the previous
-    for (Index it=0; it<N1.size(); it++) {
-        if (dot(grad[it], step) > 0)
-            continue;
-        Real tmp = (metrics[ N1[imin] ] - metrics[ N1[it] ]) /
-            dot(grad[it], step);
-        assert(tmp > 0.0);
-        //if (tmp < 0.0) {
-        //    std::cout << "Eeeks! gamma=" << tmp << " partials:\n"
-        //        << "grad[imin] = " << grad[imin] << "\n"
-        //        << "grad[it]   = " << grad[it] << "\n"
-        //        << "m =  " << metrics[ N1[it] ] << "\n"
-        //        << "m' = " << metrics[ N1[imin] ] << "\n";
-        //}
-        if (tmp < gamma) {
-            gamma = tmp;
-        }
-    }
+    //for (Index it=0; it<N1.size(); it++) {
+    //    if (dot(grad[it], step) > 0)
+    //        continue;
+    //    Real tmp = (metrics[ N1[imin] ] - metrics[ N1[it] ]) /
+    //        dot(grad[it], step);
+    //    assert(tmp > 0.0);
+    //    //if (tmp < 0.0) {
+    //    //    std::cout << "Eeeks! gamma=" << tmp << " partials:\n"
+    //    //        << "grad[imin] = " << grad[imin] << "\n"
+    //    //        << "grad[it]   = " << grad[it] << "\n"
+    //    //        << "m =  " << metrics[ N1[it] ] << "\n"
+    //    //        << "m' = " << metrics[ N1[imin] ] << "\n";
+    //    //}
+    //    if (tmp < gamma) {
+    //        gamma = tmp;
+    //    }
+    //}
     //std::cout << "gamma=" << gamma << " grad=" << step << "\n";
     x[v] = xold + gamma*step;
 
@@ -348,7 +591,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
         Real oldworst = 1.0, newworst = 1.0;
         for (Index it=0; it<N1.size(); it++) {
             Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[v]);
+                triInfo.getValue()[v].normal);
 
             if (metrics[N1[it]] < oldworst) {
                 oldworst = metrics[N1[it]];
@@ -383,7 +626,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
         // Update metrics
         for (Index it=0; it<N1.size(); it++) {
             metrics[ N1[it] ] = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[v]);
+                triInfo.getValue()[v].normal);
         }
     }
     // NOTE: Old position restore by caller (if needed).
@@ -642,30 +885,12 @@ bool Test2DAdapter<DataTypes>::smoothPain2D(Index v, VecCoord &x, vector<Real>me
         // Update metrics
         for (Index it=0; it<N1.size(); it++) {
             metrics[ N1[it] ] = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[v]);
+                triInfo.getValue()[ N1[it] ].normal);
         }
     }
     // NOTE: Old position restore by caller (if needed).
 
     return bAccepted;
-}
-
-template<class DataTypes>
-void Test2DAdapter<DataTypes>::detectBoundary()
-{
-    if ((m_container == NULL) || (m_container->getNbTriangles() == 0))
-        return;
-
-    // TODO: maybe use TriangleSetTopologyContainer::getPointsOnBorder()
-    m_boundary.resize(m_container->getNbPoints());
-    for (Index i=0; i<(Index)m_container->getNbEdges(); i++) {
-        TrianglesAroundEdge tlist = m_container->getTrianglesAroundEdge(i);
-        if (tlist.size() != 2) {
-            Edge e = m_container->getEdge(i);
-            m_boundary[e[0]] = true;
-            m_boundary[e[1]] = true;
-        }
-    }
 }
 
 template<class DataTypes>
@@ -689,6 +914,48 @@ void Test2DAdapter<DataTypes>::computeTriangleNormal(const Triangle &t, const Ve
     B /= Bn;
     normal = cross(A, B);
     normal.normalize();
+}
+
+template<class DataTypes>
+bool Test2DAdapter<DataTypes>::detectBoundaryVertex(Index pt)
+{
+    if (m_container == NULL)
+        return false;
+
+    //std::cout << "checking " << pt << "\n";
+    EdgesAroundVertex N1e = m_container->getEdgesAroundVertex(pt);
+    for (Index ie=0; ie<N1e.size(); ie++) {
+        TrianglesAroundEdge tlist = m_container->getTrianglesAroundEdge(N1e[ie]);
+        unsigned int count = tlist.size();
+        //std::cout << "  " << count << " (" << tlist << ")\n";
+        if (count != 2) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
+{
+    if ((!vparams->displayFlags().getShowBehaviorModels()))
+        return;
+
+    const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::position())->getValue();
+
+    helper::vector<defaulttype::Vector3> boundary;
+    const helper::vector<PointInformation> &pts = pointInfo.getValue();
+    for (Index i=0; i < x.size(); i++) {
+        if (pts[i].bBoundary) {
+            boundary.push_back(x[i]);
+        }
+    }
+    vparams->drawTool()->drawPoints(boundary, 8, sofa::defaulttype::Vec<4,float>(0.8, 0.0, 0.8, 1.0));
+
+    helper::vector<defaulttype::Vector3> vv(1, defaulttype::Vector3(myPoint[0], myPoint[1], myPoint[2]));
+    vparams->drawTool()->drawPoints(vv, 4, sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
 }
 
 } // namespace controller

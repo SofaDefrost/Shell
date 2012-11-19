@@ -8,9 +8,15 @@
 #include <sofa/defaulttype/Vec.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
+#include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/TriangleSetTopologyModifier.h>
+#include <sofa/component/topology/TriangleSetGeometryAlgorithms.h>
+#include <sofa/component/topology/TopologyData.h>
 
+#include <sofa/helper/map.h>
 #include <sofa/helper/vector.h>
+
 
 namespace sofa
 {
@@ -78,6 +84,7 @@ public:
     typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle       Triangle;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
+    typedef sofa::component::topology::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
     typedef sofa::helper::vector<Index> VecIndex;
 
 protected:
@@ -90,7 +97,93 @@ protected:
 
 public:
 
+    class PointInformation {
+        public:
+            PointInformation() {}
+
+            bool bBoundary; /// marks whether node lies on the boundary
+
+            /// Output stream
+            inline friend std::ostream& operator<< ( std::ostream& os, const PointInformation& /*pi*/ ) { return os; }
+            /// Input stream
+            inline friend std::istream& operator>> ( std::istream& in, PointInformation& /*pi*/ ) { return in; }
+    };
+
+    class PointInfoHandler : public topology::TopologyDataHandler<topology::Point, sofa::helper::vector<PointInformation> >
+    {
+        public:
+            typedef topology::TopologyDataHandler<topology::Point, sofa::helper::vector<PointInformation> > Inherited;
+            PointInfoHandler(Test2DAdapter<DataTypes>* _adapter, topology::PointData<sofa::helper::vector<PointInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
+
+            //void applyCreateFunction(
+            //    unsigned int pointIndex,
+            //    PointInformation &pInfo,
+            //    const sofa::helper::vector< unsigned int > &ancestors,
+            //    const sofa::helper::vector< double > &coeffs)
+            //{ applyCreateFunction(pointIndex, pInfo, topology::BaseMeshTopology::InvalidID, ancestors, coeffs); }
+
+            void applyCreateFunction(
+                unsigned int pointIndex,
+                PointInformation &pInfo,
+                const topology::Point &elem,
+                const sofa::helper::vector< unsigned int > &ancestors,
+                const sofa::helper::vector< double > &coeffs);
+
+            void applyDestroyFunction(unsigned int pointIndex, PointInformation &pInfo);
+
+            void swap( unsigned int i1, unsigned int i2 );
+
+        protected:
+            Test2DAdapter<DataTypes> *adapter;
+    };
+
+    class TriangleInformation {
+        public:
+            TriangleInformation() {}
+
+            Vec3 normal; /// Initial normal of the triangle.
+
+            /// Output stream
+            inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ ) { return os; }
+            /// Input stream
+            inline friend std::istream& operator>> ( std::istream& in, TriangleInformation& /*ti*/ ) { return in; }
+    };
+
+    class TriangleInfoHandler : public topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> >
+    {
+        public:
+            typedef topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
+
+            TriangleInfoHandler(
+                Test2DAdapter<DataTypes> *_adapter,
+                topology::TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
+
+            void applyCreateFunction(
+                unsigned int triangleIndex,
+                TriangleInformation &tInfo,
+                const topology::Triangle &elem,
+                const sofa::helper::vector< unsigned int > &ancestors,
+                const sofa::helper::vector< double > &coeffs);
+
+            void applyDestroyFunction(unsigned int triangleIndex, TriangleInformation &tInfo);
+
+            void swap( unsigned int i1, unsigned int i2 );
+
+            /// Add Element after a displacement of vertices, ie. add element based on previous position topology revision.
+            void addOnMovedPosition(const sofa::helper::vector<unsigned int> &indexList,
+                const sofa::helper::vector< topology::Triangle > &elems);
+
+            /// Remove Element after a displacement of vertices, ie. add element based on previous position topology revision.
+            void removeOnMovedPosition(const sofa::helper::vector<unsigned int> &indices);
+
+        protected:
+            Test2DAdapter<DataTypes> *adapter;
+    };
+
+
     Data<Real> m_sigma; /// Minimal increase in functional to accept the change
+    Data< helper::vector<Real> > m_functionals; /// Current values of the functional
+
 
     virtual void init();
     virtual void reinit();
@@ -105,6 +198,8 @@ public:
         return DataTypes::Name();
     }
 
+    void draw(const core::visual::VisualParams* vparams);
+
     void onEndAnimationStep(const double dt);
     void onKeyPressedEvent(core::objectmodel::KeypressedEvent *key);
 
@@ -117,7 +212,28 @@ public:
      * @param normal    Surface normal for the triangle (to check for inversion).
      */
     Real funcTriangle(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
-        return metricGeom(t, x, normal);
+        //return metricGeom(t, x, normal);
+        //return metricGeom(t, x, normal) + 4*metricDistance(t, x, normal);
+        return 4*metricDistance(t, x, normal);
+    }
+
+    Real metricDistance(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) {
+
+        Index pt = 407;
+
+        //Real scale = 1e-5;
+        Real precision = 1e-5;
+
+        Real d;
+        if (t[0] == pt) d = (myPoint - x[ t[0] ]).norm();
+        else if (t[1] == pt) d = (myPoint - x[ t[1] ]).norm();
+        else if (t[2] == pt) d = (myPoint - x[ t[2] ]).norm();
+        else return 0.0;
+
+        // Accept point if distance from target is less than this value.
+        if (d < precision) return 1.0;
+
+        return (Real)1.0 - helper::rsqrt(d);
     }
 
     /**
@@ -254,10 +370,15 @@ private:
 
     unsigned int stepCounter;
     sofa::component::topology::TriangleSetTopologyContainer*  m_container;
+    sofa::component::topology::TriangleSetTopologyModifier*  m_modifier;
+    sofa::component::topology::TriangleSetGeometryAlgorithms<DataTypes> *m_algorithms;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
-    helper::vector<bool> m_boundary; /// marks whether node lies on the boundary
 
-    vector<Real> m_functionals;
+    std::map<Index,bool> m_toUpdate; /// List of nodes that have to be rechecked if they are on the boundry.
+
+    Real precision;     /// Amount of precision that is acceptable for us
+
+    Vec3 myPoint;
 
     Real sumgamma, mingamma, maxgamma;
     int ngamma;
@@ -283,7 +404,7 @@ private:
      * @param metrics   Current metrice values for elements
      * @param normals   Original normals (to check for inversion)
      */
-    bool smoothOptimizeMax(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals);
+    bool smoothOptimizeMax(Index v, VecCoord &x, vector<Real>metrics);
 
     /**
      * @brief Optimization based smoothing
@@ -312,9 +433,9 @@ private:
     bool smoothPain2D(Index v, VecCoord &x, vector<Real>metrics, vector<Vec3> normals);
 
     /**
-     * @brief Detect which nodes lie on the boundary.
+     * @brief Detect if nodes lie on the boundary.
      */
-    void detectBoundary();
+    bool detectBoundaryVertex(Index pt);
 
     /**
      * @brief Compute triangle normal.
@@ -328,7 +449,19 @@ private:
     // TODO: isn't this in geometry algorithms or CGAL?
     void computeTriangleNormal(const Triangle &t, const VecCoord &x, Vec3 &normal);
 
+    // GPU-specific methods
     void colourGraph();
+    void smoothLinear();
+    void smoothParallel();
+
+protected:
+
+    topology::PointData< sofa::helper::vector<PointInformation> > pointInfo;
+    PointInfoHandler* pointHandler;
+
+    topology::TriangleData< sofa::helper::vector<TriangleInformation> > triInfo;
+    TriangleInfoHandler* triHandler;
+
 };
 
 

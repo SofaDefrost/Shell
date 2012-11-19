@@ -20,6 +20,12 @@ void Test2DAdapterCuda3f_reduceStep(unsigned int size, void* x, void* pt, void* 
 void Test2DAdapterCuda3f_restoreUnchanged(unsigned int size, void* x, void* pt, void* indices);
 void Test2DAdapterCuda3f_smooth(unsigned int size, void* x, void* tri, void* pt, void* indices);
 void Test2DAdapterCuda3f_testAcceptable(unsigned int size, void* x, const void* tri, void* pt, void* indices, float tolerance);
+///// parallel
+void Test2DAdapterCuda3f_prepareGradients(unsigned int size, const void* x, void* tri);
+void Test2DAdapterCuda3f_smoothParallel(unsigned int size, void* x, const void* tri, void* pt);
+void Test2DAdapterCuda3f_reduceStepP(unsigned int size, void* x, void* pt);
+void Test2DAdapterCuda3f_testAcceptableP(unsigned int size, void* x, const void* tri, void* pt, float tolerance);
+void Test2DAdapterCuda3f_restoreUnchangedP(unsigned int size, void* x, void* pt);
 //#ifdef SOFA_GPU_CUDA_DOUBLE
 //void Test2DAdapterCuda3d_computeTriangleNormal(const void* x, const void* n);
 //#endif
@@ -27,16 +33,20 @@ void Test2DAdapterCuda3f_testAcceptable(unsigned int size, void* x, const void* 
 
 typedef unsigned int Index;
 
-// NOTE: should be equivalent to the Test2DAdapterData::TriangleData
+// NOTE: must be equivalent to the Test2DAdapterData::TriangleData
 template <class Real>
 struct TriangleData {
     Index nodes[3];
     CudaVec3<Real> normal;
     Real functional;
+    CudaVec3<Real> gradient[3];
 };
 
+// NOTE: must be equivalent to the Test2DAdapterData::PointData
 template <class Real>
 struct PointData {
+    bool bBoundary;
+
     unsigned int nNeighboursPt;
     const Index *neighboursPt;
 
@@ -47,6 +57,9 @@ struct PointData {
     CudaVec3<Real> oldpos;
     Real oldworst;
     Real newworst;
+
+    Index mintri;
+    CudaVec3<Real> grad;
 };
 
 //////////////////////
@@ -115,6 +128,15 @@ __device__ Real functionalGeom(const Index t,
     }
 
     return m;
+}
+
+template<class Real>
+__device__ __inline__ Index translateIndexInTriangle(Index index,
+    const TriangleData<Real> &tri)
+{
+    if (tri.nodes[0] == index) return 0;
+    if (tri.nodes[1] == index) return 1;
+    return 2;
 }
 
 //////////////////////
@@ -255,7 +277,6 @@ __global__ void Test2DAdapterCuda3t_restoreUnchanged_kernel(unsigned int size,
 {
     int index = umul24(blockIdx.x,BSIZE)+threadIdx.x;
     if (index < size) {
-
         Index v = indices[index];
         if (!pt[v].bAccepted) {
             x[v] = pt[v].oldpos;
@@ -291,6 +312,179 @@ __global__ void Test2DAdapterCuda3t_testAcceptable_kernel(unsigned int size,
         //}
     }
 }
+
+///// parallel
+
+template<class Real>
+__global__ void Test2DAdapterCuda3t_prepareGradients_kernel(unsigned int size,
+    CudaVec3<Real>* x, TriangleData<Real>* tri)
+{
+    typedef CudaVec3<Real> Vec3;
+
+    int index = umul24(blockIdx.x,BSIZE)+threadIdx.x;
+    if (index < size) {
+        // TODO: handle boundary vertices
+
+        for (int i=0; i<3; i++) {
+            // For each corner
+
+            Real delta = 1e-5;
+
+            Index v = tri[index].nodes[i];
+            Vec3 xold = x[v];
+
+            // NOTE: Constrained to 2D!
+            // TODO: can we use shared memory here?
+            // -- X
+            x[v].x += delta;
+            Real m = functionalGeom<Real>(index, x, tri);
+            tri[index].gradient[i].x = (m - tri[index].functional)/delta;
+            // -- Y
+            x[v].x = xold.x;
+            x[v].y += delta;
+            m = functionalGeom<Real>(index, x, tri);
+            tri[index].gradient[i].y = (m - tri[index].functional)/delta;
+
+            x[v].y = xold.y;
+        }
+    }
+}
+
+template<class Real>
+__global__ void Test2DAdapterCuda3t_smoothParallel_kernel(unsigned int size,
+    CudaVec3<Real>* x, const TriangleData<Real>* tri, PointData<Real>* pt)
+{
+    typedef CudaVec3<Real> Vec3;
+
+    int index = umul24(blockIdx.x,BSIZE)+threadIdx.x;
+    if (index < size) {
+
+        pt[index].oldpos = x[index];
+        pt[index].oldworst = getMinFunc(index, tri, pt);
+        pt[index].bAccepted = false;
+
+        unsigned int nElem = pt[index].nNeighboursTri;
+
+        // Find smallest functional with non-zero gradient
+        Index tmin = Index(-1);
+        Real fmin = 1.0;
+        Vec3 step = Vec3::make(0.0, 0.0, 0.0);
+        if (!pt[index].bBoundary) {
+        for (Index it=0; it<nElem; it++) {
+            Index t = pt[index].neighboursTri[it];
+            Vec3 tg = tri[t].gradient[ translateIndexInTriangle(index, tri[t]) ];
+            if ((tri[t].functional < fmin) && (norm2(tg) > 1e-15)) {
+                fmin = tri[t].functional;
+                tmin = t;
+                step = tg;
+            }
+        }
+        }
+        pt[index].mintri = tmin;
+        pt[index].grad = step;
+
+        // Sync -- we need mintri to be available for all points
+        __syncthreads();
+
+        // Consult neighbourhood and make an estimate
+        Vec3 ns = Vec3::make(0.0, 0.0, 0.0);
+        if (!pt[index].bBoundary) {
+
+        for (Index it=0; it<nElem; it++) {
+            Index t = pt[index].neighboursTri[it];
+
+            Index otherp[2];
+            Index othert[2];
+            for (int v=0, i=0; v<3; v++) {
+                if (tri[t].nodes[v] == index) continue;
+                otherp[i] = tri[t].nodes[v];
+                othert[i] = pt[ otherp[i] ].mintri;
+                i++;
+            }
+
+            Vec3 tmp = step;
+            if (tmin == othert[0]) tmp = tmp / Real(2.0);
+            if (tmin == othert[1]) tmp = tmp / Real(2.0);
+
+            if (tmin != othert[0] && tmin != othert[1]) {
+                tmp += (pt[ otherp[0] ].grad + pt[ otherp[1] ].grad)/Real(2.0);
+            } else if (tmin != othert[0]) {
+                tmp += pt[ otherp[0] ].grad;
+            } else if (tmin != othert[1]) {
+                tmp += pt[ otherp[1] ].grad;
+            } 
+
+            ns += tmp;
+        }
+        ns = ns / Real(nElem);
+
+        }
+
+        Real gamma = 0.005;
+
+        x[index] += gamma*ns;
+    }
+}
+
+template<class Real>
+__global__ void Test2DAdapterCuda3t_reduceStepP_kernel(unsigned int size,
+    CudaVec3<Real>* x, const PointData<Real>* pt)
+{
+    typedef CudaVec3<Real> Vec3;
+
+    int index = umul24(blockIdx.x,BSIZE)+threadIdx.x;
+    if (index < size) {
+
+        if (!pt[index].bAccepted) {
+            // The correct step size is best found empiricaly
+            x[index] = pt[index].oldpos
+                + (x[index] - pt[index].oldpos) * Real(2.0/3.0);
+            //x[index] = (x[v] + pt[index].oldpos)/2.0;
+        }
+    }
+}
+
+template<class Real>
+__global__ void Test2DAdapterCuda3t_testAcceptableP_kernel(unsigned int size,
+    CudaVec3<Real>* x, const TriangleData<Real>* tri, PointData<Real>* pt,
+    float tolerance)
+{
+    int index = umul24(blockIdx.x,BSIZE)+threadIdx.x;
+    if (index < size) {
+
+        //// This check is not worth the effort
+        //if ((xold - x[index]).norm2() < 1e-8) {
+        //    // No change in position
+        //    //std::cout << "No change in position for " << index << "\n";
+        //    break;
+        //}
+
+        //if (!pt[index].bAccepted) { // TODO
+
+        // We accept any change that doesn't decrease worst metric for the
+        // triangle set.
+        Real newworst = getMinFunc(index, tri, pt);
+        if (newworst >= (pt[index].oldworst + tolerance)) {
+            pt[index].bAccepted = true;
+        }
+        pt[index].newworst = newworst;
+
+        //}
+    }
+}
+
+template<class Real>
+__global__ void Test2DAdapterCuda3t_restoreUnchangedP_kernel(unsigned int size,
+    CudaVec3<Real>* x, const PointData<Real>* pt)
+{
+    int index = umul24(blockIdx.x,BSIZE)+threadIdx.x;
+    if (index < size) {
+        if (!pt[index].bAccepted) {
+            x[index] = pt[index].oldpos;
+        }
+    }
+}
+
 
 
 //////////////////////
@@ -352,6 +546,64 @@ void Test2DAdapterCuda3f_testAcceptable(unsigned int size, void* x, const void* 
     mycudaDebugError("Test2DAdapterCuda3t_testAcceptable_kernel<float>");
 }
 
+
+/// Specific to parallel version
+
+void Test2DAdapterCuda3f_prepareGradients(unsigned int size, const void* x,
+    void* tri)
+{
+    dim3 threads(BSIZE,1);
+    dim3 grid((size+BSIZE-1)/BSIZE,1);
+    Test2DAdapterCuda3t_prepareGradients_kernel<float>
+        <<< grid, threads >>>(
+            size, (CudaVec3<float>*)x, (TriangleData<float>*)tri);
+    mycudaDebugError("Test2DAdapterCuda3t_prepareGradients_kernel<float>");
+}
+
+void Test2DAdapterCuda3f_smoothParallel(unsigned int size, void* x,
+    const void* tri, void* pt)
+{
+    dim3 threads(BSIZE,1);
+    dim3 grid((size+BSIZE-1)/BSIZE,1);
+    Test2DAdapterCuda3t_smoothParallel_kernel<float>
+        <<< grid, threads >>>(
+            size, (CudaVec3<float>*)x, (const TriangleData<float>*)tri,
+            (PointData<float>*)pt);
+    mycudaDebugError("Test2DAdapterCuda3t_smoothParallel_kernel<float>");
+}
+
+void Test2DAdapterCuda3f_reduceStepP(unsigned int size, void* x, void* pt)
+{
+    dim3 threads(BSIZE,1);
+    dim3 grid((size+BSIZE-1)/BSIZE,1);
+    Test2DAdapterCuda3t_reduceStepP_kernel<float>
+        <<< grid, threads >>>(
+            size, (CudaVec3<float>*)x, (const PointData<float>*)pt);
+    mycudaDebugError("Test2DAdapterCuda3t_reduceStepP_kernel<float>");
+}
+
+void Test2DAdapterCuda3f_testAcceptableP(unsigned int size, void* x,
+    const void* tri, void* pt, float tolerance)
+{
+    dim3 threads(BSIZE,1);
+    dim3 grid((size+BSIZE-1)/BSIZE,1);
+    Test2DAdapterCuda3t_testAcceptableP_kernel<float>
+        <<< grid, threads >>>(
+            size, (CudaVec3<float>*)x, (const TriangleData<float>*)tri,
+            (PointData<float>*)pt, tolerance);
+    mycudaDebugError("Test2DAdapterCuda3t_testAcceptableP_kernel<float>");
+}
+
+void Test2DAdapterCuda3f_restoreUnchangedP(unsigned int size, void* x,
+    void* pt)
+{
+    dim3 threads(BSIZE,1);
+    dim3 grid((size+BSIZE-1)/BSIZE,1);
+    Test2DAdapterCuda3t_restoreUnchangedP_kernel<float>
+        <<< grid, threads >>>(
+            size, (CudaVec3<float>*)x, (const PointData<float>*)pt);
+    mycudaDebugError("Test2DAdapterCuda3t_restoreUnchangedP_kernel<float>");
+}
 
 
 #if defined(__cplusplus) && CUDA_VERSION < 2000

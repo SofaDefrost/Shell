@@ -14,6 +14,12 @@ void Test2DAdapterCuda3f_reduceStep(unsigned int size, void* x, void* pt, void* 
 void Test2DAdapterCuda3f_restoreUnchanged(unsigned int size, void* x, void* pt, void* indices);
 void Test2DAdapterCuda3f_smooth(unsigned int size, void* x, void* tri, void* pt, void* indices);
 void Test2DAdapterCuda3f_testAcceptable(unsigned int size, void* x, const void* tri, void* pt, void* indices, float tolerance);
+///// parallel
+void Test2DAdapterCuda3f_prepareGradients(unsigned int size, const void* x, void* tri);
+void Test2DAdapterCuda3f_smoothParallel(unsigned int size, void* x, const void* tri, void* pt);
+void Test2DAdapterCuda3f_reduceStepP(unsigned int size, void* x, void* pt);
+void Test2DAdapterCuda3f_testAcceptableP(unsigned int size, void* x, const void* tri, void* pt, float tolerance);
+void Test2DAdapterCuda3f_restoreUnchangedP(unsigned int size, void* x, void* pt);
 //#ifdef SOFA_GPU_CUDA_DOUBLE
 //void Test2DAdapterCuda3d_computeTriangleNormal(const void* x, const void* n);
 //#endif
@@ -39,12 +45,12 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::onEndAnimationStep(const double
     if ((m_container == NULL) || (m_state == NULL))
         return;
 
-    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::position());
-    VecCoord& x = *datax->beginEdit();
-
     Index nTriangles = m_container->getNbTriangles();
     if (nTriangles == 0)
         return;
+
+    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::position());
+    VecCoord& x = *datax->beginEdit();
 
     //////////////////////////
     // Initialization
@@ -92,6 +98,7 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::onEndAnimationStep(const double
                 data.pointsHost[v].neighboursTri[it] = N1[it];
             }
 
+            data.points[v].bBoundary = pointInfo.getValue()[v].bBoundary;
             data.points[v].nNeighboursTri = N1.size();
             data.points[v].neighboursTri= reinterpret_cast<const Index*>
                 (data.pointsHost[v].neighboursTri.deviceRead());
@@ -123,19 +130,86 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::onEndAnimationStep(const double
     sofa::helper::system::thread::CTime timer;
     start = timer.getTime();
 
-    void *triangles_gpu = data.triangles.deviceWrite(); // Persistent on gpu, we don't need to use this on host
-    void *points_gpu = data.points.deviceWrite(); // Persistent on gpu, we don't need to use this on host
+    //smoothLinear();
+    smoothParallel();
 
-    Test2DAdapterCuda3f_computeTriangleNormal(nTriangles, x.deviceRead(), triangles_gpu);
+    stop = timer.getTime();
+    std::cout << "---------- GPU time = " << stop-start << "\n";
 
-    //data.triangles.hostRead();
-    //std::cout << "n/x:\n";
-    //for (unsigned int i=0; i<nTriangles; i++) {
-    //    std::cout << "[" << data.triangles[i].normal << "]/[" << x[i] << "]\n";
-    //}
-    //std::cout << "\n";
 
-    Test2DAdapterCuda3f_functionalGeom(nTriangles, x.deviceRead(), triangles_gpu);
+    data.triangles.hostRead();
+
+    vector<Real> &functionals = *m_functionals.beginEdit();
+    functionals.resize(nTriangles);
+    for (Index i=0; i<nTriangles; i++) {
+        functionals[i] = data.triangles[i].functional;
+    }
+    m_functionals.endEdit();
+
+    // Write metrics to file
+    std::ofstream of("/tmp/metrics.csv", std::ios::app);
+    of << "geom," << stepCounter;
+    for (Index i=0; i < m_functionals.getValue().size(); i++) {
+        of << "," << m_functionals.getValue()[i];
+    }
+    of << "\n";
+    of.close();
+
+#if 0
+    //ngamma = 0;
+    //sumgamma = maxgamma = 0.0;
+    //mingamma = 1.0;
+
+    //Real maxdelta=0.0;
+    //unsigned int moved=0;
+
+    // Evaluate improvement
+    Real sum=0.0, sum2=0.0, min = 1.0;
+    for (Index i=0; i < nTriangles; i++) {
+        if (m_functionals[i] < min) {
+            min = m_functionals[i];
+        }
+        sum += m_functionals[i];
+        sum2 += m_functionals[i] * m_functionals[i];
+    }
+    sum /= nTriangles;
+    sum2 = helper::rsqrt(sum2/nTriangles);
+
+    std::cout << stepCounter << "] moved " << moved << " points, max delta=" << helper::rsqrt(maxdelta)
+        << " gamma min/avg/max: " << mingamma << "/" << sumgamma/ngamma
+        << "/" << maxgamma
+
+        << " Quality min/avg/RMS: " << min << "/" << sum << "/" << sum2
+
+        << "\n";
+
+#endif
+
+    datax->endEdit();
+}
+
+
+template<>
+void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::smoothLinear()
+{
+    Index nTriangles = m_container->getNbTriangles();
+    if (nTriangles == 0)
+        return;
+
+    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::position());
+    VecCoord& x = *datax->beginEdit();
+
+    // Persistent on gpu, we don't need to use this on host
+    void *triangles_gpu = data.triangles.deviceWrite();
+    void *points_gpu = data.points.deviceWrite();
+
+    // Compute initial normals
+    Test2DAdapterCuda3f_computeTriangleNormal(nTriangles, x.deviceRead(),
+        triangles_gpu);
+
+    // Compute initial values of the functional
+    Test2DAdapterCuda3f_functionalGeom(nTriangles, x.deviceRead(),
+        triangles_gpu);
 
     //data.triangles.hostRead();
     //std::cout << "m: ";
@@ -143,15 +217,6 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::onEndAnimationStep(const double
     //    std::cout << data.triangles[i].functional << " ";
     //}
     //std::cout << "\n";
-
-    CudaVector<Vec3> normals(nTriangles);
-
-    //ngamma = 0;
-    //sumgamma = maxgamma = 0.0;
-    //mingamma = 1.0;
-
-    //Real maxdelta=0.0;
-    //unsigned int moved=0;
 
     for (unsigned int c=0; c<data.colours.size(); c++) {
         unsigned int nPoints = data.colours[c].size();
@@ -202,57 +267,80 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::onEndAnimationStep(const double
 
     // Copy results
     x.hostRead();
+    datax->endEdit();
+}
 
-    stop = timer.getTime();
-    std::cout << "---------- GPU time = " << stop-start << "\n";
+template<>
+void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::smoothParallel()
+{
+    Index nTriangles = m_container->getNbTriangles();
+    Index nPoints = m_container->getNbPoints();
+    if (nTriangles == 0)
+        return;
 
-#if 0
-    TODO
+    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::position());
+    VecCoord& x = *datax->beginEdit();
 
-    for (Index i=0; i<x.size(); i++) {
-        if (m_boundary[i]) {
-            //std::cout << "skipping boundary " << i << "\n";
-            continue;
-        }
+    // Persistent on gpu, we don't need to use this on host
+    void *triangles_gpu = data.triangles.deviceWrite();
+    void *points_gpu = data.points.deviceWrite();
 
-        Vec3 xold = x[i];
-        // TODO: Kernel
-        //!! if (!smoothLaplacian(i, x, m_functionals, normals)) {
-        //!! //if (!smoothOptimizeMin(i, x, m_functionals, normals)) {
-        //!! //if (!smoothOptimizeMax(i, x, m_functionals, normals)) {
-        //!! //if (!smoothPain2D(i, x, m_functionals, normals)) {
-        //!!     x[i] = xold;
-        //!! } else {
-        //!!     moved++;
-        //!!     Real delta = (x[i] - xold).norm2();
-        //!!     if (delta > maxdelta) {
-        //!!         maxdelta = delta;
-        //!!     }
-        //!! }
+    // Compute initial normals
+    Test2DAdapterCuda3f_computeTriangleNormal(nTriangles, x.deviceRead(),
+        triangles_gpu);
+
+    // Compute initial values of the functional
+    Test2DAdapterCuda3f_functionalGeom(nTriangles, x.deviceRead(),
+        triangles_gpu);
+
+    // Prepare gradients
+    Test2DAdapterCuda3f_prepareGradients(nTriangles, x.deviceRead(),
+        triangles_gpu);
+
+    // Per vertex operations: gradient, assumed step
+    Test2DAdapterCuda3f_smoothParallel(nPoints, x.deviceWrite(),
+        triangles_gpu, points_gpu);
+
+    // Re-evaluate functional
+    Test2DAdapterCuda3f_functionalGeom(nTriangles, x.deviceRead(),
+        triangles_gpu);
+
+    // Test for acceptance
+    Test2DAdapterCuda3f_testAcceptableP(nPoints, x.deviceWrite(),
+        triangles_gpu, points_gpu, m_sigma.getValue());
+
+    data.points.hostRead();
+    for (unsigned int i=0; i<x.size(); i++) {
+        std::cout << i << ": " << data.points[i].oldworst << "/" <<
+            data.points[i].newworst << " " << data.points[i].bAccepted << "\n";
     }
 
-    // Evaluate improvement
-    Real sum=0.0, sum2=0.0, min = 1.0;
-    for (Index i=0; i < nTriangles; i++) {
-        if (m_functionals[i] < min) {
-            min = m_functionals[i];
-        }
-        sum += m_functionals[i];
-        sum2 += m_functionals[i] * m_functionals[i];
+    for (int i=0; i<10; i++) {
+        // Try smaller step
+        // TODO: do we want something "smarter"?
+        Test2DAdapterCuda3f_reduceStepP(nPoints, x.deviceWrite(), points_gpu);
+        // Re-evaluate functional
+        Test2DAdapterCuda3f_functionalGeom(nTriangles, x.deviceRead(),
+            triangles_gpu);
+        // Test for acceptance
+        Test2DAdapterCuda3f_testAcceptableP(nPoints, x.deviceWrite(),
+            triangles_gpu, points_gpu, m_sigma.getValue());
     }
-    sum /= nTriangles;
-    sum2 = helper::rsqrt(sum2/nTriangles);
 
-    std::cout << stepCounter << "] moved " << moved << " points, max delta=" << helper::rsqrt(maxdelta)
-        << " gamma min/avg/max: " << mingamma << "/" << sumgamma/ngamma
-        << "/" << maxgamma
+    // Restore positions of unchanged nodes
+    // TODO: we can't use the same method as for linear. By reseting the
+    // position we may change the functional for neighbouring regions. Also we
+    // should somehow keep the position inside the new convex polygon formed by
+    // moving the N1-ring instead of simply restoring the original position.
+    Test2DAdapterCuda3f_restoreUnchangedP(nPoints, x.deviceWrite(),
+        points_gpu);
 
-        << " Quality min/avg/RMS: " << min << "/" << sum << "/" << sum2
+    // Re-evaluate functional
+    Test2DAdapterCuda3f_functionalGeom(nTriangles, x.deviceRead(),
+        triangles_gpu);
 
-        << "\n";
-
-#endif
-
+    // Copy results
+    x.hostRead();
     datax->endEdit();
 }
 
@@ -266,7 +354,7 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::colourGraph()
 
     for (Index v=0; (int)v<m_container->getNbPoints(); v++) {
 
-        if (m_boundary[v]) continue; // Skip boundary vertices
+        if (pointInfo.getValue()[v].bBoundary) continue; // Skip boundary vertices
 
         c[v] = 0;
 
