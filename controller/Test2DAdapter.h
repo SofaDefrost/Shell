@@ -105,7 +105,8 @@ public:
         public:
             PointInformation() {}
 
-            bool bBoundary; /// marks whether node lies on the boundary
+            /// Marks whether node lies on the boundary.
+            bool bBoundary;
 
             /// Output stream
             inline friend std::ostream& operator<< ( std::ostream& os, const PointInformation& /*pi*/ ) { return os; }
@@ -145,7 +146,8 @@ public:
         public:
             TriangleInformation() {}
 
-            Vec3 normal; /// Initial normal of the triangle.
+            /// Initial normal of the triangle.
+            Vec3 normal;
 
             /// Output stream
             inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ ) { return os; }
@@ -185,8 +187,10 @@ public:
     };
 
 
-    Data<Real> m_sigma; /// Minimal increase in functional to accept the change
-    Data< helper::vector<Real> > m_functionals; /// Current values of the functional
+    /// Minimal increase in functional to accept the change.
+    Data<Real> m_sigma;
+    /// Current values of the functional for each triangle.
+    Data< helper::vector<Real> > m_functionals;
 
 
     virtual void init();
@@ -378,14 +382,19 @@ private:
     sofa::component::topology::TriangleSetGeometryAlgorithms<DataTypes> *m_algorithms;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
 
-    std::map<Index,bool> m_toUpdate; /// List of nodes that have to be rechecked if they are on the boundry.
+    /// List of nodes that have to be rechecked if they are on the boundry.
+    std::map<Index,bool> m_toUpdate;
 
-    Real m_precision;     /// Amount of precision that is acceptable for us.
+    /// Amount of precision that is acceptable for us.
+    Real m_precision;
 
-    sofa::gui::PickHandler *m_pickHandler;         // For mouse interaction.
+    /// Object handling the mouse interaction.
+    sofa::gui::PickHandler *m_pickHandler;
 
-    Vec3 m_point;       /// A point on a surface to attract to.
-    Index m_pointId;    /// Closest point in the mstate.
+    /// A point on a surface to attract to.
+    Vec3 m_point;
+    /// Closest point in the mstate.
+    Index m_pointId;
 
     Real sumgamma, mingamma, maxgamma;
     int ngamma;
