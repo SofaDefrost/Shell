@@ -82,6 +82,7 @@ public:
 
     typedef sofa::component::topology::EdgeSetTopologyContainer::Edge               Edge;
     typedef sofa::component::topology::EdgeSetTopologyContainer::EdgesAroundVertex  EdgesAroundVertex;
+    //typedef sofa::component::topology::VecEdgeID                                    VecEdgeID;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID     Index;
     typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle       Triangle;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
@@ -101,12 +102,25 @@ protected:
 
 public:
 
+    /// Holds information about each node.
     class PointInformation {
         public:
-            PointInformation() {}
+            PointInformation() : type(NORMAL) {}
 
-            /// Marks whether node lies on the boundary.
-            bool bBoundary;
+            /// Type of the node.
+            enum NodeType { NORMAL, FIXED, BOUNDARY };
+
+            /// Line this boundary node lies on.
+            Vec3 boundary;
+
+            /// @brief Marks the type of the node (whether it lies on the
+            /// boundary or is fixed).
+            NodeType type;
+
+            /// Returns true if node lies on the boundary.
+            bool isBoundary() const { return type == BOUNDARY; }
+            /// Returns true if node is fixed and cannot be moved.
+            bool isFixed() const { return type == FIXED; }
 
             /// Output stream
             inline friend std::ostream& operator<< ( std::ostream& os, const PointInformation& /*pi*/ ) { return os; }
@@ -187,11 +201,13 @@ public:
     };
 
 
-    /// Minimal increase in functional to accept the change.
+    /// Minimal increase in functional to accept the change
     Data<Real> m_sigma;
-    /// Current values of the functional for each triangle.
+    /// Current value of the functional for each triangle.
     Data< helper::vector<Real> > m_functionals;
-
+    /// @brief If geometric functinal drops below this value the attached node
+    /// is dropped.
+    Data<Real> m_affinity;
 
     virtual void init();
     virtual void reinit();
@@ -219,14 +235,20 @@ public:
      * @param x         Vertices.
      * @param normal    Surface normal for the triangle (to check for inversion).
      */
-    Real funcTriangle(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
+    Real funcTriangle(const Triangle &t, const VecCoord &x, const Vec3 &normal) const {
         //return metricGeom(t, x, normal);
-        return 0.01*helper::rsqrt(metricGeom(t, x, normal)) + 0.99*metricDistance(t, x, normal);
-        //return metricDistance(t, x, normal);
+
+        // TODO: Simple sum is not good enough. Geometrical functionals
+        // use negative value to designate inverted triangle. This information
+        // may be lost in the sumation although any inverted triangle is worse
+        // than any non-inverted triangle.
+        return metricInverted(t, x, normal) * (
+            0.1*helper::rsqrt(metricGeom(t, x, normal)) + 0.9*metricDistance(t, x, normal));
     }
 
-    Real metricDistance(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) {
-        if (m_pointId == (Index)-1) return 1.0;
+
+    Real metricDistance(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
+        if (m_pointId == InvalidID) return 1.0;
 
         //Real scale = 1e-5;
         //Real precision = 1e-5;
@@ -245,14 +267,30 @@ public:
     }
 
     /**
+     * @brief Detects triangle inversion
+     *
+     * @param t         Triangle to compute the metric for.
+     * @param x         Vertices.
+     * @param normal    Surface normal for the triangle (to check for inversion).
+     *
+     * @returns Returns 1 if triangle is OK, -1 if it is inverted.
+     */
+    Real metricInverted(const Triangle &t, const VecCoord &x, const Vec3 &normal) const {
+        // Is triangle inverted?
+        Vec3 nt;
+        computeTriangleNormal(t, x, nt);
+        return ((nt*normal) < 1e-15) ? -1.0 : 1.0;
+    }
+
+    /**
      * @brief Distortion metric for a triangle from [CTS98] (but probably due
      * to somebody else)
      *
      * @param t         Triangle to compute the metric for.
      * @param x         Vertices.
-     * @param normal    Surface normal for the triangle (to check for inversion).
+     * @param normal    Surface normal for the triangle.
      */
-    Real metricGeom(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
+    Real metricGeom(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
         // TODO: we can precompute these
         Vec3 ab = x[ t[1] ] - x[ t[0] ];
         Vec3 ca = x[ t[0] ] - x[ t[2] ];
@@ -263,25 +301,17 @@ public:
         m *= ca.cross(cb).norm(); // || CA × CB ||
         m /= ca.norm2() + ab.norm2() + cb.norm2();
 
-        // Is triangle inverted?
-        Vec3 nt;
-        computeTriangleNormal(t, x, nt);
-        if (dot(nt, normal) < 0) {
-            m *= -1.0;
-        }
-
         return m;
     }
 
     /**
-     * @brief Distortion metric for a triangle from [VL99] extended for
-     * handling of inverted triangles.
+     * @brief Distortion metric for a triangle from [VL99].
      *
      * @param t         Triangle to compute the metric for.
      * @param x         Vertices.
-     * @param normal    Surface normal for the triangle (to check for inversion).
+     * @param normal    Surface normal for the triangle.
      */
-    Real metricGeom2(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
+    Real metricGeom2(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
         // TODO: we can precompute these
         Vec3 ab = x[ t[1] ] - x[ t[0] ];
         Vec3 ca = x[ t[0] ] - x[ t[2] ];
@@ -304,13 +334,6 @@ public:
 
         m *= ip * ip * ip;
 
-        // Is triangle inverted?
-        Vec3 nt;
-        computeTriangleNormal(t, x, nt);
-        if (dot(nt, normal) < 0) {
-            m *= -1.0;
-        }
-
         return m;
     }
 
@@ -318,8 +341,7 @@ public:
      * @brief Distortion metric for a triangle adapted from [PUdOG01].
      *
      * Distortion metric for a triangle adapted from [PUdOG01]. The original
-     * functional has minimum at 0. We invert it and set maximum to 1. It is
-     * extended for handling of inverted triangles.
+     * functional has minimum at 0. We invert it and set maximum to 1.
      *
      * NOTE: Strangely the minimum (resp. maximum) is not the geometry of
      * equilateral triangle. I.e. for triangle with two nodes at (0,0) and
@@ -333,9 +355,9 @@ public:
      *
      * @param t         Triangle to compute the metric for.
      * @param x         Vertices.
-     * @param normal    Surface normal for the triangle (to check for inversion).
+     * @param normal    Surface normal for the triangle.
      */
-    Real metricGeom3(const Triangle &t, const VecCoord &x, const Vec3 &normal) {
+    Real metricGeom3(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
         // TODO: we can precompute these
         Vec3 vab = x[ t[1] ] - x[ t[0] ];
         Vec3 vca = x[ t[0] ] - x[ t[2] ];
@@ -362,14 +384,6 @@ public:
         // Transform into function with max at 1
         m = 1.0/(m + 1.0);
 
-        // Is triangle inverted?
-        Vec3 nt;
-        computeTriangleNormal(t, x, nt);
-        if (dot(nt, normal) < 0) {
-            m *= -1.0;
-            //m *= 10000;
-        }
-
         return m;
     }
 
@@ -391,10 +405,16 @@ private:
     /// Object handling the mouse interaction.
     sofa::gui::PickHandler *m_pickHandler;
 
-    /// A point on a surface to attract to.
-    Vec3 m_point;
     /// Closest point in the mstate.
     Index m_pointId;
+    /// A point on a surface to attract to (valid only if m_pointId != InvalidID).
+    Vec3 m_point;
+    /// @brief Triangle ID inside which m_point is located (valid only if
+    ///m_pointId != InvalidID).
+    Index m_pointTriId;
+    /// @brief Number of iterations during which the attached node will not be
+    /// reattached.
+    unsigned int m_gracePeriod;
 
     Real sumgamma, mingamma, maxgamma;
     int ngamma;
@@ -449,9 +469,22 @@ private:
     bool smoothPain2D(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals);
 
     /**
-     * @brief Detect if nodes lie on the boundary.
+     * @brief Inspect the nodes to detect boundary/fixed nodes.
      */
-    bool detectBoundaryVertex(Index pt);
+    void recheckBoundary();
+
+    /**
+     * @brief Detect if node can be moved or not.
+     *
+     * Detects if node lies on a boundary and if it can be moved or not.
+     *
+     * @param pt        Index of the point to inspect.
+     * @param boundary  Direction of the boundary (set only if the type is BOUNDARY).
+     *
+     * @returns Type of the node.
+     *
+     */
+    typename PointInformation::NodeType detectNodeType(Index pt, Vec3 &boundaryDirection);
 
     /**
      * @brief Compute triangle normal.
@@ -462,8 +495,8 @@ private:
      * @param normal    The computed normal.
      *
      */
-    // TODO: isn't this in geometry algorithms or CGAL?
-    void computeTriangleNormal(const Triangle &t, const VecCoord &x, Vec3 &normal);
+    // TODO: this is geometry algorithms
+    void computeTriangleNormal(const Triangle &t, const VecCoord &x, Vec3 &normal) const;
 
     // GPU-specific methods
     void colourGraph();

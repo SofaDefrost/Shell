@@ -98,7 +98,7 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::onEndAnimationStep(const double
                 data.pointsHost[v].neighboursTri[it] = N1[it];
             }
 
-            data.points[v].bBoundary = pointInfo.getValue()[v].bBoundary;
+            data.points[v].bBoundary = pointInfo.getValue()[v].isBoundary() || pointInfo.getValue()[v].isFixed();
             data.points[v].nNeighboursTri = N1.size();
             data.points[v].neighboursTri= reinterpret_cast<const Index*>
                 (data.pointsHost[v].neighboursTri.deviceRead());
@@ -354,7 +354,7 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::colourGraph()
 
     for (Index v=0; (int)v<m_container->getNbPoints(); v++) {
 
-        if (pointInfo.getValue()[v].bBoundary) continue; // Skip boundary vertices
+        if (pointInfo.getValue()[v].isBoundary() || pointInfo.getValue()[v].isFixed()) continue; // Skip boundary vertices
 
         c[v] = 0;
 

@@ -5,9 +5,11 @@
 
 #include <sofa/core/objectmodel/KeypressedEvent.h>
 #include <sofa/core/visual/VisualParams.h>  
+#include <sofa/helper/rmath.h>
 #include <sofa/helper/system/thread/debug.h>
 #include <sofa/component/topology/TopologyData.inl>
 
+#include <sofa/component/collision/ComponentMouseInteraction.h>
 #include <sofa/component/collision/MouseInteractor.h>
 #include <sofa/component/collision/PointModel.h>
 #include <sofa/component/collision/LineModel.h>
@@ -130,10 +132,12 @@ template<class DataTypes>
 Test2DAdapter<DataTypes>::Test2DAdapter()
 : m_sigma(initData(&m_sigma, (Real)0.01, "sigma", "Minimal increase in functional to accept the change"))
 , m_functionals(initData(&m_functionals, "functionals", "Current values of the functional for each triangle"))
+, m_affinity(initData(&m_affinity, (Real)0.7, "affinity", "Threshold for point attachment (value betwen 0 and 1)."))
 , stepCounter(0)
 , m_precision(1e-8)
 , m_pickHandler(NULL)
 , m_pointId(InvalidID)
+, m_gracePeriod(0)
 , pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
 , triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
@@ -210,6 +214,11 @@ void Test2DAdapter<DataTypes>::reinit()
     m_functionals.beginEdit()->resize(m_container->getNbTriangles(), Real(0.0));
     m_functionals.endEdit();
 
+    if (m_affinity.getValue() < 0.0 || m_affinity.getValue() > 1.0) {
+        *m_affinity.beginEdit() = 0.7;
+        m_affinity.endEdit();
+    }
+
     helper::vector<PointInformation>& pts = *pointInfo.beginEdit();
     pts.resize(m_container->getNbPoints());
     //for (int i=0; i<m_container->getNbPoints(); i++)
@@ -237,6 +246,8 @@ void Test2DAdapter<DataTypes>::reinit()
     }
     triInfo.endEdit();
 
+    recheckBoundary();
+
     stepCounter = 0;
 }
 
@@ -250,15 +261,10 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         return;
 
     stepCounter++;
+    if (m_gracePeriod > 0) m_gracePeriod--;
 
     // Update boundary vertices
-    helper::vector<PointInformation>& pts = *pointInfo.beginEdit();
-    for (std::map<Index,bool>::const_iterator i=m_toUpdate.begin();
-        i != m_toUpdate.end(); i++) {
-        pts[i->first].bBoundary =  detectBoundaryVertex(i->first);
-    }
-    pointInfo.endEdit();
-    m_toUpdate.clear();
+    recheckBoundary();
 
     //if (stepCounter < f_interval.getValue())
     //    return; // Stay still for a few steps
@@ -274,15 +280,17 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         return;
 
     // See if there is any mouse interaction
-    m_pointId = InvalidID;
+    //std::cout << m_pickHandler->isActive() << "\n";
+    //if (m_pickHandler && m_pickHandler->isActive()) {
     if (m_pickHandler) {
+
         using namespace sofa::component::collision;
         BodyPicked *picked;
         if ((picked = m_pickHandler->getLastPicked()) != NULL) {
             // TODO: check mstate
-            m_point = picked->point;
 
-            if(dynamic_cast<PointModel*>(picked->body)) {
+            // Support only trianglular model! The others don't give any added value.
+            /*if(dynamic_cast<PointModel*>(picked->body)) {
                 // Point
                 m_pointId = picked->indexCollisionElement;
             } else if(dynamic_cast<LineModel*>(picked->body)) {
@@ -291,19 +299,33 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
                 Real d1 = (x[ e[0] ] - m_point).norm2();
                 Real d2 = (x[ e[1] ] - m_point).norm2();
                 m_pointId = (d1 < d2 ? e[0] : e[1]);
-            } else if(dynamic_cast<TriangleModel*>(picked->body)) {
+            } else*/ if(dynamic_cast<TriangleModel*>(picked->body)) {
                 // TODO: can we tell directly from bary coords?
                 Triangle t = m_container->getTriangle(
                     picked->indexCollisionElement);
-                Real d1 = (x[ t[0] ] - m_point).norm2();
-                Real d2 = (x[ t[1] ] - m_point).norm2();
-                Real d3 = (x[ t[2] ] - m_point).norm2();
-                m_pointId = (d1 < d2) ?
+                Real d1 = (x[ t[0] ] - picked->point).norm2();
+                Real d2 = (x[ t[1] ] - picked->point).norm2();
+                Real d3 = (x[ t[2] ] - picked->point).norm2();
+                Index newId = (d1 < d2) ?
                     (d1 < d3 ? t[0] : t[2]) :
                     (d2 < d3 ? t[1] : t[2]);
+                if (!m_gracePeriod && (newId != m_pointId)) {
+                    m_pointId = newId;
+                    m_gracePeriod = 10;
+                }
+                if (newId == m_pointId) {
+                    m_point = picked->point;
+                    m_pointTriId = picked->indexCollisionElement;
+                }
+            } else {
+                m_pointId = InvalidID;
             }
             //std::cout << "picked " << m_point << " (" << m_pointId << ")\n";
+        } else {
+            m_pointId = InvalidID;
         }
+    } else {
+        m_pointId = InvalidID;
     }
 
     //sofa::helper::system::thread::ctime_t start, stop;
@@ -328,8 +350,8 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     Real maxdelta=0.0;
     unsigned int moved=0;
     for (Index i=0; i<x.size(); i++) {
-        if (pointInfo.getValue()[i].bBoundary) {
-            //std::cout << "skipping boundary " << i << "\n";
+        if (pointInfo.getValue()[i].isFixed()) {
+            //std::cout << "skipping fixed node " << i << "\n";
             continue;
         }
 
@@ -347,19 +369,41 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
             Index tId = m_algorithms->getTriangleInDirection(i, x[i] - xold);
             if (tId == InvalidID) {
+
+                // Try once more and more carefully
+                TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(i);
+                for (Index it=0; it<N1.size(); it++) {
+                    Index t;
+                    //bool ret = m_algorithms->isPointInsideTriangle(N1[it], false, x[i], t);
+                    //std::cout << N1[it] << ": ret " << ret << " sug " << t << "\n";
+                    if (m_algorithms->isPointInsideTriangle(N1[it], false, x[i], t)) {
+                        Triangle tri = m_container->getTriangle(N1[it]);
+                        helper::vector<double> bary = m_algorithms->compute3PointsBarycoefs(x[i], tri[0], tri[1], tri[2], true);
+                        bool bGood = true;
+                        for (int bc=0; bc<3; bc++) {
+                            if (bary[bc] < -1e-15) {
+                                bGood = false;
+                                break;
+                            }
+                        }
+
+                        if (!bGood) continue;
+
+                        tId = N1[it];
+                        break;
+                    }
+                }
+            }
+
+
+            if (tId == InvalidID) {
+                // We screwed up something. Probably a triangle got inverted accidentaly.
                 serr << "Unexpected triangle Id -1 for point " << i << "! Marking point as fixed." << sendl;
 
                 x[i] = xold;
 
-                (*pointInfo.beginEdit())[i].bBoundary = true;
+                (*pointInfo.beginEdit())[i].type = PointInformation::FIXED;
                 pointInfo.endEdit();
-
-                //TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(i);
-                //for (Index it=0; it<N1.size(); it++) {
-                //    Index t;
-                //    bool ret = m_algorithms->isPointInsideTriangle(N1[it], false, x[i], t);
-                //    std::cout << N1[it] << ": ret " << ret << " sug " << t << "\n";
-                //}
 
                 //EdgesAroundVertex N1e = m_container->getEdgesAroundVertex(i);
                 //for (Index ip=0; ip<N1e.size(); ip++) {
@@ -414,6 +458,34 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     sum /= nTriangles;
     sum2 = helper::rsqrt(sum2/nTriangles);
 
+    // DEBUG: See the values around attached point
+
+    if ((m_pointId != InvalidID) && !m_gracePeriod) {
+        TrianglesAroundVertex N1 =
+            m_container->getTrianglesAroundVertex(m_pointId);
+        Real min = 1.0;
+        for (unsigned int it=0; it<N1.size(); it++) {
+            Real f = metricGeom(m_container->getTriangle(N1[it]), x,
+                triInfo.getValue()[ N1[it] ].normal);
+            if (f < min) min = f;
+        }
+        if (min < m_affinity.getValue()) {
+            // Value to low, try reattaching the node
+            m_gracePeriod = 10;
+            Triangle t = m_container->getTriangle(m_pointTriId);
+            VecIndex pts;
+            for (int i=0; i<3; i++) {
+                if (t[i] != m_pointId) pts.push_back(t[i]);
+            }
+            if ((x[m_pointId] - x[ pts[0] ]).norm2() <
+                (x[m_pointId] - x[ pts[1] ]).norm2()) {
+                m_pointId = pts[0];
+            } else {
+                m_pointId = pts[1];
+            }
+        }
+    }
+
     //std::cout << stepCounter << "] moved " << moved << " points, max delta=" << helper::rsqrt(maxdelta)
     //    << " gamma min/avg/max: " << mingamma << "/" << sumgamma/ngamma
     //    << "/" << maxgamma
@@ -449,12 +521,6 @@ void Test2DAdapter<DataTypes>::onKeyPressedEvent(core::objectmodel::KeypressedEv
         }
         of << "\n";
         of.close();
-    }
-    else if (key->getKey() == 'T') {
-
-        for (Index i=0; i<(Index)m_container->getNbPoints(); i++) {
-            detectBoundaryVertex(i);
-        }
     }
 }
 
@@ -540,6 +606,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
 {
     Vec3 xold = x[v];
 
+#if 1
     // Compute gradients
     TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(v);
     helper::vector<Vec3> grad(N1.size());
@@ -575,6 +642,30 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
     }
 
     Vec3 step = grad[imin];
+#else
+    //
+    // Minimaze the mean, i.e.: F = 1/n Σ_i f_i
+    //
+    // TODO
+
+    Vec3 grad(0.0, 0.0, 0.0); // F = 1/n Σ_i f_i
+
+    // Compute gradients
+    TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(v);
+    helper::vector<Vec3> grad(N1.size());
+    Real delta = m_precision/10.0;
+    // NOTE: Constrained to 2D!
+    for (int component=0; component<2; component++) {
+        x[v] = xold;
+        x[v][component] += delta;
+        for (Index it=0; it<N1.size(); it++) {
+            Real m = funcTriangle(m_container->getTriangle(N1[it]), x,
+                triInfo.getValue()[ N1[it] ].normal);
+            grad[it][component] = (m - metrics[ N1[it] ])/delta;
+        }
+    }
+    Vec3 step = ...;
+#endif
 
     // Find out step size
     Real gamma = 0.01; // ≈ m_precision * 2^10
@@ -621,6 +712,13 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
     //    }
     //}
     //std::cout << "gamma=" << gamma << " grad=" << step << "\n";
+
+    // If it's boundary node project it onto the boundary line
+    const PointInformation &pt = pointInfo.getValue()[v];
+    if (pt.isBoundary()) {
+        step = pt.boundary * (pt.boundary*step);
+    }
+
     x[v] = xold + gamma*step;
 
     // Check if this improves the mesh
@@ -947,7 +1045,7 @@ bool Test2DAdapter<DataTypes>::smoothPain2D(Index v, VecCoord &x, vector<Real> &
 }
 
 template<class DataTypes>
-void Test2DAdapter<DataTypes>::computeTriangleNormal(const Triangle &t, const VecCoord &x, Vec3 &normal)
+void Test2DAdapter<DataTypes>::computeTriangleNormal(const Triangle &t, const VecCoord &x, Vec3 &normal) const
 {
     Vec3 A, B;
     A = x[ t[1] ] - x[ t[0] ];
@@ -970,10 +1068,26 @@ void Test2DAdapter<DataTypes>::computeTriangleNormal(const Triangle &t, const Ve
 }
 
 template<class DataTypes>
-bool Test2DAdapter<DataTypes>::detectBoundaryVertex(Index pt)
+void Test2DAdapter<DataTypes>::recheckBoundary()
+{
+    helper::vector<PointInformation>& pts = *pointInfo.beginEdit();
+    for (std::map<Index,bool>::const_iterator i=m_toUpdate.begin();
+        i != m_toUpdate.end(); i++) {
+        pts[i->first].type = detectNodeType(i->first, pts[i->first].boundary);
+    }
+    pointInfo.endEdit();
+    m_toUpdate.clear();
+}
+
+template<class DataTypes>
+typename Test2DAdapter<DataTypes>::PointInformation::NodeType Test2DAdapter<DataTypes>::detectNodeType(Index pt, Vec3 &boundaryDirection)
 {
     if (m_container == NULL)
-        return false;
+        return PointInformation::NORMAL;
+
+    const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
+
+    VecVec3 dirlist; // Directions of boundary edges
 
     //std::cout << "checking " << pt << "\n";
     EdgesAroundVertex N1e = m_container->getEdgesAroundVertex(pt);
@@ -981,12 +1095,33 @@ bool Test2DAdapter<DataTypes>::detectBoundaryVertex(Index pt)
         TrianglesAroundEdge tlist = m_container->getTrianglesAroundEdge(N1e[ie]);
         unsigned int count = tlist.size();
         //std::cout << "  " << count << " (" << tlist << ")\n";
-        if (count != 2) {
-            return true;
+        if (count < 1 || count > 2) {
+            // What a strange topology! Better not touch ...
+            return PointInformation::FIXED;
+        } else if (count == 1) {
+            Edge e = m_container->getEdge(N1e[ie]);
+            Vec3 dir = x[e[0]] - x[e[1]];
+            dir.normalize();
+            dirlist.push_back(dir);
         }
     }
 
-    return false;
+    if (dirlist.size() == 0) {
+        // No boundary edges
+        return PointInformation::NORMAL;
+    } else if (dirlist.size() != 2) {
+        // What a strange topology! Better not touch ...
+        return PointInformation::FIXED;
+    }
+
+    if (helper::rabs(1.0 - dirlist[0] * dirlist[1]) > 1e-15) {
+        // Not on a line
+        return PointInformation::FIXED;
+    }
+
+    boundaryDirection = dirlist[0];
+
+    return PointInformation::BOUNDARY;
 }
 
 
@@ -999,13 +1134,18 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
     const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     helper::vector<defaulttype::Vector3> boundary;
+    helper::vector<defaulttype::Vector3> fixed;
     const helper::vector<PointInformation> &pts = pointInfo.getValue();
     for (Index i=0; i < x.size(); i++) {
-        if (pts[i].bBoundary) {
+        if (pts[i].isBoundary()) {
             boundary.push_back(x[i]);
+        } else if (pts[i].isFixed()) {
+            fixed.push_back(x[i]);
         }
     }
-    vparams->drawTool()->drawPoints(boundary, 8,
+    vparams->drawTool()->drawPoints(boundary, 10,
+        sofa::defaulttype::Vec<4,float>(0.5, 0.5, 1.0, 1.0));
+    vparams->drawTool()->drawPoints(fixed, 10,
         sofa::defaulttype::Vec<4,float>(0.8, 0.0, 0.8, 1.0));
 
     if (m_pointId != InvalidID) {
