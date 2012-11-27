@@ -109,6 +109,7 @@ public:
     , outputTopo(NULL)
     , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
+    , measureStress(initData(&measureStress, false, "measureStress","Tell forcefield to measure stress values at mapped points"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
     , matrixJ()
     , updateJ(false)
@@ -179,6 +180,7 @@ protected:
     , outputTopo(NULL)
     , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
+    , measureStress(initData(&measureStress, false, "measureStress","Tell forcefield to measure stress values at mapped points"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
     , matrixJ()
     , updateJ(false)
@@ -205,6 +207,7 @@ protected:
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> bsInterpolation;
 
         Data<bool> measureError;
+        Data<bool> measureStress;
         SingleLink<BezierShellMechanicalMapping<TIn, TOut>,
             sofa::core::topology::BaseMeshTopology,
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;

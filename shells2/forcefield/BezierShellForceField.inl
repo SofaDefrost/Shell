@@ -1298,6 +1298,46 @@ void BezierShellForceField<DataTypes>::computeStrainDisplacementMatrixBending(Tr
     }
 }
 
+template <class DataTypes>
+void BezierShellForceField<DataTypes>::stressAtPoints(const VecVec3 &points, const VecIndex &elements)
+{
+    if (points.size() != elements.size())
+    {
+        serr << "Invalid arguments for stressAtPoints(), sizes do not match." << sendl;
+        return;
+    }
+
+    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+
+    for (unsigned int t=0; t<triangleInf.size(); t++)
+    {
+        triangleInf[t].measure.clear();
+    }
+
+    for (unsigned int i=0; i<points.size(); i++)
+    {
+        TriangleInformation &tinfo = triangleInf[ elements[i] ];
+        typename TriangleInformation::MeasurePoint mp;
+
+        mp.point = points[i];
+        matrixSDM(mp.B, mp.point, tinfo);
+        matrixSDB(mp.Bb, mp.point, tinfo);
+        mp.id = i;
+
+        tinfo.measure.push_back(mp);
+    }
+
+    triangleInfo.endEdit();
+
+    f_measuredValues.beginEdit()->resize(points.size());
+    f_measuredValues.endEdit();
+
+    if (!bMeasureStrain && !bMeasureStress) {
+        bMeasureStress = true;
+        // TODO: update f_drawMeasure
+    }
+}
+
 // ----------------------------------------------------------------------------
 // --- Compute the strain-displacement matrix for bending deformation
 // -----------------------------------------------------------------------------
@@ -2109,7 +2149,8 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
         }
 
         // Draw measured strain or stress
-        if (bMeasureStrain || bMeasureStress) {
+        // TODO: remove this. replaced by DataDisplay component
+        if (f_drawMeasure.getValue().getSelectedItem() != "None") {
             glDisable(GL_LIGHTING);
             glBegin(GL_TRIANGLES);
 

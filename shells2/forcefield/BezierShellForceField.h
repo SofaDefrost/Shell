@@ -84,6 +84,7 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
 
         typedef Vec<3,Real> Vec3;
         typedef Vec<2,Real> Vec2;
+        typedef helper::vector<Vec3> VecVec3;
 
         typedef Mat<2,2,Real> Mat22;
         typedef Mat<3,3,Real> Mat33;
@@ -98,6 +99,7 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
         typedef sofa::core::topology::BaseMeshTopology::index_type Index;
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
         typedef sofa::core::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
+        typedef helper::vector<Index> VecIndex;
 
         typedef typename sofa::defaulttype::SolidTypes<Real>::Transform Transform;
         typedef typename sofa::defaulttype::SolidTypes<Real>::SpatialVector SpatialVector;
@@ -287,6 +289,15 @@ public:
         const TriangleInformation& getTriangleInfo(Index t) {
             return triangleInfo.getValue()[t];
         }
+
+        /**
+         * Set points at which compute the stress or strain.
+         *
+         * @param points        Barycentric coordinates of points.
+         * @param elements      Triangle ID for each point specifying the
+         *                      triangle to which the point is related.
+         */
+        void stressAtPoints(const VecVec3 &points, const VecIndex &elements);
 
 protected :
 

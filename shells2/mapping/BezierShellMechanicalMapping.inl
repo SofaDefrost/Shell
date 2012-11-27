@@ -33,6 +33,7 @@
 
 #include <sofa/component/forcefield/ConstantForceField.h>
 
+#include "../forcefield/BezierShellForceField.h"
 
 // We have own code to check the getJ() because checkJacobian sucks (at this
 // point in time).
@@ -200,6 +201,20 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
         }
     }
 
+    if (measureStress.getValue())
+    {
+        forcefield::BezierShellForceField<TIn> *ff;
+        this->getContext()->get(ff);
+
+        if (ff)
+        {
+            ff->stressAtPoints(projBaryCoords, projElements);
+        }
+        else
+        {
+            serr << "Unable to find force field component! Ignoring 'measureStress' option." << sendl;
+        }
+    }
 
 #if 0
     // Retrieves topological mapping to get list of edges  (for contour rendering)
