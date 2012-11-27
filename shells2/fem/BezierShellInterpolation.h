@@ -18,7 +18,7 @@
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TopologyData.inl>
+#include <sofa/component/topology/TopologyData.h>
 #include <sofa/simulation/common/AnimateBeginEvent.h>
 
 #include <sofa/helper/vector.h>
