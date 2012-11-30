@@ -311,7 +311,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
                     (d2 < d3 ? t[1] : t[2]);
                 if (!m_gracePeriod && (newId != m_pointId)) {
                     m_pointId = newId;
-                    m_gracePeriod = 10;
+                    m_gracePeriod = 20;
                 }
                 if (newId == m_pointId) {
                     m_point = picked->point;
@@ -458,8 +458,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     sum /= nTriangles;
     sum2 = helper::rsqrt(sum2/nTriangles);
 
-    // DEBUG: See the values around attached point
-
+    // Check the values around attached point and reattach if necessary
     if ((m_pointId != InvalidID) && !m_gracePeriod) {
         TrianglesAroundVertex N1 =
             m_container->getTrianglesAroundVertex(m_pointId);
@@ -470,8 +469,8 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
             if (f < min) min = f;
         }
         if (min < m_affinity.getValue()) {
-            // Value to low, try reattaching the node
-            m_gracePeriod = 10;
+            // Value too low, try reattaching the node
+            m_gracePeriod = 20;
             Triangle t = m_container->getTriangle(m_pointTriId);
             VecIndex pts;
             for (int i=0; i<3; i++) {
@@ -1100,7 +1099,12 @@ typename Test2DAdapter<DataTypes>::PointInformation::NodeType Test2DAdapter<Data
             return PointInformation::FIXED;
         } else if (count == 1) {
             Edge e = m_container->getEdge(N1e[ie]);
-            Vec3 dir = x[e[0]] - x[e[1]];
+            Vec3 dir;
+            if (e[0] == pt) {
+                dir = x[e[1]] - x[e[0]];
+            } else {
+                dir = x[e[0]] - x[e[1]];
+            }
             dir.normalize();
             dirlist.push_back(dir);
         }
@@ -1114,7 +1118,7 @@ typename Test2DAdapter<DataTypes>::PointInformation::NodeType Test2DAdapter<Data
         return PointInformation::FIXED;
     }
 
-    if (helper::rabs(1.0 - dirlist[0] * dirlist[1]) > 1e-15) {
+    if ((1.0 + dirlist[0] * dirlist[1]) > 1e-15) {
         // Not on a line
         return PointInformation::FIXED;
     }

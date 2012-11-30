@@ -159,7 +159,7 @@ void TriangleSwitchExample<DataTypes>::onEndAnimationStep(const double /*dt*/)
     m_modifier->propagateTopologicalChanges();
 }
 
-// Computes two times the area of the triangle. The area is signed.
+// Computes triangle normal
 template<class DataTypes>
 void TriangleSwitchExample<DataTypes>::computeTriangleNormal(const Triangle &t, Vec3 &normal)
 {
