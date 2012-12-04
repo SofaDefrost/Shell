@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<Node name="Root" gravity="0 0 0" >
+    <VisualStyle displayFlags="showWireframe showBehavior" />
+    <AdaptiveCuttingSetting button="Left" />
+
+    <CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <CollisionResponse response="default" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+    <CollisionGroup />
+
+    <Node name="points">
+        <MechanicalObject template="Vec3d" name="fixedPoints"
+            position="-1.2 -1 0    -1.2 1 0"
+            showObject="true" />
+        <FixedConstraint indices="0 1" />
+    </Node>
+
+    <Node>
+
+        <EulerImplicitSolver rayleighMass="1" rayleighStiffness="1" />
+        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
+
+        <MeshObjLoader name="mesh" filename="../mesh/plane32.obj"/>
+        <TriangleSetTopologyContainer name="topo" src="@mesh" />
+
+        <MechanicalObject template="Vec3d" name="MO" />
+        <UniformMass mass="0.1" />
+
+        <Test2DAdapter template="Vec3d" name="adapter" />
+
+        <TriangleSetTopologyModifier />
+        <TriangleSetTopologyAlgorithms />
+        <TriangleSetGeometryAlgorithms />
+
+        <FixedConstraint indices="0 1" />
+
+        <RestShapeSpringsForceField name="Springs" external_rest_shape="../points/fixedPoints"
+            points="2 3"
+            external_points="1 0"
+            stiffness="50000"
+            angularStiffness="50000" />
+
+
+        <TriangularFEMForceField name="FEM" youngModulus="5000" poissonRatio="0.3" method="large" />
+
+        <Point />
+        <Line />
+        <Triangle />
+
+        <Node name="Render">
+            <OglModel name="Visual" color="red"/>
+            <IdentityMapping input="@.." output="@Visual"/>
+        </Node>
+
+        <!--
+        <Node name="Rest state">
+            <TriangleSetTopologyContainer name="topo" points="@../topo.points" edges="@../topo.edges" triangles="@../topo.triangles" />
+            <MechanicalObject template="Vec3d" rest_position="@../MO.rest_position" position="@../MO.rest_position" />
+            <Node name="Render">
+                <OglModel name="Visual" color="yellow"/>
+                <IdentityMapping input="@.." output="@Visual"/>
+            </Node>
+        </Node>
+        -->
+
+
+    </Node>
+</Node>

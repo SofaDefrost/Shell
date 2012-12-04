@@ -9,8 +9,10 @@
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
+#include <sofa/component/collision/MouseInteractor.h>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 #include <sofa/component/topology/TriangleSetTopologyModifier.h>
+#include <sofa/component/topology/TriangleSetTopologyAlgorithms.h>
 #include <sofa/component/topology/TriangleSetGeometryAlgorithms.h>
 #include <sofa/component/topology/TopologyData.h>
 
@@ -40,6 +42,15 @@ class Test2DAdapterData
 public:
 };
 
+/// Class to shield the data type
+class CuttingAdapter
+{
+public:
+    virtual void setTrackedPoint(const collision::BodyPicked &picked) = 0;
+    virtual void freeTrackedPoint() = 0;
+    virtual void addCuttingPoint() = 0;
+};
+
 /**
  *
  * @brief Component for adaptivity/smoothing of 2D triangular meshes.
@@ -61,7 +72,7 @@ public:
  *        39 (9) (1999) 1468–1486.
  */
 template<class DataTypes>
-class Test2DAdapter : public Controller
+class Test2DAdapter : public Controller, public CuttingAdapter
 {
 public:
     SOFA_CLASS(SOFA_TEMPLATE(Test2DAdapter,DataTypes),Controller);
@@ -227,6 +238,13 @@ public:
     void onEndAnimationStep(const double dt);
     void onKeyPressedEvent(core::objectmodel::KeypressedEvent *key);
 
+    void setTrackedPoint(const collision::BodyPicked &picked);
+    void freeTrackedPoint() {
+        std::cout << ":: freeing point " << m_pointId << "\n";
+        m_pointId = InvalidID;
+        // TODO: stop cutting
+    }
+    void addCuttingPoint();
 
     /**
      * @brief Distortion metric for a triangle to be computed.
@@ -236,7 +254,7 @@ public:
      * @param normal    Surface normal for the triangle (to check for inversion).
      */
     Real funcTriangle(const Triangle &t, const VecCoord &x, const Vec3 &normal) const {
-        //return metricGeom(t, x, normal);
+        //return  metricInverted(t, x, normal) * metricGeom(t, x, normal);
 
         // TODO: Simple sum is not good enough. Geometrical functionals
         // use negative value to designate inverted triangle. This information
@@ -393,7 +411,8 @@ private:
     unsigned int stepCounter;
     sofa::component::topology::TriangleSetTopologyContainer*  m_container;
     sofa::component::topology::TriangleSetTopologyModifier*  m_modifier;
-    sofa::component::topology::TriangleSetGeometryAlgorithms<DataTypes> *m_algorithms;
+    sofa::component::topology::TriangleSetGeometryAlgorithms<DataTypes> *m_algoGeom;
+    sofa::component::topology::TriangleSetTopologyAlgorithms<DataTypes> *m_algoTopo;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
 
     /// List of nodes that have to be rechecked if they are on the boundry.
@@ -401,9 +420,6 @@ private:
 
     /// Amount of precision that is acceptable for us.
     Real m_precision;
-
-    /// Object handling the mouse interaction.
-    sofa::gui::PickHandler *m_pickHandler;
 
     /// Closest point in the mstate.
     Index m_pointId;
@@ -415,6 +431,13 @@ private:
     /// @brief Number of iterations during which the attached node will not be
     /// reattached.
     unsigned int m_gracePeriod;
+
+    /// Whether the cutting is in progress or not.
+    bool m_bCutting;
+    /// @brief Stored index of the first edge to cut when the first cut has
+    /// been delayed.
+    Index m_cutEdge;
+
 
     Real sumgamma, mingamma, maxgamma;
     int ngamma;
@@ -485,6 +508,16 @@ private:
      *
      */
     typename PointInformation::NodeType detectNodeType(Index pt, Vec3 &boundaryDirection);
+
+    /**
+     * @brief Move point to a new location.
+     *
+     * @param pt        Index of the point to mvoe.
+     * @param target    Target coordinates to move the point to.
+     * @param hint      Optional index of the triangle in which the point is
+     *                  located.
+     */
+    void relocatePoint(Index pt, Coord target, Index hint=InvalidID);
 
     /**
      * @brief Compute triangle normal.

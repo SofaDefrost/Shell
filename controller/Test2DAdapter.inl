@@ -9,10 +9,9 @@
 #include <sofa/helper/system/thread/debug.h>
 #include <sofa/component/topology/TopologyData.inl>
 
-#include <sofa/component/collision/ComponentMouseInteraction.h>
-#include <sofa/component/collision/MouseInteractor.h>
-#include <sofa/component/collision/PointModel.h>
-#include <sofa/component/collision/LineModel.h>
+//#include <sofa/component/collision/ComponentMouseInteraction.h>
+//#include <sofa/component/collision/PointModel.h>
+//#include <sofa/component/collision/LineModel.h>
 #include <sofa/component/collision/TriangleModel.h>
 
 #include <sofa/gui/GUIManager.h>
@@ -135,24 +134,15 @@ Test2DAdapter<DataTypes>::Test2DAdapter()
 , m_affinity(initData(&m_affinity, (Real)0.7, "affinity", "Threshold for point attachment (value betwen 0 and 1)."))
 , stepCounter(0)
 , m_precision(1e-8)
-, m_pickHandler(NULL)
 , m_pointId(InvalidID)
 , m_gracePeriod(0)
+, m_bCutting(false)
+, m_cutEdge(InvalidID)
 , pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
 , triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
     pointHandler = new PointInfoHandler(this, &pointInfo);
     triHandler = new TriangleInfoHandler(this, &triInfo);
-
-    // Get PickHandler for mouse interaction
-    //sofa::gui::SofaGUI *currGui = sofa::gui::SofaGUI::CurrentGUI();
-    sofa::gui::BaseGUI *gui = sofa::gui::GUIManager::getGUI();
-    if(gui != NULL) {
-        sofa::gui::BaseViewer* viewer = gui->getViewer();
-        if (viewer != NULL) {
-            m_pickHandler = viewer->getPickHandler();
-        }
-    }
 }
 
 template<class DataTypes>
@@ -183,9 +173,15 @@ void Test2DAdapter<DataTypes>::init()
         return;
     }
 
-    this->getContext()->get(m_algorithms);
-    if (m_algorithms == NULL) {
+    this->getContext()->get(m_algoGeom);
+    if (m_algoGeom == NULL) {
         serr << "Unable to find TriangleSetGeometryAlgorithms" << sendl;
+        return;
+    }
+
+    this->getContext()->get(m_algoTopo);
+    if (m_algoTopo == NULL) {
+        serr << "Unable to find TriangleSetTopologyAlgorithms" << sendl;
         return;
     }
 
@@ -257,7 +253,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 {
     //std::cout << "CPU step\n";
 
-    if ((m_container == NULL) || (m_modifier == NULL) || (m_state == NULL))
+    if ((m_container == NULL) || (m_state == NULL))
         return;
 
     stepCounter++;
@@ -273,60 +269,13 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::restPosition());
     //VecCoord& x = *datax->beginEdit();
+    // WARNING: Notice that we're working on a copy that is NOT updated by
+    //          external changes!
     VecCoord x = datax->getValue();
 
     Index nTriangles = m_container->getNbTriangles();
     if (nTriangles == 0)
         return;
-
-    // See if there is any mouse interaction
-    //std::cout << m_pickHandler->isActive() << "\n";
-    //if (m_pickHandler && m_pickHandler->isActive()) {
-    if (m_pickHandler) {
-
-        using namespace sofa::component::collision;
-        BodyPicked *picked;
-        if ((picked = m_pickHandler->getLastPicked()) != NULL) {
-            // TODO: check mstate
-
-            // Support only trianglular model! The others don't give any added value.
-            /*if(dynamic_cast<PointModel*>(picked->body)) {
-                // Point
-                m_pointId = picked->indexCollisionElement;
-            } else if(dynamic_cast<LineModel*>(picked->body)) {
-                // Edge
-                Edge e = m_container->getEdge(picked->indexCollisionElement);
-                Real d1 = (x[ e[0] ] - m_point).norm2();
-                Real d2 = (x[ e[1] ] - m_point).norm2();
-                m_pointId = (d1 < d2 ? e[0] : e[1]);
-            } else*/ if(dynamic_cast<TriangleModel*>(picked->body)) {
-                // TODO: can we tell directly from bary coords?
-                Triangle t = m_container->getTriangle(
-                    picked->indexCollisionElement);
-                Real d1 = (x[ t[0] ] - picked->point).norm2();
-                Real d2 = (x[ t[1] ] - picked->point).norm2();
-                Real d3 = (x[ t[2] ] - picked->point).norm2();
-                Index newId = (d1 < d2) ?
-                    (d1 < d3 ? t[0] : t[2]) :
-                    (d2 < d3 ? t[1] : t[2]);
-                if (!m_gracePeriod && (newId != m_pointId)) {
-                    m_pointId = newId;
-                    m_gracePeriod = 20;
-                }
-                if (newId == m_pointId) {
-                    m_point = picked->point;
-                    m_pointTriId = picked->indexCollisionElement;
-                }
-            } else {
-                m_pointId = InvalidID;
-            }
-            //std::cout << "picked " << m_point << " (" << m_pointId << ")\n";
-        } else {
-            m_pointId = InvalidID;
-        }
-    } else {
-        m_pointId = InvalidID;
-    }
 
     //sofa::helper::system::thread::ctime_t start, stop;
     //sofa::helper::system::thread::CTime timer;
@@ -363,83 +312,12 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         {
             x[i] = xold;
         } else {
-            helper::vector <unsigned int> move_ids;
-            helper::vector< helper::vector< unsigned int > > move_ancestors;
-            helper::vector< helper::vector< double > > move_coefs;
-
-            Index tId = m_algorithms->getTriangleInDirection(i, x[i] - xold);
-            if (tId == InvalidID) {
-
-                // Try once more and more carefully
-                TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(i);
-                for (Index it=0; it<N1.size(); it++) {
-                    Index t;
-                    //bool ret = m_algorithms->isPointInsideTriangle(N1[it], false, x[i], t);
-                    //std::cout << N1[it] << ": ret " << ret << " sug " << t << "\n";
-                    if (m_algorithms->isPointInsideTriangle(N1[it], false, x[i], t)) {
-                        Triangle tri = m_container->getTriangle(N1[it]);
-                        helper::vector<double> bary = m_algorithms->compute3PointsBarycoefs(x[i], tri[0], tri[1], tri[2], true);
-                        bool bGood = true;
-                        for (int bc=0; bc<3; bc++) {
-                            if (bary[bc] < -1e-15) {
-                                bGood = false;
-                                break;
-                            }
-                        }
-
-                        if (!bGood) continue;
-
-                        tId = N1[it];
-                        break;
-                    }
-                }
-            }
-
-
-            if (tId == InvalidID) {
-                // We screwed up something. Probably a triangle got inverted accidentaly.
-                serr << "Unexpected triangle Id -1 for point " << i << "! Marking point as fixed." << sendl;
-
-                x[i] = xold;
-
-                (*pointInfo.beginEdit())[i].type = PointInformation::FIXED;
-                pointInfo.endEdit();
-
-                //EdgesAroundVertex N1e = m_container->getEdgesAroundVertex(i);
-                //for (Index ip=0; ip<N1e.size(); ip++) {
-                //    Edge e = m_container->getEdge(N1e[ip]);
-                //    std::cout << m_container->getPointDataArray().getValue()[ e[0] ] << " " << m_container->getPointDataArray().getValue()[ e[1] ] << "\n";
-                //}
-            } else {
-                Triangle tri = m_container->getTriangle(tId);
-
-                move_ids.push_back(i);
-
-                move_ancestors.resize(move_ancestors.size()+1);
-                move_ancestors.back().push_back(tri[0]);
-                move_ancestors.back().push_back(tri[1]);
-                move_ancestors.back().push_back(tri[2]);
-
-                move_coefs.push_back(m_algorithms->compute3PointsBarycoefs(x[i], tri[0], tri[1], tri[2], true));
-
-                // Do the real work
-                m_modifier->movePointsProcess(move_ids, move_ancestors, move_coefs);
-                m_modifier->notifyEndingEvent();
-                m_modifier->propagateTopologicalChanges();
-
-
-                // Check
-                //const VecCoord& xnew = m_state->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
-                //std::cout << "requested " << x[i] << "\tgot " << xnew[i] << "\tdelta" << (x[i] - xnew[i]).norm() << "\n";
-
-            }
-
+            relocatePoint(i, x[i]);
             moved++;
             Real delta = (x[i] - xold).norm2();
             if (delta > maxdelta) {
                 maxdelta = delta;
             }
-    
         }
     }
 
@@ -459,7 +337,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     sum2 = helper::rsqrt(sum2/nTriangles);
 
     // Check the values around attached point and reattach if necessary
-    if ((m_pointId != InvalidID) && !m_gracePeriod) {
+    if ((m_pointId != InvalidID) && !m_gracePeriod && !m_bCutting) {
         TrianglesAroundVertex N1 =
             m_container->getTrianglesAroundVertex(m_pointId);
         Real min = 1.0;
@@ -520,6 +398,147 @@ void Test2DAdapter<DataTypes>::onKeyPressedEvent(core::objectmodel::KeypressedEv
         }
         of << "\n";
         of.close();
+    }
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::setTrackedPoint(const collision::BodyPicked &picked)
+{
+    using namespace sofa::component::collision;
+
+    const VecCoord& x = m_state->read(
+        sofa::core::ConstVecCoordId::restPosition())->getValue();
+
+    // Support only trianglular model! The others don't give any added value.
+    /*if(dynamic_cast<PointModel*>(picked.body)) {
+    // Point
+    m_pointId = picked.indexCollisionElement;
+    } else if(dynamic_cast<LineModel*>(picked.body)) {
+    // Edge
+    Edge e = m_container->getEdge(picked.indexCollisionElement);
+    Real d1 = (x[ e[0] ] - m_point).norm2();
+    Real d2 = (x[ e[1] ] - m_point).norm2();
+    m_pointId = (d1 < d2 ? e[0] : e[1]);
+    } else*/ if(dynamic_cast<TriangleModel*>(picked.body)) {
+
+        // TODO: can we tell directly from bary coords?
+        Triangle t = m_container->getTriangle(
+            picked.indexCollisionElement);
+        Real d1 = (x[ t[0] ] - picked.point).norm2();
+        Real d2 = (x[ t[1] ] - picked.point).norm2();
+        Real d3 = (x[ t[2] ] - picked.point).norm2();
+        Index newId = (d1 < d2) ?
+            (d1 < d3 ? t[0] : t[2]) :
+            (d2 < d3 ? t[1] : t[2]);
+        if (!m_gracePeriod && (newId != m_pointId)) {
+            m_pointId = newId;
+            m_gracePeriod = 20;
+        }
+        if (newId == m_pointId) {
+            m_point = picked.point;
+            m_pointTriId = picked.indexCollisionElement;
+        }
+    } else {
+        m_pointId = InvalidID;
+    }
+    std::cout << ":: tracking point " << m_pointId << "(" << m_point
+        << ") from traingle " << m_pointTriId << "\n";
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::addCuttingPoint()
+{
+    if (!m_algoTopo || !m_algoGeom) return;
+
+    if (m_pointId == InvalidID) {
+        serr << "BUG! Attempted cutting with no point tracked." << sendl;
+        return;
+    }
+
+    const VecCoord& x = m_state->read(
+        sofa::core::ConstVecCoordId::restPosition())->getValue();
+    Coord oldpos = x[m_pointId];
+
+    bool bFirst = !m_bCutting;
+    m_bCutting = true;
+
+    // Make sure the tracked point is at the target location.
+    if (pointInfo[m_pointId].type == PointInformation::NORMAL) {
+        relocatePoint(m_pointId, m_point, m_pointTriId);
+    } else {
+        // TODO: We need a parameter controling how close one has to be to the
+        // boundary/fixed node to attach to it. For boundary nodes we have to
+        // project the target position onto the boundary nodes. Fixed points,
+        // of course, have to be kept intact. Or alternatively we may prevent
+        // attachment to fixed nodes completely.
+        serr << "Handling of boundary/fixed nodes is not implemented!" << serr;
+    }
+
+
+    // Chose another point in the direction of movement.
+    // TODO: the following is not good
+    Vec3 dir = m_point - oldpos;
+    dir.normalize();
+    // END_TODO
+
+    // Get another point in that direction.
+    Index tId = m_algoGeom->getTriangleInDirection(m_pointId,
+        m_point - x[m_pointId]);
+    if (tId == InvalidID) {
+        serr << "BUG! Nothing in cutting direction!" << sendl;
+        return;
+    }
+
+    EdgesInTriangle elist = m_container->getEdgesInTriangle(tId);
+    Real alpha[2];
+    Index otherPt[2], otherEdge[2];
+    for (int i=0,j=0; i<3; i++) {
+        Edge e = m_container->getEdge(elist[i]);
+        if ((e[0] != m_pointId) && (e[1] != m_pointId)) continue;
+        Vec3 edgeDir;
+        if (e[0] == m_pointId) {
+            otherPt[j] = e[1];
+            edgeDir = x[ e[1] ] - x[ e[0] ];
+        } else {
+            otherPt[j] = e[0];
+            edgeDir = x[ e[0] ] - x[ e[1] ];
+        }
+        otherEdge[j] = elist[i];
+        edgeDir.normalize();
+        alpha[j] = dir * edgeDir;
+        j++;
+    }
+
+    Index newPt = (alpha[0] < alpha[1]) ? otherPt[0] : otherPt[1];
+    Index oldPt = m_pointId;
+    Index edge = (alpha[0] < alpha[1]) ? otherEdge[0] : otherEdge[1];
+
+    // Attach the new point and move it to be near the cursor.
+    m_pointId = newPt;
+    m_pointTriId = tId;
+    m_gracePeriod = 20;
+    relocatePoint(newPt, x[oldPt] + (dir*m_precision/2.0), tId);
+
+    // Split the edge. If this is first cut point and the point is not on the
+    // border just remeber it and do the operation when another cut point is
+    // inserted.
+    if (bFirst &&
+        (pointInfo[oldPt].type == PointInformation::NORMAL)) {
+        m_cutEdge = edge;
+        // For now just fix the point.
+        (*pointInfo.beginEdit())[oldPt].type = PointInformation::FIXED;
+        pointInfo.endEdit();
+    } else {
+        VecIndex edgeList, newList, endList;
+        bool bReachedBorder;
+        if (m_cutEdge != InvalidID) {
+            edgeList.push_back(m_cutEdge);
+            m_cutEdge = InvalidID;
+        }
+        edgeList.push_back(edge);
+        m_algoTopo->InciseAlongEdgeList(edgeList, newList, endList,
+            bReachedBorder);
+        // TODO: fix all the points?
     }
 }
 
@@ -1079,6 +1098,95 @@ void Test2DAdapter<DataTypes>::recheckBoundary()
 }
 
 template<class DataTypes>
+void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
+    Index hint)
+{
+    if (m_modifier == NULL) return;
+    Index tId = hint;
+
+    const VecCoord& x = m_state->read(
+        sofa::core::ConstVecCoordId::restPosition())->getValue();
+    
+    //if ((x[pt] - target).norm() < 1e-15) return; // Nothing to do
+    if ((x[pt] - target).norm() < m_precision) return; // Nothing to do
+
+    if (tId == InvalidID) {
+        tId = m_algoGeom->getTriangleInDirection(pt, target - x[pt]);
+    }
+
+    if (tId == InvalidID) {
+        // Try once more and more carefully
+        TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(pt);
+        for (Index it=0; it<N1.size(); it++) {
+            Index t;
+            if (m_algoGeom->isPointInsideTriangle(N1[it], false, target, t)) {
+                Triangle tri = m_container->getTriangle(N1[it]);
+                helper::vector<double> bary =
+                    m_algoGeom->compute3PointsBarycoefs(
+                        target, tri[0], tri[1], tri[2], true);
+                bool bGood = true;
+                for (int bc=0; bc<3; bc++) {
+                    if (bary[bc] < -1e-15) {
+                        bGood = false;
+                        break;
+                    }
+                }
+
+                if (!bGood) continue;
+
+                tId = N1[it];
+                break;
+            }
+        }
+    }
+
+    if (tId == InvalidID) {
+        // We screwed up something. Probably a triangle got inverted accidentaly.
+        serr << "Unexpected triangle Id -1! Cannot move point "
+            << pt << ", marking point as fixed." << sendl;
+
+        (*pointInfo.beginEdit())[pt].type = PointInformation::FIXED;
+        pointInfo.endEdit();
+
+        //EdgesAroundVertex N1e = m_container->getEdgesAroundVertex(pt);
+        //for (Index ip=0; ip<N1e.size(); ip++) {
+        //    Edge e = m_container->getEdge(N1e[ip]);
+        //    std::cout << m_container->getPointDataArray().getValue()[ e[0] ] << " " << m_container->getPointDataArray().getValue()[ e[1] ] << "\n";
+        //}
+
+        return;
+    }
+
+    Triangle tri = m_container->getTriangle(tId);
+
+    helper::vector <unsigned int> move_ids;
+    helper::vector< helper::vector< unsigned int > > move_ancestors;
+    helper::vector< helper::vector< double > > move_coefs;
+
+    move_ids.push_back(pt);
+
+    move_ancestors.resize(move_ancestors.size()+1);
+    move_ancestors.back().push_back(tri[0]);
+    move_ancestors.back().push_back(tri[1]);
+    move_ancestors.back().push_back(tri[2]);
+
+    move_coefs.push_back(
+        m_algoGeom->compute3PointsBarycoefs(target,
+            tri[0], tri[1], tri[2], true));
+
+    // Do the real work
+    m_modifier->movePointsProcess(move_ids, move_ancestors, move_coefs);
+    m_modifier->notifyEndingEvent();
+    m_modifier->propagateTopologicalChanges();
+
+    // Check
+    //const VecCoord& xnew = m_state->read(
+    //    sofa::core::ConstVecCoordId::restPosition())->getValue();
+    //std::cout << "requested " << target << "\tgot " << xnew[pt] << "\tdelta"
+    //    << (target - xnew[pt]).norm() << "\n";
+}
+
+template<class DataTypes>
 typename Test2DAdapter<DataTypes>::PointInformation::NodeType Test2DAdapter<DataTypes>::detectNodeType(Index pt, Vec3 &boundaryDirection)
 {
     if (m_container == NULL)
@@ -1135,11 +1243,13 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
     if ((!vparams->displayFlags().getShowBehaviorModels()))
         return;
 
+    if (!m_state) return;
     const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     helper::vector<defaulttype::Vector3> boundary;
     helper::vector<defaulttype::Vector3> fixed;
     const helper::vector<PointInformation> &pts = pointInfo.getValue();
+    if (pts.size() != x.size()) return;
     for (Index i=0; i < x.size(); i++) {
         if (pts[i].isBoundary()) {
             boundary.push_back(x[i]);

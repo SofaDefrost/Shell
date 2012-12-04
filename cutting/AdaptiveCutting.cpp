@@ -68,6 +68,58 @@ namespace gui
 int AdaptiveCuttingOperationReg = RegisterOperation("AdaptiveCutting")
     .add< AdaptiveCuttingOperation >();
 
+void AdaptiveCuttingOperation::start()
+{
+    // Add cutting point
+    CuttingAdapter *ca = getAdapter();
+    if (ca) {
+        ca->addCuttingPoint();
+    }
+    Operation::start(); // TODO: do we need this?
+}
+
+
+void AdaptiveCuttingOperation::endOperation()
+{
+    // Free the tracked point
+    CuttingAdapter *ca = getAdapter();
+    if (ca) {
+        ca->freeTrackedPoint();
+    }
+    this->end(); // TODO: do we need this?
+}
+
+void AdaptiveCuttingOperation::wait()
+{
+    // Update the position in the adaptivity component
+    if (!pickHandle) return;
+    BodyPicked *picked = pickHandle->getLastPicked();
+    if (!picked) return;
+
+    CuttingAdapter *ca = getAdapter();
+    if (ca) {
+        ca->setTrackedPoint(*picked);
+    }
+}
+
+component::controller::CuttingAdapter* AdaptiveCuttingOperation::getAdapter()
+{
+    if (!pickHandle) return NULL;
+
+    BodyPicked *picked = pickHandle->getLastPicked();
+    if (!picked) return NULL;
+
+    component::controller::CuttingAdapter *ca = NULL;
+    if (picked->body) {
+        if (!picked->body->getContext()) std::cout << "no context!\n";
+        picked->body->getContext()->get(ca);
+    } else {
+        if (!picked->mstate->getContext()) std::cout << "no context!2\n";
+        picked->mstate->getContext()->get(ca);
+    }
+
+    return ca;
+}
 
 } // namespace gui
 
