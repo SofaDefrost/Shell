@@ -240,9 +240,11 @@ public:
 
     void setTrackedPoint(const collision::BodyPicked &picked);
     void freeTrackedPoint() {
-        std::cout << ":: freeing point " << m_pointId << "\n";
+        // Detach the point
         m_pointId = InvalidID;
-        // TODO: stop cutting
+        // Stop cutting
+        m_bCutting = false;
+        m_cutEdge = InvalidID;
     }
     void addCuttingPoint();
 

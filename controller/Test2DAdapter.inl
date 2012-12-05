@@ -54,7 +54,9 @@ void Test2DAdapter<DataTypes>::PointInfoHandler::swap(unsigned int i1,
 {
     std::cout << "pt " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
     Inherited::swap(i1, i2);
-    // TODO: update indices in m_toUpdate
+    // TODO:
+    // - update indices in m_toUpdate
+    // - m_pointId may change?
 }
 
 
@@ -100,6 +102,12 @@ void Test2DAdapter<DataTypes>::TriangleInfoHandler::swap(unsigned int i1,
 {
     std::cout << "tri " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
     Inherited::swap(i1, i2);
+
+    if (m_pointTriId == i1) {
+        m_pointId = i2;
+    } else if (m_pointTriId == i2) {
+        m_pointId = i1;
+    }
 }
 
 template<class DataTypes>
@@ -430,7 +438,9 @@ void Test2DAdapter<DataTypes>::setTrackedPoint(const collision::BodyPicked &pick
         Index newId = (d1 < d2) ?
             (d1 < d3 ? t[0] : t[2]) :
             (d2 < d3 ? t[1] : t[2]);
-        if (!m_gracePeriod && (newId != m_pointId)) {
+        // TODO: Durign cutting we should allow change only to point directly
+        // connected with last cut point.
+        if (!m_gracePeriod && !m_bCutting && (newId != m_pointId)) {
             m_pointId = newId;
             m_gracePeriod = 20;
         }
@@ -441,8 +451,6 @@ void Test2DAdapter<DataTypes>::setTrackedPoint(const collision::BodyPicked &pick
     } else {
         m_pointId = InvalidID;
     }
-    std::cout << ":: tracking point " << m_pointId << "(" << m_point
-        << ") from traingle " << m_pointTriId << "\n";
 }
 
 template<class DataTypes>
@@ -482,8 +490,7 @@ void Test2DAdapter<DataTypes>::addCuttingPoint()
     // END_TODO
 
     // Get another point in that direction.
-    Index tId = m_algoGeom->getTriangleInDirection(m_pointId,
-        m_point - x[m_pointId]);
+    Index tId = m_algoGeom->getTriangleInDirection(m_pointId, dir);
     if (tId == InvalidID) {
         serr << "BUG! Nothing in cutting direction!" << sendl;
         return;
@@ -1263,10 +1270,17 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
         sofa::defaulttype::Vec<4,float>(0.8, 0.0, 0.8, 1.0));
 
     if (m_pointId != InvalidID) {
+        // Draw tracked position
         helper::vector<defaulttype::Vector3> vv(1,
             defaulttype::Vector3(m_point[0], m_point[1], m_point[2]));
         vparams->drawTool()->drawPoints(vv, 4,
             sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
+        // Draw attached point
+        vv[0] = x[m_pointId];
+        vparams->drawTool()->drawPoints(vv, 6,
+            m_bCutting
+            ? sofa::defaulttype::Vec<4,float>(1.0, 1.0, 0.0, 1.0)
+            : sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
     }
 }
 
