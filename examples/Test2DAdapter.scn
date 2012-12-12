@@ -10,7 +10,7 @@
     <CollisionGroup />
 
     <Node>
-        <MeshObjLoader name="mesh" filename="../mesh/plane32-noise.obj"/>
+        <MeshObjLoader name="mesh" filename="../mesh/plane128.obj"/>
         <TriangleSetTopologyContainer name="points" src="@mesh" />
 
         <!-- Used for mouse tracking

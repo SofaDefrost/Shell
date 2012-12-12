@@ -32,7 +32,7 @@ namespace controller
 {
 
 /**
- * @brief Internal ata for Test2DAdapter.
+ * @brief Internal data for Test2DAdapter.
  *
  * Internal data for Test2DAdapter. Can be overriden in class specializations.
  */
@@ -116,7 +116,7 @@ public:
     /// Holds information about each node.
     class PointInformation {
         public:
-            PointInformation() : type(NORMAL) {}
+            PointInformation() : type(NORMAL), forceFixed(false) {}
 
             /// Type of the node.
             enum NodeType { NORMAL, FIXED, BOUNDARY };
@@ -128,10 +128,15 @@ public:
             /// boundary or is fixed).
             NodeType type;
 
+            /// Force node to be fixed despite its type.
+            bool forceFixed;
+
+            /// Returns true if node can be moved freely.
+            bool isNormal() const { return type == NORMAL && !forceFixed; }
             /// Returns true if node lies on the boundary.
             bool isBoundary() const { return type == BOUNDARY; }
             /// Returns true if node is fixed and cannot be moved.
-            bool isFixed() const { return type == FIXED; }
+            bool isFixed() const { return (type == FIXED) || forceFixed; }
 
             /// Output stream
             inline friend std::ostream& operator<< ( std::ostream& os, const PointInformation& /*pi*/ ) { return os; }
@@ -152,12 +157,12 @@ public:
             //    const sofa::helper::vector< double > &coeffs)
             //{ applyCreateFunction(pointIndex, pInfo, topology::BaseMeshTopology::InvalidID, ancestors, coeffs); }
 
-            void applyCreateFunction(
-                unsigned int pointIndex,
-                PointInformation &pInfo,
-                const topology::Point &elem,
-                const sofa::helper::vector< unsigned int > &ancestors,
-                const sofa::helper::vector< double > &coeffs);
+            //void applyCreateFunction(
+            //    unsigned int pointIndex,
+            //    PointInformation &pInfo,
+            //    const topology::Point &elem,
+            //    const sofa::helper::vector< unsigned int > &ancestors,
+            //    const sofa::helper::vector< double > &coeffs);
 
             void applyDestroyFunction(unsigned int pointIndex, PointInformation &pInfo);
 
@@ -200,12 +205,12 @@ public:
 
             void swap( unsigned int i1, unsigned int i2 );
 
-            /// Add Element after a displacement of vertices, ie. add element based on previous position topology revision.
-            void addOnMovedPosition(const sofa::helper::vector<unsigned int> &indexList,
-                const sofa::helper::vector< topology::Triangle > &elems);
+            ///// Add Element after a displacement of vertices, ie. add element based on previous position topology revision.
+            //void addOnMovedPosition(const sofa::helper::vector<unsigned int> &indexList,
+            //    const sofa::helper::vector< topology::Triangle > &elems);
 
-            /// Remove Element after a displacement of vertices, ie. add element based on previous position topology revision.
-            void removeOnMovedPosition(const sofa::helper::vector<unsigned int> &indices);
+            ///// Remove Element after a displacement of vertices, ie. add element based on previous position topology revision.
+            //void removeOnMovedPosition(const sofa::helper::vector<unsigned int> &indices);
 
         protected:
             Test2DAdapter<DataTypes> *adapter;
@@ -243,10 +248,13 @@ public:
         // Detach the point
         m_pointId = InvalidID;
         // Stop cutting
-        m_bCutting = false;
+        m_cutPoints = 0;
         m_cutEdge = InvalidID;
     }
     void addCuttingPoint();
+
+    /// Whether the cutting is in progress or not.
+    bool cutting() { return m_cutPoints > 0; }
 
     /**
      * @brief Distortion metric for a triangle to be computed.
@@ -263,7 +271,7 @@ public:
         // may be lost in the sumation although any inverted triangle is worse
         // than any non-inverted triangle.
         return metricInverted(t, x, normal) * (
-            0.1*helper::rsqrt(metricGeom(t, x, normal)) + 0.9*metricDistance(t, x, normal));
+            0.01*helper::rsqrt(metricGeom(t, x, normal)) + 0.99*metricDistance(t, x, normal));
     }
 
 
@@ -274,9 +282,9 @@ public:
         //Real precision = 1e-5;
 
         Real d;
-        if (t[0] == m_pointId) d = (m_point - x[ t[0] ]).norm2();
-        else if (t[1] == m_pointId) d = (m_point - x[ t[1] ]).norm2();
-        else if (t[2] == m_pointId) d = (m_point - x[ t[2] ]).norm2();
+        if (t[0] == m_pointId) d = (m_pointRest - x[ t[0] ]).norm2();
+        else if (t[1] == m_pointId) d = (m_pointRest - x[ t[1] ]).norm2();
+        else if (t[2] == m_pointId) d = (m_pointRest - x[ t[2] ]).norm2();
         else return 1.0;
 
         // Accept point if distance from target is less than this value.
@@ -427,6 +435,8 @@ private:
     Index m_pointId;
     /// A point on a surface to attract to (valid only if m_pointId != InvalidID).
     Vec3 m_point;
+    /// Position of m_point projected into rest shape.
+    Vec3 m_pointRest;
     /// @brief Triangle ID inside which m_point is located (valid only if
     ///m_pointId != InvalidID).
     Index m_pointTriId;
@@ -434,11 +444,15 @@ private:
     /// reattached.
     unsigned int m_gracePeriod;
 
-    /// Whether the cutting is in progress or not.
-    bool m_bCutting;
     /// @brief Stored index of the first edge to cut when the first cut has
     /// been delayed.
     Index m_cutEdge;
+    /// Last cutting point.
+    Index m_cutLastPoint;
+    /// Cutting operation to perform in this step.
+    VecIndex m_cutList;
+    /// Number of cut points defined.
+    int m_cutPoints;
 
 
     Real sumgamma, mingamma, maxgamma;
@@ -518,8 +532,9 @@ private:
      * @param target    Target coordinates to move the point to.
      * @param hint      Optional index of the triangle in which the point is
      *                  located.
+     * @param bInRest   Whether to perform the operation on rest shape.
      */
-    void relocatePoint(Index pt, Coord target, Index hint=InvalidID);
+    void relocatePoint(Index pt, Coord target, Index hint=InvalidID, bool bInRest=true);
 
     /**
      * @brief Compute triangle normal.

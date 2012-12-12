@@ -113,7 +113,7 @@ component::controller::CuttingAdapter* AdaptiveCuttingOperation::getAdapter()
     if (picked->body) {
         if (!picked->body->getContext()) std::cout << "no context!\n";
         picked->body->getContext()->get(ca);
-    } else {
+    } else if (picked->mstate) {
         if (!picked->mstate->getContext()) std::cout << "no context!2\n";
         picked->mstate->getContext()->get(ca);
     }

@@ -1,3 +1,12 @@
+//
+// Component for dynamic remeshing.
+//
+// Few notes for the all brave adventurers.
+// * There is a thin line between operations performed in rest shape and in
+//   deformed shape. Specificaly the element geometry is analysed in rest
+//   shape, but point tracking for cutting support is (mostly) done in deformed
+//   shape.
+
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 #define SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 
@@ -31,32 +40,35 @@ namespace controller
 {
 
 
-#if 1
-template<class DataTypes>
-void Test2DAdapter<DataTypes>::PointInfoHandler::applyCreateFunction(
-    unsigned int pointIndex, PointInformation &/*pInfo*/,
-    const topology::Point& /*elem*/,
-    const sofa::helper::vector< unsigned int > &/*ancestors*/,
-    const sofa::helper::vector< double > &/*coeffs*/)
-{
-    std::cout << "pt " << __FUNCTION__ << pointIndex << std::endl;
-}
-
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::PointInfoHandler::applyDestroyFunction(unsigned int pointIndex, PointInformation& /*pInfo*/)
 {
-    std::cout << "pt " << __FUNCTION__ << pointIndex << std::endl;
+    //std::cout << "pt " << __FUNCTION__ << pointIndex << std::endl;
+    adapter->m_toUpdate.erase(pointIndex);
 }
 
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::PointInfoHandler::swap(unsigned int i1,
     unsigned int i2)
 {
-    std::cout << "pt " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
+    //std::cout << "pt " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
     Inherited::swap(i1, i2);
-    // TODO:
-    // - update indices in m_toUpdate
-    // - m_pointId may change?
+
+    // m_pointId may change
+    if (adapter->m_pointId == i1) {
+        adapter->m_pointId = i2;
+    } else if (adapter->m_pointId == i2) {
+        adapter->m_pointId = i1;
+    }
+
+    // Update indices in m_toUpdate
+    if (adapter->m_toUpdate[i1] && !adapter->m_toUpdate[i2]) {
+        adapter->m_toUpdate.erase(i1);
+        adapter->m_toUpdate[i2] = true;
+    } else if (adapter->m_toUpdate[i2] && !adapter->m_toUpdate[i1]) {
+        adapter->m_toUpdate.erase(i2);
+        adapter->m_toUpdate[i1] = true;
+    }
 }
 
 
@@ -69,7 +81,7 @@ void Test2DAdapter<DataTypes>::TriangleInfoHandler::applyCreateFunction(
     const sofa::helper::vector< unsigned int > &/*ancestors*/,
     const sofa::helper::vector< double > &/*coeffs*/)
 {
-    std::cout << "tri " << __FUNCTION__ << triangleIndex << " (" << elem << ") [" << adapter->m_container->getTriangle(triangleIndex) << "]" << std::endl;
+    //std::cout << "tri " << __FUNCTION__ << triangleIndex << " (" << elem << ") [" << adapter->m_container->getTriangle(triangleIndex) << "]" << std::endl;
 
     // Check if vertices are on the boundary
     // NOTE: We cannot do any complicated checking here because the topology
@@ -86,7 +98,7 @@ void Test2DAdapter<DataTypes>::TriangleInfoHandler::applyCreateFunction(
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::TriangleInfoHandler::applyDestroyFunction(unsigned int triangleIndex, TriangleInformation &/*tInfo*/)
 {
-    std::cout << "tri " << __FUNCTION__ << triangleIndex << std::endl;
+    //std::cout << "tri " << __FUNCTION__ << triangleIndex << std::endl;
     // Check if vertices are on the boundary
     // NOTE: We cannot do any complicated checking here because the topology
     //       may be inconsistent.
@@ -100,16 +112,17 @@ template<class DataTypes>
 void Test2DAdapter<DataTypes>::TriangleInfoHandler::swap(unsigned int i1,
     unsigned int i2)
 {
-    std::cout << "tri " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
+    //std::cout << "tri " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
     Inherited::swap(i1, i2);
 
-    if (m_pointTriId == i1) {
-        m_pointId = i2;
-    } else if (m_pointTriId == i2) {
-        m_pointId = i1;
+    if (adapter->m_pointTriId == i1) {
+        adapter->m_pointTriId = i2;
+    } else if (adapter->m_pointTriId == i2) {
+        adapter->m_pointTriId = i1;
     }
 }
 
+#if 0
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::TriangleInfoHandler::addOnMovedPosition(const sofa::helper::vector<unsigned int> &indexList,
     const sofa::helper::vector< topology::Triangle > & elems)
@@ -144,8 +157,8 @@ Test2DAdapter<DataTypes>::Test2DAdapter()
 , m_precision(1e-8)
 , m_pointId(InvalidID)
 , m_gracePeriod(0)
-, m_bCutting(false)
 , m_cutEdge(InvalidID)
+, m_cutPoints(0)
 , pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
 , triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
@@ -267,6 +280,16 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     stepCounter++;
     if (m_gracePeriod > 0) m_gracePeriod--;
 
+    // Perform the (delayed) cutting
+    if ((m_cutList.size() > 0) && (m_cutPoints > 2) ) {
+        VecIndex newList, endList;
+        bool bReachedBorder;
+        m_algoTopo->InciseAlongEdgeList(m_cutList, newList, endList,
+            bReachedBorder);
+        //m_algoTopo->InciseAlongEdge(m_cutList[0], NULL);
+        m_cutList.clear();
+    }
+
     // Update boundary vertices
     recheckBoundary();
 
@@ -280,10 +303,24 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     // WARNING: Notice that we're working on a copy that is NOT updated by
     //          external changes!
     VecCoord x = datax->getValue();
+    //
+    const VecCoord& xrest = datax->getValue();
 
     Index nTriangles = m_container->getNbTriangles();
     if (nTriangles == 0)
         return;
+
+    // Update projection of tracked point in rest shape
+    if (m_pointId != InvalidID) {
+        Triangle tri = m_container->getTriangle(m_pointTriId);
+        helper::vector< double > bary = m_algoGeom->compute3PointsBarycoefs(
+            m_point, tri[0], tri[1], tri[2], false);
+        m_pointRest =
+            xrest[ tri[0] ] * bary[0] +
+            xrest[ tri[1] ] * bary[1] +
+            xrest[ tri[2] ] * bary[2];
+    }
+
 
     //sofa::helper::system::thread::ctime_t start, stop;
     //sofa::helper::system::thread::CTime timer;
@@ -320,12 +357,30 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         {
             x[i] = xold;
         } else {
+            // Move the point
             relocatePoint(i, x[i]);
+
+            // Update boundary vertices
+            recheckBoundary();
+
             moved++;
             Real delta = (x[i] - xold).norm2();
             if (delta > maxdelta) {
                 maxdelta = delta;
             }
+
+            // Update projection of tracked point in rest shape
+            if (m_pointId == i) {
+                Triangle tri = m_container->getTriangle(m_pointTriId);
+                helper::vector< double > bary = m_algoGeom->compute3PointsBarycoefs(
+                    m_point, tri[0], tri[1], tri[2], false);
+                m_pointRest =
+                    xrest[ tri[0] ] * bary[0] +
+                    xrest[ tri[1] ] * bary[1] +
+                    xrest[ tri[2] ] * bary[2];
+            }
+
+
         }
     }
 
@@ -345,7 +400,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     sum2 = helper::rsqrt(sum2/nTriangles);
 
     // Check the values around attached point and reattach if necessary
-    if ((m_pointId != InvalidID) && !m_gracePeriod && !m_bCutting) {
+    if ((m_pointId != InvalidID) && !m_gracePeriod && !cutting()) {
         TrianglesAroundVertex N1 =
             m_container->getTrianglesAroundVertex(m_pointId);
         Real min = 1.0;
@@ -440,7 +495,7 @@ void Test2DAdapter<DataTypes>::setTrackedPoint(const collision::BodyPicked &pick
             (d2 < d3 ? t[1] : t[2]);
         // TODO: Durign cutting we should allow change only to point directly
         // connected with last cut point.
-        if (!m_gracePeriod && !m_bCutting && (newId != m_pointId)) {
+        if (!m_gracePeriod && !cutting() && (newId != m_pointId)) {
             m_pointId = newId;
             m_gracePeriod = 20;
         }
@@ -464,15 +519,16 @@ void Test2DAdapter<DataTypes>::addCuttingPoint()
     }
 
     const VecCoord& x = m_state->read(
-        sofa::core::ConstVecCoordId::restPosition())->getValue();
+        sofa::core::ConstVecCoordId::position())->getValue();
+    //const VecCoord& xrest = m_state->read(
+    //    sofa::core::ConstVecCoordId::restPosition())->getValue();
     Coord oldpos = x[m_pointId];
 
-    bool bFirst = !m_bCutting;
-    m_bCutting = true;
+    bool bFirst = !cutting();
 
     // Make sure the tracked point is at the target location.
     if (pointInfo[m_pointId].type == PointInformation::NORMAL) {
-        relocatePoint(m_pointId, m_point, m_pointTriId);
+        relocatePoint(m_pointId, m_point, m_pointTriId, false);
     } else {
         // TODO: We need a parameter controling how close one has to be to the
         // boundary/fixed node to attach to it. For boundary nodes we have to
@@ -516,36 +572,52 @@ void Test2DAdapter<DataTypes>::addCuttingPoint()
         j++;
     }
 
-    Index newPt = (alpha[0] < alpha[1]) ? otherPt[0] : otherPt[1];
+    Index newPt = (alpha[0] < alpha[1]) ? otherPt[1] : otherPt[0];
     Index oldPt = m_pointId;
-    Index edge = (alpha[0] < alpha[1]) ? otherEdge[0] : otherEdge[1];
+    Index edge = (alpha[0] < alpha[1]) ? otherEdge[1] : otherEdge[0];
+
+    m_cutPoints++;
 
     // Attach the new point and move it to be near the cursor.
     m_pointId = newPt;
     m_pointTriId = tId;
     m_gracePeriod = 20;
-    relocatePoint(newPt, x[oldPt] + (dir*m_precision/2.0), tId);
+    relocatePoint(newPt, x[oldPt] + (dir*m_precision/2.0), tId, false);
 
     // Split the edge. If this is first cut point and the point is not on the
     // border just remeber it and do the operation when another cut point is
     // inserted.
-    if (bFirst &&
-        (pointInfo[oldPt].type == PointInformation::NORMAL)) {
+    //if (bFirst &&
+    //    (pointInfo[oldPt].type == PointInformation::NORMAL)) {
+    //    m_cutEdge = edge;
+    //    // For now just fix the point.
+    //    (*pointInfo.beginEdit())[oldPt].type = PointInformation::FIXED;
+    //    pointInfo.endEdit();
+    //} else {
+    //    if (m_cutEdge != InvalidID) {
+    //        m_cutList.push_back(m_cutEdge);
+    //        m_cutEdge = InvalidID;
+    //    }
+    //    m_cutList.push_back(edge);
+    //    // TODO: remove this
+    //    (*pointInfo.beginEdit())[oldPt].type = PointInformation::FIXED;
+    //    pointInfo.endEdit();
+    //}
+    m_cutLastPoint = oldPt;
+    if (bFirst) {
         m_cutEdge = edge;
         // For now just fix the point.
-        (*pointInfo.beginEdit())[oldPt].type = PointInformation::FIXED;
+        (*pointInfo.beginEdit())[oldPt].forceFixed = true;
         pointInfo.endEdit();
     } else {
-        VecIndex edgeList, newList, endList;
-        bool bReachedBorder;
         if (m_cutEdge != InvalidID) {
-            edgeList.push_back(m_cutEdge);
-            m_cutEdge = InvalidID;
+            m_cutList.push_back(m_cutEdge);
         }
-        edgeList.push_back(edge);
-        m_algoTopo->InciseAlongEdgeList(edgeList, newList, endList,
-            bReachedBorder);
-        // TODO: fix all the points?
+        m_cutEdge = edge;
+        // Fix the point so nothing happens to it before the topological change
+        // occurs.
+        (*pointInfo.beginEdit())[oldPt].forceFixed = true;
+        pointInfo.endEdit();
     }
 }
 
@@ -740,7 +812,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
 
     // If it's boundary node project it onto the boundary line
     const PointInformation &pt = pointInfo.getValue()[v];
-    if (pt.isBoundary()) {
+    if (pt.isBoundary()) { // && !pt.isFixed()
         step = pt.boundary * (pt.boundary*step);
     }
 
@@ -805,7 +877,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
                 triInfo.getValue()[ N1[it] ].normal);
         }
     }
-    // NOTE: Old position restore by caller (if needed).
+    // NOTE: Old position restored by caller (if needed).
 
     return bAccepted;
 }
@@ -1106,15 +1178,22 @@ void Test2DAdapter<DataTypes>::recheckBoundary()
 
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
-    Index hint)
+    Index hint, bool bInRest)
 {
-    if (m_modifier == NULL) return;
+    if (m_modifier == NULL ||
+        m_algoGeom == NULL ||
+        m_container == NULL ||
+        m_state == NULL)
+        return;
+
     Index tId = hint;
 
     const VecCoord& x = m_state->read(
-        sofa::core::ConstVecCoordId::restPosition())->getValue();
-    
-    //if ((x[pt] - target).norm() < 1e-15) return; // Nothing to do
+        bInRest
+        ? sofa::core::ConstVecCoordId::restPosition()
+        : sofa::core::ConstVecCoordId::position()
+        )->getValue();
+
     if ((x[pt] - target).norm() < m_precision) return; // Nothing to do
 
     if (tId == InvalidID) {
@@ -1126,11 +1205,11 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
         TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(pt);
         for (Index it=0; it<N1.size(); it++) {
             Index t;
-            if (m_algoGeom->isPointInsideTriangle(N1[it], false, target, t)) {
+            if (m_algoGeom->isPointInsideTriangle(N1[it], false, target, t, bInRest)) {
                 Triangle tri = m_container->getTriangle(N1[it]);
                 helper::vector<double> bary =
                     m_algoGeom->compute3PointsBarycoefs(
-                        target, tri[0], tri[1], tri[2], true);
+                        target, tri[0], tri[1], tri[2], bInRest);
                 bool bGood = true;
                 for (int bc=0; bc<3; bc++) {
                     if (bary[bc] < -1e-15) {
@@ -1152,7 +1231,7 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
         serr << "Unexpected triangle Id -1! Cannot move point "
             << pt << ", marking point as fixed." << sendl;
 
-        (*pointInfo.beginEdit())[pt].type = PointInformation::FIXED;
+        (*pointInfo.beginEdit())[pt].forceFixed = true;
         pointInfo.endEdit();
 
         //EdgesAroundVertex N1e = m_container->getEdgesAroundVertex(pt);
@@ -1172,14 +1251,19 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
 
     move_ids.push_back(pt);
 
-    move_ancestors.resize(move_ancestors.size()+1);
+    move_ancestors.resize(1);
     move_ancestors.back().push_back(tri[0]);
     move_ancestors.back().push_back(tri[1]);
     move_ancestors.back().push_back(tri[2]);
 
     move_coefs.push_back(
         m_algoGeom->compute3PointsBarycoefs(target,
-            tri[0], tri[1], tri[2], true));
+            tri[0], tri[1], tri[2], bInRest));
+
+    if (hint != InvalidID) {
+    std::cout << "hinted move: " << x[pt] << " -> " << target <<
+        " :: " << move_coefs.back() << "\n";
+    }
 
     // Do the real work
     m_modifier->movePointsProcess(move_ids, move_ancestors, move_coefs);
@@ -1258,10 +1342,10 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
     const helper::vector<PointInformation> &pts = pointInfo.getValue();
     if (pts.size() != x.size()) return;
     for (Index i=0; i < x.size(); i++) {
-        if (pts[i].isBoundary()) {
-            boundary.push_back(x[i]);
-        } else if (pts[i].isFixed()) {
+        if (pts[i].isFixed()) {
             fixed.push_back(x[i]);
+        } else if (pts[i].isBoundary()) {
+            boundary.push_back(x[i]);
         }
     }
     vparams->drawTool()->drawPoints(boundary, 10,
@@ -1275,12 +1359,36 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
             defaulttype::Vector3(m_point[0], m_point[1], m_point[2]));
         vparams->drawTool()->drawPoints(vv, 4,
             sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
+        // Draw tracked position (projected in rest shape)
+        vv[0] = m_pointRest;
+        vparams->drawTool()->drawPoints(vv, 4,
+            sofa::defaulttype::Vec<4,float>(1.0, 1.0, 0.0, 1.0));
         // Draw attached point
         vv[0] = x[m_pointId];
         vparams->drawTool()->drawPoints(vv, 6,
-            m_bCutting
+            cutting()
             ? sofa::defaulttype::Vec<4,float>(1.0, 1.0, 0.0, 1.0)
             : sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
+    }
+
+    if (m_cutList.size() > 0) {
+        helper::vector<defaulttype::Vector3> points;
+        for (VecIndex::const_iterator i=m_cutList.begin();
+            i != m_cutList.end(); i++) {
+            const Edge &e = m_container->getEdge(*i);
+            points.push_back(x[ e[0] ]);
+            points.push_back(x[ e[1] ]);
+        }
+        vparams->drawTool()->drawLines(points, 4,
+            sofa::defaulttype::Vec<4,float>(1.0, 0.0, 0.0, 1.0));
+    }
+    if (m_cutEdge != InvalidID) {
+        const Edge &e = m_container->getEdge(m_cutEdge);
+        helper::vector<defaulttype::Vector3> points;
+        points.push_back(x[ e[0] ]);
+        points.push_back(x[ e[1] ]);
+        vparams->drawTool()->drawLines(points, 4,
+            sofa::defaulttype::Vec<4,float>(1.0, 0.0, 0.0, 1.0));
     }
 }
 
