@@ -51,25 +51,32 @@
         <Triangle />
 
         <Node name="Render">
-            <OglModel name="Visual" color="red"/>
+            <OglModel name="Visual" color="#90EE90"/>
             <IdentityMapping input="@.." output="@Visual"/>
         </Node>
 
         <Node name="Render wire">
             <VisualStyle displayFlags="showWireframe" />
-            <OglModel name="Visual" color="yellow"/>
+            <OglModel name="Visual" color="#BC8F8F" depthTest="false" />
             <IdentityMapping input="@.." output="@Visual"/>
         </Node>
 
 
 
         <Node name="Rest state">
-            <VisualStyle displayFlags="showWireframe" />
             <TriangleSetTopologyContainer name="topo" points="@../topo.points" edges="@../topo.edges" triangles="@../topo.triangles" />
             <TransformEngine name="transform" template="Vec3d" translation="2.5 0 0" input_position="@../MO.rest_position" />
             <MechanicalObject template="Vec3d" rest_position="@transform.output_position" position="@transform.output_position" />
-            <Node name="Render">
-                <OglModel name="Visual" color="yellow" translation="2.5 0 0"/>
+
+            <Node name="Data">
+                <DataDisplay cellData="@../../adapter.functionals" />
+                <ColorMap colorScheme="Blue to Red" />
+                <IdentityMapping input="@.." output="@."/>
+            </Node>
+
+            <Node name="Render wire">
+                <VisualStyle displayFlags="showWireframe" />
+                <OglModel name="Visual" color="white" translation="2.5 0 0" depthTest="false" />
                 <IdentityMapping input="@.." output="@Visual"/>
             </Node>
         </Node>

@@ -150,19 +150,19 @@ public:
             typedef topology::TopologyDataHandler<topology::Point, sofa::helper::vector<PointInformation> > Inherited;
             PointInfoHandler(Test2DAdapter<DataTypes>* _adapter, topology::PointData<sofa::helper::vector<PointInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
 
-            //void applyCreateFunction(
-            //    unsigned int pointIndex,
-            //    PointInformation &pInfo,
-            //    const sofa::helper::vector< unsigned int > &ancestors,
-            //    const sofa::helper::vector< double > &coeffs)
-            //{ applyCreateFunction(pointIndex, pInfo, topology::BaseMeshTopology::InvalidID, ancestors, coeffs); }
+            void applyCreateFunction(
+                unsigned int pointIndex,
+                PointInformation &pInfo,
+                const sofa::helper::vector< unsigned int > &ancestors,
+                const sofa::helper::vector< double > &coeffs)
+            { applyCreateFunction(pointIndex, pInfo, topology::BaseMeshTopology::InvalidID, ancestors, coeffs); }
 
-            //void applyCreateFunction(
-            //    unsigned int pointIndex,
-            //    PointInformation &pInfo,
-            //    const topology::Point &elem,
-            //    const sofa::helper::vector< unsigned int > &ancestors,
-            //    const sofa::helper::vector< double > &coeffs);
+            void applyCreateFunction(
+                unsigned int pointIndex,
+                PointInformation &pInfo,
+                const topology::Point &elem,
+                const sofa::helper::vector< unsigned int > &ancestors,
+                const sofa::helper::vector< double > &coeffs);
 
             void applyDestroyFunction(unsigned int pointIndex, PointInformation &pInfo);
 
@@ -271,15 +271,12 @@ public:
         // may be lost in the sumation although any inverted triangle is worse
         // than any non-inverted triangle.
         return metricInverted(t, x, normal) * (
-            0.01*helper::rsqrt(metricGeom(t, x, normal)) + 0.99*metricDistance(t, x, normal));
+            0.05*helper::rsqrt(metricGeom(t, x, normal)) + 0.95*metricDistance(t, x, normal));
     }
 
 
     Real metricDistance(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
         if (m_pointId == InvalidID) return 1.0;
-
-        //Real scale = 1e-5;
-        //Real precision = 1e-5;
 
         Real d;
         if (t[0] == m_pointId) d = (m_pointRest - x[ t[0] ]).norm2();
@@ -288,10 +285,15 @@ public:
         else return 1.0;
 
         // Accept point if distance from target is less than this value.
-        if (d < m_precision) return 1.0;
-
-        return (Real)1.0 - d;
-        //return (Real)1.0 - helper::rsqrt(d);
+        if (d < m_precision) {
+            return 1.0;
+        } else if (d > 1.0) {
+            // Do NOT go into negative value! Negative is strictly for inverted
+            // elements.
+            return 0.0;
+        } else {
+            return (Real)1.0 - d;
+        }
     }
 
     /**
@@ -435,11 +437,26 @@ private:
     Index m_pointId;
     /// A point on a surface to attract to (valid only if m_pointId != InvalidID).
     Vec3 m_point;
+    /**
+     * @brief A point on a surface to attract to (valid only if m_pointId !=
+     * InvalidID).
+     *
+     * Difference between m_point and m_pointTracked is that m_pointTracked
+     * contains latest position but m_point is the last position that was still
+     * in the triangle m_pointTriId. During cutting when the tracked point is
+     * constrained the cursor (m_pointTracked) may move out of the N1-ring
+     * where the cut is planned. In this case m_point contains the position
+     * still in N1-ring but m_pointTracked does not.
+     */
+    Vec3 m_pointTracked;
     /// Position of m_point projected into rest shape.
     Vec3 m_pointRest;
     /// @brief Triangle ID inside which m_point is located (valid only if
     ///m_pointId != InvalidID).
     Index m_pointTriId;
+    /// @brief Triangle ID inside which m_pointTracked is located (valid only
+    /// if m_pointId != InvalidID).
+    Index m_pointTriIdTracked;
     /// @brief Number of iterations during which the attached node will not be
     /// reattached.
     unsigned int m_gracePeriod;
