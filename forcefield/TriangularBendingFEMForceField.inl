@@ -42,7 +42,7 @@
 #include <sofa/component/topology/TopologyData.inl>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 
-#include <sofa/simulation/common/Simulation.h>
+#include <sofa/core/visual/VisualParams.h>
 #include <sofa/simulation/common/AnimateEndEvent.h>
 
 #include "../controller/MeshChangedEvent.h"

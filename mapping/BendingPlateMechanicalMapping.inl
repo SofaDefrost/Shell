@@ -28,6 +28,7 @@
 #include "BendingPlateMechanicalMapping.h"
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 #include <sofa/component/collision/MinProximityIntersection.h>
+#include <sofa/core/visual/VisualParams.h>
 
 #include <sofa/component/forcefield/ConstantForceField.h>
 

@@ -38,8 +38,7 @@
 //#include <assert.h>
 #include <sofa/component/topology/TopologyData.inl>
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
-#include <sofa/simulation/common/Simulation.h> // for draw()
-
+#include <sofa/core/visual/VisualParams.h>
 #include "../controller/MeshChangedEvent.h"
 
 #ifdef _WIN32

@@ -7,7 +7,6 @@
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/component/topology/TopologyData.inl>
 //#include <sofa/component/topology/GridTopology.h>
-//#include <sofa/simulation/common/Simulation.h>
 #include <sofa/helper/decompose.h>
 //#include <sofa/helper/gl/template.h>
 //#include <sofa/helper/gl/Axis.h>
@@ -26,6 +25,7 @@
 
 #include <sofa/helper/gl/Cylinder.h>
 #include <sofa/simulation/common/Simulation.h>
+#include <sofa/core/visual/VisualParams.h>
 #include <sofa/helper/gl/Axis.h>
 //#include <sofa/simulation/common/Node.h>
 
