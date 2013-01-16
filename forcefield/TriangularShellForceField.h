@@ -110,7 +110,7 @@ class TriangularShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Mat<9, 9, Real> StiffnessMatrix;                // element stiffness matrix
         typedef Mat<18, 18, Real> StiffnessMatrixFull;          // stiffness matrix for shell (= bending plate + membrane)
 
-        typedef void (TriangularShellForceField<DataTypes>::*compstiff)(StiffnessMatrix &K, const TriangleInformation &tinfo);
+        typedef void (TriangularShellForceField<DataTypes>::*compstiff)(StiffnessMatrix &K, TriangleInformation &tinfo);
         typedef helper::fixed_array<Real, 10> AndesBeta;
 
         sofa::core::topology::BaseMeshTopology* _topology;
@@ -148,6 +148,16 @@ public:
                 // Stiffness matrix
                 StiffnessMatrix stiffnessMatrixMembrane;
                 StiffnessMatrix stiffnessMatrixBending;
+
+                // Measure stress or strain
+                struct MeasurePoint {
+                    Vec3 point;             // Barycentric coordinates
+                    StrainDisplacement B;   // Strain-displacement Matrix
+                    StrainDisplacement Bb;  // Strain-displacement Matrix bending
+                    Index id;               // Index into the result array
+                };
+                helper::vector<MeasurePoint> measure;
+
 
                 // The following are in rest shape
                 // - element area
@@ -203,6 +213,8 @@ public:
         Data <sofa::helper::OptionsGroup> f_membraneElement;
         Data <sofa::helper::OptionsGroup> f_bendingElement;
         Data<bool> f_corotated;
+        Data<sofa::helper::OptionsGroup> f_measure;
+        Data<helper::vector<Real> > f_measuredValues;
 
         TRQSTriangleHandler* triangleHandler;
 
@@ -213,8 +225,12 @@ protected :
         compstiff csBending;
 
         /// Material stiffness matrix
-        MaterialStiffness materialMatrixMembrane, materialMatrixBending;
+        MaterialStiffness materialMatrix, materialMatrixMembrane, materialMatrixBending;
         TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
+
+        // What to measure
+        bool bMeasureStrain;
+        bool bMeasureStress;
 
         void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
 
@@ -225,22 +241,22 @@ protected :
         void computeDisplacement(Displacement &Dm, Displacement &Db, const VecCoord &x, const Index elementIndex);
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);
         void computeStiffnessMatrixMembrane(StiffnessMatrix &K, TriangleInformation &tinfo);
-        void computeStiffnessMatrixBending(StiffnessMatrix &K, const TriangleInformation &tinfo);
+        void computeStiffnessMatrixBending(StiffnessMatrix &K, TriangleInformation &tinfo);
         void computeForce(Displacement &Fm, const Displacement& Dm, Displacement &Fb, const Displacement& Db,const Index elementIndex);
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
 
         void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixFull &K_gs, const TriangleInformation &tinfo);
 
         // Membrane Elements
-        void computeStiffnessMatrixCST(StiffnessMatrix &K, const TriangleInformation &tinfo);
-        void computeStiffnessMatrixAll3I(StiffnessMatrix &K, const TriangleInformation &tinfo);
-        void computeStiffnessMatrixAll3M(StiffnessMatrix &K, const TriangleInformation &tinfo);
-        void computeStiffnessMatrixAllLS(StiffnessMatrix &K, const TriangleInformation &tinfo);
-        void computeStiffnessMatrixLSTRet(StiffnessMatrix &K, const TriangleInformation &tinfo);
-        void computeStiffnessMatrixAndesOpt(StiffnessMatrix &K, const TriangleInformation &tinfo);
+        void computeStiffnessMatrixCST(StiffnessMatrix &K, TriangleInformation &tinfo);
+        void computeStiffnessMatrixAll3I(StiffnessMatrix &K, TriangleInformation &tinfo);
+        void computeStiffnessMatrixAll3M(StiffnessMatrix &K, TriangleInformation &tinfo);
+        void computeStiffnessMatrixAllLS(StiffnessMatrix &K, TriangleInformation &tinfo);
+        void computeStiffnessMatrixLSTRet(StiffnessMatrix &K, TriangleInformation &tinfo);
+        void computeStiffnessMatrixAndesOpt(StiffnessMatrix &K, TriangleInformation &tinfo);
 
         // Bending plate elements
-        void computeStiffnessMatrixDKT(StiffnessMatrix &K, const TriangleInformation &tinfo);
+        void computeStiffnessMatrixDKT(StiffnessMatrix &K, TriangleInformation &tinfo);
 
         // Helper functions for the elements
         void andesTemplate(StiffnessMatrix &K, const TriangleInformation &tinfo, const Real alpha, const AndesBeta &beta);

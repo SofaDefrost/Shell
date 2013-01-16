@@ -80,6 +80,8 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
 , f_membraneElement(initData(&f_membraneElement, "membraneElement", "The membrane element to use"))
 , f_bendingElement(initData(&f_bendingElement, "bendingElement", "The bending plate element to use"))
 , f_corotated(initData(&f_corotated, true, "corotated", "Compute forces in corotational frame"))
+, f_measure(initData(&f_measure, "measure", "Compute the strain or stress"))
+, f_measuredValues(initData(&f_measuredValues, "measuredValues", "Measured values for stress or strain"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
     f_membraneElement.beginEdit()->setNames(7,
@@ -101,6 +103,14 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
         );
     f_bendingElement.beginEdit()->setSelectedItem("DKT");
     f_bendingElement.endEdit();
+
+    f_measure.beginEdit()->setNames(3,
+        "None",                 // Draw nothing
+        "Strain (norm)",        // L_2 norm of strain in x and y directions
+        "Von Mises stress"      // Von Mises stress criterion
+        );
+    f_measure.beginEdit()->setSelectedItem("None");
+    f_measure.endEdit();
 
     triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
 }
@@ -176,7 +186,24 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
         return;
     }
 
+    // What to compute?
+    if (f_measure.getValue().getSelectedItem() == "None") {
+        bMeasureStrain = false;  bMeasureStress = false;
+    } else if (f_measure.getValue().getSelectedItem() == "Strain (norm)") {
+        bMeasureStrain = true;  bMeasureStress = false;
+    } else if (f_measure.getValue().getSelectedItem() == "Von Mises stress") {
+        bMeasureStrain = false;  bMeasureStress = true;
+    } else {
+        serr << "Invalid value for measure'" << f_measure.getValue().getSelectedItem() << "'" << sendl;
+        return;
+    }
     helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+
+    if (bMeasureStrain || bMeasureStress)
+    {
+        f_measuredValues.beginEdit()->resize(_topology->getNbPoints());
+        f_measuredValues.endEdit();
+    }
 
     /// Prepare to store info in the triangle array
     ti.resize(_topology->getNbTriangles());
@@ -356,6 +383,11 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     tinfo->b = b;
     tinfo->c = c;
 
+    tinfo->measure.resize(3);
+    tinfo->measure[0].id = a; tinfo->measure[0].point = Vec3(0,0,0);
+    tinfo->measure[1].id = b; tinfo->measure[1].point = Vec3(1,0,0);
+    tinfo->measure[2].id = c; tinfo->measure[2].point = Vec3(0,1,0);
+
     // Gets vertices of rest positions
     const VecCoord& x0 = *this->mstate->getX0();
 
@@ -502,19 +534,20 @@ void TriangularShellForceField<DataTypes>::computeMaterialStiffness()
          nu = f_poisson.getValue(),
          t = f_thickness.getValue();
 
-    materialMatrixMembrane[0][0] = 1.0;
-    materialMatrixMembrane[0][1] = nu;
-    materialMatrixMembrane[0][2] = 0;
-    materialMatrixMembrane[1][0] = nu;
-    materialMatrixMembrane[1][1] = 1.0;
-    materialMatrixMembrane[1][2] = 0;
-    materialMatrixMembrane[2][0] = 0;
-    materialMatrixMembrane[2][1] = 0;
-    materialMatrixMembrane[2][2] = (1 - nu)/2.0;
+    materialMatrix[0][0] = 1.0;
+    materialMatrix[0][1] = nu;
+    materialMatrix[0][2] = 0;
+    materialMatrix[1][0] = nu;
+    materialMatrix[1][1] = 1.0;
+    materialMatrix[1][2] = 0;
+    materialMatrix[2][0] = 0;
+    materialMatrix[2][1] = 0;
+    materialMatrix[2][2] = (1 - nu)/2.0;
 
-    materialMatrixMembrane *= E / (1.0 - nu * nu);
+    materialMatrix *= E / (1.0 - nu * nu);
 
-    materialMatrixBending = materialMatrixMembrane;
+    materialMatrixMembrane = materialMatrix;
+    materialMatrixBending = materialMatrix;
 
     // Integrate through the shell thickness
     materialMatrixMembrane *= t;
@@ -652,6 +685,30 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
 
     }
 
+    // Compute the measure (stress/strain)
+    if (bMeasureStrain) {
+        helper::vector<Real> &values = *f_measuredValues.beginEdit();
+        for (unsigned int i=0; i< tinfo->measure.size(); i++) {
+            Vec3 strain = tinfo->measure[i].B * Dm + tinfo->measure[i].Bb * Db;
+            // Norm from strain in x and y
+            // NOTE: Shear strain is not included
+            values[ tinfo->measure[i].id ] = helper::rsqrt(
+                strain[0] * strain[0] + strain[1] * strain[1]);
+        }
+        f_measuredValues.endEdit();
+    } else if (bMeasureStress) {
+        helper::vector<Real> &values = *f_measuredValues.beginEdit();
+        for (unsigned int i=0; i< tinfo->measure.size(); i++) {
+            Vec3 stress = materialMatrix * tinfo->measure[i].B * Dm
+                + materialMatrix * tinfo->measure[i].Bb * Db;
+            // Von Mises stress criterion (plane stress)
+            values[ tinfo->measure[i].id ] = helper::rsqrt(
+                  stress[0] * stress[0] - stress[0] * stress[1]
+                + stress[1] * stress[1] + 3 * stress[2] * stress[2]);
+        }
+        f_measuredValues.endEdit();
+    }
+
     // Transform forces back into global frame
     getVCenter(f[a]) -= tinfo->Rt * Vec3(Fm[0], Fm[1], Fb[0]);
     getVCenter(f[b]) -= tinfo->Rt * Vec3(Fm[3], Fm[4], Fb[3]);
@@ -685,7 +742,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixMembrane(Stiffn
 // --- Compute the stiffness matrix for bending plate element
 // ----------------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMatrix &K, const TriangleInformation &tinfo)
+void TriangularShellForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
     if (csBending == NULL)
         return;
@@ -879,7 +936,7 @@ void TriangularShellForceField<DataTypes>::convertStiffnessMatrixToGlobalSpace(S
 //  Membrane elements
 
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::computeStiffnessMatrixCST(StiffnessMatrix &K, const TriangleInformation &tinfo)
+void TriangularShellForceField<DataTypes>::computeStiffnessMatrixCST(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
     // NOTE: we could use the ANDES template below for CST too, but this is a little faster
     Mat<9,3, Real> L;
@@ -918,6 +975,12 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixCST(StiffnessMa
     Lt.transpose(L);
 
     K = L * materialMatrixMembrane * Lt / (4*tinfo.area);
+
+    // Compute strain-displacement matrix
+    for (unsigned int i=0; i< tinfo.measure.size(); i++) {
+        tinfo.measure[i].B = L / (2*tinfo.area);
+    }
+
 }
 
 // The ANDES template for membrane element
@@ -1050,25 +1113,25 @@ void TriangularShellForceField<DataTypes>::andesTemplate(StiffnessMatrix &K, con
 }
 
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAll3I(StiffnessMatrix &K, const TriangleInformation &tinfo)
+void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAll3I(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
     return andesTemplate(K, tinfo, 1.0, AndesBeta(4.0/9.0, 1.0/12.0, 5.0/12.0, 1.0/2.0, 0.0, 1.0/3.0, -1.0/3.0, -1.0/12.0, -1.0/2.0, -5.0/12.0));
 }
 
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAll3M(StiffnessMatrix &K, const TriangleInformation &tinfo)
+void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAll3M(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
     return andesTemplate(K, tinfo, 1.0, AndesBeta(4.0/9.0, 1.0/4.0, 5.0/4.0, 3.0/2.0, 0.0, 1.0, -1.0, -1.0/4.0, -3.0/2.0, -5.0/4.0));
 }
 
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAllLS(StiffnessMatrix &K, const TriangleInformation &tinfo)
+void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAllLS(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
     return andesTemplate(K, tinfo, 1.0, AndesBeta(4.0/9.0, 3.0/20.0, 3.0/4.0, 9.0/10.0, 0.0, 3.0/5.0, -3.0/5.0, -3.0/20.0, -9.0/10.0, -3.0/4.0));
 }
 
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::computeStiffnessMatrixLSTRet(StiffnessMatrix &K, const TriangleInformation &tinfo)
+void TriangularShellForceField<DataTypes>::computeStiffnessMatrixLSTRet(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
     return andesTemplate(K, tinfo, 4.0/3.0, AndesBeta(1.0/2.0, 2.0/3.0, -2.0/3.0, 0.0, 0.0, -4.0/3.0, 4.0/3.0, -2.0/3.0, 0.0, 2.0/3.0));
 }
@@ -1076,7 +1139,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixLSTRet(Stiffnes
 // Optimal ANDES membrane element
 // See: C. A. Felippa, A study of optimal membrane triangles with drilling freedoms, 2003
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAndesOpt(StiffnessMatrix &K, const TriangleInformation &tinfo)
+void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAndesOpt(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
     Real beta0 = helper::rmax(0.5 - 2.0*f_poisson.getValue()*f_poisson.getValue(), 0.01);
     return andesTemplate(K, tinfo, 3.0/2.0, AndesBeta(beta0, 1.0, 2.0, 1.0, 0.0, 1.0, -1.0, -1.0, -1.0, -2.0));
@@ -1086,7 +1149,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAndesOpt(Stiffn
 //  Bending plate elements
 
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT(StiffnessMatrix &K, const TriangleInformation &tinfo)
+void TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
     // Weights and abscissa for 4-point Gaussian quadrature of a triangle
     // (source: can't remember)
@@ -1105,6 +1168,13 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT(StiffnessMa
         Bt.transpose(B);
         K += gw[i] * Bt * materialMatrixBending * B;
     }
+    // Compute strain-displacement matrix
+    for (unsigned int i=0; i< tinfo.measure.size(); i++) {
+        dktSD(tinfo.measure[i].B, tinfo,
+            tinfo.measure[i].point[0],
+            tinfo.measure[i].point[1]);
+    }
+
     //std::cout << std::endl;
     K *= 2*tinfo.area;
 }
