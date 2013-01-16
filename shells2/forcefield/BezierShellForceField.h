@@ -257,8 +257,7 @@ public:
         Data<Real> f_polarMinTheta;
         Data<bool> f_drawFrame;
         Data<bool> f_drawNodes;
-        Data<sofa::helper::OptionsGroup> f_drawMeasure;
-        Data<Real> f_drawMeasureMax;
+        Data<sofa::helper::OptionsGroup> f_measure;
         Data<unsigned int> f_drawPointSize;
         Data<helper::vector<Real> > f_measuredValues;
 

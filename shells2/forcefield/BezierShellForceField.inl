@@ -119,23 +119,22 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 , f_polarMinTheta(initData(&f_polarMinTheta, (Real)1e-6, "polarMinTheta", "Stop if the angle change by polar decomposition is smaller than the value"))
 , f_drawFrame(initData(&f_drawFrame, true, "drawFrame", "Draw the corotational frame"))
 , f_drawNodes(initData(&f_drawNodes, true, "drawNodes", "Draw the control points of Bézier triangle"))
-, f_drawMeasure(initData(&f_drawMeasure, "drawMeasure", "Draw the strain or stress"))
-, f_drawMeasureMax(initData(&f_drawMeasureMax, (Real)0.2, "drawMeasureMax", "Maximal value to ma the colors to (suggested is 0.2 for strain and 0.4*youngModulus for stress)"))
+, f_measure(initData(&f_measure, "measure", "Draw the strain or stress"))
 , f_drawPointSize(initData(&f_drawPointSize, (unsigned int)8, "drawPointSize", "Point size to use"))
-, f_measuredValues(initData(&f_measuredValues, "measureValues", "Measured values for stress or strain"))
+, f_measuredValues(initData(&f_measuredValues, "measuredValues", "Measured values for stress or strain"))
 , restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
 , mapTopology(false)
 , topologyMapper(initLink("topologyMapper","Component supplying different topology for the rest shape"))
 , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
-    f_drawMeasure.beginEdit()->setNames(3,
+    f_measure.beginEdit()->setNames(3,
         "None",                 // Draw nothing
         "Strain (norm)",        // L_2 norm of strain in x and y directions
         "Von Mises stress"      // Von Mises stress criterion
         );
-    f_drawMeasure.beginEdit()->setSelectedItem("None");
-    f_drawMeasure.endEdit();
+    f_measure.beginEdit()->setSelectedItem("None");
+    f_measure.endEdit();
 
     triangleHandler = new TriangleHandler(this, &triangleInfo);
 }
@@ -186,14 +185,14 @@ void BezierShellForceField<DataTypes>::init()
 template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
 {
     // Decode the selected draw method
-    if (f_drawMeasure.getValue().getSelectedItem() == "None") {
+    if (f_measure.getValue().getSelectedItem() == "None") {
         bMeasureStrain = false;  bMeasureStress = false;
-    } else if (f_drawMeasure.getValue().getSelectedItem() == "Strain (norm)") {
+    } else if (f_measure.getValue().getSelectedItem() == "Strain (norm)") {
         bMeasureStrain = true;  bMeasureStress = false;
-    } else if (f_drawMeasure.getValue().getSelectedItem() == "Von Mises stress") {
+    } else if (f_measure.getValue().getSelectedItem() == "Von Mises stress") {
         bMeasureStrain = false;  bMeasureStress = true;
     } else {
-        serr << "Invalid value for drawMeasure'" << f_drawMeasure.getValue().getSelectedItem() << "'" << sendl;
+        serr << "Invalid value for measure'" << f_measure.getValue().getSelectedItem() << "'" << sendl;
         return;
     }
 
@@ -1334,7 +1333,8 @@ void BezierShellForceField<DataTypes>::stressAtPoints(const VecVec3 &points, con
 
     if (!bMeasureStrain && !bMeasureStress) {
         bMeasureStress = true;
-        // TODO: update f_drawMeasure
+        f_measure.beginEdit()->setSelectedItem("Von Mises stress");
+        f_measure.endEdit();
     }
 }
 
@@ -2146,102 +2146,6 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
                 Vec3(tinfo->area2, tinfo->area2, tinfo->area2)/4);
 
         }
-        }
-
-        // Draw measured strain or stress
-        // TODO: remove this. replaced by DataDisplay component
-        if (f_drawMeasure.getValue().getSelectedItem() != "None") {
-            glDisable(GL_LIGHTING);
-            glBegin(GL_TRIANGLES);
-
-            Real max = f_drawMeasureMax.getValue();;
-            //max *= max; // To avoid sqrt()
-
-            for (int i=0; i<_topology->getNbTriangles(); ++i)
-            {
-                TriangleInformation *tinfo = &triangleInf[i];
-                for (unsigned int j=0; j<tinfo->measure.size(); j++)
-                {
-                    Real m = f_measuredValues.getValue()[ tinfo->measure[j].id ];
-                    Vec3 pt = (*this->mstate->getX())[ tinfo->measure[j].id ].getCenter();
-
-                    //Real m1 = m;
-
-                    // Clip value to interval [-max; max]
-                    //if (m < -max) m = -max;
-                    //else if (m > max) m = max;
-                    //
-                    // Map value from [-max; max] to [0; 2/3] with zero at 1/3
-                    //m = m/max /3.0 + 1.0/3.0;
-
-                    // Clip value to interval [0; max]
-                    if (m < 0.0) m = 0.0;
-                    else if (m > max) m = max;
-
-                    // Map value from [0; max] to [0; 2/3]
-                    m = m/max * 2.0/3.0;
-
-                    // Convert to colour
-                    Vec3 colour;
-                    HSL2RGB(colour, (float)2/3-m, 0.8, 0.5);
-
-                    //std::cout << "Mapping " << m1 << " to " << m << " at " << pt << " with col. " << colour
-                    //    << "\n";
-
-                    glColor4f(colour[0], colour[1], colour[2], 1.0);
-                    glVertex3f(pt[0], pt[1], pt[2]);
-                }
-            }
-
-            glEnd();
-
-            //glPointSize(f_drawPointSize.getValue());
-            //glDisable(GL_LIGHTING);
-            //glBegin(GL_POINTS);
-
-            //Real max = f_drawMeasureMax.getValue();;
-            //max *= max; // To avoid sqrt()
-
-            //for (int i=0; i<_topology->getNbTriangles(); ++i)
-            //{
-            //    TriangleInformation *tinfo = &triangleInf[i];
-            //    for (int i=0; i<Gn; i++) {
-            //        Vec3 bc(GX[i], GY[i], 1 - GX[i] - GY[i]), pt;
-            //        // TODO: precompute shapefunctions
-            //        bsInterpolation->interpolateOnBTriangle(tinfo->elementID, bc, pt);
-
-            //        Real m;
-
-            //        //Real m1 = m;
-
-            //        // Clip value to interval [-max; max]
-            //        //if (m < -max) m = -max;
-            //        //else if (m > max) m = max;
-            //        //
-            //        // Map value from [-max; max] to [0; 2/3] with zero at 1/3
-            //        //m = m/max /3.0 + 1.0/3.0;
-
-            //        // Clip value to interval [0; max]
-            //        if (m < 0.0) m = 0.0;
-            //        else if (m > max) m = max;
-
-            //        // Map value from [0; max] to [0; 2/3]
-            //        m = m/max * 2.0/3.0;
-
-            //        // Convert to colour
-            //        Vec3 colour;
-            //        HSL2RGB(colour, (float)2/3-m, 0.8, 0.5);
-
-            //        //std::cout << "Mapping " << m1 << " to " << m << " at " << pt << " with col. " << colour
-            //        //    << " meas=" << tinfo->measure << "\n";
-
-            //        glColor4f(colour[0], colour[1], colour[2], 1.0);
-            //        glVertex3f(pt[0], pt[1], pt[2]);
-            //    }
-            //}
-
-            //glEnd();
-            //glPointSize(1);
         }
 
         triangleInfo.endEdit();
