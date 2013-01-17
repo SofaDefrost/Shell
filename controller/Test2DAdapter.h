@@ -225,6 +225,9 @@ public:
     /// is dropped.
     Data<Real> m_affinity;
 
+    // TODO: This should go to cutting config
+    bool autoCutting;
+
     virtual void init();
     virtual void reinit();
 
@@ -437,26 +440,11 @@ private:
     Index m_pointId;
     /// A point on a surface to attract to (valid only if m_pointId != InvalidID).
     Vec3 m_point;
-    /**
-     * @brief A point on a surface to attract to (valid only if m_pointId !=
-     * InvalidID).
-     *
-     * Difference between m_point and m_pointTracked is that m_pointTracked
-     * contains latest position but m_point is the last position that was still
-     * in the triangle m_pointTriId. During cutting when the tracked point is
-     * constrained the cursor (m_pointTracked) may move out of the N1-ring
-     * where the cut is planned. In this case m_point contains the position
-     * still in N1-ring but m_pointTracked does not.
-     */
-    Vec3 m_pointTracked;
     /// Position of m_point projected into rest shape.
     Vec3 m_pointRest;
     /// @brief Triangle ID inside which m_point is located (valid only if
     ///m_pointId != InvalidID).
     Index m_pointTriId;
-    /// @brief Triangle ID inside which m_pointTracked is located (valid only
-    /// if m_pointId != InvalidID).
-    Index m_pointTriIdTracked;
     /// @brief Number of iterations during which the attached node will not be
     /// reattached.
     unsigned int m_gracePeriod;
