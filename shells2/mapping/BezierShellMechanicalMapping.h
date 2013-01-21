@@ -237,14 +237,6 @@ protected:
         void ComputeNormals(helper::vector<Vec3> &normals);
         void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals);
 
-        // Computes the barycentric coordinates of a vertex within a triangle
-        void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c, bool bConstraint = true);
-
-        // NOTE: The following funcitons return *square* of the distance!
-        Real FindClosestPoint(unsigned int& closestVerticex, const Vec3& point, const OutVecCoord &inVertices);
-        Real FindClosestEdge(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges);
-        Real FindClosestTriangle(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
-
         // Contains the barycentric coordinates of the point within a triangle
         sofa::helper::vector<Vec3> barycentricCoordinates;
 };

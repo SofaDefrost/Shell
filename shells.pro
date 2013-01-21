@@ -32,6 +32,7 @@ SOURCES =   initPluginShells.cpp \
             shells2/forcefield/BezierShellForceField.cpp \
             shells2/mapping/BezierShellMechanicalMapping.cpp \
             cutting/AdaptiveCutting.cpp \
+            misc/PointProjection.cpp \
 
 
 HEADERS =   initPluginShells.h \
@@ -63,6 +64,8 @@ HEADERS =   initPluginShells.h \
             shells2/mapping/BezierShellMechanicalMapping.h \
             shells2/mapping/BezierShellMechanicalMapping.inl \
             cutting/AdaptiveCutting.h \
+            misc/PointProjection.h \
+            misc/PointProjection.inl \
 
 
 contains (DEFINES, SOFA_GPU_CUDA) {

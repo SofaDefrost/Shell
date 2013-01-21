@@ -34,6 +34,7 @@
 #include <sofa/component/forcefield/ConstantForceField.h>
 
 #include "../forcefield/BezierShellForceField.h"
+#include "../../misc/PointProjection.h"
 
 // We have own code to check the getJ() because checkJacobian sucks (at this
 // point in time).
@@ -102,7 +103,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
     {
         inVertices.push_back(inVerticesRigid[i].getCenter());
     }
-    const SeqEdges &inEdges = inputTopo->getEdges();
+    //const SeqEdges &inEdges = inputTopo->getEdges();
     const SeqTriangles &inTriangles = inputTopo->getTriangles();
 
     // Iterates over 'in' triangles
@@ -115,90 +116,27 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
         tinfo.attachedPoints.clear();
     }
 
+    PointProjection<Real> proj(*dynamic_cast<TriangleSetTopologyContainer*>(inputTopo));
 
     // Iterates over 'out' vertices
     for (unsigned int i=0; i<outVertices.size(); i++)
     {
-        unsigned int closestVertex, closestEdge, closestTriangle;
-        Real minVertex, minEdge, minTriangle;
-        int triangleID = 0;
+        Index triangleID = 0;
         Vec3 vertexBaryCoord;
 
-        // Iterates over 'in' vertices
-        minVertex = FindClosestPoint(closestVertex, outVertices[i], inVertices);
+        proj.ProjectPoint(vertexBaryCoord, triangleID, outVertices[i], inVertices);
 
-        // Iterates over 'in' edges
-        minEdge = FindClosestEdge(closestEdge, outVertices[i], inVertices, inEdges);
+        // Mark attached point
+        triangleInfo[triangleID].attachedPoints.push_back(i);
 
-        // Iterates over 'in' triangles
-        minTriangle = FindClosestTriangle(closestTriangle, outVertices[i], inVertices, inTriangles);
+        // Add the barycentric coordinates to the list
+        barycentricCoordinates[i] = vertexBaryCoord;
 
-        int which = 2; /* 0 vertex, 1 edge, 2 triangle */
-
-        if ((minVertex <= minEdge) && (minVertex <= minTriangle))
-        {
-            which = 0;
-        }
-        else if ((minEdge <= minTriangle) && (minEdge <= minVertex))
-        {
-            which = 1;
-        }
-
-        if (which == 0)
-        {
-            // If it is a vertex, consider one of the triangles attached to it
-            TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex(closestVertex);
-            if (trianglesAroundVertex.size() <= 0)
-            {
-                serr << "No triangles attached to vertex " << closestVertex << sendl;
-                which = (minEdge <= minTriangle) ? 1 : 2;
-            }
-            else
-            {
-                triangleID = trianglesAroundVertex[0];
-            }
-        }
-
-        if (which == 1)
-        {
-            // If it is an edge, consider one of the triangles attached to it
-            TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge(closestEdge);
-            if (trianglesAroundEdge.size() <= 0)
-            {
-                serr << "No triangles attached to edge " << closestEdge << sendl;
-                which = 3;
-            }
-            else
-            {
-                triangleID = trianglesAroundEdge[0];
-            }
-        }
-
-        if (which == 2)
-        {
-            // If it is a triangle, consider it
-            triangleID = closestTriangle;
-        }
-
-        if (which < 3)
-        {
-            triangleInfo[triangleID].attachedPoints.push_back(i);
-
-            // Computes barycentric coordinates within the triangle
-            computeBaryCoefs(vertexBaryCoord, outVertices[i],
-                inVertices[ inTriangles[triangleID][0] ],
-                inVertices[ inTriangles[triangleID][1] ],
-                inVertices[ inTriangles[triangleID][2] ]);
-
-            // Adds the barycentric coordinates to the list
-            barycentricCoordinates[i] = vertexBaryCoord;
-
-            projBaryCoords.push_back(vertexBaryCoord);
-            ShapeFunctions N;
-            bsInterpolation->computeShapeFunctions(projBaryCoords.back(), N);
-            projN.push_back(N);
-            projElements.push_back(triangleID);
-        }
+        projBaryCoords.push_back(vertexBaryCoord);
+        ShapeFunctions N;
+        bsInterpolation->computeShapeFunctions(projBaryCoords.back(), N);
+        projN.push_back(N);
+        projElements.push_back(triangleID);
     }
 
     if (measureStress.getValue())
@@ -402,19 +340,21 @@ typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapp
     // The primitive is useless here
     unsigned int dummy;
 
+    PointProjection<Real> proj(*dynamic_cast<TriangleSetTopologyContainer*>(inputTopo));
+
     // Iterates over 'in' vertices
     Real minVertex, minEdge, minTriangle, minDistance;
     Real HausdorffDistance = -1;
     for (unsigned int i=0; i<vertices1.size(); i++)
     {
         // Iterates over 'out' vertices
-        minVertex = FindClosestPoint(dummy, vertices1[i], vertices2);
+        minVertex = proj.FindClosestPoint(dummy, vertices1[i], vertices2);
 
         // Iterates over 'out' edges
-        minEdge = FindClosestEdge(dummy, vertices1[i], vertices2, edges2);
+        minEdge = proj.FindClosestEdge(dummy, vertices1[i], vertices2, edges2);
 
         // Iterates over 'out' triangles
-        minTriangle = FindClosestTriangle(dummy, vertices1[i], vertices2, triangles2);
+        minTriangle = proj.FindClosestTriangle(dummy, vertices1[i], vertices2, triangles2);
 
         // Finds out which type of primitive is the closest
         minDistance = std::min(minVertex, std::min(minEdge, minTriangle));
@@ -430,191 +370,6 @@ typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapp
     }
 
     return HausdorffDistance;
-}
-
-
-// --------------------------------------------------------------------------------------
-// Finds the closest point to a point
-// --------------------------------------------------------------------------------------
-template <class TIn, class TOut>
-typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapping<TIn, TOut>::FindClosestPoint(unsigned int& closestVertex, const Vec3& point, const OutVecCoord &inVertices)
-{
-    Real minimumDistance = 10e12;
-    for (unsigned int v=0; v<inVertices.size(); v++)
-    {
-        Real distance = (inVertices[v] - point).norm2();
-
-        if (distance < minimumDistance)
-        {
-            // Store the new closest vertex
-            closestVertex = v;
-
-            // Updates the minimum's value
-            minimumDistance = distance;
-        }
-        }
-
-    return minimumDistance;
-}
-
-
-// --------------------------------------------------------------------------------------
-// Finds the closest edge to a point
-// --------------------------------------------------------------------------------------
-template <class TIn, class TOut>
-typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapping<TIn, TOut>::FindClosestEdge(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges)
-{
-    Real minimumDistance = 10e12;
-    for (unsigned int e=0; e<inEdges.size(); e++)
-    {
-        Vec3 pointEdge1 = inVertices[ inEdges[e][0] ];
-        Vec3 pointEdge2 = inVertices[ inEdges[e][1] ];
-
-        const Vec3 AB = pointEdge2-pointEdge1;
-        const Vec3 AP = point-pointEdge1;
-
-        double A;
-        double b;
-        A = AB*AB;
-        b = AP*AB;
-
-        double alpha = b/A;
-
-        // If the point is on the edge
-        if (alpha >= 0 && alpha <= 1)
-        {
-            Vec3 P, Q, PQ;
-            P = point;
-            Q = pointEdge1 + AB * alpha;
-            PQ = Q-P;
-
-            Real distance = PQ.norm2();
-            if (distance < minimumDistance)
-            {
-                // Store the new closest edge
-                closestEdge = e;
-
-                // Updates the minimum's value
-                minimumDistance = distance;
-            }
-            }
-        }
-
-    return minimumDistance;
-}
-
-
-// --------------------------------------------------------------------------------------
-// Finds the closest triangle to a point
-// --------------------------------------------------------------------------------------
-template <class TIn, class TOut>
-typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapping<TIn, TOut>::FindClosestTriangle(unsigned int& closestTriangle, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles)
-{
-    Real minimumDistance = 10e12;
-    for (unsigned int t=0; t<inTriangles.size(); t++)
-    {
-        Vec3 pointTriangle1 = inVertices[ inTriangles[t][0] ];
-        Vec3 pointTriangle2 = inVertices[ inTriangles[t][1] ];
-        Vec3 pointTriangle3 = inVertices[ inTriangles[t][2] ];
-
-        const Vector3 AB = pointTriangle2-pointTriangle1;
-        const Vector3 AC = pointTriangle3-pointTriangle1;
-
-        Vec3 bary;
-        computeBaryCoefs(bary, point,
-            pointTriangle1, pointTriangle2, pointTriangle3, false);
-        if ((bary[0] < 0.0) || (bary[1] < 0.0) || (bary[2] < 0.0) ||
-            (rabs(1.0 - (bary[0] + bary[1] + bary[2])) > 1e-10)) {
-            // Point projected onto the plane of the triangle lies outside
-            // of the triangle. Some vertex or edge will be more
-            // appropriate.
-            continue;
-        }
-
-        Vector3 N = cross(AB, AC);
-        //Real distance = N*point - N*pointTriangle1;
-        Real distance = N*(point - pointTriangle1);
-        distance = distance*distance / N.norm2();
-
-        if (distance < minimumDistance)
-        {
-            // Store the new closest triangle
-            closestTriangle = t;
-
-            // Updates the minimum's value
-            minimumDistance = distance;
-        }
-    }
-
-    return minimumDistance;
-}
-
-
-// --------------------------------------------------------------------------------------
-// Barycentric coefficients of point p in triangle whose vertices are a, b and c.
-// If bConstraint is true constraint the coordinates to lie inside the triangle.
-// --------------------------------------------------------------------------------------
-template <class TIn, class TOut>
-void BezierShellMechanicalMapping<TIn, TOut>::computeBaryCoefs(Vec3 &baryCoefs,
-    const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c, bool bConstraint)
-{
-    const double ZERO = 1e-20;
-
-    Vec3 M = (Vec3) (b-a).cross(c-a);
-    double norm2_M = M*(M);
-
-    double coef_a, coef_b, coef_c;
-
-    if(norm2_M < ZERO) // triangle (a,b,c) is flat
-    {
-        coef_a = (double) (1.0/3.0);
-        coef_b = (double) (1.0/3.0);
-        coef_c = (double) (1.0 - (coef_a + coef_b));
-    }
-    else
-    {
-        Vec3 N =  M/norm2_M;
-
-        coef_a = N*((b-p).cross(c-p));
-        coef_b = N*((c-p).cross(a-p));
-        if (bConstraint)
-        {
-            // Do some magic to constraint the coordinates inside the triangle
-            // the requirements are:
-            //    coef_a, coef_b, coef_c ≥ 0
-            //    coef_a + coef_b + coef_c = 1
-            if (coef_a < 0.0) coef_a = 0.0;
-            if (coef_b < 0.0) coef_b = 0.0;
-            coef_c = 1.0 - (coef_a + coef_b);
-            if (coef_c < 0.0)
-            {
-                // We have to be carefull so as not to overshoot some other
-                // coefficient
-                if (coef_a < -coef_c/2.0) {
-                    coef_c += coef_a;
-                    coef_b += coef_c;
-                    coef_a = 0.0;
-                } else if (coef_b < -coef_c/2.0) {
-                    coef_c += coef_b;
-                    coef_a += coef_c;
-                    coef_b = 0.0;
-                } else {
-                    coef_a += coef_c/2.0;
-                    coef_b += coef_c/2.0;
-                }
-
-                coef_c = 0.0;
-            }
-        }
-        else
-        {
-            coef_c = N*((a-p).cross(b-p));
-        }
-    }
-
-    baryCoefs[0] = coef_a;
-    baryCoefs[1] = coef_b;
-    baryCoefs[2] = coef_c;
 }
 
 // Updates positions of the visual mesh from mechanical vertices
