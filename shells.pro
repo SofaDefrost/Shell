@@ -68,15 +68,16 @@ HEADERS =   initPluginShells.h \
             misc/PointProjection.inl \
 
 
-contains (DEFINES, SOFA_GPU_CUDA) {
-
-HEADERS += \
-                controller/CudaTest2DAdapter.h \
-                controller/CudaTest2DAdapter.inl
-SOURCES +=      controller/CudaTest2DAdapter.cpp
-CUDA_SOURCES += controller/CudaTest2DAdapter.cu
-
-}
+# CUDA classes are broken right now.
+#contains (DEFINES, SOFA_GPU_CUDA) {
+#
+#HEADERS += \
+#                controller/CudaTest2DAdapter.h \
+#                controller/CudaTest2DAdapter.inl
+#SOURCES +=      controller/CudaTest2DAdapter.cpp
+#CUDA_SOURCES += controller/CudaTest2DAdapter.cu
+#
+#}
 
 README_FILE = shells.txt
 
