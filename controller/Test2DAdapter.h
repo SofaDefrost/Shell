@@ -179,6 +179,9 @@ public:
             /// Initial normal of the triangle.
             Vec3 normal;
 
+            /// List of points projected onto this triangle.
+            sofa::helper::vector<Index> attachedPoints;
+
             /// Output stream
             inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ ) { return os; }
             /// Input stream
@@ -224,6 +227,15 @@ public:
     /// @brief If geometric functinal drops below this value the attached node
     /// is dropped.
     Data<Real> m_affinity;
+
+    /// Points to project onto the topology.
+    //SingleLink<Test2DAdapter<DataTypes>, MechanicalState<DataTypes>,
+    //    BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> m_mappedState;
+    Data< sofa::helper::vector<Vec3> > m_projectedPoints;
+    /// Interpolation indices for projected points.
+    Data< sofa::helper::vector<sofa::helper::vector< unsigned int > > > m_interpolationIndices;
+    /// Interpolation values for projected points.
+    Data< sofa::helper::vector<sofa::helper::vector< Real > > > m_interpolationValues;
 
     // TODO: This should go to cutting config
     bool autoCutting;
@@ -557,6 +569,14 @@ private:
     void colourGraph();
     void smoothLinear();
     void smoothParallel();
+
+    /// Initialize all projected points.
+    void projectionInit();
+    /**
+     * Update projection of points affected by rellocation of the specified point.
+     * @param pt    Index of a point that was relocated.
+     */
+    void projectionUpdate(Index pt);
 
 protected:
 

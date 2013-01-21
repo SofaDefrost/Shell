@@ -8,9 +8,9 @@
 //   shape.
 //
 // TODO:
-// - application of fine (mapped) mesh
 // - reattach points in N1-ring during cutting to avoid degeneration
 // - refactor into several components
+//
 //
 
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
@@ -18,6 +18,7 @@
 
 #include "../initPluginShells.h"
 
+#include <map>
 #include <float.h>
 
 #include <sofa/core/objectmodel/KeypressedEvent.h>
@@ -34,6 +35,8 @@
 #include <sofa/gui/GUIManager.h>
 #include <sofa/gui/BaseGUI.h>
 #include <sofa/gui/BaseViewer.h>
+
+#include "../misc/PointProjection.h"
 
 #include "Test2DAdapter.h"
 
@@ -174,6 +177,12 @@ Test2DAdapter<DataTypes>::Test2DAdapter()
 : m_sigma(initData(&m_sigma, (Real)0.01, "sigma", "Minimal increase in functional to accept the change"))
 , m_functionals(initData(&m_functionals, "functionals", "Current values of the functional for each triangle"))
 , m_affinity(initData(&m_affinity, (Real)0.7, "affinity", "Threshold for point attachment (value betwen 0 and 1)."))
+//, m_mappedState(initLink("mappedState", "Points to project onto the topology."))
+, m_projectedPoints(initData(&m_projectedPoints, "projectedPoints", "Points to project onto the topology."))
+, m_interpolationIndices(initData(&m_interpolationIndices, "interpolationIndices",
+        "Interpolation indices for projected points."))
+, m_interpolationValues(initData(&m_interpolationValues, "interpolationValues",
+        "Interpolation values for projected points."))
 , autoCutting(true)
 , stepCounter(0)
 , m_precision(1e-8)
@@ -286,6 +295,8 @@ void Test2DAdapter<DataTypes>::reinit()
     triInfo.endEdit();
 
     recheckBoundary();
+
+    projectionInit();
 
     stepCounter = 0;
 }
@@ -1326,6 +1337,8 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
     m_modifier->notifyEndingEvent();
     m_modifier->propagateTopologicalChanges();
 
+    projectionUpdate(pt);
+
     // Check
     //const VecCoord& xnew = m_state->read(
     //    sofa::core::ConstVecCoordId::restPosition())->getValue();
@@ -1383,6 +1396,162 @@ typename Test2DAdapter<DataTypes>::PointInformation::NodeType Test2DAdapter<Data
     return PointInformation::BOUNDARY;
 }
 
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::projectionInit()
+{
+    if (!m_container) return;
+
+    const VecCoord& x0= m_state->read(
+        sofa::core::ConstVecCoordId::restPosition())->getValue();
+
+    const VecCoord& xProj = m_projectedPoints.getValue();
+    unsigned int nVertices = xProj.size();
+
+    sofa::helper::vector<sofa::helper::vector< unsigned int > > &indices =
+        *m_interpolationIndices.beginEdit();
+    sofa::helper::vector<sofa::helper::vector< Real > > &values =
+        *m_interpolationValues.beginEdit();
+
+    indices.resize(nVertices);
+    values.resize(nVertices);
+
+    helper::vector<TriangleInformation>& tris = *triInfo.beginEdit();
+    // Clear list of previously attached points.
+    for (Index i=0; i<m_container->getNumberOfTriangles(); i++) {
+        tris[i].attachedPoints.clear();
+    }
+
+    PointProjection<Real> proj(*m_container);
+
+    for (Index i=0; i<nVertices; i++)
+    {
+        Index triangleID;
+        Vec3 vertexBaryCoord;
+
+        proj.ProjectPoint(vertexBaryCoord, triangleID, xProj[i], x0);
+        if (triangleID == InvalidID) {
+            serr << "Failed to project point " << i << "!" << sendl;
+            break;
+        }
+
+        // Mark attached point
+        tris[triangleID].attachedPoints.push_back(i);
+
+        // Add node indices to the list
+        Triangle t = m_container->getTriangle(triangleID);
+        indices[i].clear();
+        indices[i].push_back(t[0]);
+        indices[i].push_back(t[1]);
+        indices[i].push_back(t[2]);
+
+        // Add the barycentric coordinates to the list
+        values[i].clear();
+        values[i].push_back(vertexBaryCoord[0]);
+        values[i].push_back(vertexBaryCoord[1]);
+        values[i].push_back(vertexBaryCoord[2]);
+    }
+
+    m_interpolationIndices.endEdit();
+    m_interpolationValues.endEdit();
+    triInfo.endEdit();
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::projectionUpdate(Index pt)
+{
+    if (!m_container) return;
+
+    PointProjection<Real> proj(*m_container);
+
+    const VecCoord& x0= m_state->read(
+        sofa::core::ConstVecCoordId::restPosition())->getValue();
+
+    const VecCoord& xProj = m_projectedPoints.getValue();
+
+    sofa::helper::vector<sofa::helper::vector< unsigned int > > &indices =
+        *m_interpolationIndices.beginEdit();
+    sofa::helper::vector<sofa::helper::vector< Real > > &values =
+        *m_interpolationValues.beginEdit();
+
+    helper::vector<TriangleInformation>& tris = *triInfo.beginEdit();
+
+    TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(pt);
+
+    // List of newly attached points for each triangle
+    // We keep it separated to avoid double work.
+    std::map<Index, helper::vector<Index> > newAttached;
+
+    // Recompute all barycentric coordinates
+    for (unsigned int it=0; it<N1.size(); it++) {
+        Index t = N1[it];
+        Triangle tri = m_container->getTriangle(t);
+
+        sofa::helper::vector<Index> oldAttached = tris[t].attachedPoints;
+        tris[t].attachedPoints.clear();
+
+        for (unsigned int ip=0; ip<oldAttached.size(); ip++) {
+            Index ptAttached = oldAttached[ip];
+            Vec3 newBary;
+
+            proj.ComputeBaryCoords(newBary, xProj[ptAttached],
+                x0[ tri[0] ], x0[ tri[1] ], x0[ tri[2] ], false);
+
+            int neg = 0;
+            if (newBary[0] < -1e-20) neg++;
+            if (newBary[1] < -1e-20) neg++;
+            if (newBary[2] < -1e-20) neg++;
+
+            if (neg == 0) {
+                // Point still inside the triangle
+                tris[t].attachedPoints.push_back(ptAttached);
+                values[ptAttached][0] = newBary[0];
+                values[ptAttached][1] = newBary[1];
+                values[ptAttached][2] = newBary[2];
+                continue;
+            //} else if (neg == 1) {
+            //    // Only one negative coordinates means the point lies in one of
+            //    // the neighbouring triangles.
+            //    // TODO
+            //    continue;
+            }
+
+            // Retry projection but only inside the N1-ring
+            Index newTri;
+            proj.ProjectPoint(newBary, newTri, xProj[ptAttached], x0, N1);
+            if (newTri == InvalidID) {
+                serr << "Failed to project point " << ptAttached << "!" << sendl;
+                continue;
+            }
+
+            // Reassign point to new triangle
+            newAttached[newTri].push_back(ptAttached);
+
+            // Update points
+            Triangle newTri2 = m_container->getTriangle(newTri);
+            indices[ptAttached][0] = newTri2[0];
+            indices[ptAttached][1] = newTri2[1];
+            indices[ptAttached][2] = newTri2[2];
+
+            // Update barycentric coordinates
+            values[ptAttached][0] = newBary[0];
+            values[ptAttached][1] = newBary[1];
+            values[ptAttached][2] = newBary[2];
+        }
+    }
+
+    // Add newly attached points to the lists
+    for (std::map<Index, helper::vector<Index> >::const_iterator i =
+        newAttached.begin();
+        i != newAttached.end(); i++) {
+        for (unsigned int j=0; j < i->second.size(); j++) {
+            tris[i->first].attachedPoints.push_back(i->second[j]);
+        }
+    }
+
+    m_interpolationIndices.endEdit();
+    m_interpolationValues.endEdit();
+    triInfo.endEdit();
+}
 
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
