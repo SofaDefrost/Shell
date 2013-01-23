@@ -1,13 +1,22 @@
 //
 // Component for dynamic remeshing.
 //
-// Few notes for the all brave adventurers.
+// Few notes for all the brave adventurers.
 // * There is a thin line between operations performed in rest shape and in
 //   deformed shape. Specificaly the element geometry is analysed in rest
 //   shape, but point tracking for cutting support is (mostly) done in deformed
 //   shape.
+// * The point tracking is not ideal because the optimizion is slow (read:
+//   makes small updates). Idealy we would want to run several optimization
+//   steps per simulation step. Unfortunately the work related to relocation of
+//   points (updating mechanical state, propagation of topololgical changes,
+//   ...) is really big so we cannot do that.
 //
 // TODO:
+// - Bugs
+//    * triangles get inverted
+//    * attaching to fixed points and then relocating them
+//
 // - reattach points in N1-ring during cutting to avoid degeneration
 // - refactor into several components
 //
@@ -24,7 +33,8 @@
 #include <sofa/core/objectmodel/KeypressedEvent.h>
 #include <sofa/core/visual/VisualParams.h>  
 #include <sofa/helper/rmath.h>
-#include <sofa/helper/system/thread/debug.h>
+//#include <sofa/helper/system/thread/debug.h>
+#include <sofa/helper/SimpleTimer.h>
 #include <sofa/component/topology/TopologyData.inl>
 
 //#include <sofa/component/collision/ComponentMouseInteraction.h>
@@ -42,6 +52,17 @@
 
 #define OTHER(x, a, b) ((x == a) ? b : a)
 
+// Return non-zero if triangle with points (a,b,c) is defined in
+// counter-clockwise direction. 
+// NOTE: Constrained to 2D!
+#define CCW(a,b,c) (\
+    cross(Vec2(b[0]-a[0], b[1]-a[1]), \
+        Vec2(c[0]-a[0], c[1]-a[1])) > 1e-15)
+
+// Test for intersection between two segments (a,b) and (c,d)
+#define INTERSECT(a,b,c,d) (\
+    (CCW(a,c,d) != CCW(b,c,d)) && (CCW(a,b,c) != CCW(a,b,d)))
+
 namespace sofa
 {
 
@@ -50,6 +71,8 @@ namespace component
 
 namespace controller
 {
+
+//sofa::helper::TSimpleTimer<1,10> mytimer;
 
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::PointInfoHandler:: applyCreateFunction(
@@ -359,6 +382,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     //sofa::helper::system::thread::CTime timer;
     //start = timer.getTime();
 
+    //mytimer.start(":: Step init");
     vector<Real> &functionals = *m_functionals.beginEdit();
 
     functionals.resize(nTriangles);
@@ -369,6 +393,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         functionals[i] = funcTriangle(t, x, triInfo.getValue()[i].normal);
     }
     //std::cout << "m: " << functionals << "\n";
+    //mytimer.stop();
 
     ngamma = 0;
     sumgamma = maxgamma = 0.0;
@@ -383,6 +408,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         }
 
         Vec3 xold = x[i];
+        //mytimer.start("Optimize");
         //if (!smoothLaplacian(i, x, functionals, normals))
         //if (!smoothOptimizeMin(i, x, functionals, normals))
         if (!smoothOptimizeMax(i, x, functionals))
@@ -391,9 +417,12 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
             x[i] = xold;
         } else {
             // Move the point
+
+            //mytimer.step("Relocate");
             relocatePoint(i, x[i]);
 
             // Update boundary vertices
+            //mytimer.step("Recheck boundary");
             recheckBoundary();
 
             moved++;
@@ -415,6 +444,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
 
         }
+        //mytimer.stop();
     }
 
     //stop = timer.getTime();
@@ -539,33 +569,91 @@ void Test2DAdapter<DataTypes>::setTrackedPoint(const collision::BodyPicked &pick
             // connected with last cut point.
             // We pick a point from N1 shell which is closest to the tracked point.
 
-            EdgesAroundVertex N1e =
-                m_container->getEdgesAroundVertex(m_cutLastPoint);
+            // NOTE: We don't allow fixed/boundary nodes (now)
 
-            Real minDist = DBL_MAX;
-            Vec3 direction = picked.point - x[m_cutLastPoint];
-            //direction.normalize();
 
-            for (Index ie=0; ie<N1e.size(); ie++) {
-                Edge e = m_container->getEdge(N1e[ie]); 
-                Index otherPt = OTHER(m_cutLastPoint, e[0], e[1]);
+            Triangle t = m_container->getTriangle(
+                picked.indexCollisionElement);
+            if ((t[0] == m_cutLastPoint) || (t[1] == m_cutLastPoint) ||
+                (t[2] == m_cutLastPoint)) {
+                // The point is inside a triangle in N1-ring, take one of it's
+                // corner nodes
+                Index pt1 = OTHER(m_cutLastPoint, t[0], t[1]),
+                      pt2 = OTHER(m_cutLastPoint, t[2], t[1]);
 
-                Real dist = (picked.point - x[otherPt]).norm2();
 
-                Vec3 edgeDir = x[otherPt] - x[m_cutLastPoint];
-                //edgeDir.normalize();
-                Real alpha = direction * edgeDir;
-                if ((dist < minDist) && (alpha > 0.0)) {
-                    minDist = dist;
-                    newId = otherPt;
-                    newCutEdge = N1e[ie];
+                if (!pointInfo.getValue()[pt1].isNormal()) {
+                    if (!pointInfo.getValue()[pt2].isNormal()) {
+                        // No point available!
+                        newId = InvalidID;
+                    } else {
+                        newId = pt2;
+                    }
+                } else if (!pointInfo.getValue()[pt2].isNormal()) {
+                    newId = pt1;
+                } else if (
+                    (x[pt1] - picked.point).norm2() < 
+                    (x[pt2] - picked.point).norm2()) {
+                    newId = pt1;
+                } else {
+                    newId = pt2;
                 }
+
+            } else {
+
+                // Tracked position is outside the N1-ring. Pick closest point
+                // while checking for crossing segments -- between last cut
+                // edge and (seleted-picked). Idealy we should check with all
+                // cut edges, but that's too much work.
+
+                // TODO: What if m_cutEdge == InvalidID?
+
+                EdgesAroundVertex N1e =
+                    m_container->getEdgesAroundVertex(m_cutLastPoint);
+
+                Index lastCut = InvalidID;
+                Edge ce(InvalidID, InvalidID);
+                if (m_cutList.size() > 0) {
+                    lastCut = m_cutList.back();
+                    ce = m_container->getEdge(m_cutEdge);
+                }
+
+                Real minDist = DBL_MAX;
+
+                for (Index ie=0; ie<N1e.size(); ie++) {
+                    Edge e = m_container->getEdge(N1e[ie]); 
+                    Index otherPt = OTHER(m_cutLastPoint, e[0], e[1]);
+
+                    if (!pointInfo.getValue()[otherPt].isNormal())
+                        continue;
+
+                    Real dist = (picked.point - x[otherPt]).norm2();
+                    bool inter = false;
+                    if (lastCut != InvalidID) {
+                        inter = INTERSECT(x[ce[0]], x[ce[1]],
+                            x[otherPt], picked.point);
+                    }
+                    if ((dist < minDist) && !inter) {
+                        minDist = dist;
+                        newId = otherPt;
+                        newCutEdge = N1e[ie];
+                    }
+                }
+
             }
+            if (newId != InvalidID) {
+                newCutEdge = m_container->getEdgeIndex(m_cutLastPoint, newId);
+            }
+        }
+
+        if (newId == InvalidID) {
+            serr << "Failed to pick a point!" << sendl;
         }
 
         if (!m_gracePeriod && (newId != m_pointId)) {
             m_pointId = newId;
-            m_gracePeriod = 20;
+            m_gracePeriod = 5;  // NOTE: Don't put too large value here, or we
+                                // will fail to follow quick changes.
             if (newCutEdge != InvalidID) {
                 m_cutEdge = newCutEdge;
             }
@@ -1258,6 +1346,8 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
         m_state == NULL)
         return;
 
+    //mytimer.step("Relocate");
+
     Index tId = hint;
 
     const VecCoord& x = m_state->read(
@@ -1337,6 +1427,7 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
     m_modifier->notifyEndingEvent();
     m_modifier->propagateTopologicalChanges();
 
+    //mytimer.step("Projection");
     projectionUpdate(pt);
 
     // Check
