@@ -20,6 +20,9 @@
 // - reattach points in N1-ring during cutting to avoid degeneration
 // - refactor into several components
 //
+// Edge case that are not handled:
+//   - cut is too short (doesn't span two edges)
+//   - cutting near the edge (handling of boundary/fixed nodes)
 //
 
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
@@ -452,15 +455,21 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     // Evaluate improvement
     Real sum=0.0, sum2=0.0, min = 1.0;
+    Index minTriID = InvalidID;
     for (Index i=0; i < nTriangles; i++) {
         if (functionals[i] < min) {
             min = functionals[i];
+            minTriID = i;
         }
         sum += functionals[i];
         sum2 += functionals[i] * functionals[i];
     }
     sum /= nTriangles;
     sum2 = helper::rsqrt(sum2/nTriangles);
+
+    // Try swapping edge for the worst triangle
+    swapEdge(minTriID);
+
 
     // Check the values around attached point and reattach if necessary
     if ((m_pointId != InvalidID) && !m_gracePeriod && !cutting()) {
@@ -715,11 +724,28 @@ void Test2DAdapter<DataTypes>::addCuttingPoint()
 
     bool bFirst = !cutting();
 
+    // Check if the target location is in one of the triangles connected to
+    // poin m_pointId.
+    bool bConnected = false;
+    Triangle t = m_container->getTriangle(m_pointTriId);
+    for (int i=0; i<3; i++) {
+        if (t[i] == m_pointId) {
+            bConnected = true;
+            break;
+        }
+    }
+
     // Make sure the tracked point is at the target location.
-    if (pointInfo[m_pointId].type == PointInformation::NORMAL) {
+    if (!bConnected) {
+        // NOTE: We can try adding the cut point as far as possible, then
+        // reattach and repeat. But we risk "eating" up all available
+        // points quitckly. Another possibility is waiting a few iterations
+        // before adding another cut point, but this will only work if the
+        // cut point is not last (end of the cut).
+        serr << "Failed to insert cut point! Tracking too slow." << sendl;
+        return;
+    } else if (pointInfo[m_pointId].type == PointInformation::NORMAL) {
         relocatePoint(m_pointId, m_point, m_pointTriId, false);
-        // TODO: check if m_pointTriId is one of the triangles around edge:
-        //          m_pointId--m_cutLastPoint 
     } else {
         // TODO: We need a parameter controling how close one has to be to the
         // boundary/fixed node to attach to it. For boundary nodes we have to
@@ -1299,6 +1325,137 @@ bool Test2DAdapter<DataTypes>::smoothPain2D(Index v, VecCoord &x, vector<Real> &
     // NOTE: Old position restore by caller (if needed).
 
     return bAccepted;
+}
+
+template<class DataTypes>
+void Test2DAdapter<DataTypes>::swapEdge(Index triID)
+{
+    Index swapTri = InvalidID;
+    Real swapVal1, swapVal2, swapMin = DBL_MIN;
+    Triangle swapT1, swapT2;
+    // Keep old value
+    Real oldValue = m_functionals.getValue()[triID];
+
+    const VecCoord& x0 = m_state->read(
+        sofa::core::ConstVecCoordId::restPosition())->getValue();
+    const VecCoord& x = m_state->read(
+        sofa::core::ConstVecCoordId::restPosition())->getValue();
+    const Triangle &t1 = m_container->getTriangle(triID);
+
+    const EdgesInTriangle &elist = m_container->getEdgesInTriangle(triID);
+
+    int orientation0 = CCW(x0[t1[0]], x0[t1[1]], x0[t1[2]]);
+    int orientation = CCW(x[t1[0]], x[t1[1]], x[t1[2]]);
+
+    for (int ie=0; ie < 3; ie++) {
+
+        const TrianglesAroundEdge &tlist =
+            m_container->getTrianglesAroundEdge(elist[ie]);
+        if (tlist.size() != 2)
+            continue; // No other triangle or non-manifold edge
+        if (m_cutEdge == elist[ie])
+            continue; // Do not touch current cut edge
+        bool bInCutList = false;
+        for (unsigned int i=0; i<m_cutList.size(); i++) {
+            if (m_cutList[i] == elist[ie]) {
+                bInCutList = true;
+                break;
+            }
+        }
+        if (bInCutList)
+            continue; // Do not touch any other cut edge
+
+        // TODO: is the pair t1-t2 convex?
+        //       -- this check may not be necessary, swapping should lead to
+        //          inverted triangle
+        //       -- then again, pair may be convex in rest shape but
+        //          concave in deformed shape
+
+        Index triID2 = OTHER(triID, tlist[0], tlist[1]);
+        //Real oldValue2 = m_functionals.getValue()[triID2];
+        const Edge &e = m_container->getEdge(elist[ie]);
+        const Triangle &t2 = m_container->getTriangle(triID2);
+
+        if (orientation0 != CCW(x0[t2[0]], x0[t2[1]], x0[t2[2]])) {
+            std::cout << "Unable to swap edge for triangles with different "
+                "orientation in rest shape.\n";
+            continue;
+        } else if (orientation != CCW(x[t2[0]], x[t2[1]], x[t2[2]])) {
+            std::cout << "Unable to swap edge for triangles with different "
+                "orientation.\n";
+            continue;
+        }
+
+        // Detect indices of what
+        Index ne1 = InvalidID, ne2 = InvalidID; // Points not on the shared edge
+        int swap1 = -1, swap2 = -1;
+        for (int i=0; i<3; i++) {
+            if ((t1[i] != e[0]) && (t1[i] != e[1])) {
+                ne1 = t1[i];
+            } else if (t1[i] == e[0]) {
+                swap1 = i;
+            }
+            if ((t2[i] != e[0]) && (t2[i] != e[1])) {
+                ne2 = t2[i];
+            } else if (t2[i] == e[1]) {
+                swap2 = i;
+            }
+        }
+
+
+        // Swap edge shared between the triangles
+        Triangle nt1 = t1, nt2 = t2;
+        nt1[swap1] = ne2;
+        nt2[swap2] = ne1;
+
+        // Check if this helps
+        Real newValue = funcTriangle(nt1, x0,
+            triInfo.getValue()[triID].normal);
+        Real newValue2 = funcTriangle(nt2, x0,
+            triInfo.getValue()[triID2].normal);
+
+        // Is there improvement?
+        // NOTE: We assume that oldValue < oldValue2.
+        if ((newValue > oldValue) && (newValue2 > oldValue) &&
+            (newValue > swapMin) && (newValue2 > swapMin)) {
+            // Yes, this helps!
+            swapTri = triID2;
+            swapMin = (newValue < newValue2) ? newValue : newValue2;
+            swapVal1 = newValue;
+            swapVal2 = newValue2;
+            swapT1 = nt1;
+            swapT2 = nt2;
+        }
+    }
+
+    // Perform the topological operation
+    if (swapTri != InvalidID) {
+        std::cout << "Swapping\n";
+
+        if ((triID == m_pointTriId) || (swapTri == m_pointTriId)) {
+            std::cout << "Cannot swap tracked triangle!\n";
+            // TODO: we need to project tracked position to find out which
+            // of the triangles contains it.
+        }
+
+        //if (CCW(x0[swapT1[0]], x0[swapT1[1]], x0[swapT1[2]]) !=
+        //    CCW(x0[swapT2[0]], x0[swapT2[1]], x0[swapT2[2]])) {
+        //    std::cout << "WHOOPS! Inverting triangle! (rest)\n";
+        //} else if (CCW(x[swapT1[0]], x[swapT1[1]], x[swapT1[2]]) !=
+        //    CCW(x[swapT2[0]], x[swapT2[1]], x[swapT2[2]])) {
+        //    std::cout << "WHOOPS! Inverting triangle!\n";
+        //}
+
+        sofa::helper::vector< unsigned int > del;
+        del.push_back(triID);
+        del.push_back(swapTri);
+        m_modifier->removeTriangles(del, true, false);
+
+        sofa::helper::vector<Triangle> add;
+        add.push_back(swapT1);
+        add.push_back(swapT2);
+        m_modifier->addTriangles(add);
+    }
 }
 
 template<class DataTypes>

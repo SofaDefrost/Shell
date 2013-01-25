@@ -286,7 +286,7 @@ public:
         // may be lost in the sumation although any inverted triangle is worse
         // than any non-inverted triangle.
         return metricInverted(t, x, normal) * (
-            0.05*helper::rsqrt(metricGeom(t, x, normal)) + 0.95*metricDistance(t, x, normal));
+            0.05*helper::rsqrt(metricGeom2(t, x, normal)) + 0.95*metricDistance(t, x, normal));
     }
 
 
@@ -523,6 +523,13 @@ private:
      * @param normals   Original normals (to check for inversion)
      */
     bool smoothPain2D(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals);
+
+    /**
+     * Attemt edge swapping operation to improve functional of triangle.
+     *
+     * @param triID     Index of triangle to improve.
+     */
+    void swapEdge(Index triID);
 
     /**
      * @brief Inspect the nodes to detect boundary/fixed nodes.
