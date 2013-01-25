@@ -154,12 +154,19 @@ void TriangularShellForceField<DataTypes>::init()
 // --------------------------------------------------------------------------------------
 template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
 {
+    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+
     // Prepare material matrices
     computeMaterialStiffness();
 
     // Decode the selected elements to use
     if (f_membraneElement.getValue().getSelectedItem() == "None") {
         csMembrane = NULL;
+        for (int t=0; t<_topology->getNbTriangles(); ++t) {
+            for (unsigned int i=0; i<ti[t].measure.size(); ++i) {
+                ti[t].measure[i].B.clear();
+            }
+        }
     } else if (f_membraneElement.getValue().getSelectedItem() == "CST") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixCST;
     } else if (f_membraneElement.getValue().getSelectedItem() == "ALL-3I") {
@@ -179,6 +186,11 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
 
     if (f_bendingElement.getValue().getSelectedItem() == "None") {
         csBending = NULL;
+        for (int t=0; t<_topology->getNbTriangles(); ++t) {
+            for (unsigned int i=0; i<ti[t].measure.size(); ++i) {
+                ti[t].measure[i].Bb.clear();
+            }
+        }
     } else if (f_bendingElement.getValue().getSelectedItem() == "DKT") {
         csBending = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT;
     } else {
@@ -197,7 +209,6 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
         serr << "Invalid value for measure'" << f_measure.getValue().getSelectedItem() << "'" << sendl;
         return;
     }
-    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
 
     if (bMeasureStrain || bMeasureStress)
     {
@@ -978,7 +989,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixCST(StiffnessMa
 
     // Compute strain-displacement matrix
     for (unsigned int i=0; i< tinfo.measure.size(); i++) {
-        tinfo.measure[i].B = L / (2*tinfo.area);
+        tinfo.measure[i].B = Lt / (2*tinfo.area);
     }
 
 }
@@ -1170,7 +1181,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT(StiffnessMa
     }
     // Compute strain-displacement matrix
     for (unsigned int i=0; i< tinfo.measure.size(); i++) {
-        dktSD(tinfo.measure[i].B, tinfo,
+        dktSD(tinfo.measure[i].Bb, tinfo,
             tinfo.measure[i].point[0],
             tinfo.measure[i].point[1]);
     }
