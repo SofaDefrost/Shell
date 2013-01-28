@@ -27,6 +27,7 @@
         <MechanicalObject template="Vec3d" name="MO" />
         <UniformMass mass="0.1" />
 
+        <AdaptiveCuttingController template="Vec3d" />
         <Test2DAdapter template="Vec3d" name="adapter" sigma="1e-5" />
 
         <TriangleSetTopologyModifier />
@@ -70,15 +71,17 @@
 
             <Node name="Data">
                 <DataDisplay cellData="@../../adapter.functionals" />
-                <ColorMap colorScheme="Blue to Red" />
+                <ColorMap colorScheme="Green" />
                 <IdentityMapping input="@.." output="@."/>
             </Node>
 
+            <!--
             <Node name="Render wire">
                 <VisualStyle displayFlags="showWireframe" />
-                <OglModel name="Visual" color="white" translation="2.5 0 0" depthTest="false" />
+                <OglModel name="Visual" color="white" depthTest="false" />
                 <IdentityMapping input="@.." output="@Visual"/>
             </Node>
+            -->
         </Node>
         <!--
         -->

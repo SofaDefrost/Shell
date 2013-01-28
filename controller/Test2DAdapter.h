@@ -42,15 +42,6 @@ class Test2DAdapterData
 public:
 };
 
-/// Class to shield the data type
-class CuttingAdapter
-{
-public:
-    virtual void setTrackedPoint(const collision::BodyPicked &picked) = 0;
-    virtual void freeTrackedPoint() = 0;
-    virtual void addCuttingPoint() = 0;
-};
-
 /**
  *
  * @brief Component for adaptivity/smoothing of 2D triangular meshes.
@@ -72,7 +63,7 @@ public:
  *        39 (9) (1999) 1468–1486.
  */
 template<class DataTypes>
-class Test2DAdapter : public Controller, public CuttingAdapter
+class Test2DAdapter : public Controller
 {
 public:
     SOFA_CLASS(SOFA_TEMPLATE(Test2DAdapter,DataTypes),Controller);
@@ -93,7 +84,6 @@ public:
 
     typedef sofa::component::topology::EdgeSetTopologyContainer::Edge               Edge;
     typedef sofa::component::topology::EdgeSetTopologyContainer::EdgesAroundVertex  EdgesAroundVertex;
-    //typedef sofa::component::topology::VecEdgeID                                    VecEdgeID;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID     Index;
     typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle       Triangle;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
@@ -224,9 +214,6 @@ public:
     Data<Real> m_sigma;
     /// Current value of the functional for each triangle.
     Data< helper::vector<Real> > m_functionals;
-    /// @brief If geometric functinal drops below this value the attached node
-    /// is dropped.
-    Data<Real> m_affinity;
 
     /// Points to project onto the topology.
     //SingleLink<Test2DAdapter<DataTypes>, MechanicalState<DataTypes>,
@@ -237,19 +224,14 @@ public:
     /// Interpolation values for projected points.
     Data< sofa::helper::vector<sofa::helper::vector< Real > > > m_interpolationValues;
 
-    // TODO: This should go to cutting config
-    bool autoCutting;
-
     virtual void init();
     virtual void reinit();
 
-    virtual std::string getTemplateName() const
-    {
+    virtual std::string getTemplateName() const {
         return templateName(this);
     }
 
-    static std::string templateName(const Test2DAdapter<DataTypes>* = NULL)
-    {
+    static std::string templateName(const Test2DAdapter<DataTypes>* = NULL) {
         return DataTypes::Name();
     }
 
@@ -258,18 +240,37 @@ public:
     void onEndAnimationStep(const double dt);
     void onKeyPressedEvent(core::objectmodel::KeypressedEvent *key);
 
-    void setTrackedPoint(const collision::BodyPicked &picked);
-    void freeTrackedPoint() {
-        // Detach the point
-        m_pointId = InvalidID;
-        // Stop cutting
-        m_cutPoints = 0;
-        m_cutEdge = InvalidID;
+    /// Returnds whether node is considered normal (can be moved freely).
+    bool isPointNormal(Index pt) {
+        return pointInfo.getValue()[pt].isNormal();
     }
-    void addCuttingPoint();
 
-    /// Whether the cutting is in progress or not.
-    bool cutting() { return m_cutPoints > 0; }
+    /// Returns whith which precision the optimizer operates.
+    Real getPrecision() { return m_precision; }
+
+    /// Set specified point as fixed to prevent it's movement.
+    void setPointFixed(Index pt) {
+        (*pointInfo.beginEdit())[pt].forceFixed = true;
+        pointInfo.endEdit();
+    }
+
+    void setPointAttraction(Index pointID, Vec3 position, Index triangleID) {
+        m_pointId = pointID;
+        m_point = position;
+        m_pointTriId = triangleID;
+    }
+
+    /**
+     * @brief Move point to a new location.
+     *
+     * @param pt        Index of the point to mvoe.
+     * @param target    Target coordinates to move the point to.
+     * @param hint      Optional index of the triangle in which the point is
+     *                  located.
+     * @param bInRest   Whether to perform the operation on rest shape.
+     */
+    void relocatePoint(Index pt, Coord target, Index hint=InvalidID,
+        bool bInRest=true);
 
     /**
      * @brief Distortion metric for a triangle to be computed.
@@ -286,7 +287,7 @@ public:
         // may be lost in the sumation although any inverted triangle is worse
         // than any non-inverted triangle.
         return metricInverted(t, x, normal) * (
-            0.05*helper::rsqrt(metricGeom2(t, x, normal)) + 0.95*metricDistance(t, x, normal));
+            0.05*helper::rsqrt(metricGeomVL(t, x, normal)) + 0.95*metricDistance(t, x, normal));
     }
 
 
@@ -333,9 +334,64 @@ public:
      *
      * @param t         Triangle to compute the metric for.
      * @param x         Vertices.
+     * @param triID     Triangle to relate computation to.
+     */
+    Real metricGeom(const Triangle &t, const VecCoord &x, const Index triID) const {
+        return metricGeom(t, x, triInfo.getValue()[triID].normal);
+    }
+
+    /**
+     * @brief Distortion metric for a triangle from [CTS98] (but probably due
+     * to somebody else)
+     *
+     * @param t         Triangle to compute the metric for.
+     * @param x         Vertices.
      * @param normal    Surface normal for the triangle.
      */
-    Real metricGeom(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
+    Real metricGeom(const Triangle &t, const VecCoord &x, const Vec3 &normal) const {
+        return metricGeomVL(t, x, normal);
+    }
+
+private:
+
+    unsigned int stepCounter;
+    sofa::component::topology::TriangleSetTopologyContainer*  m_container;
+    sofa::component::topology::TriangleSetTopologyModifier*  m_modifier;
+    sofa::component::topology::TriangleSetGeometryAlgorithms<DataTypes> *m_algoGeom;
+    sofa::component::topology::TriangleSetTopologyAlgorithms<DataTypes> *m_algoTopo;
+    sofa::core::behavior::MechanicalState<DataTypes>* m_state;
+
+    /// List of nodes that have to be rechecked if they are on the boundry.
+    std::map<Index,bool> m_toUpdate;
+
+    /// Amount of precision that is acceptable for us.
+    Real m_precision;
+
+    Real sumgamma, mingamma, maxgamma;
+    int ngamma;
+
+    /// Point to attract to prespecified position.
+    Index m_pointId;
+    /// A point on a surface to attract to (in deformed shape).
+    Vec3 m_point;
+    /// Position of m_point projected into rest shape.
+    Vec3 m_pointRest;
+    /// @brief Triangle ID inside which m_point is located (valid only if
+    /// m_pointId != InvalidID).
+    Index m_pointTriId;
+
+    /// Edges not eligible for edge swapping operation.
+    VecIndex m_protectedEdges;
+
+    /**
+     * @brief Distortion metric for a triangle from [CTS98] (but probably due
+     * to somebody else)
+     *
+     * @param t         Triangle to compute the metric for.
+     * @param x         Vertices.
+     * @param normal    Surface normal for the triangle.
+     */
+    Real metricGeomCTS(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
         // TODO: we can precompute these
         Vec3 ab = x[ t[1] ] - x[ t[0] ];
         Vec3 ca = x[ t[0] ] - x[ t[2] ];
@@ -356,7 +412,7 @@ public:
      * @param x         Vertices.
      * @param normal    Surface normal for the triangle.
      */
-    Real metricGeom2(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
+    Real metricGeomVL(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
         // TODO: we can precompute these
         Vec3 ab = x[ t[1] ] - x[ t[0] ];
         Vec3 ca = x[ t[0] ] - x[ t[2] ];
@@ -396,13 +452,13 @@ public:
      * functional is discouraged.
      *
      * NOTE: The inverted function is not direct equivalent of the original
-     * version, on the puls side it produces slightly better results.
+     * version, on the plus side it produces slightly better results.
      *
      * @param t         Triangle to compute the metric for.
      * @param x         Vertices.
      * @param normal    Surface normal for the triangle.
      */
-    Real metricGeom3(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
+    Real metricGeomPU(const Triangle &t, const VecCoord &x, const Vec3 &/*normal*/) const {
         // TODO: we can precompute these
         Vec3 vab = x[ t[1] ] - x[ t[0] ];
         Vec3 vca = x[ t[0] ] - x[ t[2] ];
@@ -432,48 +488,6 @@ public:
         return m;
     }
 
-
-private:
-
-    unsigned int stepCounter;
-    sofa::component::topology::TriangleSetTopologyContainer*  m_container;
-    sofa::component::topology::TriangleSetTopologyModifier*  m_modifier;
-    sofa::component::topology::TriangleSetGeometryAlgorithms<DataTypes> *m_algoGeom;
-    sofa::component::topology::TriangleSetTopologyAlgorithms<DataTypes> *m_algoTopo;
-    sofa::core::behavior::MechanicalState<DataTypes>* m_state;
-
-    /// List of nodes that have to be rechecked if they are on the boundry.
-    std::map<Index,bool> m_toUpdate;
-
-    /// Amount of precision that is acceptable for us.
-    Real m_precision;
-
-    /// Closest point in the mstate.
-    Index m_pointId;
-    /// A point on a surface to attract to (valid only if m_pointId != InvalidID).
-    Vec3 m_point;
-    /// Position of m_point projected into rest shape.
-    Vec3 m_pointRest;
-    /// @brief Triangle ID inside which m_point is located (valid only if
-    ///m_pointId != InvalidID).
-    Index m_pointTriId;
-    /// @brief Number of iterations during which the attached node will not be
-    /// reattached.
-    unsigned int m_gracePeriod;
-
-    /// @brief Stored index of the first edge to cut when the first cut has
-    /// been delayed.
-    Index m_cutEdge;
-    /// Last cutting point.
-    Index m_cutLastPoint;
-    /// Cutting operation to perform in this step.
-    VecIndex m_cutList;
-    /// Number of cut points defined.
-    int m_cutPoints;
-
-
-    Real sumgamma, mingamma, maxgamma;
-    int ngamma;
 
     /**
      * @brief Constrained Laplacian smoothing
@@ -548,17 +562,6 @@ private:
      *
      */
     typename PointInformation::NodeType detectNodeType(Index pt, Vec3 &boundaryDirection);
-
-    /**
-     * @brief Move point to a new location.
-     *
-     * @param pt        Index of the point to mvoe.
-     * @param target    Target coordinates to move the point to.
-     * @param hint      Optional index of the triangle in which the point is
-     *                  located.
-     * @param bInRest   Whether to perform the operation on rest shape.
-     */
-    void relocatePoint(Index pt, Coord target, Index hint=InvalidID, bool bInRest=true);
 
     /**
      * @brief Compute triangle normal.

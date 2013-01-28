@@ -9,7 +9,7 @@
 #include <sofa/component/collision/InteractionPerformer.h>
 #include <sofa/gui/MouseOperations.h>
 
-#include "../controller/Test2DAdapter.h"
+#include "../controller/AdaptiveCuttingController.h"
 
 namespace sofa
 {
@@ -53,12 +53,12 @@ public:
     {}
 
     void start() {
-        std::cout << __PRETTY_FUNCTION__ << " not implemented" << std::endl;
+        //std::cout << __PRETTY_FUNCTION__ << " not implemented" << std::endl;
         /*TODO*/
     }
 
     void execute() {
-        std::cout << __PRETTY_FUNCTION__ << " not implemented" << std::endl;
+        //std::cout << __PRETTY_FUNCTION__ << " not implemented" << std::endl;
         //updatePosition();
         /* TODO */
     }
@@ -99,7 +99,7 @@ public:
         configurationsetting::AdaptiveCuttingSetting* s = dynamic_cast<configurationsetting::AdaptiveCuttingSetting*>(setting);
         if (s)
         {
-             std::cout << __PRETTY_FUNCTION__ << " not implemented" << std::endl; /*TODO*/
+             //std::cout << __PRETTY_FUNCTION__ << " not implemented" << std::endl; /*TODO*/
         }
     }
 };

@@ -62,10 +62,6 @@
     cross(Vec2(b[0]-a[0], b[1]-a[1]), \
         Vec2(c[0]-a[0], c[1]-a[1])) > 1e-15)
 
-// Test for intersection between two segments (a,b) and (c,d)
-#define INTERSECT(a,b,c,d) (\
-    (CCW(a,c,d) != CCW(b,c,d)) && (CCW(a,b,c) != CCW(a,b,d)))
-
 namespace sofa
 {
 
@@ -202,20 +198,16 @@ template<class DataTypes>
 Test2DAdapter<DataTypes>::Test2DAdapter()
 : m_sigma(initData(&m_sigma, (Real)0.01, "sigma", "Minimal increase in functional to accept the change"))
 , m_functionals(initData(&m_functionals, "functionals", "Current values of the functional for each triangle"))
-, m_affinity(initData(&m_affinity, (Real)0.7, "affinity", "Threshold for point attachment (value betwen 0 and 1)."))
 //, m_mappedState(initLink("mappedState", "Points to project onto the topology."))
 , m_projectedPoints(initData(&m_projectedPoints, "projectedPoints", "Points to project onto the topology."))
 , m_interpolationIndices(initData(&m_interpolationIndices, "interpolationIndices",
         "Interpolation indices for projected points."))
 , m_interpolationValues(initData(&m_interpolationValues, "interpolationValues",
         "Interpolation values for projected points."))
-, autoCutting(true)
 , stepCounter(0)
 , m_precision(1e-8)
 , m_pointId(InvalidID)
-, m_gracePeriod(0)
-, m_cutEdge(InvalidID)
-, m_cutPoints(0)
+, m_pointTriId(InvalidID)
 , pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
 , triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
@@ -288,11 +280,6 @@ void Test2DAdapter<DataTypes>::reinit()
     m_functionals.beginEdit()->resize(m_container->getNbTriangles(), Real(0.0));
     m_functionals.endEdit();
 
-    if (m_affinity.getValue() < 0.0 || m_affinity.getValue() > 1.0) {
-        *m_affinity.beginEdit() = 0.7;
-        m_affinity.endEdit();
-    }
-
     helper::vector<PointInformation>& pts = *pointInfo.beginEdit();
     pts.resize(m_container->getNbPoints());
     //for (int i=0; i<m_container->getNbPoints(); i++)
@@ -337,17 +324,6 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         return;
 
     stepCounter++;
-    if (m_gracePeriod > 0) m_gracePeriod--;
-
-    // Perform the (delayed) cutting
-    if ((m_cutList.size() > 0) && (m_cutPoints > 2) ) {
-        VecIndex newList, endList;
-        bool bReachedBorder;
-        m_algoTopo->InciseAlongEdgeList(m_cutList, newList, endList,
-            bReachedBorder);
-        //m_algoTopo->InciseAlongEdge(m_cutList[0], NULL);
-        m_cutList.clear();
-    }
 
     // Update boundary vertices
     recheckBoundary();
@@ -357,7 +333,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     //stepCounter = 0;
 
-    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::restPosition());
+   Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::restPosition());
     //VecCoord& x = *datax->beginEdit();
     // WARNING: Notice that we're working on a copy that is NOT updated by
     //          external changes!
@@ -471,33 +447,6 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     swapEdge(minTriID);
 
 
-    // Check the values around attached point and reattach if necessary
-    if ((m_pointId != InvalidID) && !m_gracePeriod && !cutting()) {
-        TrianglesAroundVertex N1 =
-            m_container->getTrianglesAroundVertex(m_pointId);
-        Real min = 1.0;
-        for (unsigned int it=0; it<N1.size(); it++) {
-            Real f = metricGeom(m_container->getTriangle(N1[it]), x,
-                triInfo.getValue()[ N1[it] ].normal);
-            if (f < min) min = f;
-        }
-        if (min < m_affinity.getValue()) {
-            // Value too low, try reattaching the node
-            m_gracePeriod = 20;
-            Triangle t = m_container->getTriangle(m_pointTriId);
-            VecIndex pts;
-            for (int i=0; i<3; i++) {
-                if (t[i] != m_pointId) pts.push_back(t[i]);
-            }
-            if ((x[m_pointId] - x[ pts[0] ]).norm2() <
-                (x[m_pointId] - x[ pts[1] ]).norm2()) {
-                m_pointId = pts[0];
-            } else {
-                m_pointId = pts[1];
-            }
-        }
-    }
-
     //std::cout << stepCounter << "] moved " << moved << " points, max delta=" << helper::rsqrt(maxdelta)
     //    << " gamma min/avg/max: " << mingamma << "/" << sumgamma/ngamma
     //    << "/" << maxgamma
@@ -534,282 +483,6 @@ void Test2DAdapter<DataTypes>::onKeyPressedEvent(core::objectmodel::KeypressedEv
         of << "\n";
         of.close();
     }
-}
-
-template<class DataTypes>
-void Test2DAdapter<DataTypes>::setTrackedPoint(const collision::BodyPicked &picked)
-{
-    using namespace sofa::component::collision;
-
-    //const VecCoord& x0 = m_state->read(
-    //    sofa::core::ConstVecCoordId::restPosition())->getValue();
-    const VecCoord& x = m_state->read(
-        sofa::core::ConstVecCoordId::position())->getValue();
-
-
-    // Support only trianglular model! The others don't give any added value.
-    /*if(dynamic_cast<PointModel*>(picked.body)) {
-    // Point
-    m_pointId = picked.indexCollisionElement;
-    } else if(dynamic_cast<LineModel*>(picked.body)) {
-    // Edge
-    Edge e = m_container->getEdge(picked.indexCollisionElement);
-    Real d1 = (x[ e[0] ] - m_point).norm2();
-    Real d2 = (x[ e[1] ] - m_point).norm2();
-    m_pointId = (d1 < d2 ? e[0] : e[1]);
-    } else*/
-    if(dynamic_cast<TriangleModel*>(picked.body)) {
-
-        Index newId = InvalidID;
-        Index newCutEdge = InvalidID;
-
-        if (!cutting()) {
-            // TODO: can we tell directly from bary coords?
-            Triangle t = m_container->getTriangle(
-                picked.indexCollisionElement);
-            Real d1 = (x[ t[0] ] - picked.point).norm2();
-            Real d2 = (x[ t[1] ] - picked.point).norm2();
-            Real d3 = (x[ t[2] ] - picked.point).norm2();
-            newId = (d1 < d2) ?
-                (d1 < d3 ? t[0] : t[2]) :
-                (d2 < d3 ? t[1] : t[2]);
-        } else {
-            // During cutting we should allow change only to point directly
-            // connected with last cut point.
-            // We pick a point from N1 shell which is closest to the tracked point.
-
-            // NOTE: We don't allow fixed/boundary nodes (now)
-
-
-            Triangle t = m_container->getTriangle(
-                picked.indexCollisionElement);
-            if ((t[0] == m_cutLastPoint) || (t[1] == m_cutLastPoint) ||
-                (t[2] == m_cutLastPoint)) {
-                // The point is inside a triangle in N1-ring, take one of it's
-                // corner nodes
-                Index pt1 = OTHER(m_cutLastPoint, t[0], t[1]),
-                      pt2 = OTHER(m_cutLastPoint, t[2], t[1]);
-
-
-                if (!pointInfo.getValue()[pt1].isNormal()) {
-                    if (!pointInfo.getValue()[pt2].isNormal()) {
-                        // No point available!
-                        newId = InvalidID;
-                    } else {
-                        newId = pt2;
-                    }
-                } else if (!pointInfo.getValue()[pt2].isNormal()) {
-                    newId = pt1;
-                } else if (
-                    (x[pt1] - picked.point).norm2() < 
-                    (x[pt2] - picked.point).norm2()) {
-                    newId = pt1;
-                } else {
-                    newId = pt2;
-                }
-
-            } else {
-
-                // Tracked position is outside the N1-ring. Pick closest point
-                // while checking for crossing segments -- between last cut
-                // edge and (seleted-picked). Idealy we should check with all
-                // cut edges, but that's too much work.
-
-                // TODO: What if m_cutEdge == InvalidID?
-
-                EdgesAroundVertex N1e =
-                    m_container->getEdgesAroundVertex(m_cutLastPoint);
-
-                Index lastCut = InvalidID;
-                Edge ce(InvalidID, InvalidID);
-                if (m_cutList.size() > 0) {
-                    lastCut = m_cutList.back();
-                    ce = m_container->getEdge(m_cutEdge);
-                }
-
-                Real minDist = DBL_MAX;
-
-                for (Index ie=0; ie<N1e.size(); ie++) {
-                    Edge e = m_container->getEdge(N1e[ie]); 
-                    Index otherPt = OTHER(m_cutLastPoint, e[0], e[1]);
-
-                    if (!pointInfo.getValue()[otherPt].isNormal())
-                        continue;
-
-                    Real dist = (picked.point - x[otherPt]).norm2();
-                    bool inter = false;
-                    if (lastCut != InvalidID) {
-                        inter = INTERSECT(x[ce[0]], x[ce[1]],
-                            x[otherPt], picked.point);
-                    }
-                    if ((dist < minDist) && !inter) {
-                        minDist = dist;
-                        newId = otherPt;
-                        newCutEdge = N1e[ie];
-                    }
-                }
-
-            }
-            if (newId != InvalidID) {
-                newCutEdge = m_container->getEdgeIndex(m_cutLastPoint, newId);
-            }
-        }
-
-        if (newId == InvalidID) {
-            serr << "Failed to pick a point!" << sendl;
-        }
-
-        if (!m_gracePeriod && (newId != m_pointId)) {
-            m_pointId = newId;
-            m_gracePeriod = 5;  // NOTE: Don't put too large value here, or we
-                                // will fail to follow quick changes.
-            if (newCutEdge != InvalidID) {
-                m_cutEdge = newCutEdge;
-            }
-
-        }
-        //if (newId == m_pointId) {
-            m_point = picked.point;
-            m_pointTriId = picked.indexCollisionElement;
-        //}
-    } else {
-        m_pointId = InvalidID;
-    }
-
-    // Add new cut point during automated cutting
-    if (cutting() && autoCutting) {
-        // Compare edge lengths in triangles sharing the cut edge.
-
-        TrianglesAroundEdge tris =
-            m_container->getTrianglesAroundEdge(m_cutEdge);
-        Real edgeSum = 0.0;
-        int edgeCount = 0;
-
-        for (int i=0; i<2; i++) {
-            EdgesInTriangle elist = m_container->getEdgesInTriangle(tris[i]);
-            for (int j=0; j<3; j++) {
-                if (elist[j] == m_cutEdge) continue;
-                Edge e = m_container->getEdge(elist[j]);
-                edgeSum += (x[e[0]] - x[e[1]]).norm2();
-                edgeCount++;
-            }
-        }
-
-        // Compute mean of (squared) edge lengths 
-        if (edgeCount > 0) {
-            edgeSum /= edgeCount;
-
-            if (edgeSum < (x[m_cutLastPoint] - x[m_pointId]).norm2()) {
-                addCuttingPoint();
-            }
-        }
-    }
-}
-
-template<class DataTypes>
-void Test2DAdapter<DataTypes>::addCuttingPoint()
-{
-    if (!m_algoTopo || !m_algoGeom) return;
-
-    if (m_pointId == InvalidID) {
-        serr << "BUG! Attempted cutting with no point tracked." << sendl;
-        return;
-    }
-
-    const VecCoord& x = m_state->read(
-        sofa::core::ConstVecCoordId::position())->getValue();
-    //const VecCoord& xrest = m_state->read(
-    //    sofa::core::ConstVecCoordId::restPosition())->getValue();
-    Coord oldpos = x[m_pointId];
-
-    bool bFirst = !cutting();
-
-    // Check if the target location is in one of the triangles connected to
-    // poin m_pointId.
-    bool bConnected = false;
-    Triangle t = m_container->getTriangle(m_pointTriId);
-    for (int i=0; i<3; i++) {
-        if (t[i] == m_pointId) {
-            bConnected = true;
-            break;
-        }
-    }
-
-    // Make sure the tracked point is at the target location.
-    if (!bConnected) {
-        // NOTE: We can try adding the cut point as far as possible, then
-        // reattach and repeat. But we risk "eating" up all available
-        // points quitckly. Another possibility is waiting a few iterations
-        // before adding another cut point, but this will only work if the
-        // cut point is not last (end of the cut).
-        serr << "Failed to insert cut point! Tracking too slow." << sendl;
-        return;
-    } else if (pointInfo[m_pointId].type == PointInformation::NORMAL) {
-        relocatePoint(m_pointId, m_point, m_pointTriId, false);
-    } else {
-        // TODO: We need a parameter controling how close one has to be to the
-        // boundary/fixed node to attach to it. For boundary nodes we have to
-        // project the target position onto the boundary nodes. Fixed points,
-        // of course, have to be kept intact. Or alternatively we may prevent
-        // attachment to fixed nodes completely.
-        serr << "Handling of boundary/fixed nodes is not implemented!" << serr;
-    }
-
-
-    // Chose another point in the direction of movement.
-    // TODO: the following is not good
-    Vec3 dir = m_point - oldpos;
-    dir.normalize();
-    // END_TODO
-
-    // Get another point in that direction.
-    Index tId = m_algoGeom->getTriangleInDirection(m_pointId, dir);
-    if (tId == InvalidID) {
-        serr << "BUG! Nothing in cutting direction!" << sendl;
-        return;
-    }
-
-    EdgesInTriangle elist = m_container->getEdgesInTriangle(tId);
-    Real alpha[2];
-    Index otherPt[2], otherEdge[2];
-    for (int i=0,j=0; i<3; i++) {
-        Edge e = m_container->getEdge(elist[i]);
-        if ((e[0] != m_pointId) && (e[1] != m_pointId)) continue;
-        Vec3 edgeDir;
-        if (e[0] == m_pointId) {
-            otherPt[j] = e[1];
-            edgeDir = x[ e[1] ] - x[ e[0] ];
-        } else {
-            otherPt[j] = e[0];
-            edgeDir = x[ e[0] ] - x[ e[1] ];
-        }
-        otherEdge[j] = elist[i];
-        edgeDir.normalize();
-        alpha[j] = dir * edgeDir;
-        j++;
-    }
-
-    Index newPt = (alpha[0] < alpha[1]) ? otherPt[1] : otherPt[0];
-    Index oldPt = m_pointId;
-    Index edge = (alpha[0] < alpha[1]) ? otherEdge[1] : otherEdge[0];
-
-    m_cutPoints++;
-
-    // Attach the new point and move it to be near the cursor.
-    m_pointId = newPt;
-    m_pointTriId = tId;
-    m_gracePeriod = 20;
-    relocatePoint(newPt, x[oldPt] + (dir*m_precision/2.0), tId, false);
-
-    m_cutLastPoint = oldPt;
-    if (!bFirst && (m_cutEdge != InvalidID)) {
-        m_cutList.push_back(m_cutEdge);
-    }
-    m_cutEdge = edge;
-    // Fix the point so nothing happens to it before the topological change
-    // occurs.
-    (*pointInfo.beginEdit())[oldPt].forceFixed = true;
-    pointInfo.endEdit();
 }
 
 template<class DataTypes>
@@ -1353,17 +1026,17 @@ void Test2DAdapter<DataTypes>::swapEdge(Index triID)
             m_container->getTrianglesAroundEdge(elist[ie]);
         if (tlist.size() != 2)
             continue; // No other triangle or non-manifold edge
-        if (m_cutEdge == elist[ie])
-            continue; // Do not touch current cut edge
-        bool bInCutList = false;
-        for (unsigned int i=0; i<m_cutList.size(); i++) {
-            if (m_cutList[i] == elist[ie]) {
-                bInCutList = true;
+
+        bool bProtected = false;
+        for (unsigned int i=0; i<m_protectedEdges.size(); i++) {
+            if (m_protectedEdges[i] == elist[ie]) {
+                bProtected = true;
                 break;
             }
         }
-        if (bInCutList)
-            continue; // Do not touch any other cut edge
+
+        if (bProtected)
+            continue; // Do not touch!
 
         // TODO: is the pair t1-t2 convex?
         //       -- this check may not be necessary, swapping should lead to
@@ -1831,9 +1504,6 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
         helper::vector<defaulttype::Vector3> vv;
         vv.push_back(
             defaulttype::Vector3(m_point[0], m_point[1], m_point[2]));
-        vv.push_back(
-            defaulttype::Vector3(m_point[0], m_point[1],
-                m_point[2]));
         vparams->drawTool()->drawPoints(vv, 6,
             sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
         // Draw tracked position (projected in rest shape)
@@ -1845,29 +1515,9 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
         vv.clear();
         vv.push_back(x[m_pointId]);
         vparams->drawTool()->drawPoints(vv, 6,
-            cutting()
+            /*cutting()
             ? sofa::defaulttype::Vec<4,float>(1.0, 1.0, 0.0, 1.0)
-            : sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
-    }
-
-    if (m_cutList.size() > 0) {
-        helper::vector<defaulttype::Vector3> points;
-        for (VecIndex::const_iterator i=m_cutList.begin();
-            i != m_cutList.end(); i++) {
-            const Edge &e = m_container->getEdge(*i);
-            points.push_back(x[ e[0] ]);
-            points.push_back(x[ e[1] ]);
-        }
-        vparams->drawTool()->drawLines(points, 4,
-            sofa::defaulttype::Vec<4,float>(1.0, 0.0, 0.0, 1.0));
-    }
-    if (m_cutEdge != InvalidID) {
-        const Edge &e = m_container->getEdge(m_cutEdge);
-        helper::vector<defaulttype::Vector3> points;
-        points.push_back(x[ e[0] ]);
-        points.push_back(x[ e[1] ]);
-        vparams->drawTool()->drawLines(points, 4,
-            sofa::defaulttype::Vec<4,float>(1.0, 0.0, 0.0, 1.0));
+            :*/ sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
     }
 }
 
@@ -1876,5 +1526,8 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
 } // namespace component
 
 } // namespace sofa
+
+#undef OTHER
+#undef CCW
 
 #endif // SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL

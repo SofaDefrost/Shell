@@ -90,6 +90,8 @@ namespace component
 		componentlist += " BezierShellInterpolation";
 		componentlist += " BezierShellMechanicalMapping";
 
+                componentlist += " AdaptiveCuttingController";
+                componentlist += " AdaptiveCuttingSetting";
 		componentlist += " JoinMeshPoints";
 		componentlist += " FindClosePoints";
 		componentlist += " MeshInterpolator";
@@ -121,3 +123,4 @@ SOFA_LINK_CLASS(MeshInterpolator)
 SOFA_LINK_CLASS(Test2DAdapter)
 SOFA_LINK_CLASS(TriangleSwitchExample)
 SOFA_LINK_CLASS(AdaptiveCuttingSetting)
+SOFA_LINK_CLASS(AdaptiveCuttingController)

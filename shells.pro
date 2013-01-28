@@ -19,7 +19,6 @@ DEFINES += SOFA_BUILD_SHELLS
 
 SOURCES =   initPluginShells.cpp \
             controller/MeshInterpolator.cpp \
-            controller/Test2DAdapter.cpp \
             controller/TriangleSwitchExample.cpp \
             engine/JoinMeshPoints.cpp \
             engine/FindClosePoints.cpp \
@@ -31,7 +30,6 @@ SOURCES =   initPluginShells.cpp \
             shells2/fem/BezierShellInterpolation.cpp \
             shells2/forcefield/BezierShellForceField.cpp \
             shells2/mapping/BezierShellMechanicalMapping.cpp \
-            cutting/AdaptiveCutting.cpp \
             misc/PointProjection.cpp \
 
 
@@ -39,8 +37,6 @@ HEADERS =   initPluginShells.h \
             controller/MeshChangedEvent.h \
             controller/MeshInterpolator.h \
             controller/MeshInterpolator.inl \
-            controller/Test2DAdapter.h \
-            controller/Test2DAdapter.inl \
             controller/TriangleSwitchExample.h \
             controller/TriangleSwitchExample.inl \
             engine/JoinMeshPoints.h \
@@ -63,10 +59,27 @@ HEADERS =   initPluginShells.h \
             shells2/forcefield/BezierShellForceField.inl \
             shells2/mapping/BezierShellMechanicalMapping.h \
             shells2/mapping/BezierShellMechanicalMapping.inl \
-            cutting/AdaptiveCutting.h \
             misc/PointProjection.h \
             misc/PointProjection.inl \
 
+
+#
+# Mesh optimization and adaptivity
+#
+contains (DEFINES, SOFA_HAVE_SHELL_ADAPTIVITY) {
+
+SOURCES += \
+            controller/AdaptiveCuttingController.cpp \
+            controller/Test2DAdapter.cpp \
+            cutting/AdaptiveCutting.cpp \
+
+HEADERS += \
+            controller/AdaptiveCuttingController.h \
+            controller/AdaptiveCuttingController.inl \
+            controller/Test2DAdapter.h \
+            controller/Test2DAdapter.inl \
+            cutting/AdaptiveCutting.h \
+}
 
 # CUDA classes are broken right now.
 #contains (DEFINES, SOFA_GPU_CUDA) {

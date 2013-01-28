@@ -20,14 +20,14 @@
         <RegularGridTopology name="topo" template="Vec3d"
             min="-1 -1 0"
             max=" 1  1 0"
-            n="14 13 1" />
+            n="10 10 1" />
     </Node>
 
     <Node name="Fine">
         <RegularGridTopology name="topo" template="Vec3d"
             min="-1 -1 0"
             max=" 1  1 0"
-            n="56 56 1" />
+            n="20 20 1" />
     </Node>
 
     <Node>
@@ -52,6 +52,7 @@
         <Test2DAdapter template="Vec3d" name="adapter" sigma="1e-5"
             projectedPoints="@/Fine/topo.position" />
         <!--    />-->
+        <AdaptiveCuttingController template="Vec3d" />
 
         <!-- Match corners -->
         <BoxROI name="box1" box="0.99 -1.01 -0.01 1.01 -0.99 0.01" />
