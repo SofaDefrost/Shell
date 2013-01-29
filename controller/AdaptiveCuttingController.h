@@ -148,6 +148,18 @@ private:
     /// Number of cut points defined.
     int m_cutPoints;
 
+    void switchPoint(const Vec3 &newPoint, const Index newPointTri,
+        const Index newID, const Index newCutEdge);
+
+    /**
+     * Set edge planned for the next cut.
+     *
+     * @param newCutEdge        Index of new edge to use.
+     * @param bKeepProtection   Whether to keep edge protection for previous
+     *                          edge.
+     */
+    void setCutEdge(const Index newCutEdge, const bool bKeepProtection=false);
+
 };
 
 

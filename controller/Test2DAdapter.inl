@@ -361,7 +361,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     //sofa::helper::system::thread::CTime timer;
     //start = timer.getTime();
 
-    //mytimer.start(":: Step init");
+    //mytimer.start("Init");
     vector<Real> &functionals = *m_functionals.beginEdit();
 
     functionals.resize(nTriangles);
@@ -380,6 +380,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     Real maxdelta=0.0;
     unsigned int moved=0;
+    //mytimer.step("Optimize");
     for (Index i=0; i<x.size(); i++) {
         if (pointInfo.getValue()[i].isFixed()) {
             //std::cout << "skipping fixed node " << i << "\n";
@@ -425,6 +426,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         }
         //mytimer.stop();
     }
+    //mytimer.step("Eval");
 
     //stop = timer.getTime();
     //std::cout << "---------- CPU time = " << stop-start << "\n";
@@ -444,7 +446,13 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     sum2 = helper::rsqrt(sum2/nTriangles);
 
     // Try swapping edge for the worst triangle
-    swapEdge(minTriID);
+    //mytimer.step("Swap");
+    //swapEdge(minTriID);
+    //NOTE: we do some work twice, this can be optimized.
+    for (Index i=0; i<m_container->getNumberOfTriangles(); i++) {
+        swapEdge(i);
+    }
+    //mytimer.stop();
 
 
     //std::cout << stepCounter << "] moved " << moved << " points, max delta=" << helper::rsqrt(maxdelta)
@@ -1519,6 +1527,20 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
             ? sofa::defaulttype::Vec<4,float>(1.0, 1.0, 0.0, 1.0)
             :*/ sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
     }
+
+
+    if (m_protectedEdges.size() > 0) {
+        helper::vector<defaulttype::Vector3> points;
+        for (VecIndex::const_iterator i=m_protectedEdges.begin();
+            i != m_protectedEdges.end(); i++) {
+            const Edge &e = m_container->getEdge(*i);
+            points.push_back(x[ e[0] ]);
+            points.push_back(x[ e[1] ]);
+        }
+        vparams->drawTool()->drawLines(points, 4,
+            sofa::defaulttype::Vec<4,float>(0.0, 1.0, 0.0, 1.0));
+    }
+
 }
 
 } // namespace controller

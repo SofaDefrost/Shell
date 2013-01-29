@@ -260,6 +260,21 @@ public:
         m_pointTriId = triangleID;
     }
 
+    void protectEdge(Index edgeID) {
+        if (std::find(m_protectedEdges.begin(), m_protectedEdges.end(),
+                edgeID) == m_protectedEdges.end()) {
+            m_protectedEdges.push_back(edgeID);
+        }
+    }
+
+    void unprotectEdge(Index edgeID) {
+        VecIndex::iterator i = std::find(m_protectedEdges.begin(),
+            m_protectedEdges.end(), edgeID);
+        if (i != m_protectedEdges.end()) {
+            m_protectedEdges.erase(i);
+        }
+    }
+
     /**
      * @brief Move point to a new location.
      *
@@ -381,6 +396,7 @@ private:
     Index m_pointTriId;
 
     /// Edges not eligible for edge swapping operation.
+    // TODO: We need to add edge EdgeInfoHandler::swap().
     VecIndex m_protectedEdges;
 
     /**

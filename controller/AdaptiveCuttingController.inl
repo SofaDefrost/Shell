@@ -39,7 +39,7 @@ namespace controller
 template<class DataTypes>
 AdaptiveCuttingController<DataTypes>::AdaptiveCuttingController()
 : m_affinity(initData(&m_affinity, (Real)0.7, "affinity", "Threshold for point attachment (value betwen 0 and 1)."))
-, autoCutting(true)
+, autoCutting(false)
 , m_pointId(InvalidID)
 , m_pointTriId(InvalidID)
 , m_gracePeriod(0)
@@ -111,6 +111,12 @@ void AdaptiveCuttingController<DataTypes>::onEndAnimationStep(const double /*dt*
     // Perform the (delayed) cutting
     if ((m_cutList.size() > 0) && (m_cutPoints > 2) ) {
         VecIndex newList, endList;
+        // First remove protection
+        for (VecIndex::const_iterator i=m_cutList.begin();
+            i != m_cutList.end(); i++) {
+            m_adapter->unprotectEdge(*i);
+        }
+        // Then perform the incision
         bool bReachedBorder;
         m_algoTopo->InciseAlongEdgeList(m_cutList, newList, endList,
             bReachedBorder);
@@ -152,7 +158,7 @@ template<class DataTypes>
 void AdaptiveCuttingController<DataTypes>::draw(
     const core::visual::VisualParams* vparams)
 {
-    if ((!vparams->displayFlags().getShowBehaviorModels()))
+    //if ((!vparams->displayFlags().getShowBehaviorModels()))
         return;
 
     if (!m_state) return;
@@ -212,7 +218,6 @@ void AdaptiveCuttingController<DataTypes>::setTrackedPoint(
         Index newCutEdge = InvalidID;
 
         if (!cutting()) {
-            // TODO: can we tell directly from bary coords?
             Triangle t = m_container->getTriangle(
                 picked.indexCollisionElement);
             Real d1 = (x[ t[0] ] - picked.point).norm2();
@@ -263,8 +268,6 @@ void AdaptiveCuttingController<DataTypes>::setTrackedPoint(
                 // edge and (seleted-picked). Idealy we should check with all
                 // cut edges, but that's too much work.
 
-                // TODO: What if m_cutEdge == InvalidID?
-
                 EdgesAroundVertex N1e =
                     m_container->getEdgesAroundVertex(m_cutLastPoint);
 
@@ -272,7 +275,7 @@ void AdaptiveCuttingController<DataTypes>::setTrackedPoint(
                 Edge ce(InvalidID, InvalidID);
                 if (m_cutList.size() > 0) {
                     lastCut = m_cutList.back();
-                    ce = m_container->getEdge(m_cutEdge);
+                    ce = m_container->getEdge(lastCut);
                 }
 
                 Real minDist = DBL_MAX;
@@ -305,26 +308,13 @@ void AdaptiveCuttingController<DataTypes>::setTrackedPoint(
 
         if (newId == InvalidID) {
             serr << "Failed to pick a point!" << sendl;
+        } else {
+            switchPoint(picked.point, picked.indexCollisionElement, newId,
+                newCutEdge);
         }
-
-        if (!m_gracePeriod && (newId != m_pointId)) {
-            m_pointId = newId;
-            m_gracePeriod = 5;  // NOTE: Don't put too large value here, or we
-                                // will fail to follow quick changes.
-            if (newCutEdge != InvalidID) {
-                m_cutEdge = newCutEdge;
-            }
-
-        }
-        //if (newId == m_pointId) {
-            m_point = picked.point;
-            m_pointTriId = picked.indexCollisionElement;
-        //}
     } else {
-        m_pointId = InvalidID;
+        freeTrackedPoint();
     }
-
-    m_adapter->setPointAttraction(m_pointId, m_point, m_pointTriId);
 
 
     // Add new cut point during automated cutting
@@ -459,12 +449,51 @@ void AdaptiveCuttingController<DataTypes>::addCuttingPoint()
     if (!bFirst && (m_cutEdge != InvalidID)) {
         m_cutList.push_back(m_cutEdge);
     }
-    m_cutEdge = edge;
+    setCutEdge(edge, true);
     // Fix the point so nothing happens to it before the topological change
     // occurs.
     m_adapter->setPointFixed(oldPt);
 }
 
+template<class DataTypes>
+void AdaptiveCuttingController<DataTypes>::switchPoint(const Vec3 &newPoint,
+    const Index newPointTri, const Index newId, const Index newCutEdge)
+{
+    if (newId == InvalidID) {
+        freeTrackedPoint();
+        return;
+    }
+
+    if (!m_gracePeriod && (newId != m_pointId)) {
+        m_gracePeriod = 5;  // NOTE: Don't put too large value here, or we
+                            // will fail to follow quick changes.
+        m_pointId = newId;
+        if (newCutEdge != InvalidID) {
+            setCutEdge(newCutEdge);
+        }
+    }
+    //if (newId == m_pointId) {
+    m_point = newPoint;
+    m_pointTriId = newPointTri;
+    //}
+
+    m_adapter->setPointAttraction(m_pointId, m_point, m_pointTriId);
+
+}
+
+template<class DataTypes>
+void AdaptiveCuttingController<DataTypes>::setCutEdge(const Index newCutEdge,
+    const bool bKeepProtection)
+{
+    if (!m_adapter) return;
+
+    if (!bKeepProtection) {
+        m_adapter->unprotectEdge(m_cutEdge);
+    }
+    m_adapter->protectEdge(newCutEdge);
+
+    m_cutEdge = newCutEdge;
+}
 
 } // namespace controller
 
