@@ -162,7 +162,7 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     // Decode the selected elements to use
     if (f_membraneElement.getValue().getSelectedItem() == "None") {
         csMembrane = NULL;
-        for (int t=0; t<_topology->getNbTriangles(); ++t) {
+        for (unsigned int t=0; t<ti.size(); ++t) {
             for (unsigned int i=0; i<ti[t].measure.size(); ++i) {
                 ti[t].measure[i].B.clear();
             }
@@ -186,7 +186,7 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
 
     if (f_bendingElement.getValue().getSelectedItem() == "None") {
         csBending = NULL;
-        for (int t=0; t<_topology->getNbTriangles(); ++t) {
+        for (unsigned int t=0; t<ti.size(); ++t) {
             for (unsigned int i=0; i<ti[t].measure.size(); ++i) {
                 ti[t].measure[i].Bb.clear();
             }
