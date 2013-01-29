@@ -68,6 +68,8 @@ HEADERS =   initPluginShells.h \
 #
 contains (DEFINES, SOFA_HAVE_SHELL_ADAPTIVITY) {
 
+DEFINES += SOFA_BUILD_SHELLS_ADAPTIVITY
+
 SOURCES += \
             controller/AdaptiveCuttingController.cpp \
             controller/Test2DAdapter.cpp \

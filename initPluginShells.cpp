@@ -90,13 +90,16 @@ namespace component
 		componentlist += " BezierShellInterpolation";
 		componentlist += " BezierShellMechanicalMapping";
 
-                componentlist += " AdaptiveCuttingController";
-                componentlist += " AdaptiveCuttingSetting";
 		componentlist += " JoinMeshPoints";
 		componentlist += " FindClosePoints";
 		componentlist += " MeshInterpolator";
-		componentlist += " Test2DAdapter";
 		componentlist += " TriangleSwitchExample";
+
+#ifdef SOFA_BUILD_SHELLS_ADAPTIVITY
+		componentlist += " AdaptiveCuttingController";
+		componentlist += " AdaptiveCuttingSetting";
+		componentlist += " Test2DAdapter";
+#endif
 
 		//componentlist += "";
 		return componentlist.c_str();
@@ -120,7 +123,10 @@ SOFA_LINK_CLASS(BezierShellMechanicalMapping)
 SOFA_LINK_CLASS(JoinMeshPoints)
 SOFA_LINK_CLASS(FindClosePoints)
 SOFA_LINK_CLASS(MeshInterpolator)
-SOFA_LINK_CLASS(Test2DAdapter)
 SOFA_LINK_CLASS(TriangleSwitchExample)
+
+#ifdef SOFA_BUILD_SHELLS_ADAPTIVITY
 SOFA_LINK_CLASS(AdaptiveCuttingSetting)
 SOFA_LINK_CLASS(AdaptiveCuttingController)
+SOFA_LINK_CLASS(Test2DAdapter)
+#endif
