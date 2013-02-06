@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<Node name="root" gravity="0 0 0" dt="0.01">
+    <VisualStyle displayFlags="hideCollisionModels hideForceFields hideBehaviorModels"/>
+
+    <Node name="CubeMesh">
+        <MeshVTKLoader name="meshLoader"  filename="cube2739.vtk" scale3d="0.03 0.03 0.03" translation="-0.015 -0.015 -0.015"/>
+        <TetrahedronSetTopologyContainer name="topo" src="@meshLoader" />		
+        <MechanicalObject name="CubeMO" />
+        <BoxROI name="Face" box="-0.016 0.0149 -0.016   0.016 0.016 0.016" drawBoxes="1"/>
+        <!--<BoxROI name="Face" box="0.0149 -0.016 -0.016   0.016 0.016 0.016" drawBoxes="1"/>-->
+    </Node>
+
+    <Node name="SurfMesh">
+        <TriangleSetTopologyContainer name="topo"
+            position="@/CubeMesh/Face.position"
+            edges="@/CubeMesh/Face.edgesInROI" 
+            triangles="@/CubeMesh/Face.trianglesInROI" 
+            />
+        <MechanicalObject name="SurfMO" position="@/CubeMesh/topo.position" />
+        <!--<TriangleSetTopologyContainer name="topo" src="@/CubeMesh/Face" />-->
+        <!--<Tetra2TriangleTopologicalMapping input="@/CubeMesh/topo" output="@." />-->
+    </Node>
+
+
+
+    <Node name="Cube">
+        <!--<StaticSolver applyIncrementFactor="true" verbose="0" />-->
+        <EulerImplicitSolver />
+        <!--<SparseLDLSolver/>-->
+        <CGLinearSolver iterations="200" tolerance="1e-12" threshold="1e-12" />
+
+        <MechanicalObject name="MO" src="@/CubeMesh/CubeMO" />
+        <UniformMass totalmass="0.027" />
+        <BoxConstraint box="-0.016 -0.016 -0.016 0.016 -0.014 0.016"/>		
+
+        <!--<ConstantForceField points="357 " totalForce="0 -0.1 0" />-->
+        <ConstantForceField points="346 357 385" totalForce="0 -0.1 0" />
+
+        <Node name="TetraFEM">
+            <TetrahedronSetTopologyContainer name="topoTetra"  src="@/CubeMesh/topo" />		
+            <TetrahedronFEMForceField name="FEM" youngModulus="2870" poissonRatio="0.45" method="large" drawHeterogeneousTetra="0" />
+       </Node>
+
+        <Node name="TriFEM">
+            <TriangleSetTopologyContainer name="topoTri" src="@/SurfMesh/topo" />
+            <TriangularFEMForceField name="FEM" youngModulus="2870" poissonRatio="0.45" method="large" />
+
+            <Node>
+                <OglModel name="Visual" color="green"/>
+                <IdentityMapping input="@../.." output="@Visual"/>
+            </Node>
+
+
+        </Node>
+
+    </Node>
+
+</Node>

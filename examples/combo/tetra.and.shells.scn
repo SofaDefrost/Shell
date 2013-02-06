@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<Node name="root" gravity="0 30 0" dt="0.05">
+	<VisualStyle displayFlags="hideCollisionModels showForceFields showBehaviorModels"/>
+<!-- 	<EulerImplicitSolver /> -->
+	<Node name="Cube">
+ 		<!--<StaticSolver applyIncrementFactor="true" verbose="0" />-->
+                <EulerImplicitSolver />
+                <SparseLDLSolver/>
+                <!--<CGLinearSolver />-->
+                <MeshVTKLoader name="meshLoader"  filename="cube2739.vtk" scale3d="0.03 0.03 0.03" translation="-0.015 -0.015 -0.015"/>
+		<!--<MeshVTKLoader name="meshLoader"  filename="cube144.vtk" scale3d="0.03 0.03 0.03" translation="-0.015 -0.015 -0.015"/>-->
+		<TetrahedronSetTopologyContainer name="topo"  position="@meshLoader.position"  edges="@meshLoader.edges"  triangles="@meshLoader.triangles"  tetrahedra="@meshLoader.tetras" />		
+		<MechanicalObject name="BlockMO" />
+		<UniformMass totalmass="0.027" />
+		<BoxConstraint box="-0.016 -0.016 -0.016 0.016 -0.014 0.016"/>		
+		<BoxROI name="TopFace" box="-0.016 0.014 -0.016 0.016 0.016 0.016" drawBoxes="1"/>
+		<TetrahedronFEMForceField name="FEM" youngModulus="2870" poissonRatio="0.45" method="large" drawHeterogeneousTetra="0" />
+
+		<!--<RestShapeSpringsForceField name="Spring" stiffness="1e3" angularStiffness="0" points="@TopFace.indices"  external_rest_shape="../TopNodesDisp/BlockMODisp" external_points="@TopFace.indices"/>-->
+
+                <MappedBeamToTetraForceField mappedFEM="Shells/FEM/FF" mappedMechObject="Shells/ShellMO" mapping="Shells/ShellTetraMapping" printLog="1"/>
+
+                <Node name="Shells">
+
+                    <Node name="grid">
+                        <RegularGrid name="gridTopo" min="-0.015 -0.015 0.015" max="0.015 0.015 0.015" nx="5" ny="5" nz="1" />
+                    </Node>
+
+                    <TriangleSetTopologyContainer name="trianglesTopo"/>
+                    <TriangleSetTopologyModifier name="Modifier" />
+                    <Quad2TriangleTopologicalMapping input="@grid/gridTopo" output="@trianglesTopo" />
+
+                    <MechanicalObject name="ShellMO" template="Rigid" />
+                    <UniformMass mass="0.001 0.001 [0.0001 0 0 0 0.0001 0 0 0 0.0001]" printLog="false" totalmass="0.001" />
+
+                    <BarycentricMapping name="ShellTetraMapping" isMechanical="true" object1="../BlockMO" object2="ShellMO"/>
+
+                    <Node name="bezierNodes">
+                        <PointSetTopologyContainer template="Vec3d" name="BezierPoints" />
+                        <Mesh2PointTopologicalMapping input="@../trianglesTopo" output="@BezierPoints"
+                            pointBaryCoords="0 0 0"
+                            edgeBaryCoords="0.333 0.6666 0    0.6666 0.3333 0"
+                            triangleBaryCoords="0.3333 0.3333 0" />
+                        <BezierShellInterpolation template="Rigid" name="bsInterp" />
+                    </Node>
+
+                    <Node name="FEM">
+                        <BezierShellForceField name="FF"
+                            youngModulus="2870" poissonRatio="0.45" thickness="0.001"
+                            bsInterpolation="@../bezierNodes/bsInterp"
+                            drawFrame="false" drawNodes="false" drawPointSize="2" />
+                        <Node>
+                            <OglModel name="Visual" color="green"/>
+                            <IdentityMapping input="@.." output="@Visual"/>
+                        </Node>
+                    </Node>
+                </Node>
+
+
+            </Node>
+
+	<Node name="TopNodesDisp">
+		<MeshVTKLoader name="meshLoader"  filename="cube2739.vtk" scale3d="0.03 0.03 0.03" translation="-0.015 -0.015 -0.015"/>
+		<TetrahedronSetTopologyContainer name="topo"  position="@meshLoader.position"  edges="@meshLoader.edges"  triangles="@meshLoader.triangles"  tetrahedra="@meshLoader.tetras" />	
+		<MechanicalObject name="BlockMODisp" translation="0 0.0040 0" />
+	</Node>
+</Node>
