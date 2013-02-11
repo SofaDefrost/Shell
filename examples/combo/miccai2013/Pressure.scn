@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<Node name="root" dt="0.01" gravity="0 0 0">
+	<VisualStyle displayFlags="hideVisual showBehaviorModels showForceFields showCollisionModels" />
+
+        <FreeMotionAnimationLoop />
+	<GenericConstraintSolver tolerance="1e-8" printLog="false"/>
+        <!--<ComplianceVisualModel />-->
+	<CollisionPipeline depth="6" verbose="0" draw="0"/>
+	<BruteForceDetection name="N2" />
+        <!--<MinProximityIntersection name="proximity" alarmDistance="0.1" contactDistance="0.01" />-->
+        <LocalMinDistance name="Proximity"  alarmDistance="0.1" contactDistance="0.01"  angleCone="0.0" />
+	<DefaultContactManager name="Response" response="FrictionContact" />
+        <!--<RuleBasedContactManager name="Response" response="FrictionContact" rules="10 * NeedleContact" />-->
+
+        <Node name="VolMesh">
+            <!--<MeshVTKLoader name="loader"  filename="cube100k.vtk"-->
+                <MeshVTKLoader name="loader"  filename="../cube2739.vtk"
+                rotation="0 0 0" scale3d="1 1 1" translation="0 0.01 0" />
+            <TetrahedronSetTopologyContainer name="topo" src="@loader" />
+            <MechanicalObject name="VolMO" />
+        </Node>
+
+        <Node name="SurfMesh">
+            <!--<MeshObjLoader name="loader" filename="cube100k.obj"-->
+            <MeshObjLoader name="loader" filename="../cube2739.obj"
+                rotation="0 0 0" scale3d="1 1 1" translation="0 0.01 0" />
+            <TriangleSetTopologyContainer name="topo" src="@loader" />
+            <MechanicalObject name="SurfMO" />
+        </Node>
+
+        <Node name="Tube">
+            <EulerImplicit />
+            <SparseLDLSolver/> 
+
+            <Mesh name="topo"
+                points="
+                0.3 1.1 0.3
+                0.7 1.1 0.3
+                0.7 1.1 0.7
+                0.3 1.1 0.7
+                0.3 3.0 0.3
+                0.7 3.0 0.3
+                0.7 3.0 0.7
+                0.3 3.0 0.7
+                "
+                lines="
+                0 1  1 2  2 3  3 0
+                4 5  5 6  6 7  7 4
+                0 4  1 5  2 6  3 7
+                "
+
+                quads="0 1 5 4"
+                />
+
+            <MechanicalObject template="Vec3d" name="weight" />
+
+            <FixedConstraint indices="0-7" />
+
+            <!--<RegularGridSpringForceField stiffness="1e12" />-->
+            <!--<HexahedralFEMForceField youngModulus="1e12" poissonRatio="0.5" />-->
+            <!--<TetrahedronFEMForceField name="FEM"-->
+                <!--youngModulus="2870" poissonRatio="0.45"-->
+                <!--computeGlobalMatrix="false" method="large"/>-->
+            <!--<PlaneForceField normal="0 1 0" d="0" stiffness="1e12" draw="true" />-->
+
+            <LinearSolverConstraintCorrection />
+
+            <UniformMass mass="5"/>
+
+            <Node name="Collision">
+                <TriangleSetTopologyContainer name="topo" src="@../topo" />
+                <TriangleSetTopologyModifier />
+
+                <MechanicalObject template="Vec3d" />
+                <IdentityMapping input="@.." output="@."/>
+ 
+                <Point name="weight_collis_point" group="10" />
+                <Line name="weight_collis_line" group="10"/>
+                <!--<Triangle name="weight_collis_line" bothSide="true" group="10"/>-->
+            </Node>
+
+	</Node>
+
+        <Node name="Cube">
+                <EulerImplicit />
+                <SparseLDLSolver/> 
+
+                <Mesh src="@/VolMesh/loader" />
+                <MechanicalObject src="@/VolMesh/loader"/>
+
+                <!--<BoxROI name="roi" box="0.3 0.99 0.3  0.7 1.01 0.7" drawBoxes="true" />-->
+
+                <TetrahedronFEMForceField name="FEM"
+                    youngModulus="2870" poissonRatio="0.45"
+                    computeGlobalMatrix="false" method="large"/>
+                <!-- Parameters:
+                     shear modulus μ = G = E/(2*(1+ν))
+                     bulk modulus  κ = K = E/(3*(1-2*ν))
+                <MJEDTetrahedralForceField name="FEM" materialName="NeoHookean"
+                    ParameterSet="989.6552 9566.667" considerInversion="true" printLog="true" />
+                -->
+
+                <SurfacePressureForceField name="SP"
+                    pressure="-5000" mainDirection="0 1 0"
+                    min="0.3 0.90 0.3"  max="0.7 4.01 0.7"
+                    />
+
+                <UniformMass mass="0.0025"/>
+
+                <LinearSolverConstraintCorrection/>
+
+                <Node name="CubeCollision">
+                    <Mesh src="@/SurfMesh/topo" />
+                    <MechanicalObject src="@/SurfMesh/SurfMO" />
+                    <Triangle name="cube_collis_triangle" computeNormals="false" bothSide="true" group="11" />
+                    <Line name="cube_collis_line" group="11" />
+                    <Point name="cube_collis_point" group="11" />
+                    <BarycentricMapping input="@.." output="@." />
+                </Node>
+
+        </Node>
+</Node>
