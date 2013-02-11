@@ -24,7 +24,6 @@
 	</Node>
 
         <Node name="VolMesh">
-            <!--<MeshVTKLoader name="loader"  filename="cubeMembrane1m.vtk"-->
             <MeshVTKLoader name="loader"  filename="cubeMembrane100k.vtk"
                 rotation="0 -90 0" scale3d="0.03 0.03 0.03" translation="0.14 -0.015 -0.015" />
             <TetrahedronSetTopologyContainer name="topo" src="@loader" />
@@ -32,7 +31,6 @@
         </Node>
 
         <Node name="SurfMesh">
-            <!--<MeshObjLoader name="loader" filename="cubeMembrane1m.obj"-->
             <MeshObjLoader name="loader" filename="cubeMembrane100k.obj"
                 rotation="0 -90 0" scale3d="0.03 0.03 0.03" translation="0.14 -0.015 -0.015" />
             <TriangleSetTopologyContainer name="topo" src="@loader" />
