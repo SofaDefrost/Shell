@@ -1,0 +1,86 @@
+% http://www.miccai2013.org/submission_guideline.html
+\documentclass{llncs}
+
+\usepackage{makeidx}  % allows for indexgeneration
+
+\begin{document}
+%
+%\frontmatter          % for the preliminaries
+%
+\mainmatter              % start of the contributions
+%
+\title{TODO: Title} % TODO
+%
+\titlerunning{TODO: Title}  % abbreviated title (for running head)
+%                                     also used for the TOC unless
+%                                     \toctitle is used
+%
+\author{Anonymous}
+%\author{%
+%Tom\'a\v{s} Golembiovsk\'y\inst{1,2} \and%
+%Igor Peterl\'ik\inst{3} \and%
+%%Christian Duriez\inst{2} \and%
+%Stephan\'e Cotin\inst{2,3}%
+%}
+%
+%\authorrunning{Tom\'a\vs Golembiovsk\'y et al.} % abbreviated author list (for running head)
+%
+%\institute{%
+%Faculty of Informatics, Masaryk University, Brno, Czech Republic\and%
+%INRIA Lille -- Nord, France\and%
+%IHU, Strasbourg, France%
+%}
+%
+\maketitle
+
+% TODO
+\begin{abstract}
+TODO: Abstract
+\keywords{liver, Glisson's capsule, deformation modeling, membrane}
+\end{abstract}
+
+%\section{Introduction}
+\section{...}
+
+TODO
+
+The Glisson's capsule \cite{Umale2013} has in order of three higher
+stiffness than the parenchyma. As such it plays an important role in the
+deformation of the liver \cite{Ahn2010,Hollenstein2006}. Evaluation of the
+liver as a homogeneous material can lead to overestimation of the
+mechanical properties up to the factor of 3 \cite{Hollenstein2006}.
+
+% -- TODO: properties of the capsule
+
+We propose to further extend the tetrahedral based model of the parenchyma
+with vascularized model \cite{Peterlik2012} by the layer of membrane elements.
+(Modelling the capsule with tetrahedral elements is unfeasible -- many
+elements or largely deformed elements.)
+
+Based on the small thickness it seems reasonable to assume that no bending
+strains limmit the deformation of the capsule. Therefore modelling the
+capsule with membrane element only should be adequate.
+
+% -- TODO: what is membrane element
+% -- 
+
+
+
+\section{Experiments/Evaluation}
+
+\section{Results}
+
+\section{Conclusion}
+
+
+
+%
+% ---- Bibliography ----
+%
+
+\bibliographystyle{splncs03}
+\bibliography{bibdata}
+
+
+\end{document}
+% vim:set et sw=2 tw=75 fdm=marker fdl=1 fdc=4 isk+=_,-:
