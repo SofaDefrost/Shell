@@ -373,13 +373,6 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
 }
 
 
-template<class DataTypes>
-void TriangularShellForceField<DataTypes>::addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/)
-{
-
-}
-
-
 // --------------------------------------------------------------------------------------
 // --- Store the initial position of the nodes
 // --------------------------------------------------------------------------------------
@@ -1162,16 +1155,16 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAndesOpt(Stiffn
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
-    // Weights and abscissa for 4-point Gaussian quadrature of a triangle
-    // (source: can't remember)
-    Vec<4, Real> gx(0.211324865, 0.211324865, 0.788675134, 0.788675134);
-    Vec<4, Real> gy(0.166666667, 0.622008467, 0.044658198, 0.166666667);
-    Vec<4, Real> gw(0.197168783, 0.197168783, 0.052831216, 0.052831216);
+    // Weights and abscissa for 6-point Gaussian quadrature of a triangle
+    // (source: http://www.electromagnetics.biz/integration.htm)
+    Vec<6, Real> gx(0.8168476,  0.09157621, 0.09157621, 0.1081030, 0.4459485, 0.4459485);
+    Vec<6, Real> gy(0.09157621, 0.8168476,  0.09157621, 0.4459485, 0.1081030, 0.4459485);
+    Vec<6, Real> gw(0.05497587, 0.05497587, 0.05497587, 0.1116908, 0.1116908, 0.1116908);
 
     // Integrage over triangle area
     K.clear();
     //std::cout << "B=\n";
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<6; i++) {
         StrainDisplacement B;
         Mat<9,3, Real> Bt;
         dktSD(B, tinfo, gx[i], gy[i]);  // Compute strain-displacement matrix
