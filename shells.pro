@@ -23,6 +23,7 @@ SOURCES =   initPluginShells.cpp \
             engine/JoinMeshPoints.cpp \
             engine/FindClosePoints.cpp \
             forcefield/BezierTriangularBendingFEMForceField.cpp \
+            forcefield/CstFEMForceField.cpp \
             forcefield/TriangularBendingFEMForceField.cpp \
             forcefield/TriangularShellForceField.cpp \
             mapping/BendingPlateMechanicalMapping.cpp \
@@ -45,6 +46,8 @@ HEADERS =   initPluginShells.h \
             engine/FindClosePoints.inl \
             forcefield/BezierTriangularBendingFEMForceField.h \
             forcefield/BezierTriangularBendingFEMForceField.inl \
+            forcefield/CstFEMForceField.h \
+            forcefield/CstFEMForceField.inl \
             forcefield/TriangularBendingFEMForceField.h \
             forcefield/TriangularBendingFEMForceField.inl \
             forcefield/TriangularShellForceField.h \

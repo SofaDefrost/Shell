@@ -85,6 +85,7 @@ namespace component
 		componentlist += " BezierTriangularBendingFEMForceField";
 		componentlist += " BezierTriangleMechanicalMapping";
 		componentlist += " TriangularShellForceField";
+		componentlist += " CstFEMForceField";
 
 		componentlist += " BezierShellForceField";
 		componentlist += " BezierShellInterpolation";
@@ -117,9 +118,12 @@ SOFA_LINK_CLASS(BendingPlateMechanicalMapping)
 SOFA_LINK_CLASS(BezierTriangularBendingFEMForceField)
 SOFA_LINK_CLASS(BezierTriangleMechanicalMapping)
 SOFA_LINK_CLASS(TriangularShellForceField)
+SOFA_LINK_CLASS(CstFEMForceField)
+
 SOFA_LINK_CLASS(BezierShellForceField)
 SOFA_LINK_CLASS(BezierShellInterpolation)
 SOFA_LINK_CLASS(BezierShellMechanicalMapping)
+
 SOFA_LINK_CLASS(JoinMeshPoints)
 SOFA_LINK_CLASS(FindClosePoints)
 SOFA_LINK_CLASS(MeshInterpolator)
