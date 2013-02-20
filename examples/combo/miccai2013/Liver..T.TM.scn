@@ -1,0 +1,110 @@
+﻿<?xml version="1.0"?>
+<Node name="root" dt="0.005" gravity="0 -9.810 0" >
+    <VisualStyle displayFlags="hideCollisionModels hideForceFields hideBehaviorModels showVisualModels" />
+
+    <Node name="LiverMesh">
+        <MeshVTKLoader name="vloader" filename="data/liver-volume-500-ordered.vtu" flipNormals="false" createSubelements="true" />
+        <MeshObjLoader name="loader" filename="data/liverM.obj" flipNormals="false" />
+        <TetrahedronSetTopologyContainer name="Container" src="@vloader"/>
+        <TetrahedronSetTopologyModifier name="Modifier"/>
+        <TetrahedronSetTopologyAlgorithms name="TopoAlgo"/>
+        <TetrahedronSetGeometryAlgorithms name="GeomAlgo"/>
+        <!--<MechanicalObject name="MO" />-->
+    </Node>
+
+    <Node name="LiverSurfMesh">
+        <TriangleSetTopologyContainer name="topo" />
+        <TriangleSetTopologyModifier name="Modifier" />
+        <!--<MechanicalObject name="SurfMO" position="@/LiverMesh/Container.position" />-->
+        <Tetra2TriangleTopologicalMapping input="@/LiverMesh/Container" output="@." />
+    </Node>
+
+    <Node name="Liver1" activated="true">
+        <!--<EulerImplicitSolver/>-->
+        <StaticSolver applyIncrementFactor="true" />
+        <SparseLDLSolver name="precond"/>
+        <!--<CGLinearSolver iterations="30" tolerance="1e-12" threshold="1e-12"/>-->
+
+        <TetrahedronSetTopologyContainer name="Container" src="@/LiverMesh/vloader"/>
+        <TetrahedronSetTopologyModifier name="Modifier"/>
+        <TetrahedronSetTopologyAlgorithms name="TopoAlgo"/>
+        <TetrahedronSetGeometryAlgorithms name="GeomAlgo"/>
+
+        <MechanicalObject template="Vec3d" name="LiverMO" scale3d="0.001 0.001 0.001" translation="0.00 0.00 0.00" />
+        <UniformMass totalmass="1.5" />		
+
+        <!--<MJEDTetrahedralForceField ParameterSet="5172.41379 46551.724" materialName="StVenantKirchhoff"/>-->
+        <TetrahedronFEMForceField name="FEM" youngModulus="1.98e3" poissonRatio="0.45" method="large" listening="1" />
+
+        <BoxROI name="box" box="0.20 0.24 0.36 0.25 0.28 0.42" drawBoxes="1"/>
+        <FixedConstraint  indices="@box.indices"/>
+
+        <VTKExporter filename="result_tetra.vtk" XMLformat="false" listening="true" edges="0" triangles="0" quads="0" tetras="1" exportAtEnd="true"/>
+
+        <Node name="Visual1">
+            <VisualStyle displayFlags="hideWireframe" />
+            <Mesh src="@/LiverMesh/loader" name="surface" />
+            <OglModel name="LiverVisu" fileMesh="data/liverM.obj" color="0 1 0 1" />
+            <BarycentricMapping input="@../LiverMO" output="@LiverVisu"/>
+        </Node>
+
+        <!--<Node name="Visual1W">-->
+            <!--<VisualStyle displayFlags="showWireframe" />-->
+            <!--<Mesh src="@/LiverMesh/loader" name="surface" />-->
+            <!--<OglModel name="LiverVisu" fileMesh="data/liverM.obj" color="0 0.5 0 1" cullFace="1" depthTest="false"/>-->
+            <!--<BarycentricMapping input="@../LiverMO" output="@LiverVisu"/>-->
+        <!--</Node>-->
+
+    </Node>
+
+    <Node name="Liver2" activated="true">
+        <!--<EulerImplicitSolver/>-->
+        <StaticSolver applyIncrementFactor="true" />
+        <SparseLDLSolver />
+        <!--<CGLinearSolver iterations="200" tolerance="1e-18" threshold="1e-18"/>-->
+
+        <TetrahedronSetTopologyContainer name="Container" src="@/LiverMesh/vloader"/>
+        <TetrahedronSetTopologyModifier name="Modifier"/>
+        <TetrahedronSetTopologyAlgorithms name="TopoAlgo"/>
+        <TetrahedronSetGeometryAlgorithms name="GeomAlgo"/>
+
+        <MechanicalObject template="Vec3d" name="LiverMO" src="@/LiverMesh/vloader" scale3d="0.001 0.001 0.001" />
+        <UniformMass totalmass="1.5" />	
+
+        <Node name="Parenchyma">
+
+            <!--<MJEDTetrahedralForceField ParameterSet="5172.41379 46551.724" materialName="StVenantKirchhoff"/>-->
+            <TetrahedronFEMForceField name="FEM" youngModulus="1.98e3" poissonRatio="0.45" method="large" listening="1" />
+
+            <VTKExporter filename="result_tetra.tri.vtk" XMLformat="false" listening="true" edges="0" triangles="0" quads="0" tetras="1" exportAtEnd="true"/>   	
+
+            <Node name="Visual2">
+                <VisualStyle displayFlags="hideWireframe" />
+                <Mesh src="@/LiverMesh/loader" name="surface" />
+                <OglModel name="LiverVisu" fileMesh="data/liverM.obj" color="0 0 1 0.5" alphaBlend="true" depthTest="false" />
+                <BarycentricMapping input="@../../LiverMO" output="@LiverVisu"/>
+            </Node>
+
+            <!--<Node name="Visual2W">-->
+                <!--<VisualStyle displayFlags="showWireframe" />-->
+                <!--<Mesh src="@/LiverMesh/loader" name="surface" />-->
+                <!--<OglModel name="LiverVisu" fileMesh="data/liverM.obj" color="0 0 0.5 0.5" alphaBlend="true" cullFace="1" depthTest="false" />-->
+                <!--<BarycentricMapping input="@../../LiverMO" output="@LiverVisu"/>-->
+            <!--</Node>-->
+
+        </Node>
+
+        <Node name="Capsule">
+            <TriangleSetTopologyContainer name="topoTri" src="@/LiverSurfMesh/topo" />
+            <CstFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="20e-6" corotated="true" />
+        </Node>
+
+        <Node name="constraint">
+            <VisualStyle displayFlags="showBehaviorModels" />
+            <BoxROI name="box" box="0.20 0.24 0.36 0.25 0.28 0.42" drawBoxes="1"/>
+            <FixedConstraint  indices="@box.indices"/>
+        </Node>
+
+    </Node>
+
+</Node>
