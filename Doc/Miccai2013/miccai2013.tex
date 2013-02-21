@@ -3,6 +3,14 @@
 
 \usepackage{makeidx}  % allows for indexgeneration
 
+%%% Comments
+\usepackage{color}
+\newcommand{\TG}[1]{{\color{blue}\textbf{TG: #1}}}
+%%%
+
+\newcommand{\Vec}[1]{\mathbf{#1}}
+\newcommand{\Mat}[1]{\mathbf{#1}}
+
 \begin{document}
 %
 %\frontmatter          % for the preliminaries
@@ -44,7 +52,20 @@ TODO: Abstract
 
 TODO
 
-The Glisson's capsule \cite{Umale2013} has in order of three higher
+% -- TODO why model liver? what's interesting about it?
+% -- liver covered by capsule, thin membrane
+
+
+the usual approach is to model the organ as homogeneous material,
+as such complex non-linear material descriptions are inevitably necessary
+to describe the properties of non-homogeneous tissue.
+
+modeling non-homogenous volumetric object by a dense mesh is complicated by
+large number of elements. we propose a composite model and show that it
+leads to adequate results.
+
+
+The Glisson's capsule has in order of three higher
 stiffness than the parenchyma. As such it plays an important role in the
 deformation of the liver \cite{Ahn2010,Hollenstein2006}. Evaluation of the
 liver as a homogeneous material can lead to overestimation of the
@@ -61,12 +82,154 @@ Based on the small thickness it seems reasonable to assume that no bending
 strains limmit the deformation of the capsule. Therefore modelling the
 capsule with membrane element only should be adequate.
 
-% -- TODO: what is membrane element
-% -- 
+GOAL: show that we are able to simulate the behaviour of non-homogeneous
+tissue covered by capsule (liver/kidney) by combined model.
 
+GOAL2: show that combination of linear tetrahedra and linear membrane is
+easy.
+
+% NOTE: the assumption is that we cannot estimate elastic modulus as a
+% combination of the two moduli (for parenchyma and capsule) because it will
+% work only for certain displacement. Is this valid?
+% -- based on the text of Hollenstein2006 it seems like it
+
+
+\section{Model}
+
+\subsection{parenchyma} %{{{
+
+
+
+\TG{TODO: write something like this} % (src: Peterlik2012)
+\begin{quote}
+While most studies concerning the material properties of liver parenchyma
+agree on a viscoelastic behaviour (see [5] or [7] for instance), we employ
+a simpler non-linear elastic model. This is essentially motivated by the
+fact that we are not focusing on the transient part of the deformation but
+rather the static equilibrium under some specific loading conditions.
+\end{quote}
+
+
+We model the parenchyma using corotational finite elmets. The corotational
+formulation allows us to deal with geometrical non-linearities but still
+rely on linear stress-strain relationship. Thus rotations and large
+deformations are possible. In the corotational formulation the deformation
+of each element is expressed in the local frame of reference. There are
+several ways of computing the corotational frame for elements, we rely on
+the geometrical method proposed in \cite{Nesme2005}.
+% NOTE: This is very simplified and could be extended.
+The stiffness matrix $\Mat{K}$ can be expressed in terms of the deformation
+$u$ and the force as $\Vec{f} = \Mat{K}(\Vec{u}) \Vec{u}$. The resulting
+system of linear equations is then solved by direct LDL solver.
+
+%}}}
+
+\subsection{Capsule} %{{{
+
+The thickness of the Glisson's capsule is relatively small (Umale et al.
+\cite{Umale2011} reported for porcine liver values in range of 10-20
+$\mu$m). This makes it very difficult to model with volumetric mesh. Such
+mesh would inevitably contain large number of elements or very irregular
+elements. Instead modeling the capsule with two-dimensional elements seems
+as a natural choice. Mechanics provides a FE tool in the form of membranes
+and shells. Based on the small thickness (compared to the area) we also
+assume negligible bending forces and propose a model based on membrane
+elements. 
+
+To maintain simplicity of the composite model we choos simple triangular
+elements with constant strain.
+
+\TG{add a ref. or dive into the definition?}
+
+We again use linear elastic model and employ the  corotational formulation
+for the triangular elements.
+
+
+
+%}}}
+
+\subsection{Coupling Between Capsule and Parenchyma} %{{{
+
+High cohesion between capsule and parenchyma was reported. Based on this
+property we may assume no relative motion of the capsule to the parenchyma.
+
+While in general we could use arbitrary surface mesh for a capsule we use
+the fact that the parenchyma is modelled by tetrahedral elements which have
+triangular faces. Because the boundary of the volumetric mesh is already
+triangulated, we only extract the boundary triangles which we use for the
+model of capsule.
+
+Using directly the boundary of the tetrahedral mesh does not only solve the
+problem of obtaining the triangular mesh, but has one more advantage. Nodes
+of the triangular mesh overlap with nodes of the tetrahedral mesh and we do
+not have to project nodes of tiangular mesh onto the tetrahedra. More over,
+the stiffness matrices for capsule and parenchyma are easily assembled
+together and solved as one system.
+
+\TG{Is assembling process too obvious?}
+
+Withouth the loss of generality we can assume the tetrahedron consists of
+nodes $p_1, p_2, p_3$ and $p_4$, the boundary triangle has nodes $p_1, p_2$
+and $p_3$. We can reorder the degrees of freedom so that the stiffness
+matrix $\Mat{K}^t$ for the tetrahedron can be written as:
+
+\begin{equation}
+  \Mat{K}^t = \left[\begin{array}{c|c}
+      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
+      \hline
+      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
+  \end{array}\right]
+\end{equation}
+
+Then the assembled stiffness matrix for the element is:
+
+\begin{equation}
+  \Mat{K} = \left[\begin{array}{c|c}
+      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
+      \hline
+      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
+  \end{array}\right]
+  +
+  \left[\begin{array}{c|c}
+      \Mat{K}^m & 0 \\
+      \hline
+      0 & 0 \\
+  \end{array}\right]
+\end{equation}
+
+Where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
+
+%}}}
+
+\subsection{Blood Vessels} %{{{
+
+We also combined our composite model with vascularization method proposed
+by Peterlik et al. \cite{Peterlik2012}. The method is based on linear beams
+with local frames of reference (in a many aspects similar to the
+corotational formulation). As such the model also handles geometric
+non-linearities in the deformation. The proposed model assumes no relative
+motion of vessels to the parenchyma. Segmented vascular network is
+discretized into the set of linear elements that are then projected into
+the tetrahedral mesh of the parenchyma. During the simulation forces and
+torques resulting from the deformations of vessels by parenchyma are
+computed and propagated back onto the tetrahedral mesh.
+
+%}}}
 
 
 \section{Experiments/Evaluation}
+
+setup:
+
+Test 1) Global deformation of liver under gravity
+  * show that there is a difference between simple homogeneous material
+    and material with capsule
+  * include blood vessels
+
+Test 2) Indentation test
+  * perform indentation and analyze the profile
+  * show how stiffer membrane affect the result
+
 
 \section{Results}
 
@@ -83,4 +246,4 @@ capsule with membrane element only should be adequate.
 
 
 \end{document}
-% vim:set et sw=2 tw=75 fdm=marker fdl=1 fdc=4 isk+=_,-:
+% vim:set et sw=2 tw=75 fdm=marker fdl=3 fdc=4 isk+=_,-:
