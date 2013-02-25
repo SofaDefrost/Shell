@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+
+<!--
+     Simulation of aspiration test (Nava/Hollenstein)
+
+     Tube:      radius 1 cm
+     Pressure:  300 mbar = 30 kPa
+                ... this seems too much, we simulate 2 kPa with comparable results
+     Liver:     3 cm x 3 cm  x 3 cm cube
+
+-->
+
+<Node name="root" dt="0.01" gravity="0 0 0">
+	<VisualStyle displayFlags="showVisual showBehaviorModels showForceFields showCollisionModels" />
+
+        <FreeMotionAnimationLoop />
+	<GenericConstraintSolver tolerance="1e-8" printLog="false"/>
+        <!--<ComplianceVisualModel />-->
+	<CollisionPipeline depth="6" verbose="0" draw="0"/>
+	<BruteForceDetection name="N2" />
+        <!--<MinProximityIntersection name="proximity" alarmDistance="0.1" contactDistance="0.01" />-->
+        <LocalMinDistance name="Proximity"  alarmDistance="0.01" contactDistance="0.0005"  angleCone="0.0" />
+	<DefaultContactManager name="Response" response="FrictionContact" />
+        <!--<RuleBasedContactManager name="Response" response="FrictionContact" rules="10 * NeedleContact" />-->
+
+        <Node name="VolMesh">
+            <MeshVTKLoader name="loader"  filename="../cube2739.vtk"
+                 scale3d="0.03 0.03 0.03" translation="-0.015 0 -0.015" />
+            <TetrahedronSetTopologyContainer name="topo" src="@loader" />
+            <MechanicalObject name="VolMO" />
+            <Node name="Surface">
+                <TriangleSetTopologyContainer name="triangles" />
+                <TriangleSetTopologyModifier />
+                <Tetra2TriangleTopologicalMapping input="@../topo" output="@." />
+            </Node>
+
+        </Node>
+
+        <Node name="SurfMesh">
+            <MeshObjLoader name="loader" filename="../cube2739.obj"
+                scale3d="0.03 0.03 0.03" translation="-0.015 0 -0.015" />
+            <TriangleSetTopologyContainer name="topo" src="@loader" />
+            <MechanicalObject name="SurfMO" />
+        </Node>
+
+        <Node name="TubeMesh">
+            <MeshObjLoader name="loader" filename="tube.obj"
+                scale3d="0.02 0.02 0.02" translation="0 0.041 0" />
+            <TriangleSetTopologyContainer name="topo" src="@loader" />
+            <MechanicalObject name="TubeMO" />
+        </Node>
+
+        <Node name="Tube">
+            <EulerImplicit />
+            <SparseLDLSolver/> 
+
+            <TriangleSetTopologyContainer name="topo" src="@/TubeMesh/topo" />
+
+            <MechanicalObject template="Vec3d" />
+
+            <FixedConstraint indices="0-63" />
+
+            <LinearSolverConstraintCorrection />
+
+            <UniformMass mass="1"/>
+
+            <Node name="Collision">
+                <TriangleSetTopologyContainer name="topo" src="@../topo" />
+                <TriangleSetTopologyModifier />
+
+                <MechanicalObject template="Vec3d" />
+                <IdentityMapping input="@.." output="@."/>
+ 
+                <!--<Point name="tube_collis_point" group="10" />-->
+                <Line name="tube_collis_line" group="10"/>
+                <!--<Triangle name="tube_collis_line" bothSide="true" group="10"/>-->
+            </Node>
+
+	</Node>
+
+        <Node name="Cube">
+                <EulerImplicit />
+                <SparseLDLSolver/> 
+               
+
+                <Mesh src="@/VolMesh/loader" />
+                <MechanicalObject name="MO" src="@/VolMesh/loader"/>
+                <BoxROI name="top" box="-0.016 0.0299 -0.016  0.016 0.032 0.016" drawBoxes="true" />
+                <BoxROI name="bottom" box="-0.016 -0.0001 -0.016  0.016 0.0001 0.016" drawBoxes="true" />-->
+
+                <UniformMass mass="0.001"/>
+
+                <VTKExporter filename="result_aspiration.vtk" XMLformat="false" listening="true"
+                    edges="0" triangles="0" quads="0" tetras="1"
+                    exportAtEnd="true" />
+
+                <Node name="Tetra">
+                    <TetrahedronFEMForceField name="FEM"
+                        youngModulus="1.98e3" poissonRatio="0.45"
+                        computeGlobalMatrix="false" method="large"/>
+                </Node>
+
+                <Node name="Tri">
+                    <TriangleSetTopologyContainer name="topoTri" triangles="@../top.trianglesInROI" />
+                    <CstFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="20e-6" corotated="true" />
+                    <SurfacePressureForceField name="SP"
+                        pressure="-2000" mainDirection="0 1 0"
+                        min="-0.007071 0.029 -0.007071"  max="0.007071 0.05 0.007071" />
+                    <Node>
+                        <OglModel color="green" />
+                        <IdentityMapping input="@../.." output="@." />
+                    </Node>
+                </Node>
+
+                <!--<FixedConstraint indices="@bottom.indices" />-->
+
+                <LinearSolverConstraintCorrection/>
+
+                <Node name="CubeCollision">
+                    <Mesh src="@/SurfMesh/topo" />
+                    <MechanicalObject src="@/SurfMesh/SurfMO" />
+                    <!--<Point name="cube_collis_point" group="11" />-->
+                    <Line name="cube_collis_line" group="11" />
+                    <!--<Triangle name="cube_collis_triangle" computeNormals="false" bothSide="true" group="11" />-->
+                    <BarycentricMapping input="@.." output="@." />
+                </Node>
+
+        </Node>
+</Node>
