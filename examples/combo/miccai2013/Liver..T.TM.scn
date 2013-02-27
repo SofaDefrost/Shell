@@ -22,8 +22,7 @@
     <Node name="Liver1" activated="true">
         <!--<EulerImplicitSolver/>-->
         <StaticSolver applyIncrementFactor="true" />
-        <SparseTAUCSSolver name="precond"/>
-        <!--<SparseLDLSolver name="precond"/>-->
+        <SparseLDLSolver name="precond"/>
         <!--<CGLinearSolver iterations="30" tolerance="1e-12" threshold="1e-12"/>-->
 
         <TetrahedronSetTopologyContainer name="Container" src="@/LiverMesh/vloader"/>
@@ -61,8 +60,7 @@
     <Node name="Liver2" activated="true">
         <!--<EulerImplicitSolver/>-->
         <StaticSolver applyIncrementFactor="true" />
-        <SparseTAUCSSolver name="precond"/>
-        <!--<SparseLDLSolver />-->
+        <SparseLDLSolver />
         <!--<CGLinearSolver iterations="200" tolerance="1e-18" threshold="1e-18"/>-->
 
         <TetrahedronSetTopologyContainer name="Container" src="@/LiverMesh/vloader"/>
