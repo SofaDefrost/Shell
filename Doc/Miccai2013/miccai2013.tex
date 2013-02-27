@@ -1,7 +1,8 @@
 % http://www.miccai2013.org/submission_guideline.html
 \documentclass{llncs}
 
-\usepackage{makeidx}  % allows for indexgeneration
+\usepackage{makeidx}
+\usepackage[pdftex]{graphicx}
 
 %%% Comments
 \usepackage{color}
@@ -11,13 +12,23 @@
 \newcommand{\Vec}[1]{\mathbf{#1}}
 \newcommand{\Mat}[1]{\mathbf{#1}}
 
+%\Figure{width}{name}{caption}
+\newcommand{\Figure}[3]{%
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=#1]{#2}
+  \caption{\label{fig-#2}#3}
+\end{figure}}
+
 \begin{document}
 %
 %\frontmatter          % for the preliminaries
 %
 \mainmatter              % start of the contributions
 %
-\title{TODO: Title} % TODO
+\title{Complete Liver Model for Real-time Simulation} % TODO
+% Or: Modelling the Glisson's Gapsule in Real-time Simulation of Liver
+% or anything else ...
 %
 \titlerunning{TODO: Title}  % abbreviated title (for running head)
 %                                     also used for the TOC unless
@@ -41,7 +52,6 @@
 %
 \maketitle
 
-% TODO
 \begin{abstract}
 This work provides a complete physical model for the deformations of the liver with its three constituents: parenchyma, vessels and the Glisson's capsule.
 Some recent experimental results \cite{Ahn2010} have shown that there is a significant difference of stiffness between the Glisson's capsule and the parenchyma. 
@@ -82,11 +92,11 @@ mechanical properties up to the factor of 3 \cite{Hollenstein2006}.
 
 We propose to further extend the tetrahedral based model of the parenchyma
 with vascularized model \cite{Peterlik2012} by the layer of membrane elements.
-(Modelling the capsule with tetrahedral elements is unfeasible -- many
+(Modeling the capsule with tetrahedral elements is unfeasible -- many
 elements or largely deformed elements.)
 
 Based on the small thickness it seems reasonable to assume that no bending
-strains limmit the deformation of the capsule. Therefore modelling the
+strains limmit the deformation of the capsule. Therefore modeling the
 capsule with membrane element only should be adequate.
 
 GOAL: show that we are able to simulate the behaviour of non-homogeneous
@@ -94,6 +104,26 @@ tissue covered by capsule (liver/kidney) by combined model.
 
 GOAL2: show that combination of linear tetrahedra and linear membrane is
 easy.
+
+% -----
+
+The liver is usually modeled as a homogeneous isotropic (visco-)elastic
+material \TG{need refs.?}. It is however non-homogeneous and modeling it as
+such necessarily requires complex non-linear material formulation. Peterlik
+et al. \cite{Peterlik2012} showed the importance of the vascular structures
+on the liver deformation.
+
+Another overlooked component is the Glisson's capsule. Despite it's very
+small thickness it has high elastic modulus that is in three orders of
+magnitude larger than that of the parenchyma. As such it plays an important
+role in both global and local deformations of the liver.
+
+It is not possible to model such thin structure with classical tetrahedral
+elements.
+
+
+% -----
+
 
 % NOTE: the assumption is that we cannot estimate elastic modulus as a
 % combination of the two moduli (for parenchyma and capsule) because it will
@@ -103,28 +133,21 @@ easy.
 
 \section{Model}
 
-\subsection{parenchyma} %{{{
+\subsection{Parenchyma} %{{{
 
-
-
-\TG{TODO: write something like this} % (src: Peterlik2012)
-\begin{quote}
-While most studies concerning the material properties of liver parenchyma
-agree on a viscoelastic behaviour (see [5] or [7] for instance), we employ
-a simpler non-linear elastic model. This is essentially motivated by the
-fact that we are not focusing on the transient part of the deformation but
-rather the static equilibrium under some specific loading conditions.
-\end{quote}
-
-
-We model the parenchyma using corotational finite elmets. The corotational
+It is known that the parenchyma exhibits viscoealstic behaviour \TG{Cite
+something}, we however employ simpler elastic model as we are not so much
+interested in time-dependent behaviour but rather in static equilibrium
+under certain conditions.
+%
+The parenchyma is modeled using corotational finite elmets. The corotational
 formulation allows us to deal with geometrical non-linearities but still
 rely on linear stress-strain relationship. Thus rotations and large
 deformations are possible. In the corotational formulation the deformation
 of each element is expressed in the local frame of reference. There are
 several ways of computing the corotational frame for elements, we rely on
 the geometrical method proposed in \cite{Nesme2005}.
-% NOTE: This is very simplified and could be extended.
+% NOTE: This description of corotational method is very simplified and could be extended.
 The stiffness matrix $\Mat{K}$ can be expressed in terms of the deformation
 $u$ and the force as $\Vec{f} = \Mat{K}(\Vec{u}) \Vec{u}$. The resulting
 system of linear equations is then solved by direct LDL solver.
@@ -161,7 +184,7 @@ High cohesion between capsule and parenchyma was reported. Based on this
 property we may assume no relative motion of the capsule to the parenchyma.
 
 While in general we could use arbitrary surface mesh for a capsule we use
-the fact that the parenchyma is modelled by tetrahedral elements which have
+the fact that the parenchyma is modeled by tetrahedral elements which have
 triangular faces. Because the boundary of the volumetric mesh is already
 triangulated, we only extract the boundary triangles which we use for the
 model of capsule.
@@ -224,24 +247,60 @@ computed and propagated back onto the tetrahedral mesh.
 %}}}
 
 
-\section{Experiments/Evaluation}
+\section{Experiments} %{{{
 
-setup:
+To evaluate the model we have implemented in the
+SOFA\footnote{www.sofa-framework.org} framework and performed a set of
+numerical simulations. We have tests the influence of the capsule for both
+local and global deformations. In the simulations material properties for a
+porcine liver were used as reported by Umale \cite{Umale2013}. The
+parenchyma was modeled with elastic modulus 1980~Pa and the capsule has
+elastic modulus 8~MPa and thickness 20~$\mu$m.
+\TG{The vessels have same parameters as Igor used in his work. Is this OK
+or should we use values reported by Sagar for consistency?}
+
+\subsection{Local deformations}
+
+Hollenstain et al. \cite{Hollenstein2006} measured the response of the
+bovine liver to the negative pressure using their aspiration test. One of
+the observations was that the Glissons capsule has non-negligible influence
+and modeling only the parenchyma leads to overestimation of the
+deformation. We reproduced the test with our model and acquired similar
+results.
+
+The aspiration device consists of a tube with 1 cm in diameter and is able
+to control internal pressure in the tube. The test is performed by
+attaching the tube to the tissue and meassuring the tissue response. We
+have set up a simulation in the spirit of this test. 
+% TODO: fix the scene! tube has 5 mm radius, not 1 cm
+The simulation is performed with a 3x3x3 cm cube of liver tissue and tube
+with 1 cm radius. The pressure of 2 kPa is simulated inside the tube.
+
+Figure \ref{fig-aspiration} shows the profiles of cuts in the middle of the
+cube for the model with and without capsule. It can be seen that the
+deformation for the model without capsule is much larger which is in
+aggreement with the data obtained by Hollenstain et al.
+
+\Figure{4in}{aspiration}{TODO: aspiration test; fix figure, add screenshot}
+
+\subsection{Global Deformations}
 
 Test 1) Global deformation of liver under gravity
   * show that there is a difference between simple homogeneous material
     and material with capsule
   * include blood vessels
 
-Test 2) Indentation test
-  * perform indentation and analyze the profile
-  * show how stiffer membrane affect the result
-
-
-\section{Results}
+%}}}
 
 \section{Conclusion}
 
+- we have proposed a complete liver model that employs membrane element to model
+the capsule and extends work by Peterlik et al.
+
+- we have reproduced aspiration test, results are in aggreement with Hollenstain
+  et al.
+
+- we have shown influence on global deformations
 
 
 %
