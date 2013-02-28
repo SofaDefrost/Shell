@@ -326,7 +326,17 @@ In the simulations we used material properties for a porcine liver as
 reported by Umale \cite{Umale2013}. The
 parenchyma was modeled with elastic modulus 1980~Pa and the capsule has
 elastic modulus 8~MPa and thickness 20~$\mu$m.
+\IP{OK, now we must decide what value we are going to use for the parenchyma, so it does not explode but it's somehow reasonable...)}
+
 \TG{values for blood vessels}
+
+\IP{we have to also add some information how we got the models -- either we comment briefly in each subsection:
+Local deformations: cube meshed in gmsh (graded mesh?), number of elements, etc...
+Global deformations: contrast-enhanced CT data obtained via acquisition performed on a female pig; the 3D mesh created by a
+semi-automatic segmentation using ITKSnap~\cite{itksnap}, then meshed using CGAL~\cite{cgal-meshingAlg} resulting in a mesh having 
+NNN elements. The capsule modelled using the surface triangular elements extracted from the tetrahedra. The vascularization 
+created from the segmentation of hepatic vein as described in~\cite{peterlik2012}. The structured composed of MMM elements.}
+
 
 
 \subsection{Local Deformations} %{{{
@@ -373,10 +383,40 @@ agreement with the data obtained by Hollenstein et al.
 
 \TG{!!!}
 
-Test 1) Global deformation of liver under gravity
-  * show that there is a difference between simple homogeneous material
-    and material with capsule
-  * include blood vessels
+%Test 1) Global deformation of liver under gravity
+%  * show that there is a difference between simple homogeneous material
+%    and material with capsule
+%  * include blood vessels
+
+\IP{Short overview, I'll put it together tomorrow morning and add some fancy images. I am not sure if we are going to mess up 
+with gravity, it seems to me too much... We should rather focus only on this "registration-like" simulation (what about 
+using term "elastic warping"??? and explain properly why we think it proves the capsule plays a role. My first shot:}
+
+--we want to mimic a process takes place inside the pig such that it results in a natural deformation of the liver
+
+--such a natural deformation happens when the position of the pig is changed from the flank to a supine position
+
+--we performed a segmentation of both flank and supine and for some parts of the liver, displacements up to XXX\,cm  (I would say 3-4) 
+were observed, which is enough given the size of the entire liver (18\,cm longest dimension)
+
+--to induce the same deformation on the liver, we performed a process similar to deformation registration between the flank and supine 
+data: we chosen a set of feature in flank and supine data such that each feature could be reliably located in both supine and flank 
+data
+
+--this set of features was extracted from the vascularization, since although the vascular tree is getting deformed together with the liver, 
+the topology remains constant
+
+--then we placed a linear spring to each feature location in the supine data, so it's attracted towards its flank position
+
+--since the features were mapped to the elements via barycentric mapping, the entire model of the liver is being deformed, "elastically warped" from the 
+supine to the flank position
+
+
+--now the tricky part begins: we performed this process with models with and without the capsule; in each case we obtained 
+a different resulting shape of liver
+
+--additionally, we measured the forces needed to warp the liver in both cases: we obtained a difference summarized as.... ???
+
 
 %}}}
 
