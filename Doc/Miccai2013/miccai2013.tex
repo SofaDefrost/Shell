@@ -7,6 +7,7 @@
 %%% Comments
 \usepackage{color}
 \newcommand{\TG}[1]{{\color{blue}\textbf{TG: #1}}}
+\newcommand{\CD}[1]{{\color{green}\textbf{CD: #1}}}
 %%%
 
 \newcommand{\Vec}[1]{\mathbf{#1}}
@@ -57,7 +58,7 @@ This work provides a complete physical model for the deformations of the liver w
 Some recent experimental results \cite{Ahn2010} have shown that there is a significant difference of stiffness between the Glisson's capsule and the parenchyma. 
 Moreover, it has been observed that the capsule plays an important role for the deformation at the local level \cite{Hollenstein2006}.
 However, the Glisson's capsule is very thin and its influence for the global deformations of the liver was never highlighted.
-In this work, we propose to use a membrane FEM model for the capsule, that is coupled with a vascularized model of the liver.
+In this work, we propose to use a membrane FEM model for the capsule, that is coupled with a vascularized model of the liver (\CD{based on a coupling ?})
 We show that the approach is able to reproduce the deformations observed at the local level.
 Additionally, we show, by simulating natural global deformations of the liver observed on real images (due to gravity), that the results have important differences with and without the capsule.
 
@@ -70,6 +71,15 @@ Medical simulation is expected to play an integral part in many aspects of
 medical practice. From diagnosis, through planning or training to computer
 assisted intervention. A good medical model has to be simple yet efficient
 to be really usable.
+\CD{develop the applications for which it has to be real-time...}
+
+\CD{First... explain the biomechanics of the liver (for instance: 
+\textit{
+The liver is a complex organ composed by three main structures: the parenchyma (soft tissue, that have a hyper-visco-elastic behavior) is coupled with a dense vascular network (tree-like tubular structure with a stiffer behavior) and is surrounded by the Glisson capsule  (a stiff collagenous membrane).
+It illustrates the need of relying on both volume, surface and line finite elements and the need of proposing coupling methods between them.}
+ }
+
+\CD{Yet, many work on liver modeling only consider the parenchyma...}
 The liver is usually modeled as a homogeneous isotropic (visco-)elastic
 material \TG{refs}.% It is however non-homogeneous and modeling it as
 %homogeneous necessarily requires complex non-linear material descriptions.
@@ -110,6 +120,7 @@ proposed by Peterl\'{i}k et al. \cite{Peterlik2012}.
 
 \subsection{Parenchyma} %{{{
 
+\CD{This paragraph may change if we use an other model... but maybe we should directly say that we rely on vascularized model ?}
 It is known that the parenchyma exhibits viscoelastic behaviour \TG{Cite
 something}, we however employ simpler elastic model as we are not so much
 interested in time-dependent behaviour but rather in static equilibrium
@@ -148,7 +159,7 @@ elements.
 To maintain simplicity of the composite model we choose simple triangular
 elements with constant strain.
 
-\TG{add a ref. or dive into the definition? \cite{Felippa2003}}
+\TG{add a ref. or dive into the definition? \cite{Felippa2003}} \CD{both...}
 
 We again use linear elastic material and employ the corotational formulation
 for the triangular elements.
@@ -173,6 +184,7 @@ not have to project nodes of triangular mesh onto the tetrahedra. More over,
 the stiffness matrices for capsule and parenchyma are easily assembled
 together and solved as one system.
 
+\CD{The following may appear as "trivial"... maybe we can remove this part at the end if we need space} 
 Without the loss of generality we can assume the tetrahedron consists of
 nodes $p_1, p_2, p_3$ and $p_4$ and the boundary triangle has nodes $p_1, p_2$
 and $p_3$. We can reorder the degrees of freedom so that the stiffness
@@ -210,6 +222,7 @@ system of linear equations is then solved by direct LDL solver.
 
 \subsection{Blood Vessels} %{{{
 
+\CD{Just a proposal: put this subsection before Glisson Capsule}
 We also combined our composite model with vascularization method proposed
 by Peterl\'{i}k et al. \cite{Peterlik2012}. The method is based on linear beams
 with local frames of reference (in a many aspects similar to the
@@ -241,7 +254,12 @@ parenchyma was modeled with elastic modulus 1980~Pa and the capsule has
 elastic modulus 8~MPa and thickness 20~$\mu$m.
 \TG{values for blood vessels}
 
+
+\CD{If the experiments demonstrate that the stiffness of the material is different, the thickness is very very small... so we have to evaluate if it is really necessary to include the model of the capsule for both local and global deformations.}
+
 \subsection{Local deformations} %{{{
+
+\CD{Maybe explain why we call that "local deformations" and in which case it is important to capture such local deformations (i.e. insertion of needle, contacts with a sharp instrument...).}
 
 Hollenstein et al. \cite{Hollenstein2006} measured the response of the
 bovine liver to the negative pressure using their aspiration test. One of
@@ -268,7 +286,12 @@ aggreement with the data obtained by Hollenstein et al.
 %}}}
 
 
+
+
 \subsection{Global Deformations}
+\CD{ Experiments demonstrate that capsule plays a role at local level, but still, maybe not so important to model the capsule for more global deformation...
++ What are the applications for modeling the global deformations of the liver (training and planning simulation, physics-based registration, augmented reality,)}
+
 
 \TG{!!!}
 
