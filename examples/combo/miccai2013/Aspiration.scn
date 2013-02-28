@@ -14,7 +14,7 @@
 
 -->
 
-<Node name="root" dt="0.01" gravity="0 0 0">
+<Node name="root" dt="0.005" gravity="0 0 0">
 	<VisualStyle displayFlags="showVisual hideForceFields hideCollisionModels" />
 
         <FreeMotionAnimationLoop />
@@ -27,8 +27,9 @@
 	<DefaultContactManager name="Response" response="FrictionContact" />
 
         <Node name="VolMesh">
-            <MeshVTKLoader name="loader"  filename="../cube2739.vtk"
-                 scale3d="0.03 0.03 0.03" translation="-0.015 0 -0.015" />
+            <!--<MeshVTKLoader name="loader"  filename="../cube2739.vtk"-->
+            <MeshVTKLoader name="loader"  filename="cube2648G.vtk"
+                 scale3d="0.015 0.015 0.015" translation="-0.0075 0 -0.0075" />
             <TetrahedronSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="VolMO" />
             <Node name="Surface">
@@ -40,15 +41,16 @@
         </Node>
 
         <Node name="SurfMesh">
-            <MeshObjLoader name="loader" filename="../cube2739.obj"
-                scale3d="0.03 0.03 0.03" translation="-0.015 0 -0.015" />
+            <!--<MeshObjLoader name="loader" filename="../cube2739.obj"-->
+            <MeshObjLoader name="loader" filename="cube2648G.obj"
+                scale3d="0.015 0.015 0.015" translation="-0.0075 0 -0.0075" />
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="SurfMO" />
         </Node>
 
         <Node name="TubeMesh">
             <MeshObjLoader name="loader" filename="tube.obj"
-                scale3d="0.02 0.02 0.02" translation="0 0.041 0" />
+                scale3d="0.01 0.01 0.01" translation="0 0.0206 0" />
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="TubeMO" />
         </Node>
@@ -88,8 +90,8 @@
 
                 <Mesh src="@/VolMesh/loader" />
                 <MechanicalObject name="MO" src="@/VolMesh/loader"/>
-                <BoxROI name="top" box="-0.016 0.0299 -0.016  0.016 0.032 0.016" drawBoxes="true" />
-                <BoxROI name="bottom" box="-0.016 -0.0001 -0.016  0.016 0.0001 0.016" drawBoxes="true" />-->
+                <BoxROI name="top" box="-0.0076 0.0149 -0.0076  0.0076 0.0178 0.0076" drawBoxes="true" />
+                <BoxROI name="bottom" box="-0.0076 -0.0001 -0.0076  0.0076 0.0001 0.0076" drawBoxes="true" />-->
 
                 <UniformMass mass="0.001"/>
 
@@ -99,19 +101,20 @@
 
                 <Node name="Tetra">
                     <TetrahedronFEMForceField name="FEM"
-                        youngModulus="1.98e3" poissonRatio="0.45"
+                        youngModulus="3.5e3" poissonRatio="0.45"
                         computeGlobalMatrix="false" method="large"/>
                 </Node>
 
                 <Node name="Tri">
                     <TriangleSetTopologyContainer name="topoTri" triangles="@../top.trianglesInROI" />
-                    <CstFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="20e-6" corotated="true" />
+                    <!--<CstFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="20e-6" corotated="true" />-->
 
-                    <SphereROI name="sphere" centers="0 0.03 0" radii="0.01" drawSphere="true" />
+                    <SphereROI name="sphere" centers="0 0.015 0" radii="0.005" drawSphere="true" />
                     <SurfacePressureForceField name="SP"
-                        pressure="-2000" mainDirection="0 1 0"
+                        pressure="3000" mainDirection="0 1 0"
                         triangleIndices="@sphere.triangleIndices"
-                        min="-0.007071 0.029 -0.007071"  max="0.007071 0.05 0.007071" />
+                        />
+                    <!--min="-0.007071 0.029 -0.007071"  max="0.007071 0.05 0.007071" -->
                     <!--<Node name="Visual">-->
                         <!--<OglModel color="green" />-->
                         <!--<IdentityMapping input="@../.." output="@." />-->
@@ -124,7 +127,7 @@
 
                 <Node name="CubeCollision">
                     <Mesh src="@/SurfMesh/topo" />
-                    <MechanicalObject src="@/SurfMesh/SurfMO" />
+                    <MechanicalObject />
                     <!--<Point name="cube_collis_point" group="11" />-->
                     <Line name="cube_collis_line" group="11" />
                     <!--<Triangle name="cube_collis_triangle" computeNormals="false" bothSide="true" group="11" />-->
@@ -140,7 +143,7 @@
 
         <Node name="TubeRender">
             <MeshObjLoader name="loader" filename="tube.obj"
-                scale3d="0.02 0.02 0.02" translation="0 0.0405 0" />
+                scale3d="0.01 0.01 0.01" translation="0 0.0205 0" />
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="TubeMO" />
             <Node name="Visual">
