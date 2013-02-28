@@ -20,14 +20,6 @@
 \newcommand{\Vec}[1]{\mathbf{#1}}
 \newcommand{\Mat}[1]{\mathbf{#1}}
 
-%\Figure{width}{name}{caption}
-\newcommand{\Figure}[3]{%
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=#1]{#2}
-  \caption{\label{fig-#2}#3}
-\end{figure}}
-
 \begin{document}
 %
 %\frontmatter          % for the preliminaries
@@ -90,9 +82,9 @@ achieve given the complexity of soft tissues.
 In case of human liver, the task of real-time accurate modeling is challenging, mainly because of the complex structure 
 of this organ composed of three main constituents: \emph{parenchyma}, \emph{vascular networks} and \emph{Glisson's capsule}.
 The parenchyma is certainly the most studied component of the liver; today the researchers agree on hyperelastic 
-properties of the tissue, for which the mechanical parameters have been reported for example in~\cite{}. 
-Several methods have been proposed to model the hyperelastic behaviour at real-time rates, such multiplicative Jacobian decomposition
-introduced in~\cite{stephanie2008}.
+properties of the tissue, for which the mechanical parameters have been reported for example in~\cite{}\TODO. 
+Several methods have been proposed to model the hyperelastic behaviour at real-time rates, such as multiplicative Jacobian decomposition
+introduced in~\cite{Marchesseau2010}.
 
 The mechanical importance of the vascular structures in liver is studied in~\cite{Peterlik2012}. It shows that that the 
 influence of vessels on the mechanical behaviour of the liver is significant, mainly if large deformations occur. 
@@ -100,19 +92,19 @@ Since detailed modeling of the vessels would be extremely costly (mainly because
 being less than 250\,{$\mu$}m), the authors propose a composite model allowing for real-time simulation of entire liver
 with two vascular trees corresponding to portal and hepatic veins.
 
-The final constituent represented by Glisson's capsule have been already studied in the literature. 
-Extensive experiments on porcine liver has been published in~\cite{Umale2013}. The measurements show that although being very 
+The final constituent represented by Glisson's capsule has been already studied in the literature. 
+Extensive experiments on porcine liver have been published in~\cite{Umale2013}. The measurements show that although being very 
 thin (10--20$\mu m$), the Young's modulus of the capsule (reported as $8.22\pm3.42$\,MPa) exceeds the values for the parenchyma by three orders of magnitude,
 suggesting the mechanical influence of the membrane on the liver behaviour.
 
 In~\cite{Hollenstein2006}, a local influence of the capsule has been measured using a special aspiration device. The study was then repeated 
 in vivo on human patients during the operation, confirming the mechanical importance of the membrane~\cite{Ahn2010,Nava2008}.
-To our best knowledge, on attempt has been made to demonstrate the role of the Glisson's capsule on the global behaviour of 
+To our best knowledge, no attempt has been made to demonstrate the role of the Glisson's capsule on the global behaviour of 
 the liver, i.e. during large deformations of the organ.
 
 The main contribution of the paper is twofold: first, we present an efficient real-time model of the liver, taking into account 
 the parenchyma, vascularization and Glisson's capsule. The model is based on three different finite element representations for each constituent,
-linked together via mechanical coupling. We show that the model mimics the local experiments descibed in~\cite{Hollenstein2006}.
+linked together via mechanical coupling. We show that the model mimics the local experiments described in~\cite{Hollenstein2006}.
  
 Second, we use the complete model of the liver to demonstrate the influence of the Glisson's
 capsule via simulation: using a specific model of a pig liver built from CT contrast-enhanced data, we show that there is a significant 
@@ -173,7 +165,7 @@ triangular membrane elements used for the capsule.
 
 \subsection{Parenchyma and Vascularization} %{{{
 
-It is known that the parenchyma exhibits non-linear viscoelastic behaviour \cite{marchesseauMJED}.
+It is known that the parenchyma exhibits non-linear viscoelastic behaviour \cite{Marchesseau2010}.
 However, as we are mainly interested in the static equilibrium, we do not model the time-dependent
 phenomena related to viscosity.
 
@@ -183,7 +175,7 @@ phenomena related to viscosity.
 %We also rely on the vascularized model of the parenchyma proposed by
 %Peterl\'{i}k et al. \cite{Peterlik2012}.
 
-The parenchyma is modeled using corotational finite elements~\cite{Felippa}.
+The parenchyma is modeled using corotational finite elements~\cite{Felippa2005}.
 While relying on linear stress-strain relationship, it allows for large displacements including rotations. 
 While in the full non-linear formulation, the stiffness matrix relates the forces a $\Vec{f}$ and 
 displacements $\Vec{u}$ as $\Vec{f} = \Mat{K}(\Vec{u})$, the corotational model 
@@ -209,11 +201,11 @@ the geometrical method proposed in \cite{Nesme2005}.
 
 The model of the vascularization is based on linear beams 
 with local frames of reference; in many aspects it's similar to the
-corotational formulation described above~\cite{Duriez}. As such the model also handles geometric
+corotational formulation described above~\cite{Duriez2006}. As such the model also handles geometric
 non-linearities in the deformation. Through a specification of cross section and moments of inertia, 
 the model can account for the specific properties of the blood vessels. 
 
-The beam-based model of vessels is mechanically coupled to the parenchyma as described in~\cite{peterlik2012}. 
+The beam-based model of vessels is mechanically coupled to the parenchyma as described in~\cite{Peterlik2012}. 
 The coupling assumes that there is no relative motion between the vessels and surrounding parenchyma. 
 %The proposed model assumes no relative
 %motion of vessels to the parenchyma. Segmented vascular network is
@@ -327,6 +319,9 @@ reported by Umale \cite{Umale2013}. The
 parenchyma was modeled with elastic modulus 1980~Pa and the capsule has
 elastic modulus 8~MPa and thickness 20~$\mu$m.
 \IP{OK, now we must decide what value we are going to use for the parenchyma, so it does not explode but it's somehow reasonable...)}
+\TG{Right now I'm using 3500 Pa for parenchyma. I can even use higher
+modulus, but not any smaller because we get large deformations and use of
+corotational model might become questionable.}
 
 \TG{values for blood vessels}
 
@@ -335,7 +330,10 @@ Local deformations: cube meshed in gmsh (graded mesh?), number of elements, etc.
 Global deformations: contrast-enhanced CT data obtained via acquisition performed on a female pig; the 3D mesh created by a
 semi-automatic segmentation using ITKSnap~\cite{itksnap}, then meshed using CGAL~\cite{cgal-meshingAlg} resulting in a mesh having 
 NNN elements. The capsule modelled using the surface triangular elements extracted from the tetrahedra. The vascularization 
-created from the segmentation of hepatic vein as described in~\cite{peterlik2012}. The structured composed of MMM elements.}
+created from the segmentation of hepatic vein as described in~\cite{Peterlik2012}. The structured composed of MMM elements.}
+\TG{Sure. Put it here or into the respective subsections? (cube: graded
+  mesh created by gmsh with 2648 tetrahedra, 518 triangles for capsule
+extracted from tetrahedral mesh.)}
 
 
 
@@ -369,7 +367,18 @@ test cube. It can be seen that the
 deformation for the model without capsule is much larger. This is in good
 agreement with the data obtained by Hollenstein et al.
 
-\Figure{4in}{aspiration}{TODO: aspiration test; fix figure, add screenshot}
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{cc}
+    \includegraphics[width=3in]{aspiration.pdf} &
+    \includegraphics[height=1.5in]{aspiration.jpg}\\
+    a) & b)
+  \end{tabular}
+
+  \caption{\label{fig-aspiration}Aspiration test: a) displacment profile
+  with (blue) and without (black) the capsule; b) simulation scene}
+\end{figure}
+
 
 %}}}
 
