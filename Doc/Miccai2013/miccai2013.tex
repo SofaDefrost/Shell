@@ -65,7 +65,7 @@ This work provides a complete physical model for the deformations of the liver w
 Some recent experimental results \cite{Ahn2010} have shown that there is a significant difference of stiffness between the Glisson's capsule and the parenchyma. 
 Moreover, it has been observed that the capsule plays an important role for the deformation at the local level \cite{Hollenstein2006}.
 However, the Glisson's capsule is very thin and its influence for the global deformations of the liver was never highlighted.
-In this work, we propose to use a membrane FEM model for the capsule, that is coupled with a vascularized model of the liver (\CD{based on a coupling ?})
+In this work, we propose to use a membrane FEM model for the capsule, that is coupled with a vascularized model of the liver.
 We show that the approach is able to reproduce the deformations observed at the local level.
 Additionally, we show, by simulating natural global deformations of the liver observed on real images (due to gravity), that the results have important differences with and without the capsule.
 
@@ -96,25 +96,25 @@ properties of the tissue, for which the mechanical parameters have been reported
 Several methods have been proposed to model the hyperelastic behaviour at real-time rates, such multiplicative Jacobian decomposition
 introduced in~\cite{stephanie2008}.
 
-The mechanical importance of the vascular structures in liver is studied in~\cite{peterlik2012}. It shows that that the 
+The mechanical importance of the vascular structures in liver is studied in~\cite{Peterlik2012}. It shows that that the 
 influence of vessels on the mechanical behaviour of the liver is significant, mainly if large deformations occur. 
 Since detailed modeling of the vessels would be extremely costly (mainly because of the thickness of the vessel wall 
 being less than 250\,{$\mu$}m), the authors propose a composite model allowing for real-time simulation of entire liver
 with two vascular trees corresponding to portal and hepatic veins.
 
 The final constituent represented by Glisson's capsule have been already studied in the literature. 
-Extensive experiments on porcine liver has been published in~\cite{Sagar}. The measurements show that although being very 
+Extensive experiments on porcine liver has been published in~\cite{Umale2013}. The measurements show that although being very 
 thin (10--20$\mu m$), the Young's modulus of the capsule (reported as $8.22\pm3.42$\,MPa) exceeds the values for the parenchyma by three orders of magnitude,
 suggesting the mechanical influence of the membrane on the liver behaviour.
 
-In~\cite{Hollenstein}, a local influence of the capsule has been measured using a special aspiration device. The study was then repeated 
-in vivo on human patients during the operation, confirming the mechanical importance of the membrane~\cite{Ahn,Nava}.
+In~\cite{Hollenstein2006}, a local influence of the capsule has been measured using a special aspiration device. The study was then repeated 
+in vivo on human patients during the operation, confirming the mechanical importance of the membrane~\cite{Ahn2010,Nava2008}.
 To our best knowledge, on attempt has been made to demonstrate the role of the Glisson's capsule on the global behaviour of 
 the liver, i.e. during large deformations of the organ.
 
 The main contribution of the paper is twofold: first, we present an efficient real-time model of the liver, taking into account 
 the parenchyma, vascularization and Glisson's capsule. The model is based on three different finite element representations for each constituent,
-linked together via mechanical coupling. We show that the model mimics the local experiments descibed in~\cite{Hollenstein}.
+linked together via mechanical coupling. We show that the model mimics the local experiments descibed in~\cite{Hollenstein2006}.
  
 Second, we use the complete model of the liver to demonstrate the influence of the Glisson's
 capsule via simulation: using a specific model of a pig liver built from CT contrast-enhanced data, we show that there is a significant 
@@ -123,27 +123,26 @@ difference in the response of the model with and without the capsule in case whe
 The paper is organized as follows: \TODO.
 
 
-%%Medical simulation is expected to play an integral part in many aspects of
-%%medical practice. From diagnosis, through planning or training to computer
-%%assisted intervention. A good medical model has to be simple yet efficient
-%%to be really usable.
-%\CD{develop the applications for which it has to be real-time...}
+%Medical simulation is expected to play an integral part in many aspects of
+%medical practice. From diagnosis, through planning or training to computer
+%assisted intervention.
+%Medical training application, like the ones for training laparoscopic
+%surgery, have to operate in real-time and a good medical model has to be
+%simple yet efficient to be really usable in this environment.
 %
-%\CD{First... explain the biomechanics of the liver (for instance: 
-%\textit{
-%The liver is a complex organ composed by three main structures: the parenchyma (soft tissue, that have a hyper-visco-elastic behavior) is coupled with a dense vascular network (tree-like tubular structure with a stiffer behavior) and is surrounded by the Glisson capsule  (a stiff collagenous membrane).
-%It illustrates the need of relying on both volume, surface and line finite elements and the need of proposing coupling methods between them.}
-% }
+%Liver is largest internal organ formed mostly by a soft tissue (parenchyma)
+%that is hyper-elastic and also visco-elastic. The parenchyma is interwoven
+%by dense vascular network, this tree-like tubular structure is stiffer then
+%the parenchyma. Finally the parenchyma is covered by very stiff collagenous
+%membrane that preserves the integrity of the organ.
 %
-%\CD{Yet, many work on liver modeling only consider the parenchyma...}
-%The liver is usually modeled as a homogeneous isotropic (visco-)elastic
-%material \TG{refs}.% It is however non-homogeneous and modeling it as
-%%homogeneous necessarily requires complex non-linear material descriptions.
-%Recently
+%Strangely, most of the work on liver modelling only considers the
+%parenchyma and model the liver as single homogeneous object \TG{Refs}.
+%Only recently
 %Peterl\'{i}k et al. \cite{Peterlik2012} showed the importance of the vascular
 %structures on the liver deformation.
 %
-%Another often overlooked component is the Glisson's capsule.
+%Another overlooked component is the Glisson's capsule.
 %Biomechanical measurements report that the capsule has very small
 %thickness (approx. 20 $\mu$m for porcine liver \cite{Umale2011}).
 %On the other hand it has in three orders of magnitude higher stiffness than
@@ -155,13 +154,13 @@ The paper is organized as follows: \TODO.
 %\cite{Hollenstein2006}.
 %
 %While the influence on local deformation was reported, no experimental
-%results show whether the capsule also plays an important role on the global
+%results show whether the capsule also plays an important role in global
 %deformations of the liver. We propose a composite model that models the
 %capsule with membrane FEM elements. We show that the model is able to
 %simulate expected local behaviour reported in literature. Further more we
 %show that the capsule plays also an important role in the deformation on
 %global scale.
-%
+
 \TG{summary of following sections.}
 
 %}}}
@@ -292,22 +291,22 @@ system of linear equations is then solved by direct LDL solver.
 
 \section{Experiments} %{{{
 
-To evaluate the model we have implemented in the
-SOFA\footnote{www.sofa-framework.org} framework and performed a set of
-numerical simulations. First local deformations were compared to the
-results reported in literature to validate the method. Then the model of
-the complete liver was subjected to natural global deformations to asses
-the importance of the capsule on the deformation.
+To evaluate the model it was implemented in the
+SOFA\footnote{www.sofa-framework.org} framework and a set of
+numerical simulations was performed. First local deformations were compared to the
+results reported in literature to validate the method.
 
-Material properties used in the simulations were for a porcine liver as
+To show that, despite its very small thickness, the membrane cannot be
+neglected even in the context of global deformations and its overall
+stiffness plays an important role, the model of
+the complete liver was subjected to natural global deformations.
+
+In the simulations we used material properties for a porcine liver as
 reported by Umale \cite{Umale2013}. The
 parenchyma was modeled with elastic modulus 1980~Pa and the capsule has
 elastic modulus 8~MPa and thickness 20~$\mu$m.
 \TG{values for blood vessels}
 
-
-\CD{If the experiments demonstrate that the stiffness of the material is different, the thickness is very very small... so we have to evaluate if it is really necessary to include the model of the capsule for both local and global deformations.}
-\TG{I didn't undersand that. What do you mean?}
 
 \subsection{Local Deformations} %{{{
 
@@ -387,4 +386,5 @@ global context.
 
 
 \end{document}
+% spell: setl spell spelllang=en spellfile=spelldict.en.utf-8.add
 % vim:set et sw=2 tw=75 fdm=marker fdl=3 fdc=4 isk+=_,-:
