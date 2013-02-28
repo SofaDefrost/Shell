@@ -679,17 +679,18 @@ void CstFEMForceField<DataTypes>::handleEvent(core::objectmodel::Event *event)
         }
 
         if (actualStep > f_startDTAppl.getValue()) {
-            if (f_numDTAppl == 0)
-                applyFactor = 1.0;
-            else {
-                applyFactor = Real(actualStep - f_startDTAppl.getValue())/Real(f_numDTAppl.getValue());
-                applyFactor = (applyFactor > 1.0) ? 1.0 : applyFactor;
-            }
-        } else
+            applyFactor = Real(actualStep - f_startDTAppl.getValue())/Real(abs(f_numDTAppl.getValue()));
+            applyFactor = (applyFactor > 1.0) ? 1.0 : applyFactor;
+        }
+        else
             applyFactor = 0.0;
 
+
+        if (f_numDTAppl.getValue() < 0)
+            applyFactor = 1.0 - applyFactor;
+
         actualStep++;
-        std::cout << "Actual applyFactor = " << applyFactor << std::endl;
+        std::cout << this->getName() << "[" << actualStep << "]  applyFactor = " << applyFactor << std::endl;
     }
 }
 
