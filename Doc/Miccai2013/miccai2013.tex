@@ -9,14 +9,12 @@
 \def\ie{i.\,e.}
 \def\Dash{\nobreak\,---\penalty-500\,}
 
-\def\TODO{{\color{red}{TODO}}}
-
-
 %%% Comments
 \usepackage{color}
 \newcommand{\TG}[1]{{\color{blue}\textbf{TG: #1}}}
 \newcommand{\CD}[1]{{\color{green}\textbf{CD: #1}}}
 \newcommand{\IP}[1]{{\color{cyan}\textbf{IP: #1}}}
+\newcommand{\TODO}[1]{{\color{red}\textbf{TODO: #1}}}
 %%%
 
 \newcommand{\Vec}[1]{\mathbf{#1}}
@@ -120,7 +118,7 @@ Second, we use the complete model of the liver to demonstrate the influence of t
 capsule via simulation: using a specific model of a pig liver built from CT contrast-enhanced data, we show that there is a significant 
 difference in the response of the model with and without the capsule in case when the liver undergoes large deformations. 
 
-The paper is organized as follows: \TODO.
+The paper is organized as follows: \TODO{paper organization}.
 
 
 %Medical simulation is expected to play an integral part in many aspects of
@@ -168,42 +166,65 @@ The paper is organized as follows: \TODO.
 
 \section{Model} %{{{
 
-In this section we will describe the construction of our composite model.
-It's three main parts are: tetrahedral model for parenchyma, membrane model
-for capsule coupled to the parenchyma and beam model of vascular system as
-proposed by Peterl\'{i}k et al. \cite{Peterlik2012}.
+In this section we describe the construction of our composite model
+being composed of three main components: tetrahedral FE model of the 
+parenchyma, Tymoshenko-beam model for the vascular structures and finally 
+triangular membrane elements used for the capsule.
 
-\subsection{Parenchyma} %{{{
+\subsection{Parenchyma and Vascularization} %{{{
 
-It is known that the parenchyma exhibits viscoelastic behaviour \TG{Cite
-something}, we however employ simpler elastic model as we are not so much
-interested in time-dependent behaviour but rather in static equilibrium
-under certain conditions.
-We also rely on the vascularized model of the parenchyma proposed by
-Peterl\'{i}k et al. \cite{Peterlik2012}.
+It is known that the parenchyma exhibits non-linear viscoelastic behaviour \cite{marchesseauMJED}.
+However, as we are mainly interested in the static equilibrium, we do not model the time-dependent
+phenomena related to viscosity.
 
-The parenchyma is modeled using corotational finite elements. The corotational
-formulation allows us to deal with geometrical non-linearities but still
-rely on linear stress-strain relationship. Thus rotations and large
-deformations are possible. In the corotational formulation the deformation
-of each element is expressed in the local frame of reference. There are
-several ways of computing the corotational frame for elements, we rely on
+%However, we employ simpler corotational model as we are not so much
+%interested in time-dependent behaviour but rather in static equilibrium
+%under certain conditions.
+%We also rely on the vascularized model of the parenchyma proposed by
+%Peterl\'{i}k et al. \cite{Peterlik2012}.
+
+The parenchyma is modeled using corotational finite elements~\cite{Felippa}.
+While relying on linear stress-strain relationship, it allows for large displacements including rotations. 
+While in the full non-linear formulation, the stiffness matrix relates the forces a $\Vec{f}$ and 
+displacements $\Vec{u}$ as $\Vec{f} = \Mat{K}(\Vec{u})$, the corotational model 
+requires the stiffness matrix $\Mat{K}_0$ of the system be computed only once before the simulation begins. 
+Then, in each step, the motion of each element $e$ is decomposed into rigid rotation $\Mat{R}^e$ and local deformation. 
+The rotations are then used to update each local element stiffness matrix as $\Mat{R}\Mat{K}_0\Mat{R}^{\top}$
+whereas the deformations are used to compute the linear strain in the local corotational frame.
+%The stiffness matrix $\Mat{K}$ can be expressed in terms of the deformation
+%$u$ and the force as $\Vec{f} = \Mat{K}(\Vec{u}) \Vec{u}$. 
+%Where the
+%components of $\Mat{K}$ depend on the orientation of each element in the
+%current simulation step.
+%the rigid component is  
+% The corotational
+%formulation allows us to deal with geometrical non-linearities but still
+%relies on linear stress-strain relationship. Thus rotations and large
+%deformations are modelled correctly. 
+%In the corotational formulation the deformation
+%of each element is expressed in the local frame of reference. 
+There are several ways of computing the corotational frame for elements; we rely on
 the geometrical method proposed in \cite{Nesme2005}.
 % NOTE: This description of corotational method is very simplified and could be extended.
-The stiffness matrix $\Mat{K}$ can be expressed in terms of the deformation
-$u$ and the force as $\Vec{f} = \Mat{K}(\Vec{u}) \Vec{u}$. Where the
-components of $\Mat{K}$ depend on the orientation of each element in the
-current simulation step.
 
-The vascularization method is based on linear beams
-with local frames of reference (in a many aspects similar to the
-corotational formulation). As such the model also handles geometric
-non-linearities in the deformation. The proposed model assumes no relative
-motion of vessels to the parenchyma. Segmented vascular network is
-discretized into the set of linear elements that are then projected into
-the tetrahedral mesh of the parenchyma. During the simulation forces and
-torques resulting from the deformations of vessels by parenchyma are
-computed and propagated back onto the tetrahedral mesh.
+The model of the vascularization is based on linear beams 
+with local frames of reference; in many aspects it's similar to the
+corotational formulation described above~\cite{Duriez}. As such the model also handles geometric
+non-linearities in the deformation. Through a specification of cross section and moments of inertia, 
+the model can account for the specific properties of the blood vessels. 
+
+The beam-based model of vessels is mechanically coupled to the parenchyma as described in~\cite{peterlik2012}. 
+The coupling assumes that there is no relative motion between the vessels and surrounding parenchyma. 
+%The proposed model assumes no relative
+%motion of vessels to the parenchyma. Segmented vascular network is
+%discretized into the set of linear elements that are then projected into
+%the tetrahedral mesh of the parenchyma. 
+During the simulation, the nodes of linked beams are first displaced and rotated according to the actual motion of associated tetrahedra. 
+As the deformation of beams results in mechanical response represented by forces and torques, these are propagated back to 
+the tetrahedral FE model. 
+
+%a displacement of tetrahedral nodes are mapped  forces and torques resulting from the deformations of vessels by parenchyma are
+%computed and propagated back onto the tetrahedral mesh.
 
 %}}}
 
