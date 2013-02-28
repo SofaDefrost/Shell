@@ -27,9 +27,7 @@
 %
 \mainmatter              % start of the contributions
 %
-\title{Complete Liver Model for Real-time Simulation} % TODO
-% Or: Modelling the Glisson's Gapsule in Real-time Simulation of Liver
-% or anything else ...
+\title{Complete Real-Time Liver Model including Glisson Capsule, Vascular Network and Parenchyma}
 %
 \titlerunning{TODO: Title}  % abbreviated title (for running head)
 %                                     also used for the TOC unless
@@ -62,7 +60,7 @@ In this work, we propose to use a membrane FEM model for the capsule, that is co
 We show that the approach is able to reproduce the deformations observed at the local level.
 Additionally, we show, by simulating natural global deformations of the liver observed on real images (due to gravity), that the results have important differences with and without the capsule.
 
-\keywords{liver, Glisson's capsule, deformation modeling, membrane}
+\keywords{liver, Glisson's capsule, vascular network, deformation modeling, membrane}
 \end{abstract}
 
 \section{Introduction} %{{{
@@ -120,12 +118,13 @@ proposed by Peterl\'{i}k et al. \cite{Peterlik2012}.
 
 \subsection{Parenchyma} %{{{
 
-\CD{This paragraph may change if we use an other model... but maybe we should directly say that we rely on vascularized model ?}
 It is known that the parenchyma exhibits viscoelastic behaviour \TG{Cite
 something}, we however employ simpler elastic model as we are not so much
 interested in time-dependent behaviour but rather in static equilibrium
 under certain conditions.
-%
+We also rely on the vascularized model of the parenchyma proposed by
+Peterl\'{i}k et al. \cite{Peterlik2012}.
+
 The parenchyma is modeled using corotational finite elements. The corotational
 formulation allows us to deal with geometrical non-linearities but still
 rely on linear stress-strain relationship. Thus rotations and large
@@ -138,6 +137,16 @@ The stiffness matrix $\Mat{K}$ can be expressed in terms of the deformation
 $u$ and the force as $\Vec{f} = \Mat{K}(\Vec{u}) \Vec{u}$. Where the
 components of $\Mat{K}$ depend on the orientation of each element in the
 current simulation step.
+
+The vascularization method is based on linear beams
+with local frames of reference (in a many aspects similar to the
+corotational formulation). As such the model also handles geometric
+non-linearities in the deformation. The proposed model assumes no relative
+motion of vessels to the parenchyma. Segmented vascular network is
+discretized into the set of linear elements that are then projected into
+the tetrahedral mesh of the parenchyma. During the simulation forces and
+torques resulting from the deformations of vessels by parenchyma are
+computed and propagated back onto the tetrahedral mesh.
 
 %}}}
 
@@ -220,22 +229,6 @@ system of linear equations is then solved by direct LDL solver.
 
 %}}}
 
-\subsection{Blood Vessels} %{{{
-
-\CD{Just a proposal: put this subsection before Glisson Capsule}
-We also combined our composite model with vascularization method proposed
-by Peterl\'{i}k et al. \cite{Peterlik2012}. The method is based on linear beams
-with local frames of reference (in a many aspects similar to the
-corotational formulation). As such the model also handles geometric
-non-linearities in the deformation. The proposed model assumes no relative
-motion of vessels to the parenchyma. Segmented vascular network is
-discretized into the set of linear elements that are then projected into
-the tetrahedral mesh of the parenchyma. During the simulation forces and
-torques resulting from the deformations of vessels by parenchyma are
-computed and propagated back onto the tetrahedral mesh.
-
-%}}}
-
 %}}}
 
 
@@ -256,30 +249,37 @@ elastic modulus 8~MPa and thickness 20~$\mu$m.
 
 
 \CD{If the experiments demonstrate that the stiffness of the material is different, the thickness is very very small... so we have to evaluate if it is really necessary to include the model of the capsule for both local and global deformations.}
+\TG{I didn't undersand that. What do you mean?}
 
-\subsection{Local deformations} %{{{
+\subsection{Local Deformations} %{{{
 
-\CD{Maybe explain why we call that "local deformations" and in which case it is important to capture such local deformations (i.e. insertion of needle, contacts with a sharp instrument...).}
+During the contact with an instrument (probe, needle insertion, sharp
+instruments, \ldots) a specific deformation occurs in the near vicinity of
+the instrument. This type of deformation may not necessarily induce the
+deformation of the object as a whole and therefore can be considered as
+local. Correct material properties are not only important for amount of the
+displacement but play also a crucial role in capturing the correct area of
+the deformation or its profile near the instrument.
+\TG{Does it make sense this way? I can add an image. :)}
 
-Hollenstein et al. \cite{Hollenstein2006} measured the response of the
-bovine liver to the negative pressure using their aspiration test. One of
-the observations was that the Glissons capsule has non-negligible influence
-and modeling only the parenchyma leads to overestimation of the
-deformation. We reproduced the test with our model and acquired similar
-results.
+One example of such local deformation occurs during the aspiration test
+when the response of liver to the negative pressure is measured.
+Hollenstein et al. \cite{Hollenstein2006} observed that the Glisson's
+capsule has non-negligible influence on response of the tissue and modeling
+only the parenchyma leads to overestimation of the deformation. We
+reproduced the test with our model and acquired similar results.
 
 The aspiration device consists of a tube with 1 cm in diameter and is able
 to control internal pressure in the tube. The test is performed by
-attaching the tube to the tissue and meassuring the tissue response. We
+attaching the tube to the tissue and measuring the tissue response. We
 have set up a simulation in the spirit of this test. 
-% TODO: fix the scene! tube has 5 mm radius, not 1 cm
-The simulation is performed with a 3x3x3 cm cube of liver tissue and tube
-with 1 cm radius. The pressure of 2 kPa is simulated inside the tube.
+The simulation is performed with a 15x15x15 mm cube of liver tissue and tube
+with 1 cm in diameter. The pressure of 3 kPa is simulated inside the tube.
 
 Figure \ref{fig-aspiration} shows the profiles of cuts in the middle of the
-cube for the model with and without capsule. It can be seen that the
-deformation for the model without capsule is much larger which is in
-aggreement with the data obtained by Hollenstein et al.
+test cube. It can be seen that the
+deformation for the model without capsule is much larger. This is in good
+agreement with the data obtained by Hollenstein et al.
 
 \Figure{4in}{aspiration}{TODO: aspiration test; fix figure, add screenshot}
 
