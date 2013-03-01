@@ -13,7 +13,7 @@ plot(range(c(a1[,1], a2[,1])), range(c(a1[,2], a2[,2])), #ylim=c(0, 0.004),
 lines(a1, col="black")
 lines(a2, col="blue")
 
-abline(h=0, lty="dotted");
+#abline(h=0, lty="dotted");
 
 #legend("topright", c("A","B", "C", "D"), pch=c(1,4,5,6), col="black");
 

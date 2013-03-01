@@ -29,7 +29,7 @@
 %
 \title{Complete Real-Time Liver Model including Glisson Capsule, Vascular Network and Parenchyma}
 %
-\titlerunning{TODO: Title}  % abbreviated title (for running head)
+\titlerunning{Complete Liver Model}  % abbreviated title (for running head)
 %                                     also used for the TOC unless
 %                                     \toctitle is used
 %
@@ -82,7 +82,7 @@ achieve given the complexity of soft tissues.
 In case of human liver, the task of real-time accurate modeling is challenging, mainly because of the complex structure 
 of this organ composed of three main constituents: \emph{parenchyma}, \emph{vascular networks} and \emph{Glisson's capsule}.
 The parenchyma has certainly been the most studied component of the liver; today the researchers agree on hyperelastic 
-properties of the tissue, for which the mechanical parameters have been reported for example in~\cite{}\TODO. 
+properties of the tissue, for which the mechanical parameters have been reported for example in~\cite{Kerdok2006,Gao2009}. 
 Several methods have been proposed to model the hyperelastic behaviour at real-time rates, such as multiplicative Jacobian decomposition
 introduced in~\cite{Marchesseau2010}.
 
@@ -239,13 +239,13 @@ To maintain simplicity of the composite model we choose simple triangular
 elements with constant strain (CST).
 
 The computation of elastic stiffness matrix follows the common derivation
-%
+
 \begin{eqnarray}
-  \Mat{K^m} & = \int_V \Mat{B}^T \Mat{E} \Mat{B} dV     \label{mem1} \\
+  \Mat{K}^m & = \int_V \Mat{B}^T \Mat{E} \Mat{B} dV     \label{mem1} \\
             & = h \int_A \Mat{B}^T \Mat{E} \Mat{B} dA   \label{mem2} \\
             & = h A \Mat{B}^T \Mat{E} \Mat{B}           \label{mem3}
 \end{eqnarray}
-%
+
 where $\Mat{B}$ is the strain-displacement matrix, $\Mat{E}$ the material
 matrix, $h$ is the thickness and $A$ area of the element. In the previous
 \eqref{mem2} follows from the fact that we assume constant thickness of the
@@ -354,7 +354,7 @@ corotational model might become questionable.}
 \IP{we have to also add some information how we got the models -- either we comment briefly in each subsection:
 Local deformations: cube meshed in gmsh (graded mesh?), number of elements, etc...
 Global deformations: contrast-enhanced CT data obtained via acquisition performed on a female pig; the 3D mesh created by a
-semi-automatic segmentation using ITKSnap~\cite{itksnap}, then meshed using CGAL~\cite{cgal-meshingAlg} resulting in a mesh having 
+semi-automatic segmentation using ITKSnap\footnote{www.itksnap.org}, then meshed using CGAL\footnote{www.cgal.org} \cite{Boltcheva2009} resulting in a mesh having 
 NNN elements. The capsule modelled using the surface triangular elements extracted from the tetrahedra. The vascularization 
 created from the segmentation of hepatic vein as described in~\cite{Peterlik2012}. The structured composed of MMM elements.}
 \TG{Sure. Put it here or into the respective subsections? (cube: graded
