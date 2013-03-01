@@ -5,7 +5,7 @@ a1 <- a1[1:31,c(4,3)]; a1[,2] <- a1[,2] - 0.015; a1[,2] <- a1[,2] * 1000
 a2 <- a2[1:33,c(4,3)]; a2[,2] <- a2[,2] - 0.015; a2[,2] <- a2[,2] * 1000
 
 pdf("aspiration.pdf", width=3, height=1.5, pointsize=8); # sizes in inches
-p <- par(lwd=2, mar=c(4,4,1,1)+0.1);
+p <- par(lwd=0.5, mar=c(4,4,0,0)+0.1);
 
 plot(range(c(a1[,1], a2[,1])), range(c(a1[,2], a2[,2])), #ylim=c(0, 0.004), 
      type="n", xlab="x-coordinate", ylab="Displacement [mm]")
