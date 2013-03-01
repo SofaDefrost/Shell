@@ -65,7 +65,6 @@ Additionally, we show, by simulating natural global deformations of the liver ob
 \section{Introduction} 
 \IP{I think we should provide some introductory motivation and broader context of the reasarch. I tried this:}
 
-In 2009, nearly 100,000 European citizens died of cirrhosis or liver cancer. 
 According to the statistics, nearly 100,000 European citizens die of cirrhosis or liver cancer each year. 
 Although new methods such as radio-frequency ablation or cryo-ablation used in interventional radiology 
 represent promising improvements, surgery remains the option that offers the foremost success rate against these pathologies. 
@@ -81,33 +80,33 @@ achieve given the complexity of soft tissues.
 
 In case of human liver, the task of real-time accurate modeling is challenging, mainly because of the complex structure 
 of this organ composed of three main constituents: \emph{parenchyma}, \emph{vascular networks} and \emph{Glisson's capsule}.
-The parenchyma is certainly the most studied component of the liver; today the researchers agree on hyperelastic 
+The parenchyma has certainly been the most studied component of the liver; today the researchers agree on hyperelastic 
 properties of the tissue, for which the mechanical parameters have been reported for example in~\cite{}\TODO. 
 Several methods have been proposed to model the hyperelastic behaviour at real-time rates, such as multiplicative Jacobian decomposition
 introduced in~\cite{Marchesseau2010}.
 
-The mechanical importance of the vascular structures in liver is studied in~\cite{Peterlik2012}. It shows that that the 
+The mechanical importance of the vascular structures in liver is studied in~\cite{Peterlik2012}. It shows that the 
 influence of vessels on the mechanical behaviour of the liver is significant, mainly if large deformations occur. 
 Since detailed modeling of the vessels would be extremely costly (mainly because of the thickness of the vessel wall 
 being less than 250\,{$\mu$}m), the authors propose a composite model allowing for real-time simulation of entire liver
 with two vascular trees corresponding to portal and hepatic veins.
 
-The final constituent represented by Glisson's capsule has been already studied in the literature. 
-Extensive experiments on porcine liver have been published in~\cite{Umale2013}. The measurements show that although being very 
-thin (10--20$\mu m$), the Young's modulus of the capsule (reported as $8.22\pm3.42$\,MPa) exceeds the values for the parenchyma by three orders of magnitude,
-suggesting the mechanical influence of the membrane on the liver behaviour.
+Rather a small number of studies have been conducted on the last liver constituent, the  Glisson's capsule.
+Quantitative results of experiments on a porcine liver have been published in~\cite{Umale2013}. The measurements indicate that although being very 
+thin (10--20$\mu m$), the capsule shows to be stiff in tensile tests mainly if compared to the parenchyma: the Young's modulus of the capsule (reported as $8.22\pm3.42$\,MPa) exceeds the values for the parenchyma by three orders of magnitude.
+This suggests that the mechanical influence of the membrane on the liver behaviour is significant.
 
 In~\cite{Hollenstein2006}, a local influence of the capsule has been measured using a special aspiration device. The study was then repeated 
 in vivo on human patients during the operation, confirming the mechanical importance of the membrane~\cite{Ahn2010,Nava2008}.
 To our best knowledge, no attempt has been made to demonstrate the role of the Glisson's capsule on the global behaviour of 
-the liver, i.e. during large deformations of the organ.
+the liver, mainly if large deformations of the organ take place.
 
 The main contribution of the paper is twofold: first, we present an efficient real-time model of the liver, taking into account 
 the parenchyma, vascularization and Glisson's capsule. The model is based on three different finite element representations for each constituent,
-linked together via mechanical coupling. We show that the model mimics the local experiments described in~\cite{Hollenstein2006}.
+linked together via mechanical coupling. We show that the model mimics the \emph{local} experiments described in~\cite{Hollenstein2006}.
  
-Second, we use the complete model of the liver to demonstrate the influence of the Glisson's
-capsule via simulation: using a specific model of a pig liver built from CT contrast-enhanced data, we show that there is a significant 
+Second, we use the complete model of the liver to demonstrate the \emph{global} influence of the Glisson's
+capsule via simulation: using a specific model of a porcine liver built from CT contrast-enhanced data, we show that there is a significant 
 difference in the response of the model with and without the capsule in case when the liver undergoes large deformations. 
 
 The paper is organized as follows: \TODO{paper organization}.
