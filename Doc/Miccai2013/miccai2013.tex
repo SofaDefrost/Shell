@@ -420,7 +420,7 @@ agreement with the data obtained by Hollenstein et al.
 \begin{figure}[htb]
   \centering
     \includegraphics[width=.95\textwidth]{forceEvolution.pdf}
-  \caption{\label{fig-force}Evolution of forces during elastic warping.}
+  \caption{\label{f:forceEvol}Evolution of forces during elastic warping.}
 \end{figure}
 
 \begin{figure}[htb]
@@ -428,7 +428,7 @@ agreement with the data obtained by Hollenstein et al.
     \subfigure[]{\includegraphics[width=.32\textwidth]{gravity2.png}}
     \subfigure[]{\includegraphics[width=.32\textwidth]{registered.png}}
     \subfigure[]{\includegraphics[width=.32\textwidth]{distanceMap.png}}
-  \caption{\label{fig-gravity}Vascularized liver under pure gravity with (red) and without (green) the capsule.}
+  \caption{\label{f:global}Vascularized liver under pure gravity with (red) and without (green) the capsule.}
 \end{figure}
 
 In the previous section we have shown that the composite model of parenchyma and 
@@ -450,36 +450,33 @@ used in simulation where external force representing the gravity was applied to 
 resulting in large deformations mainly in the area of lobes. The refresh rate of 10\,FPS 
 was achieved on a desktop computer with Intel i7 CPU running at 3\,GHz and 16\,GB of memory. 
 
+The simulation with gravity was also used as a first demonstration of the global influence of the capsule. 
+In Fig.~\ref{f:global}a, the models with capsule (red) and without (yellow) are depicted after being 
+deformed due to the gravity, showing a significant difference between the two models.  
 
-\IP{Short overview, I'll put it together tomorrow morning and add some fancy images. I am not sure if we are going to mess up 
-with gravity, it seems to me too much... We should rather focus only on this "registration-like" simulation (what about 
-using term "elastic warping"??? and explain properly why we think it proves the capsule plays a role. My first shot:}
+In order to demonstrate the influence of the capsule on a real deformation of the liver, we 
+performed a following protocol employing the supine and flank models built from the CT data. 
+First, we performed a rigid registration of the two organs \wrt\ the root point of the hepatic vein. 
+As shown in Fig.~\ref{f:global}b, the liver undergoes very large deformation when the body 
+is turned from the supine to the flank position, exceeding 6\,cm for some parts of the organ. 
+In order to induce similar deformation, we extracted feature pairs from the vascular system of the liver:
+we selected points such as bifurcations which can be identified easily in each supine and flank 
+model providing a set of correspondences. In the next stage, we used these correspondences as a non-homogeneous
+boundary conditions (imposed via penalty term) in order to perform a deformable registration of the supine
+model onto the flank data. During the registration, the response forces acting in the prescribed 
+points were calculated. It is important to emphasize that the goal of the simulation was not 
+to perform an accurate registration of the flank and supine data, however, the process was used 
+as an example of real deformation that can be undertaken by the liver. 
 
---we want to mimic a process takes place inside the pig such that it results in a natural deformation of the liver
-
---such a natural deformation happens when the position of the pig is changed from the flank to a supine position
-
---we performed a segmentation of both flank and supine and for some parts of the liver, displacements up to XXX\,cm  (I would say 3-4) 
-were observed, which is enough given the size of the entire liver (18\,cm longest dimension)
-
---to induce the same deformation on the liver, we performed a process similar to deformation registration between the flank and supine 
-data: we chosen a set of feature in flank and supine data such that each feature could be reliably located in both supine and flank 
-data
-
---this set of features was extracted from the vascularization, since although the vascular tree is getting deformed together with the liver, 
-the topology remains constant
-
---then we placed a linear spring to each feature location in the supine data, so it's attracted towards its flank position
-
---since the features were mapped to the elements via barycentric mapping, the entire model of the liver is being deformed, "elastically warped" from the 
-supine to the flank position
-
-
---now the tricky part begins: we performed this process with models with and without the capsule; in each case we obtained 
-a different resulting shape of liver
-
---additionally, we measured the forces needed to warp the liver in both cases: we obtained a difference summarized as.... ???
-
+The registration process was performed with the vascularized model, however, the effect of the capsule was 
+not considered. Once the static equilibrium was achieved, the effect of the capsule was gradually switched 
+on, \ie\ the stiffness of the membrane was slowly increased from 0 to 8\,MPa. The force response in the 
+prescribed points is depicted in Fig.~\ref{f:forceEvol} showing the change in the response as the effect
+of the capsule is increased. At the same time, the shape of the deformed liver with capsule was compared 
+to the model without capsule. A distance map is depicted in Fig.~\ref{f:global}c: in the red areas, the 
+maximal difference of 1\,cm. We believe that this results confirms that the Glisson's capsule 
+plays an important role in the mechanical response of the entire liver, \ie\ not only on the local, but 
+also on the global level.
 
 %}}}
 
