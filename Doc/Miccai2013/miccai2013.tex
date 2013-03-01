@@ -65,8 +65,6 @@ Additionally, we show, by simulating natural global deformations of the liver ob
 \end{abstract}
 
 \section{Introduction} 
-\IP{I think we should provide some introductory motivation and broader context of the reasarch. I tried this:}
-
 According to the statistics, nearly 100,000 European citizens die of cirrhosis or liver cancer each year. 
 Although new methods such as radio-frequency ablation or cryo-ablation used in interventional radiology 
 represent promising improvements, surgery remains the option that offers the foremost success rate against these pathologies. 
@@ -224,7 +222,7 @@ the tetrahedral FE model.
 %}}}
 
 \subsection{Glisson's Capsule} %{{{
-
+\label{ss:capsuleModel}
 The thickness of the Glisson's capsule is relatively small. Umale et al.
 \cite{Umale2011} reported for porcine liver values in range of 10-20
 $\mu$m.
@@ -333,7 +331,6 @@ system of linear equations is then solved by direct LDL solver.
 
 
 \section{Experiments} %{{{
-
 To evaluate the model it was implemented in the
 SOFA\footnote{www.sofa-framework.org} framework and a set of
 numerical simulations was performed. First local deformations were compared to the
@@ -344,86 +341,59 @@ neglected even in the context of global deformations and its overall
 stiffness plays an important role, the model of
 the complete liver was subjected to natural global deformations.
 
-In the simulations we used material properties for a porcine liver as
-reported by Umale \cite{Umale2013}. The
-parenchyma was modeled with elastic modulus 1980~Pa and the capsule has
-elastic modulus 8~MPa and thickness 20~$\mu$m.
-\IP{OK, now we must decide what value we are going to use for the parenchyma, so it does not explode but it's somehow reasonable...)}
-\TG{Right now I'm using 3500 Pa for parenchyma. I can even use higher
-modulus, but not any smaller because we get large deformations and use of
-corotational model might become questionable.}
+In the simulations we used material properties reported in literature: for the 
+Glisson's capsule we used Young's modulus $E_c$=8.22\,MPa and thickness $t_c$=20\,$\mu$m~\cite{Umale2013},
+whereas for the vessel wall we applied stiffness $E_v$=0.62\,MPa and $t_v$=200\,$\mu$m~\cite{Peterlik2012}.
+Since the values for parenchyma elasticity quite vary (usually between 2\,kPa to 5\,kPa), we perform the simulation 
+with $E_p$=3.5\,kPa.
 
-\TG{values for blood vessels}
-
-\IP{we have to also add some information how we got the models -- either we comment briefly in each subsection:
-Local deformations: cube meshed in gmsh (graded mesh?), number of elements, etc...
-Global deformations: contrast-enhanced CT data obtained via acquisition performed on a female pig; the 3D mesh created by a
-semi-automatic segmentation using ITKSnap\footnote{www.itksnap.org}, then meshed using CGAL\footnote{www.cgal.org} \cite{Boltcheva2009} resulting in a mesh having 
-NNN elements. The capsule modelled using the surface triangular elements extracted from the tetrahedra. The vascularization 
-created from the segmentation of hepatic vein as described in~\cite{Peterlik2012}. The structured composed of MMM elements.}
-\TG{Sure. Put it here or into the respective subsections? (cube: graded
-  mesh created by gmsh with 2648 tetrahedra, 518 triangles for capsule
-extracted from tetrahedral mesh.)}
-
-
+\begin{figure}[t]
+    	\subfigure[]{\includegraphics[height=3.5cm]{aspiration.jpg}}
+	\subfigure[]{\includegraphics[width=7cm]{aspiration.pdf}}
+  \caption{\label{fig-aspiration}Aspiration test: (a) the SOFA simulation scene, (b) displacment profile
+  with (blue) and without (black) the capsule.}
+\end{figure}
 
 \subsection{Local Deformations} %{{{
-
 During the contact with an instrument (probe, needle insertion, sharp
 instruments, \ldots) a specific deformation occurs in the near vicinity of
 the instrument. This type of deformation may not necessarily induce the
 deformation of the object as a whole and therefore can be considered as
-local. Correct material properties are not only important for amount of the
-displacement but play also a crucial role in capturing the correct area of
+local. Correct material properties are not only important to quantify the
+displacement, but also play an important role in capturing the correct area of
 the deformation or its profile near the instrument.
-\TG{Does it make sense this way? I can add an image. :)}
 
-One example of such local deformation occurs during the aspiration test
+A good example of such a local deformation is the aspiration test
 when the response of liver to the negative pressure is measured.
-Hollenstein et al. \cite{Hollenstein2006} observed that the Glisson's
-capsule has non-negligible influence on response of the tissue and modeling
-only the parenchyma leads to overestimation of the deformation. We
-reproduced the test with our model and acquired similar results.
+In~\cite{Hollenstein2006} it is observed that the Glisson's
+capsule has a non-negligible influence on the response of the tissue and modeling
+only the parenchyma leads to an overestimation of the deformation. 
 
-The aspiration device consists of a tube with 1 cm in diameter and is able
+%We reproduced the test with our model and acquired similar results.
+The aspiration device consists of a tube with 1\,cm in diameter and is able
 to control internal pressure in the tube. The test is performed by
 attaching the tube to the tissue and measuring the tissue response. We
-have set up a simulation in the spirit of this test. 
-The simulation is performed with a 15x15x15 mm cube of liver tissue and tube
-with 1 cm in diameter. The pressure of 3 kPa is simulated inside the tube.
+have set up a simulation to reproduce the experiment (see Fig.~\ref{fig-aspiration}a: we meshed a 15$\times$15$\times$15\,mm$^3$ 
+cube representing the tissue 
+resulting in 2648 tetrahedra. The we attached a tube having diameter d=1\,cm 
+and applied a pressure of 3\,kPa inside the tube. The interaction between the tube and 
+tissue surface was modelled with friction contact. 
 
-Figure \ref{fig-aspiration} shows the profiles of cuts in the middle of the
-test cube. It can be seen that the
-deformation for the model without capsule is much larger. This is in good
-agreement with the data obtained by Hollenstein et al.
-
-\begin{figure}[htb]
-  \centering
-  \begin{tabular}{cc}
-    \includegraphics[width=3in]{aspiration.pdf} &
-    \includegraphics[height=1.5in]{aspiration.jpg}\\
-    a) & b)
-  \end{tabular}
-
-  \caption{\label{fig-aspiration}Aspiration test: a) displacment profile
-  with (blue) and without (black) the capsule; b) simulation scene}
-\end{figure}
-
+In Fig.~\ref{fig-aspiration}b the profiles of cuts in the middle of the
+test cube are presented showing significantly larger deformation in the model without capsule. This is in perfect 
+agreement with the results reported in~\cite{Hollenstein2006} and it can be concluded that 
+our composite model based on coupling the triangular and tetrahedral elements provides an accurate 
+model of parenchyma and capsule.
 
 %}}}
 
-
-
-
-\subsection{Global Deformations}
-
-\begin{figure}[htb]
+\begin{figure}[t]
   \centering
     \includegraphics[width=.95\textwidth]{forceEvolution.pdf}
   \caption{\label{f:forceEvol}Evolution of forces during elastic warping.}
 \end{figure}
 
-\begin{figure}[htb]
+\begin{figure}[t]
   \centering
     \subfigure[]{\includegraphics[width=.32\textwidth]{gravity2.png}}
     \subfigure[]{\includegraphics[width=.32\textwidth]{registered.png}}
@@ -431,6 +401,7 @@ agreement with the data obtained by Hollenstein et al.
   \caption{\label{f:global}Vascularized liver under pure gravity with (red) and without (green) the capsule.}
 \end{figure}
 
+\subsection{Global Deformations}
 In the previous section we have shown that the composite model of parenchyma and 
 capsule can be used to reproduce the \emph{local} behaviour of the tissue. In the following, 
 first we present a real-time complete model of entire liver built from image data. 
@@ -439,12 +410,12 @@ the model undergoes large deformations.
 
 The complete model was constructed using constrast-enhanced CT data acquired on a female pig 
 being positioned first in supine and then flank configuration. 
-The liver and hepatic vein were segmented for both datasets  using semi-automatic methods available in ITKSnap.
-Further, an unstructured mesh was obtained from the segmented maps using algorithm~\cite{boltcheva}
-available in ITKSnap. The semiautomatic method presented in~\cite{peterlik2012} was 
+The liver and hepatic vein were segmented for both datasets  using semi-automatic methods available in ITKSnap~\footnote{www.itksnap.org}.
+Further, an unstructured mesh was obtained from the segmented maps using CGAL~\footnote{www.cgal.org}. 
+The semi-automatic method presented in~\cite{Peterlik2012} was 
 then applied to the segmented map of the hepatic vein, resulting in linked-beam model. 
 Finally, the model of the Glisson's capsule was constructed using the elements described in 
-section~\ref{} over the surface triangles extracted from the tetrahedral mesh. 
+section~\ref{ss:capsuleModel} over the surface triangles extracted from the tetrahedral mesh. 
 The complete model composed of 6200 tetrahedra, 220 beams and 1820 triangles was then 
 used in simulation where external force representing the gravity was applied to the model, 
 resulting in large deformations mainly in the area of lobes. The refresh rate of 10\,FPS 
