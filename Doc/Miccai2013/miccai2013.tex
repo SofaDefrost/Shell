@@ -38,8 +38,8 @@
 %\author{%
 %Tom\'a\v{s} Golembiovsk\'y\inst{1,2} \and%
 %Igor Peterl\'ik\inst{3} \and%
-%Christian Duriez\inst{2} \and%
-%Stephan\'e Cotin\inst{2,3}%
+%Christian Duriez\inst{2,4} \and%
+%Stephan\'e Cotin\inst{2}%
 %}
 %
 %\authorrunning{Tom\'a\vs Golembiovsk\'y et al.} % abbreviated author list (for running head)
@@ -47,7 +47,8 @@
 %\institute{%
 %Faculty of Informatics, Masaryk University, Brno, Czech Republic\and%
 %INRIA Lille -- Nord, France\and%
-%IHU, Strasbourg, France%
+%Institut Hospitallo-Universitaire, Strasbourg, France \and%
+%University of Lille, Lille, France%
 %}
 %
 \maketitle
@@ -92,7 +93,7 @@ being less than 250\,{$\mu$}m), the authors propose a composite model allowing f
 with two vascular trees corresponding to portal and hepatic veins.
 
 Rather a small number of studies have been conducted on the last liver constituent, the  Glisson's capsule.
-Quantitative results of experiments on a porcine liver have been published in~\cite{Umale2013}. The measurements indicate that although being very 
+Quantitative results of experiments on a porcine liver have been published in~\cite{Umale2011}. The measurements indicate that although being very 
 thin (10--20$\mu m$), the capsule shows to be stiff in tensile tests mainly if compared to the parenchyma: the Young's modulus of the capsule (reported as $8.22\pm3.42$\,MPa) exceeds the values for the parenchyma by three orders of magnitude.
 This suggests that the mechanical influence of the membrane on the liver behaviour is significant.
 
@@ -240,13 +241,13 @@ To maintain simplicity of the composite model we choose simple triangular
 elements with constant strain (CST).
 
 The computation of elastic stiffness matrix follows the common derivation
-
+%
 \begin{eqnarray}
-  \Mat{K}^m & = \int_V \Mat{B}^T \Mat{E} \Mat{B} dV     \label{mem1} \\
-            & = h \int_A \Mat{B}^T \Mat{E} \Mat{B} dA   \label{mem2} \\
-            & = h A \Mat{B}^T \Mat{E} \Mat{B}           \label{mem3}
+  \Mat{K}^m & = & \int_V \Mat{B}^T \Mat{E} \Mat{B} dV     \label{mem1} \\
+            & = & h \int_A \Mat{B}^T \Mat{E} \Mat{B} dA   \label{mem2} \\
+            & = & h A \Mat{B}^T \Mat{E} \Mat{B}           \label{mem3}
 \end{eqnarray}
-
+%
 \noindent%
 where $\Mat{B}$ is the strain-displacement matrix, $\Mat{E}$ the material
 matrix, $h$ is the thickness and $A$ area of the element. In the previous
@@ -254,7 +255,7 @@ matrix, $h$ is the thickness and $A$ area of the element. In the previous
 element and \eqref{mem3} follows from the fact that the strain-displacement
 matrix is in our case constant. The strain-displacement matrix for the CST
 element can be expressed as:
-
+%
 \begin{equation}
   \Mat{B} = \frac{1}{2A} \begin{bmatrix}
     y_{23} & 0      & y_{31} & 0      & y_{12} & 0 \\
@@ -262,7 +263,7 @@ element can be expressed as:
     x_{32} & y_{23} & x_{13} & y_{31} & x_{21} & y_{12}
   \end{bmatrix}
 \end{equation}
-
+%
 The values $x_{ij} = x_i - x_j$ and $y_{ij} = y_i - y_j$ are computed from
 the $x$ or $y$ coordinates of the nodes $i,j$ of the triangular element.
 The reader can reffer to the respective literature for more thorough
@@ -289,39 +290,39 @@ problem of obtaining the surface mesh, but has one more advantage. Nodes
 of the triangular mesh overlap with nodes of the tetrahedral mesh and we do
 not have to project nodes of triangular mesh onto the tetrahedra. More over,
 the stiffness matrices for capsule and parenchyma are easily assembled
-together and solved as one system.
-
-\CD{The following may appear as "trivial"... maybe we can remove this part at the end if we need space} 
-Without the loss of generality we can assume the tetrahedron consists of
-nodes $p_1, p_2, p_3$ and $p_4$ and the boundary triangle has nodes $p_1, p_2$
-and $p_3$. We can reorder the degrees of freedom so that the stiffness
-matrix $\Mat{K}^t$ for the tetrahedron can be written as:
-
-\begin{equation}
-  \Mat{K}^t = \left[\begin{array}{c|c}
-      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
-      \hline
-      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
-  \end{array}\right]
-\end{equation}
-
-Then the assembled stiffness matrix for the element is:
-
-\begin{equation}
-  \Mat{K} = \left[\begin{array}{c|c}
-      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
-      \hline
-      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
-  \end{array}\right]
-  +
-  \left[\begin{array}{c|c}
-      \Mat{K}^m & 0 \\
-      \hline
-      0 & 0 \\
-  \end{array}\right]
-\end{equation}
-
-Where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
+together.% and solved as one system.
+%
+%\CD{The following may appear as "trivial"... maybe we can remove this part at the end if we need space} 
+%Without the loss of generality we can assume the tetrahedron consists of
+%nodes $p_1, p_2, p_3$ and $p_4$ and the boundary triangle has nodes $p_1, p_2$
+%and $p_3$. We can reorder the degrees of freedom so that the stiffness
+%matrix $\Mat{K}^t$ for the tetrahedron can be written as:
+%%
+%\begin{equation}
+%  \Mat{K}^t = \left[\begin{array}{c|c}
+%      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
+%      \hline
+%      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
+%  \end{array}\right]
+%\end{equation}
+%%
+%Then the assembled stiffness matrix for the element is:
+%%
+%\begin{equation}
+%  \Mat{K} = \left[\begin{array}{c|c}
+%      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
+%      \hline
+%      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
+%  \end{array}\right]
+%  +
+%  \left[\begin{array}{c|c}
+%      \Mat{K}^m & 0 \\
+%      \hline
+%      0 & 0 \\
+%  \end{array}\right]
+%\end{equation}
+%%
+%Where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
 The resulting
 system of linear equations is then solved by direct LDL solver.
 
@@ -342,7 +343,7 @@ stiffness plays an important role, the model of
 the complete liver was subjected to natural global deformations.
 
 In the simulations we used material properties reported in literature: for the 
-Glisson's capsule we used Young's modulus $E_c$=8.22\,MPa and thickness $t_c$=20\,$\mu$m~\cite{Umale2013},
+Glisson's capsule we used Young's modulus $E_c$=8.22\,MPa and thickness $t_c$=20\,$\mu$m~\cite{Umale2011},
 whereas for the vessel wall we applied stiffness $E_v$=0.62\,MPa and $t_v$=200\,$\mu$m~\cite{Peterlik2012}.
 Since the values for parenchyma elasticity quite vary (usually between 2\,kPa to 5\,kPa), we perform the simulation 
 with $E_p$=3.5\,kPa.
