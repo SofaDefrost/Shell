@@ -34,7 +34,7 @@
         <UniformMass totalmass="1.5" />		
 
         <!--<MJEDTetrahedralForceField ParameterSet="5172.41379 46551.724" materialName="StVenantKirchhoff"/>-->
-        <TetrahedronFEMForceField name="FEM" youngModulus="1.98e3" poissonRatio="0.45" method="large" listening="1" />
+        <TetrahedronFEMForceField name="FEM" youngModulus="3500" poissonRatio="0.45" method="large" listening="1" />
 
         <BoxROI name="box" box="0.20 0.24 0.36 0.25 0.28 0.42" drawBoxes="1"/>
         <FixedConstraint  indices="@box.indices"/>
@@ -74,7 +74,7 @@
         <Node name="Parenchyma">
 
             <!--<MJEDTetrahedralForceField ParameterSet="5172.41379 46551.724" materialName="StVenantKirchhoff"/>-->
-            <TetrahedronFEMForceField name="FEM" youngModulus="1.98e3" poissonRatio="0.45" method="large" listening="1" />
+            <TetrahedronFEMForceField name="FEM" youngModulus="3500" poissonRatio="0.45" method="large" listening="1" />
 
             <VTKExporter filename="result_tetra.tri.vtk" XMLformat="false" listening="true" edges="0" triangles="0" quads="0" tetras="1" exportAtEnd="true"/>   	
 
