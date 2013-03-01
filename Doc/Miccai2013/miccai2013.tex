@@ -112,9 +112,9 @@ difference in the response of the model with and without the capsule in case whe
 
 The paper is organized as follows: first we describe the proposed vascularized
 liver model with capsule (Sec. 2); then we show the correct behaviour of the
-model in context of local deformations and finally we analyze the influence of
-the capsule on the global deformations of the liver and show that despite the
-small thickness it plays an important role also in the global context.
+model in context of \emph{local} deformations and finally we analyze the influence of
+the capsule on the \emph{global} deformations of the liver and show that despite the
+small thickness it plays an important role also in the \emph{global} context.
 
 
 %Medical simulation is expected to play an integral part in many aspects of
@@ -179,9 +179,9 @@ phenomena related to viscosity.
 
 The parenchyma is modeled using corotational finite elements~\cite{Felippa2005}.
 While relying on linear stress-strain relationship, it allows for large displacements including rotations. 
-While in the full non-linear formulation, the stiffness matrix relates the forces a $\Vec{f}$ and 
+While in the full non-linear formulation, the stiffness matrix relates the forces $\Vec{f}$ and 
 displacements $\Vec{u}$ as $\Vec{f} = \Mat{K}(\Vec{u})$, the corotational model 
-requires the stiffness matrix $\Mat{K}_0$ of the system be computed only once before the simulation begins. 
+requires the stiffness matrix $\Mat{K}_0$ of the system to be computed only once before the simulation begins. 
 Then, in each step, the motion of each element $e$ is decomposed into rigid rotation $\Mat{R}^e$ and local deformation. 
 The rotations are then used to update each local element stiffness matrix as $\Mat{R}\Mat{K}_0\Mat{R}^{\top}$
 whereas the deformations are used to compute the linear strain in the local corotational frame.
@@ -233,7 +233,7 @@ dense mesh to avoid numerical instabilities and would significantly
 violate the speed requirements imposed on medical simulators.
 Instead modeling the capsule with two-dimensional elements that abstract from the
 thickness in the third dimension seems
-as a natural choice. Mechanics provides this a FE tool in the form of membranes
+as a natural choice. Mechanics provides this FE tool in the form of membranes
 and shells. Based on the small thickness (compared to the surface area) we also
 assume negligible bending forces and propose a model based on membrane
 elements. 
@@ -248,6 +248,7 @@ The computation of elastic stiffness matrix follows the common derivation
             & = h A \Mat{B}^T \Mat{E} \Mat{B}           \label{mem3}
 \end{eqnarray}
 
+\noindent%
 where $\Mat{B}$ is the strain-displacement matrix, $\Mat{E}$ the material
 matrix, $h$ is the thickness and $A$ area of the element. In the previous
 \eqref{mem2} follows from the fact that we assume constant thickness of the
