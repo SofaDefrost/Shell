@@ -4,6 +4,7 @@
 \usepackage{amsmath}
 \usepackage{makeidx}
 \usepackage[pdftex]{graphicx}
+\usepackage{subfigure}
 
 \def\wrt{w.\,r.\,t.}
 \def\eg{e.\,g.}
@@ -424,9 +425,30 @@ agreement with the data obtained by Hollenstein et al.
 
 \begin{figure}[htb]
   \centering
-    \includegraphics[width=.25\textwidth]{gravity.jpg}
+    \subfigure[]{\includegraphics[width=.32\textwidth]{gravity2.png}}
+    \subfigure[]{\includegraphics[width=.32\textwidth]{registered.png}}
+    \subfigure[]{\includegraphics[width=.32\textwidth]{distanceMap.png}}
   \caption{\label{fig-gravity}Vascularized liver under pure gravity with (red) and without (green) the capsule.}
 \end{figure}
+
+In the previous section we have shown that the composite model of parenchyma and 
+capsule can be used to reproduce the \emph{local} behaviour of the tissue. In the following, 
+first we present a real-time complete model of entire liver built from image data. 
+Second, using this model we demonstrate the \emph{global} mechanical influence of the capsule when 
+the model undergoes large deformations. 
+
+The complete model was constructed using constrast-enhanced CT data acquired on a female pig 
+being positioned first in supine and then flank configuration. 
+The liver and hepatic vein were segmented for both datasets  using semi-automatic methods available in ITKSnap.
+Further, an unstructured mesh was obtained from the segmented maps using algorithm~\cite{boltcheva}
+available in ITKSnap. The semiautomatic method presented in~\cite{peterlik2012} was 
+then applied to the segmented map of the hepatic vein, resulting in linked-beam model. 
+Finally, the model of the Glisson's capsule was constructed using the elements described in 
+section~\ref{} over the surface triangles extracted from the tetrahedral mesh. 
+The complete model composed of 6200 tetrahedra, 220 beams and 1820 triangles was then 
+used in simulation where external force representing the gravity was applied to the model, 
+resulting in large deformations mainly in the area of lobes. The refresh rate of 10\,FPS 
+was achieved on a desktop computer with Intel i7 CPU running at 3\,GHz and 16\,GB of memory. 
 
 
 \IP{Short overview, I'll put it together tomorrow morning and add some fancy images. I am not sure if we are going to mess up 
