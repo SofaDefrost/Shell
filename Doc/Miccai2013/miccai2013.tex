@@ -1,6 +1,7 @@
 % http://www.miccai2013.org/submission_guideline.html
 \documentclass{llncs}
 
+\usepackage{amsmath}
 \usepackage{makeidx}
 \usepackage[pdftex]{graphicx}
 
@@ -17,7 +18,7 @@
 \newcommand{\TODO}[1]{{\color{red}\textbf{TODO: #1}}}
 %%%
 
-\newcommand{\Vec}[1]{\mathbf{#1}}
+\renewcommand{\Vec}[1]{\mathbf{#1}}
 \newcommand{\Mat}[1]{\mathbf{#1}}
 
 \begin{document}
@@ -235,9 +236,35 @@ and shells. Based on the small thickness (compared to the surface area) we also
 assume negligible bending forces and propose a model based on membrane
 elements. 
 To maintain simplicity of the composite model we choose simple triangular
-elements with constant strain.
+elements with constant strain (CST).
 
-\TG{add a ref. or dive into the definition? \cite{Felippa2003}} \CD{both...}
+The computation of elastic stiffness matrix follows the common derivation
+%
+\begin{eqnarray}
+  \Mat{K^m} & = \int_V \Mat{B}^T \Mat{E} \Mat{B} dV     \label{mem1} \\
+            & = h \int_A \Mat{B}^T \Mat{E} \Mat{B} dA   \label{mem2} \\
+            & = h A \Mat{B}^T \Mat{E} \Mat{B}           \label{mem3}
+\end{eqnarray}
+%
+where $\Mat{B}$ is the strain-displacement matrix, $\Mat{E}$ the material
+matrix, $h$ is the thickness and $A$ area of the element. In the previous
+\eqref{mem2} follows from the fact that we assume constant thickness of the
+element and \eqref{mem3} follows from the fact that the strain-displacement
+matrix is in our case constant. The strain-displacement matrix for the CST
+element can be expressed as:
+
+\begin{equation}
+  \Mat{B} = \frac{1}{2A} \begin{bmatrix}
+    y_{23} & 0      & y_{31} & 0      & y_{12} & 0 \\
+         0 & x_{32} & 0      & x_{13} & 0      & x_{21} \\
+    x_{32} & y_{23} & x_{13} & y_{31} & x_{21} & y_{12}
+  \end{bmatrix}
+\end{equation}
+
+The values $x_{ij} = x_i - x_j$ and $y_{ij} = y_i - y_j$ are computed from
+the $x$ or $y$ coordinates of the nodes $i,j$ of the triangular element.
+The reader can reffer to the respective literature for more thorough
+description \cite{Felippa2003}.
 
 We again use linear elastic material and employ the corotational formulation
 for the triangular elements.
