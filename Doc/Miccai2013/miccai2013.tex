@@ -105,7 +105,7 @@ Since a detailed modeling of the vessels would be extremely costly (mainly becau
 the authors propose a composite model allowing for real-time simulation of entire liver with vasculature.
 
 Rather a small number of studies have been conducted on the last liver constituent, the  Glisson's capsule.
-Quantitative results of experiments on a porcine liver have been published in~\cite{Umale2013}; the measurements indicate that although being very 
+Quantitative results of experiments on a porcine liver have been published in~\cite{Umale2011}; the measurements indicate that although being very 
 thin (10--20$\mu m$), the capsule shows to be stiff in tensile tests: the Young's modulus of the capsule (reported as $8.22\pm3.42$\,MPa) 
 exceeds the values for the parenchyma by three orders of magnitude.
 This suggests that the mechanical influence of the membrane on the liver behaviour is not negligible.
@@ -241,17 +241,17 @@ the tetrahedral FE model.
 
 \subsection{Glisson's Capsule} %{{{
 \label{ss:capsuleModel}
-The thickness of the Glisson's capsule is relatively small. Umale et al.
-\cite{Umale2011} reported for porcine liver values in range of 10-20
-$\mu$m.
+The thickness of the Glisson's capsule is relatively small: values in range of 10-20
+$\mu$m have been reported in~\cite{Umale2011}.
 It is not possible to model such thin structure with classical tetrahedral
-elements. Modeling this non-homogeneous volumetric object would require a
-dense mesh to avoid numerical instabilities and would significantly
-violate the speed requirements imposed on medical simulators.
-Instead modeling the capsule with two-dimensional elements that abstract from the
+elements, if real-time aspect of the simulation is to be preserved.
+Furthermore, modeling both the tissue and the capsule would require an extremely 
+dense mesh to avoid numerical instabilities and thus would significantly
+violate the speed requirements required for medical simulators.
+Instead, modeling the capsule with two-dimensional elements that abstract from the
 thickness in the third dimension seems
-as a natural choice. Mechanics provides this FE tool in the form of membranes
-and shells. Based on the small thickness (compared to the surface area) we also
+to be a natural choice. In the elasticity theory, this functionality is usually provided by membrane and shell elements.
+Based on the small thickness (compared to the surface area) we also
 assume negligible bending forces and propose a model based on membrane
 elements. 
 To maintain simplicity of the composite model we choose simple triangular
@@ -265,12 +265,11 @@ The computation of elastic stiffness matrix follows the common derivation
             & = & h A \Mat{B}^T \Mat{E} \Mat{B}           \label{mem3}
 \end{eqnarray}
 %
-\noindent%
 where $\Mat{B}$ is the strain-displacement matrix, $\Mat{E}$ the material
 matrix, $h$ is the thickness and $A$ area of the element. In the previous
 \eqref{mem2} follows from the fact that we assume constant thickness of the
 element and \eqref{mem3} follows from the fact that the strain-displacement
-matrix is in our case constant. The strain-displacement matrix for the CST
+matrix is constant in our case. The strain-displacement matrix for the CST
 element can be expressed as:
 %
 \begin{equation}
@@ -283,30 +282,26 @@ element can be expressed as:
 %
 The values $x_{ij} = x_i - x_j$ and $y_{ij} = y_i - y_j$ are computed from
 the $x$ or $y$ coordinates of the nodes $i,j$ of the triangular element.
-The reader can reffer to the respective literature for more thorough
-description \cite{Felippa2003}.
+The reader can refer to the respective literature for more thorough
+description~\cite{Felippa2003}.
 
-We again use linear elastic material and employ the corotational formulation
+We use linear elastic material and employ the corotational formulation
 for the triangular elements.
 
 %}}}
 
 \subsection{Coupling Between Capsule and Parenchyma} %{{{
-
 The literature reports high cohesion between capsule and parenchyma.
-Based on this
-property we may assume no relative motion of the capsule to the parenchyma.
-While in general we could use arbitrary surface mesh for a capsule we use
-the fact that the parenchyma is modeled by tetrahedral elements which have
-triangular faces. Because the boundary of the volumetric mesh is already
-triangulated, we only extract the boundary triangles which we use for the
-model of capsule.
+Based on this property we assume there is no relative motion of the capsule \wrt\ the parenchyma.
+Although an arbitrary surface mesh could be used to model the capsule, we exploit 
+the fact that the parenchyma is modeled by tetrahedral elements having
+triangular faces. Thus, as the boundary of the volumetric mesh is already
+triangulated, we simply employ the triangles on the mesh surface to model the capsule.
 
 Using directly the boundary of the tetrahedral mesh does not only solve the
-problem of obtaining the surface mesh, but has one more advantage. Nodes
-of the triangular mesh overlap with nodes of the tetrahedral mesh and we do
-not have to project nodes of triangular mesh onto the tetrahedra. More over,
-the stiffness matrices for capsule and parenchyma are easily assembled
+problem of building the surface mesh, but has one more advantage: the nodes
+of the triangular mesh coincide with the nodes of the tetrahedral mesh, so no projection of one mesh onto the other is needed.
+Moreover, the stiffness matrices for capsule and parenchyma are then easily assembled
 together.% and solved as one system.
 %
 %\CD{The following may appear as "trivial"... maybe we can remove this part at the end if we need space} 
@@ -340,8 +335,7 @@ together.% and solved as one system.
 %\end{equation}
 %%
 %Where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
-The resulting
-system of linear equations is then solved by direct LDL solver.
+The resulting system of linear equations is solved by direct solver based on Cholesky decomposition.
 
 %}}}
 
@@ -475,21 +469,27 @@ also on the global level.
 %}}}
 
 \section{Conclusion} %{{{
+In the paper, a complete model of the liver was presented taking into account 
+three constituents of the organ, each being modelled with a different type 
+of finite elements: tetrahedral corotational model used the parenchyma, serially 
+linked corotational beams based on Tymoshenko formulation modelling the vascularization 
+and finally triangular elements with constant strain employed for the capsule. 
+The model was first validated for local displacements: the aspiration test presented in~\cite{Hollenstein2006} 
+was succesfully reproduced, showing a good agreement between the simulation and experiments. 
+Further, the model was used to demonstrate global influence of the capsule when the organ 
+undergoes large deformations. 
 
-A composite model for simulation of complete liver is presented in the
-paper. The work of Peterlik et al. for vaskularized liver model was
-extended by addig the capsule modeled with membrane FEM model mechanically
-coupled with the parenchyma. To validate the model a simulation of local
-deformations was performed and was found in an aggrement with the results
-measured and published by Hollenstein et al.
+In the future work, we plan to employ the model to model other organs where the capsule play an important role
+(for example kidneys). We will also focus on better understanding the interaction between the organs in the abdominal 
+cavity. 
 
-While the influence of the capsule on local deformations was previously
-studied in the literature, it's significance on the global scale
-deformations of the liver remained unexplored. We have performed a set of
-natural global deformations of the complete liver and shown that the
-capsule, despite its small thickness, plays a significant role also in
-global context.
-
+%While the influence of the capsule on local deformations was previously
+%studied in the literature, it's significance on the global scale
+%deformations of the liver remained unexplored. We have performed a set of
+%natural global deformations of the complete liver and shown that the
+%capsule, despite its small thickness, plays a significant role also in
+%global context.
+%
 %}}}
 
 %
