@@ -419,10 +419,10 @@ The semi-automatic method presented in~\cite{Peterlik2012} was
 then applied to the segmented map of the hepatic vein, resulting in linked-beam model. 
 Finally, the model of the Glisson's capsule was constructed using the elements described in 
 section~\ref{ss:capsuleModel} over the surface triangles extracted from the tetrahedral mesh. 
-The complete model composed of 6200 tetrahedra, 220 beams and 1820 triangles was then 
+The complete model composed of 4266 tetrahedra, 188 beams and 1284 triangles was then 
 used in simulation where external force representing the gravity was applied to the model, 
-resulting in large deformations mainly in the area of lobes. The refresh rate of 10\,FPS 
-was achieved on a desktop computer with Intel i7 CPU running at 3\,GHz and 16\,GB of memory. 
+resulting in large deformations mainly in the area of lobes. The refresh rate of 22\,FPS 
+was achieved on a desktop computer with Intel i7 CPU running at 3.4\,GHz and 8\,GB of memory. 
 The simulation with gravity was also used as a first demonstration of the global influence of the capsule. 
 In Fig.~\ref{f:global}a, the models with capsule (red) and without (yellow) are depicted after being 
 deformed due to the gravity, showing a significant difference between the two models.  
@@ -458,8 +458,8 @@ Once the static equilibrium was achieved, the effect of the capsule was graduall
 on, \ie\ the stiffness of the membrane was slowly increased from 0 to 8.22\,MPa. The evolution of the force response in the 
 points with prescribed displacements is depicted in Fig.~\ref{f:forceEvol} showing the change in the response as the effect
 of the capsule is included. At the same time, the shape of the deformed liver with capsule was compared 
-to the model without the capsule. A distance map for those cases is depicted in Fig.~\ref{f:global}c: in the red areas, the 
-maximal difference exceeding 1.5\,cm was measured. We believe that this result confirms that the Glisson's capsule 
+to the model without the capsule. A Hausdorff distance map for those cases is depicted in Fig.~\ref{f:global}c: in the red areas, the 
+maximal difference exceeding 1.25\,cm was measured. We believe that this result confirms that the Glisson's capsule 
 plays an important role in the global mechanical response of the liver.
 
 %}}}
