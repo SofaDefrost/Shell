@@ -343,19 +343,18 @@ The resulting system of linear equations is solved by direct solver based on Cho
 
 
 \section{Experiments} %{{{
-To evaluate the model it was implemented in the
+The model presented in the previous section was implemented in 
 SOFA\footnote{www.sofa-framework.org} framework and a set of
 numerical simulations was performed. First local deformations were compared to the
 results reported in literature to validate the method.
-
-To show that, despite its very small thickness, the membrane cannot be
+Second, to show that in spite of its very small thickness the membrane cannot be
 neglected even in the context of global deformations and its overall
 stiffness plays an important role, the model of
-the complete liver was subjected to natural global deformations.
+the complete liver was subjected to global deformations.
 
-In the simulations we used material properties reported in literature: for the 
+In the simulations we used material properties reported in the literature: for the 
 Glisson's capsule we used Young's modulus $E_c$=8.22\,MPa and thickness $t_c$=20\,$\mu$m~\cite{Umale2011},
-whereas for the vessel wall we applied stiffness $E_v$=0.62\,MPa and $t_v$=200\,$\mu$m~\cite{Peterlik2012}.
+whereas for the vessel wall we applied stiffness $E_v$=0.62\,MPa and thickness $t_v$=200\,$\mu$m~\cite{Peterlik2012}.
 Since the values for parenchyma elasticity quite vary (usually between 2\,kPa to 5\,kPa), we perform the simulation 
 with $E_p$=3.5\,kPa.
 
@@ -367,8 +366,8 @@ with $E_p$=3.5\,kPa.
 \end{figure}
 
 \subsection{Local Deformations} %{{{
-During the contact with an instrument (probe, needle insertion, sharp
-instruments, \ldots) a specific deformation occurs in the near vicinity of
+During the contact with an instrument such as probe, needle, scalpel and others,
+a specific deformations take place in the vicinity of
 the instrument. This type of deformation may not necessarily induce the
 deformation of the object as a whole and therefore can be considered as
 local. Correct material properties are not only important to quantify the
@@ -376,20 +375,19 @@ displacement, but also play an important role in capturing the correct area of
 the deformation or its profile near the instrument.
 
 A good example of such a local deformation is the aspiration test
-when the response of liver to the negative pressure is measured.
-In~\cite{Hollenstein2006} it is observed that the Glisson's
+where the response of liver exposed locally to a negative pressure is measured.
+In~\cite{Hollenstein2006} it is reported that the Glisson's
 capsule has a non-negligible influence on the response of the tissue and modeling
 only the parenchyma leads to an overestimation of the deformation. 
-
 %We reproduced the test with our model and acquired similar results.
-The aspiration device consists of a tube with 1\,cm in diameter and is able
+The aspiration device consists of a tube 1\,cm in diameter and is able
 to control internal pressure in the tube. The test is performed by
 attaching the tube to the tissue and measuring the tissue response. We
-have set up a simulation to reproduce the experiment (see Fig.~\ref{fig-aspiration}a). We meshed a 15$\times$15$\times$15\,mm$^3$ 
+have set up a simulation in SOFA to reproduce the experiment (see Fig.~\ref{fig-aspiration}a: we meshed a 15$\times$15$\times$15\,mm$^3$ 
 cube representing the tissue 
-resulting in 2648 tetrahedra. Then we attached a tube having diameter d=1\,cm 
+resulting in 2648 tetrahedra. Then we attached a 1\,cm tube 
 and applied a pressure of 3\,kPa inside the tube. The interaction between the tube and 
-tissue surface was modelled with friction contact. 
+tissue was modelled with friction contact. 
 
 In Fig.~\ref{fig-aspiration}b the profiles of cuts in the middle of the
 test cube are presented showing significantly larger deformation in the model without capsule. This is in perfect 
@@ -402,7 +400,8 @@ model of parenchyma and capsule.
 \begin{figure}[t]
   \centering
     \includegraphics[width=.95\textwidth]{forceEvolution.pdf}
-  \caption{\label{f:forceEvol}Evolution of forces during elastic warping.}
+  \caption{\label{f:forceEvol}Evolution of forces during elastic during the simulation, where the supine data is deformed
+towards the flank shape, and the stiffness of the capsule is increased from 0 to 8.22\,MPa after the initial equilibrium is achieved.}
 \end{figure}
 
 \subsection{Global Deformations}
@@ -424,7 +423,6 @@ The complete model composed of 6200 tetrahedra, 220 beams and 1820 triangles was
 used in simulation where external force representing the gravity was applied to the model, 
 resulting in large deformations mainly in the area of lobes. The refresh rate of 10\,FPS 
 was achieved on a desktop computer with Intel i7 CPU running at 3\,GHz and 16\,GB of memory. 
-
 The simulation with gravity was also used as a first demonstration of the global influence of the capsule. 
 In Fig.~\ref{f:global}a, the models with capsule (red) and without (yellow) are depicted after being 
 deformed due to the gravity, showing a significant difference between the two models.  
@@ -446,27 +444,27 @@ First, we performed a rigid registration of the two organs \wrt\ the root point 
 As shown in Fig.~\ref{f:global}b, the liver undergoes very large deformation when the body 
 is turned from the supine to the flank position, exceeding 6\,cm for some parts of the organ. 
 In order to induce similar deformation, we extracted feature pairs from the vascular system of the liver:
-we selected points such as bifurcations which can be identified easily in each supine and flank 
-model providing a set of correspondences. In the next stage, we used these correspondences as a non-homogeneous
+we selected points such as bifurcations which can be identified easily in both supine and flank 
+data providing a set of correspondences. In the next step, we used these correspondences as a non-homogeneous
 boundary conditions (imposed via penalty term) in order to perform a deformable registration of the supine
-model onto the flank data. During the registration, the response forces acting in the prescribed 
-points were calculated. It is important to emphasize that the goal of the simulation was not 
-to perform an accurate registration of the flank and supine data, however, the process was used 
-as an example of real deformation that can be undertaken by the liver. 
+model onto the flank data. During the registration, the response forces acting in the points with prescribed displacements
+were calculated. It is important to emphasize that the goal of the simulation was not 
+to perform an accurate registration of the flank and supine data, but the simulation was used 
+as an example of real deformation of the organ.
 
-The registration process was performed with the vascularized model, however, the effect of the capsule was 
-not considered. Once the static equilibrium was achieved, the effect of the capsule was gradually switched 
-on, \ie\ the stiffness of the membrane was slowly increased from 0 to 8\,MPa. The force response in the 
-prescribed points is depicted in Fig.~\ref{f:forceEvol} showing the change in the response as the effect
-of the capsule is increased. At the same time, the shape of the deformed liver with capsule was compared 
-to the model without capsule. A distance map is depicted in Fig.~\ref{f:global}c: in the red areas, the 
-maximal difference of 1\,cm. We believe that this results confirm that the Glisson's capsule 
-plays an important role in the mechanical response of the entire liver, \ie\ not only on the local, but 
-also on the global level.
+The simulation was performed with the model composed of parenchyma,  vessels and capsule, however, zero stiffness was 
+set for the last component.
+Once the static equilibrium was achieved, the effect of the capsule was gradually switched 
+on, \ie\ the stiffness of the membrane was slowly increased from 0 to 8.22\,MPa. The evolution of the force response in the 
+points with prescribed displacements is depicted in Fig.~\ref{f:forceEvol} showing the change in the response as the effect
+of the capsule is included. At the same time, the shape of the deformed liver with capsule was compared 
+to the model without the capsule. A distance map for those cases is depicted in Fig.~\ref{f:global}c: in the red areas, the 
+maximal difference exceeding 1.5\,cm was measured. We believe that this result confirms that the Glisson's capsule 
+plays an important role in the global mechanical response of the liver.
 
 %}}}
 
-\section{Conclusion} %{{{
+\section{Conclusions} %{{{
 In the paper, a complete model of the liver was presented taking into account 
 three constituents of the organ, each being modelled with a different type 
 of finite elements: tetrahedral corotational model used the parenchyma, serially 
