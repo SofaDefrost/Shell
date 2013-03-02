@@ -54,53 +54,66 @@
 \maketitle
 
 \begin{abstract}
-This work provides a complete physical model for the deformations of the liver with its three constituents: parenchyma, vessels and the Glisson's capsule.
-Some recent experimental results \cite{Ahn2010} have shown that there is a significant difference of stiffness between the Glisson's capsule and the parenchyma. 
-Moreover, it has been observed that the capsule plays an important role for the deformation at the local level \cite{Hollenstein2006}.
-However, the Glisson's capsule is very thin and its influence for the global deformations of the liver was never highlighted.
-In this work, we propose to use a membrane FEM model for the capsule, that is coupled with a vascularized model of the liver.
-We show that the approach is able to reproduce the deformations observed at the local level.
-Additionally, we show, by simulating natural global deformations of the liver observed on real images (due to gravity), that the results have important differences with and without the capsule.
+The accurate mechanical modeling of liver is of a paramount interest in simulation-based operation planning 
+and computer-aided per-operative guidance. However, the realistic simulation of liver behaviour is a challenging task, 
+since the organ is composed of three constituents: parenchyma, vascularization and Glisson's capsule, each having different mechanical properties. While the 
+mechanical role of vessels on both global and local behaviour of the organ has been measured and modelled previously~\cite{Peterlik2012}, only local 
+effects have been studied in the case of Glisson's capsule~\cite{Hollenstein2006,Ahn2010}. 
 
-\keywords{liver, Glisson's capsule, vascular network, deformation modeling, membrane}
+In this paper we introduce what we believe is the first real-time model of liver taking into account all three constituents, each being simulated with 
+a different type of finite elements.
+Using the model, we focus on the role of the Glisson's capsule: first, we show that the model is able to reproduce correctly
+the local effects of the capsule in so called aspiration test. Second, based on CT image data of porcine abdominal cavity acquired in supine and flank 
+positions, we demonstrate 
+that the capsule has also a global impact on the mechanical behaviour of the liver in the case when the organ undergoes large deformations. 
+
+%This work provides a complete physical model for the deformations of the liver with its three constituents: parenchyma, vessels and the Glisson's capsule.
+%Some recent experimental results \cite{Ahn2010} have shown that there is a significant difference of stiffness between the Glisson's capsule and the parenchyma. 
+%Moreover, it has been observed that the capsule plays an important role for the deformation at the local level \cite{Hollenstein2006}.
+%However, the Glisson's capsule is very thin and its influence for the global deformations of the liver was never highlighted.
+%In this work, we propose to use a membrane FEM model for the capsule, that is coupled with a vascularized model of the liver.
+%We show that the approach is able to reproduce the deformations observed at the local level.
+%Additionally, we show, by simulating natural global deformations of the liver observed on real images (due to gravity), that the results have important differences with and without the capsule.
+
+\keywords{deformable liver model, Glisson's capsule, vascularization, real-time soft tissue modeling}
 \end{abstract}
 
 \section{Introduction} 
 According to the statistics, nearly 100,000 European citizens die of cirrhosis or liver cancer each year. 
-Although new methods such as radio-frequency ablation or cryo-ablation used in interventional radiology 
-represent promising improvements, surgery remains the option that offers the foremost success rate against these pathologies. 
+Although new methods such as radio-frequency- or cryo-ablation used in the interventional radiology 
+seems to be promising, surgery remains the option that offers the foremost success rate against these pathologies. 
 Nevertheless, surgery is not always performed due to several limitations, in particular the determination 
 of accurate eligibility criteria for the patient. 
-In this context, pre-operational planning becomes a crucial task having a significant impact on the treatment. 
+In this context, the pre-operational planning becomes a crucial task having a significant impact on the treatment. 
 
 Computer-aided physics-based medical simulation has proven to be an extremely useful technique in the area of medical training. 
 Nevertheless, whereas generic models are usually required in training simulators, accurate patient-specific modelling
 becomes necessary as soon as computer simulation is to be employed in the pre-operative planning. At the same time, 
-interactivity of such models  remains an important aspect, requiring real-time simulation which is often difficult to 
+interactivity of such models remains an important aspect, requiring real-time simulation which is often difficult to 
 achieve given the complexity of soft tissues. 
 
 In case of human liver, the task of real-time accurate modeling is challenging, mainly because of the complex structure 
 of this organ composed of three main constituents: \emph{parenchyma}, \emph{vascular networks} and \emph{Glisson's capsule}.
-The parenchyma has certainly been the most studied component of the liver; today the researchers agree on hyperelastic 
+The parenchyma has certainly been the most studied component of the liver; today researchers an agree on hyperelastic 
 properties of the tissue, for which the mechanical parameters have been reported for example in~\cite{Kerdok2006,Gao2009}. 
 Several methods have been proposed to model the hyperelastic behaviour at real-time rates, such as multiplicative Jacobian decomposition
 introduced in~\cite{Marchesseau2010}.
 
 The mechanical importance of the vascular structures in liver is studied in~\cite{Peterlik2012}. It shows that the 
-influence of vessels on the mechanical behaviour of the liver is significant, mainly if large deformations occur. 
-Since detailed modeling of the vessels would be extremely costly (mainly because of the thickness of the vessel wall 
-being less than 250\,{$\mu$}m), the authors propose a composite model allowing for real-time simulation of entire liver
-with two vascular trees corresponding to portal and hepatic veins.
+influence of vessels on the mechanical behaviour of the organ is significant, mainly if large deformations occur. 
+Since a detailed modeling of the vessels would be extremely costly (mainly because of the small thickness of the vessel wall, 
+the authors propose a composite model allowing for real-time simulation of entire liver with vasculature.
 
 Rather a small number of studies have been conducted on the last liver constituent, the  Glisson's capsule.
-Quantitative results of experiments on a porcine liver have been published in~\cite{Umale2011}. The measurements indicate that although being very 
-thin (10--20$\mu m$), the capsule shows to be stiff in tensile tests mainly if compared to the parenchyma: the Young's modulus of the capsule (reported as $8.22\pm3.42$\,MPa) exceeds the values for the parenchyma by three orders of magnitude.
-This suggests that the mechanical influence of the membrane on the liver behaviour is significant.
+Quantitative results of experiments on a porcine liver have been published in~\cite{Umale2013}; the measurements indicate that although being very 
+thin (10--20$\mu m$), the capsule shows to be stiff in tensile tests: the Young's modulus of the capsule (reported as $8.22\pm3.42$\,MPa) 
+exceeds the values for the parenchyma by three orders of magnitude.
+This suggests that the mechanical influence of the membrane on the liver behaviour is not negligible.
 
 In~\cite{Hollenstein2006}, a local influence of the capsule has been measured using a special aspiration device. The study was then repeated 
 in vivo on human patients during the operation, confirming the mechanical importance of the membrane~\cite{Ahn2010,Nava2008}.
 To our best knowledge, no attempt has been made to demonstrate the role of the Glisson's capsule on the global behaviour of 
-the liver, mainly if large deformations of the organ take place.
+the liver, mainly if the organ undergoes large deformations which is often the case during the surgery.
 
 The main contribution of the paper is twofold: first, we present an efficient real-time model of the liver, taking into account 
 the parenchyma, vascularization and Glisson's capsule. The model is based on three different finite element representations for each constituent,
@@ -111,10 +124,14 @@ capsule via simulation: using a specific model of a porcine liver built from CT 
 difference in the response of the model with and without the capsule in case when the liver undergoes large deformations. 
 
 The paper is organized as follows: first we describe the proposed vascularized
-liver model with capsule (Sec. 2); then we show the correct behaviour of the
-model in context of \emph{local} deformations and finally we analyze the influence of
-the capsule on the \emph{global} deformations of the liver and show that despite the
-small thickness it plays an important role also in the \emph{global} context.
+liver model with capsule. Second, we validate our model in context of local deformations by reproducing the aspiration test 
+described in~\cite{Hollenstein2006}. Finally, we demonstrate that in spite of it's small thickness, the Glisson's 
+capsule has a global influence on the liver undergoing large deformations. 
+
+%Then we show the correct behaviour of the
+%model in context of \emph{local} deformations and finally we analyze the influence of
+%the capsule on the \emph{global} deformations of the liver and show that despite the
+%small thickness it plays an important role also in the \emph{global} context.
 
 
 %Medical simulation is expected to play an integral part in many aspects of
@@ -394,17 +411,6 @@ model of parenchyma and capsule.
   \caption{\label{f:forceEvol}Evolution of forces during elastic warping.}
 \end{figure}
 
-\begin{figure}[t]
-  \centering
-    \subfigure[]{\includegraphics[width=.32\textwidth]{gravity2.png}}
-    \subfigure[]{\includegraphics[width=.32\textwidth]{registered.png}}
-    \subfigure[]{\includegraphics[width=.32\textwidth]{distanceMap.png}}
-    \caption{\label{f:global}%
-    a) Liver under gravity with (red) and without (yellow) capsule;
-    b) liver in supine (yellow) and flank (red) position;
-    c) distance map between between registered version with and without
-    capsule}
-\end{figure}
 
 \subsection{Global Deformations}
 In the previous section we have shown that the composite model of parenchyma and 
@@ -429,6 +435,18 @@ was achieved on a desktop computer with Intel i7 CPU running at 3\,GHz and 16\,G
 The simulation with gravity was also used as a first demonstration of the global influence of the capsule. 
 In Fig.~\ref{f:global}a, the models with capsule (red) and without (yellow) are depicted after being 
 deformed due to the gravity, showing a significant difference between the two models.  
+
+\begin{figure}[t]
+  \centering
+    \subfigure[]{\includegraphics[width=.32\textwidth]{gravity2.png}}
+    \subfigure[]{\includegraphics[width=.32\textwidth]{registered.png}}
+    \subfigure[]{\includegraphics[width=.32\textwidth]{distanceMap.png}}
+    \caption{\label{f:global}%
+    a) Liver under gravity with (red) and without (yellow) capsule;
+    b) liver in supine (yellow) and flank (red) position;
+    c) distance map between between registered version with and without
+    capsule}
+\end{figure}
 
 In order to demonstrate the influence of the capsule on a real deformation of the liver, we 
 performed a following protocol employing the supine and flank models built from the CT data. 
