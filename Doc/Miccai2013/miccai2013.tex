@@ -94,7 +94,7 @@ achieve given the complexity of soft tissues.
 
 In case of human liver, the task of real-time accurate modeling is challenging, mainly because of the complex structure 
 of this organ composed of three main constituents: \emph{parenchyma}, \emph{vascular networks} and \emph{Glisson's capsule}.
-The parenchyma has certainly been the most studied component of the liver; today researchers an agree on hyperelastic 
+The parenchyma has certainly been the most studied component of the liver; today researchers agree on hyperelastic 
 properties of the tissue, for which the mechanical parameters have been reported for example in~\cite{Kerdok2006,Gao2009}. 
 Several methods have been proposed to model the hyperelastic behaviour at real-time rates, such as multiplicative Jacobian decomposition
 introduced in~\cite{Marchesseau2010}.
@@ -412,7 +412,7 @@ first we present a real-time complete model of entire liver built from image dat
 Second, using this model we demonstrate the \emph{global} mechanical influence of the capsule when 
 the model undergoes large deformations. 
 
-The complete model was constructed using constrast-enhanced CT data acquired on a female pig 
+The complete model was constructed using contrast-enhanced CT data acquired on a female pig 
 being positioned first in supine and then flank configuration. 
 The liver and hepatic vein were segmented for both datasets  using semi-automatic methods available in ITKSnap~\footnote{www.itksnap.org}.
 Further, an unstructured mesh was obtained from the segmented maps using CGAL~\footnote{www.cgal.org}. 
@@ -435,9 +435,9 @@ deformed due to the gravity, showing a significant difference between the two mo
     \subfigure[]{\includegraphics[width=.32\textwidth]{registered.png}}
     \subfigure[]{\includegraphics[width=.32\textwidth]{distanceMap.png}}
     \caption{\label{f:global}%
-    a) Liver under gravity with (red) and without (yellow) capsule;
-    b) liver in supine (yellow) and flank (red) position;
-    c) distance map between registered version with and without capsule}
+      (a) Liver under gravity with (red) and without (yellow) capsule;
+      (b) liver in supine (yellow) and flank (red) position;
+      (c) distance map between registered version with and without capsule.}
 \end{figure}
 
 In order to demonstrate the influence of the capsule on a real deformation of the liver, we 
@@ -473,7 +473,7 @@ of finite elements: tetrahedral corotational model used the parenchyma, serially
 linked corotational beams based on Tymoshenko formulation modelling the vascularization 
 and finally triangular elements with constant strain employed for the capsule. 
 The model was first validated for local displacements: the aspiration test presented in~\cite{Hollenstein2006} 
-was succesfully reproduced, showing a good agreement between the simulation and experiments. 
+was successfully reproduced, showing a good agreement between the simulation and experiments. 
 Further, the model was used to demonstrate global influence of the capsule when the organ 
 undergoes large deformations. 
 
