@@ -70,8 +70,7 @@ CstFEMForceField<DataTypes>::CstFEMForceField()
 , f_corotated(initData(&f_corotated, true, "corotated", "Compute forces in corotational frame"))
 //, f_measure(initData(&f_measure, "measure", "Compute the strain or stress"))
 //, f_measuredValues(initData(&f_measuredValues, "measuredValues", "Measured values for stress or strain"))
-, f_startDTAppl(initData(&f_startDTAppl, 0, "startDTAppl", "time step when the forcefield starts to be applied"))
-, f_numDTAppl(initData(&f_numDTAppl,0,"numDTAppl", "number of time steps to apply the forcefield"))
+, f_stiffnessFactor(initData(&f_stiffnessFactor, Real(0.0), "stiffnessFactor", "stiffness factor between 0 and 1 to reduce the weight of the forcefield"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 
 {
@@ -158,8 +157,7 @@ template <class DataTypes> void CstFEMForceField<DataTypes>::reinit()
             (const sofa::helper::vector< unsigned int >)0, (const sofa::helper::vector< double >)0);
     }
 
-    triangleInfo.endEdit();
-    actualStep = 0;
+    triangleInfo.endEdit();    
 }
 
 
@@ -472,9 +470,9 @@ void CstFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &x
     //}
 
     // Transform forces back into global frame
-    f[a] -= Deriv(tinfo->Rt * Vec3(F[0], F[1], 0))*applyFactor;
-    f[b] -= Deriv(tinfo->Rt * Vec3(F[2], F[3], 0))*applyFactor;
-    f[c] -= Deriv(tinfo->Rt * Vec3(F[4], F[5], 0))*applyFactor;
+    f[a] -= Deriv(tinfo->Rt * Vec3(F[0], F[1], 0))*f_stiffnessFactor.getValue();
+    f[b] -= Deriv(tinfo->Rt * Vec3(F[2], F[3], 0))*f_stiffnessFactor.getValue();
+    f[c] -= Deriv(tinfo->Rt * Vec3(F[4], F[5], 0))*f_stiffnessFactor.getValue();
 
     triangleInfo.endEdit();
 }
@@ -527,9 +525,9 @@ void CstFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeriv& dx
     dF = tinfo.stiffnessMatrix * D;
 
     // Transform into global frame
-    v[tinfo.a] -= Deriv(tinfo.Rt * Vec3(dF[0], dF[1], 0)) * kFactor * applyFactor;
-    v[tinfo.b] -= Deriv(tinfo.Rt * Vec3(dF[2], dF[3], 0)) * kFactor * applyFactor;
-    v[tinfo.c] -= Deriv(tinfo.Rt * Vec3(dF[4], dF[5], 0)) * kFactor * applyFactor;
+    v[tinfo.a] -= Deriv(tinfo.Rt * Vec3(dF[0], dF[1], 0)) * kFactor * f_stiffnessFactor.getValue();
+    v[tinfo.b] -= Deriv(tinfo.Rt * Vec3(dF[2], dF[3], 0)) * kFactor * f_stiffnessFactor.getValue();
+    v[tinfo.c] -= Deriv(tinfo.Rt * Vec3(dF[4], dF[5], 0)) * kFactor * f_stiffnessFactor.getValue();
 
     triangleInfo.endEdit();
 }
@@ -666,32 +664,6 @@ void CstFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSpace(StiffnessM
     //std::cout << "K1=" << K1 << std::endl;
     //std::cout << "R=" << R << " -- " << Rt << std::endl;
     //std::cout << "Kg=" << Kg << std::endl;
-}
-
-template <class DataTypes>
-void CstFEMForceField<DataTypes>::handleEvent(core::objectmodel::Event *event)
-{
-    if (dynamic_cast<sofa::simulation::AnimateBeginEvent *>(event))
-    {
-        if (f_numDTAppl.getValue() == 0 || f_startDTAppl.getValue() == 0) {
-            applyFactor = 1.0;
-            return;
-        }
-
-        if (actualStep > f_startDTAppl.getValue()) {
-            applyFactor = Real(actualStep - f_startDTAppl.getValue())/Real(abs(f_numDTAppl.getValue()));
-            applyFactor = (applyFactor > 1.0) ? 1.0 : applyFactor;
-        }
-        else
-            applyFactor = 0.0;
-
-
-        if (f_numDTAppl.getValue() < 0)
-            applyFactor = 1.0 - applyFactor;
-
-        actualStep++;
-        std::cout << this->getName() << "[" << actualStep << "]  applyFactor = " << applyFactor << std::endl;
-    }
 }
 
 } // namespace forcefield

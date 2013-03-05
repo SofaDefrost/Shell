@@ -170,11 +170,7 @@ public:
         Data<Real> f_young;
         Data<Real> f_thickness;
         Data<bool> f_corotated;
-        Data<int> f_startDTAppl;
-        Data<int> f_numDTAppl;
-
-        Real applyFactor;
-        int actualStep;
+        Data<Real> f_stiffnessFactor;
         //Data<sofa::helper::OptionsGroup> f_measure;
         //Data< helper::vector<Real> > f_measuredValues;
 
@@ -202,9 +198,7 @@ protected :
         void computeForce(Displacement &F, const Displacement& D, const Index elementIndex);
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
 
-        void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixFull &K_gs, const TriangleInformation &tinfo);
-
-        void handleEvent(core::objectmodel::Event *event);
+        void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixFull &K_gs, const TriangleInformation &tinfo);       
 };
 
 
