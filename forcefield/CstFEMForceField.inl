@@ -70,7 +70,7 @@ CstFEMForceField<DataTypes>::CstFEMForceField()
 , f_corotated(initData(&f_corotated, true, "corotated", "Compute forces in corotational frame"))
 //, f_measure(initData(&f_measure, "measure", "Compute the strain or stress"))
 //, f_measuredValues(initData(&f_measuredValues, "measuredValues", "Measured values for stress or strain"))
-, f_stiffnessFactor(initData(&f_stiffnessFactor, Real(0.0), "stiffnessFactor", "stiffness factor between 0 and 1 to reduce the weight of the forcefield"))
+, f_stiffnessFactor(initData(&f_stiffnessFactor, Real(1.0), "stiffnessFactor", "stiffness factor between 0 and 1 to reduce the weight of the forcefield"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 
 {
