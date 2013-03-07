@@ -27,6 +27,7 @@
         <!--<StaticSolver applyIncrementFactor="true" verbose="0" />-->
         <EulerImplicitSolver />
         <!--<SparseLDLSolver/>-->
+        <!--<SparseLUSolver/>-->
         <CGLinearSolver iterations="200" tolerance="1e-12" threshold="1e-12" />
 
         <MechanicalObject name="MO" src="@/CubeMesh/CubeMO" />
@@ -34,16 +35,18 @@
         <BoxConstraint box="-0.016 -0.016 -0.016 0.016 -0.014 0.016"/>		
 
         <!--<ConstantForceField points="357 " totalForce="0 -0.1 0" />-->
-        <ConstantForceField points="346 357 385" totalForce="0 -0.1 0" />
+        <!--<ConstantForceField points="346 357 385" totalForce="0 -0.1 0" />-->
+        <ConstantForceField points="67" totalForce="0.1 0 0" />
 
         <Node name="TetraFEM">
             <TetrahedronSetTopologyContainer name="topoTetra"  src="@/CubeMesh/topo" />		
-            <TetrahedronFEMForceField name="FEM" youngModulus="2870" poissonRatio="0.45" method="large" drawHeterogeneousTetra="0" />
+            <!--<TetrahedronFEMForceField name="FEM" youngModulus="1.98e3" poissonRatio="0.45" method="large" drawHeterogeneousTetra="0" />-->
        </Node>
 
         <Node name="TriFEM">
             <TriangleSetTopologyContainer name="topoTri" src="@/SurfMesh/topo" />
-            <TriangularFEMForceField name="FEM" youngModulus="2870" poissonRatio="0.45" method="large" />
+            <!--<TriangularFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="0.001" method="large" />-->
+            <CstFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="0.001" corotated="true" />
 
             <Node>
                 <OglModel name="Visual" color="green"/>
