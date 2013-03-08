@@ -241,11 +241,6 @@ void CstFEMForceField<DataTypes>::initTriangle(const int i, const Index&a, const
     tinfo->d[1] = tinfo->restPositions[1] - tinfo->restPositions[2];
     tinfo->d[2] = tinfo->restPositions[2] - tinfo->restPositions[0];
 
-    // - squared lengths
-    tinfo->l2[0] = tinfo->d[0][0]*tinfo->d[0][0] + tinfo->d[0][1]*tinfo->d[0][1];
-    tinfo->l2[1] = tinfo->d[1][0]*tinfo->d[1][0] + tinfo->d[1][1]*tinfo->d[1][1];
-    tinfo->l2[2] = tinfo->d[2][0]*tinfo->d[2][0] + tinfo->d[2][1]*tinfo->d[2][1];
-
     // - triangle area
     tinfo->area = helper::rabs(tinfo->d[2][0]*(-tinfo->d[0][1]) - (-tinfo->d[0][0])*tinfo->d[2][1])/2.0;
 

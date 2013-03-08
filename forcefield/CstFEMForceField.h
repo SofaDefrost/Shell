@@ -125,8 +125,6 @@ public:
                 Real area;
                 // - directional vectors: 1-2, 2-3, 3-1
                 helper::fixed_array <Vec2, 3> d;
-                // - squared lengths of 'd'
-                helper::fixed_array <Real, 3> l2;
 
                 /// Output stream
                 inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ )

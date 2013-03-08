@@ -2002,12 +2002,6 @@ void BezierShellForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatri
 #endif
 
 
-template<class DataTypes>
-void BezierShellForceField<DataTypes>::addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/)
-{
-}
-
-
 template <class DataTypes>
 void BezierShellForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
