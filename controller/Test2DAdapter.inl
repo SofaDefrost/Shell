@@ -20,7 +20,7 @@
 // - reattach points in N1-ring during cutting to avoid degeneration
 // - refactor into several components
 //
-// Edge case that are not handled:
+// Edge cases that are not handled:
 //   - cut is too short (doesn't span two edges)
 //   - cutting near the edge (handling of boundary/fixed nodes)
 //
@@ -32,6 +32,7 @@
 
 #include <map>
 #include <float.h>
+#include <cmath>
 
 #include <sofa/core/objectmodel/KeypressedEvent.h>
 #include <sofa/core/visual/VisualParams.h>  
@@ -333,13 +334,13 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     //stepCounter = 0;
 
-   Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::restPosition());
+    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::restPosition());
     //VecCoord& x = *datax->beginEdit();
     // WARNING: Notice that we're working on a copy that is NOT updated by
     //          external changes!
     VecCoord x = datax->getValue();
     //
-    const VecCoord& xrest = datax->getValue();
+    const VecCoord& x0 = datax->getValue();
 
     Index nTriangles = m_container->getNbTriangles();
     if (nTriangles == 0)
@@ -351,9 +352,9 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
         helper::vector< double > bary = m_algoGeom->compute3PointsBarycoefs(
             m_point, tri[0], tri[1], tri[2], false);
         m_pointRest =
-            xrest[ tri[0] ] * bary[0] +
-            xrest[ tri[1] ] * bary[1] +
-            xrest[ tri[2] ] * bary[2];
+            x0[ tri[0] ] * bary[0] +
+            x0[ tri[1] ] * bary[1] +
+            x0[ tri[2] ] * bary[2];
     }
 
 
@@ -368,8 +369,11 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     // Compute initial metrics
     for (Index i=0; i < nTriangles; i++) {
-        Triangle t = m_container->getTriangle(i);
+        const Triangle &t = m_container->getTriangle(i);
         functionals[i] = funcTriangle(t, x, triInfo.getValue()[i].normal);
+        if (isnan(functionals[i])) {
+            serr << "NaN value for triangle " << i << sendl;
+        }
     }
     //std::cout << "m: " << functionals << "\n";
     //mytimer.stop();
@@ -417,9 +421,9 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
                 helper::vector< double > bary = m_algoGeom->compute3PointsBarycoefs(
                     m_point, tri[0], tri[1], tri[2], false);
                 m_pointRest =
-                    xrest[ tri[0] ] * bary[0] +
-                    xrest[ tri[1] ] * bary[1] +
-                    xrest[ tri[2] ] * bary[2];
+                    x0[ tri[0] ] * bary[0] +
+                    x0[ tri[1] ] * bary[1] +
+                    x0[ tri[2] ] * bary[2];
             }
 
 
@@ -432,7 +436,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     //std::cout << "---------- CPU time = " << stop-start << "\n";
 
     // Evaluate improvement
-    Real sum=0.0, sum2=0.0, min = 1.0;
+    Real sum=0.0, sum2=0.0, min = DBL_MAX;
     Index minTriID = InvalidID;
     for (Index i=0; i < nTriangles; i++) {
         if (functionals[i] < min) {
@@ -533,7 +537,7 @@ bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecCoord &x, vector<Real
             break;
         }
 
-        Real oldworst = 1.0, newworst = 1.0;
+        Real oldworst = DBL_MAX, newworst = DBL_MAX;
         for (Index it=0; it<N1.size(); it++) {
             Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
                 normals[ N1[it] ]);
@@ -593,7 +597,7 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
 
     // Find smallest metric with non-zero gradient
     Index imin = InvalidID;
-    Real mmin = 1.0;
+    Real mmin = DBL_MAX;
     //std::cout << v << " metrics: ";
     for (Index it=0; it<N1.size(); it++) {
         if (metrics[ N1[it] ] < mmin && grad[it].norm2() > 1e-15) {
@@ -708,10 +712,15 @@ bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Re
             break;
         }
 
-        Real oldworst = 1.0, newworst = 1.0;
+        Real oldworst = DBL_MAX, newworst = DBL_MAX;
         for (Index it=0; it<N1.size(); it++) {
             Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
                 triInfo.getValue()[ N1[it] ].normal);
+            if (isnan(newmetric)) {
+                // The operation leads to NaN value!
+                newworst = DBL_MIN;
+                break;
+            }
 
             if (metrics[N1[it]] < oldworst) {
                 oldworst = metrics[N1[it]];
@@ -1020,7 +1029,7 @@ void Test2DAdapter<DataTypes>::swapEdge(Index triID)
     const VecCoord& x0 = m_state->read(
         sofa::core::ConstVecCoordId::restPosition())->getValue();
     const VecCoord& x = m_state->read(
-        sofa::core::ConstVecCoordId::restPosition())->getValue();
+        sofa::core::ConstVecCoordId::position())->getValue();
     const Triangle &t1 = m_container->getTriangle(triID);
 
     const EdgesInTriangle &elist = m_container->getEdgesInTriangle(triID);
@@ -1137,6 +1146,8 @@ void Test2DAdapter<DataTypes>::swapEdge(Index triID)
         add.push_back(swapT2);
         m_modifier->addTriangles(add);
     }
+
+    // TODO: projection
 }
 
 template<class DataTypes>
@@ -1281,7 +1292,7 @@ typename Test2DAdapter<DataTypes>::PointInformation::NodeType Test2DAdapter<Data
     if (m_container == NULL)
         return PointInformation::NORMAL;
 
-    const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
+    const VecCoord& x0 = m_state->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
 
     VecVec3 dirlist; // Directions of boundary edges
 
@@ -1298,9 +1309,9 @@ typename Test2DAdapter<DataTypes>::PointInformation::NodeType Test2DAdapter<Data
             Edge e = m_container->getEdge(N1e[ie]);
             Vec3 dir;
             if (e[0] == pt) {
-                dir = x[e[1]] - x[e[0]];
+                dir = x0[e[1]] - x0[e[0]];
             } else {
-                dir = x[e[0]] - x[e[1]];
+                dir = x0[e[0]] - x0[e[1]];
             }
             dir.normalize();
             dirlist.push_back(dir);

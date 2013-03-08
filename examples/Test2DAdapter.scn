@@ -10,7 +10,7 @@
     <CollisionGroup />
 
     <Node>
-        <MeshObjLoader name="mesh" filename="../mesh/plane128.obj"/>
+        <MeshObjLoader name="mesh" filename="../mesh/plane2048-noise.obj"/>
         <TriangleSetTopologyContainer name="points" src="@mesh" />
 
         <!-- Used for mouse tracking
@@ -39,10 +39,20 @@
         <!--
         -->
 
+        <Node name="Data">
+            <DataDisplay cellData="@../adapter.functionals" colorNaN="1 0 1 1" />
+            <ColorMap colorScheme="Green" />
+            <IdentityMapping input="@.." output="@."/>
+        </Node>
+        <!--
+        -->
+
         <Node name="Render">
-            <OglModel name="Visual" color="green"/>
+            <OglModel name="Visual" color="black" depthTest="false" />
             <IdentityMapping input="@.." output="@Visual"/>
         </Node>
+
+
 
     </Node>
 
