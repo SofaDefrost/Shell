@@ -9,7 +9,7 @@
 	
 	<Node name="liver1">		
 <!-- 		<EulerImplicitSolver/> -->
-		<StaticSolver applyIncrementFactor="true" verbose="0" />
+		<StaticSolver applyIncrementFactor="true"/>
 <!-- 		<SparseLDLSolver/> -->
 <!-- 		<PCGLinearSolver preconditioners="precond" iterations="100" tolerance="1e-15"/> -->
 <!-- 		<SparseLDLSolver name="precond"/> -->
