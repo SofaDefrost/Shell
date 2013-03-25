@@ -6,7 +6,6 @@
 #define POINTPROJECTION_H
 
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
-#include <shells2/mapping/BezierShellMechanicalMapping.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Vec.h>
@@ -21,8 +20,6 @@ class PointProjection
 {
 
     public:
-        //typedef typename DataTypes::Real                Real;
-
         typedef sofa::defaulttype::Vec<3, Real> Vec3;
 
         typedef sofa::component::topology::TriangleSetTopologyContainer::Edge                   Edge;
@@ -83,13 +80,15 @@ class PointProjection
          * @param c             Position of third triangle point.
          * @param bConstraint   Constraint coordinates to lie inside triangle.
          */
-        void ComputeBaryCoords(
+        static void ComputeBaryCoords(
             Vec3 &baryCoords, const Vec3 &p,
             const Vec3 &a, const Vec3 &b, const Vec3 &c, bool bConstraint=true);
 
-    //private:
+    private:
 
         sofa::component::topology::TriangleSetTopologyContainer &topology;
+
+    public:
 
         /**
          * @brief Finds the closest point to a point.
