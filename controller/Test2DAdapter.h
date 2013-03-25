@@ -21,6 +21,7 @@
 #include <sofa/helper/map.h>
 #include <sofa/helper/vector.h>
 
+#include "misc/SurfaceParametrization.h"
 
 namespace sofa
 {
@@ -61,6 +62,31 @@ public:
  * [VL99] Y. Vasilevskii, K. Lipnikov, An adaptive algorithm for quasioptimal
  *        mesh generation, Computational mathematics and mathematical physics
  *        39 (9) (1999) 1468–1486.
+ *
+ *
+ * 1) make initial projections, handle overlaping boundaries
+ *    - for boundary points pick primary region that will be used for smoothing
+ * 2) smoothing step
+ *    - if moved point not on overlapping boundary no problem
+ *    - if point is on the boundary we need to recompute the projection and
+ *      metrics in the other regions
+ *      * computing new position using the barycentric coordinates may be
+ *        enough and we don't need to rebuild whole region
+ *      * recompute the metric tensors in N1-ring (or just for the point?)
+ *   - compute new point position in 3D and update it
+ * 3) loop
+ *
+ *
+    <---------- x(u) ----------
+
+  U                             X
+    -----------> ------------->
+       global        bezier
+    (barycentric)
+    (   in 2D   )
+
+    ----------- u(x) --------->
+ *
  */
 template<class DataTypes>
 class Test2DAdapter : public Controller
@@ -398,6 +424,8 @@ private:
     /// Edges not eligible for edge swapping operation.
     // TODO: We need to add edge EdgeInfoHandler::swap().
     VecIndex m_protectedEdges;
+
+    SurfaceParametrization<Real> surf;
 
     /**
      * @brief Distortion metric for a triangle from [CTS98] (but probably due

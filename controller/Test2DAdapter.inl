@@ -313,6 +313,8 @@ void Test2DAdapter<DataTypes>::reinit()
     projectionInit();
 
     stepCounter = 0;
+
+    surf.init(m_container, m_state->read(sofa::core::VecCoordId::restPosition())->getValue());
 }
 
 
@@ -1552,6 +1554,7 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
             sofa::defaulttype::Vec<4,float>(0.0, 1.0, 0.0, 1.0));
     }
 
+    surf.draw(vparams);
 }
 
 } // namespace controller

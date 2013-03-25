@@ -77,6 +77,7 @@ SOURCES += \
             controller/AdaptiveCuttingController.cpp \
             controller/Test2DAdapter.cpp \
             cutting/AdaptiveCutting.cpp \
+            misc/SurfaceParametrization.cpp \
 
 HEADERS += \
             controller/AdaptiveCuttingController.h \
@@ -84,6 +85,9 @@ HEADERS += \
             controller/Test2DAdapter.h \
             controller/Test2DAdapter.inl \
             cutting/AdaptiveCutting.h \
+            misc/SurfaceParametrization.h \
+            misc/SurfaceParametrization.inl \
+
 }
 
 # CUDA classes are broken right now.
