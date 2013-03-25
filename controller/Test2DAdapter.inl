@@ -24,6 +24,15 @@
 //   - cut is too short (doesn't span two edges)
 //   - cutting near the edge (handling of boundary/fixed nodes)
 //
+// TODO parametrization
+//   + updates on point relocation
+//       * done by propagation of topological changes
+//   - factor out optimization related stuff
+//   - modify optimization process to use parametrized 2D surface 
+//   - check if cutting still works
+//   - fix parametrization
+//   - compute metric tensors
+//   - add Bézier surfaces
 
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 #define SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
@@ -77,12 +86,13 @@ namespace controller
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::PointInfoHandler:: applyCreateFunction(
     unsigned int pointIndex,
-    PointInformation &,
-    const topology::Point &,
-    const sofa::helper::vector< unsigned int > &,
-    const sofa::helper::vector< double > &)
+    PointInformation &/*pInfo*/,
+    const topology::Point &point,
+    const sofa::helper::vector< unsigned int > &ancestors,
+    const sofa::helper::vector< double > &coeffs)
 {
     adapter->m_toUpdate[pointIndex] = true;
+    adapter->surf.pointAdd(pointIndex, point, ancestors, coeffs);
 }
 
 
@@ -92,6 +102,7 @@ void Test2DAdapter<DataTypes>::PointInfoHandler::applyDestroyFunction(unsigned i
 {
     //std::cout << "pt " << __FUNCTION__ << pointIndex << std::endl;
     adapter->m_toUpdate.erase(pointIndex);
+    adapter->surf.pointRemove(pointIndex);
 }
 
 template<class DataTypes>
@@ -116,6 +127,8 @@ void Test2DAdapter<DataTypes>::PointInfoHandler::swap(unsigned int i1,
         adapter->m_toUpdate.erase(i2);
         adapter->m_toUpdate[i1] = true;
     }
+
+    adapter->surf.pointSwap(i1, i2);
 }
 
 
@@ -1122,7 +1135,7 @@ void Test2DAdapter<DataTypes>::swapEdge(Index triID)
 
     // Perform the topological operation
     if (swapTri != InvalidID) {
-        std::cout << "Swapping\n";
+        //std::cout << "Swapping\n";
 
         if ((triID == m_pointTriId) || (swapTri == m_pointTriId)) {
             std::cout << "Cannot swap tracked triangle!\n";

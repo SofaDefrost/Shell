@@ -272,6 +272,40 @@ void SurfaceParametrization<Real>::getAngle(const Vec2 &u, const Vec2 &v, Real &
 }
 
 template <class Real>
+void SurfaceParametrization<Real>::pointAdd(unsigned int pointIndex, const sofa::core::topology::Point &/*elem*/,
+    const sofa::helper::vector< unsigned int > &ancestors,
+    const sofa::helper::vector< double > &coeffs)
+{
+    //std::cout << "pointAdd(" << pointIndex << ", " << elem << ")\n";
+    Vec2 newPt;
+    for (unsigned int i = 0; i < ancestors.size(); i++) {
+        newPt += points[ ancestors[i] ] * coeffs[i];
+    }
+
+    if (points.size() <= pointIndex) {
+        points.resize(pointIndex+1);
+    }
+
+    points[pointIndex] = newPt;
+}
+
+template <class Real>
+void SurfaceParametrization<Real>::pointRemove(unsigned int /*pointIndex*/)
+{
+    //std::cout << "pointRemove(" << pointIndex << ")\n";
+    // Nothing to do here.
+}
+
+template <class Real>
+void SurfaceParametrization<Real>::pointSwap(unsigned int i1, unsigned int i2)
+{
+    //std::cout << "pointSwap(" << i1 << ", " << i2 << ")\n";
+    Vec2 tmp = points[i1];
+    points[i1] = points[i2];
+    points[i2] = tmp;
+}
+
+template <class Real>
 void SurfaceParametrization<Real>::draw(const core::visual::VisualParams* /*vparams*/)
 {
         glDisable(GL_LIGHTING);

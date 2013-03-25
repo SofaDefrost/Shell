@@ -8,7 +8,9 @@
 #ifndef SURFACEPARAMETRIZATION_H
 #define SURFACEPARAMETRIZATION_H
 
+#include <sofa/core/topology/TopologyHandler.h>
 #include <sofa/core/visual/VisualParams.h>
+
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
@@ -52,6 +54,14 @@ class SurfaceParametrization
             const VecVec3 &x);
 
         void draw(const core::visual::VisualParams* vparams);
+
+        // Topological changes (also handles point relocation)
+        void pointAdd(unsigned int pointIndex, const sofa::core::topology::Point &elem,
+            const sofa::helper::vector< unsigned int > &ancestors,
+            const sofa::helper::vector< double > &coeffs);
+        void pointRemove(unsigned int pointIndex);
+        void pointSwap(unsigned int i1, unsigned int i2);
+
 
     private:
 
