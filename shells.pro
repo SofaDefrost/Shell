@@ -77,6 +77,7 @@ SOURCES += \
             controller/AdaptiveCuttingController.cpp \
             controller/Test2DAdapter.cpp \
             cutting/AdaptiveCutting.cpp \
+            misc/Optimize2DSurface.cpp \
             misc/SurfaceParametrization.cpp \
 
 HEADERS += \
@@ -85,6 +86,8 @@ HEADERS += \
             controller/Test2DAdapter.h \
             controller/Test2DAdapter.inl \
             cutting/AdaptiveCutting.h \
+            misc/Optimize2DSurface.h \
+            misc/Optimize2DSurface.inl \
             misc/SurfaceParametrization.h \
             misc/SurfaceParametrization.inl \
 

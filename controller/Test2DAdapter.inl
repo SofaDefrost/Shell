@@ -27,12 +27,13 @@
 // TODO parametrization
 //   + updates on point relocation
 //       * done by propagation of topological changes
-//   - factor out optimization related stuff
+//   + factor out optimization related stuff
 //   - modify optimization process to use parametrized 2D surface 
 //   - check if cutting still works
 //   - fix parametrization
 //   - compute metric tensors
 //   - add Bézier surfaces
+//   - fix edge swapping
 
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 #define SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
@@ -41,7 +42,6 @@
 
 #include <map>
 #include <float.h>
-#include <cmath>
 
 #include <sofa/core/objectmodel/KeypressedEvent.h>
 #include <sofa/core/visual/VisualParams.h>  
@@ -59,7 +59,7 @@
 #include <sofa/gui/BaseGUI.h>
 #include <sofa/gui/BaseViewer.h>
 
-#include "../misc/PointProjection.h"
+#include "misc/PointProjection.h"
 
 #include "Test2DAdapter.h"
 
@@ -92,7 +92,7 @@ void Test2DAdapter<DataTypes>::PointInfoHandler:: applyCreateFunction(
     const sofa::helper::vector< double > &coeffs)
 {
     adapter->m_toUpdate[pointIndex] = true;
-    adapter->surf.pointAdd(pointIndex, point, ancestors, coeffs);
+    adapter->m_surf.pointAdd(pointIndex, point, ancestors, coeffs);
 }
 
 
@@ -102,7 +102,7 @@ void Test2DAdapter<DataTypes>::PointInfoHandler::applyDestroyFunction(unsigned i
 {
     //std::cout << "pt " << __FUNCTION__ << pointIndex << std::endl;
     adapter->m_toUpdate.erase(pointIndex);
-    adapter->surf.pointRemove(pointIndex);
+    adapter->m_surf.pointRemove(pointIndex);
 }
 
 template<class DataTypes>
@@ -128,7 +128,7 @@ void Test2DAdapter<DataTypes>::PointInfoHandler::swap(unsigned int i1,
         adapter->m_toUpdate[i1] = true;
     }
 
-    adapter->surf.pointSwap(i1, i2);
+    adapter->m_surf.pointSwap(i1, i2);
 }
 
 
@@ -222,6 +222,7 @@ Test2DAdapter<DataTypes>::Test2DAdapter()
 , m_precision(1e-8)
 , m_pointId(InvalidID)
 , m_pointTriId(InvalidID)
+, m_opt(this)
 , pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
 , triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
@@ -327,7 +328,7 @@ void Test2DAdapter<DataTypes>::reinit()
 
     stepCounter = 0;
 
-    surf.init(m_container, m_state->read(sofa::core::VecCoordId::restPosition())->getValue());
+    m_surf.init(m_container, m_state->read(sofa::core::VecCoordId::restPosition())->getValue());
 }
 
 
@@ -381,15 +382,8 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     vector<Real> &functionals = *m_functionals.beginEdit();
 
     functionals.resize(nTriangles);
+    m_opt.initValues(x, functionals, m_container);
 
-    // Compute initial metrics
-    for (Index i=0; i < nTriangles; i++) {
-        const Triangle &t = m_container->getTriangle(i);
-        functionals[i] = funcTriangle(t, x, triInfo.getValue()[i].normal);
-        if (isnan(functionals[i])) {
-            serr << "NaN value for triangle " << i << sendl;
-        }
-    }
     //std::cout << "m: " << functionals << "\n";
     //mytimer.stop();
 
@@ -408,11 +402,8 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
         Vec3 xold = x[i];
         //mytimer.start("Optimize");
-        //if (!smoothLaplacian(i, x, functionals, normals))
-        //if (!smoothOptimizeMin(i, x, functionals, normals))
-        if (!smoothOptimizeMax(i, x, functionals))
-        //if (!smoothPain2D(i, x, functionals, normals))
-        {
+        if (!m_opt.smooth(i, x, functionals,
+                m_sigma.getValue(), m_precision)) {
             x[i] = xold;
         } else {
             // Move the point
@@ -468,9 +459,9 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     //mytimer.step("Swap");
     //swapEdge(minTriID);
     //NOTE: we do some work twice, this can be optimized.
-    for (Index i=0; i<m_container->getNumberOfTriangles(); i++) {
-        swapEdge(i);
-    }
+    //for (Index i=0; i<m_container->getNumberOfTriangles(); i++) {
+    //    swapEdge(i);
+    //}
     //mytimer.stop();
 
 
@@ -512,526 +503,7 @@ void Test2DAdapter<DataTypes>::onKeyPressedEvent(core::objectmodel::KeypressedEv
     }
 }
 
-template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothLaplacian(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals)
-{
-    Vec3 xold = x[v];
-
-    // Compute new position
-    EdgesAroundVertex N1e = m_container->getEdgesAroundVertex(v);
-
-    // Compute centroid of polygon from 1-ring around the vertex
-    Vec3 xnew(0,0,0);
-    for (Index ie=0; ie<N1e.size(); ie++) {
-        Edge e = m_container->getEdge(N1e[ie]); 
-        for (int n=0; n<2; n++) {
-            if (e[n] != v) {
-                xnew += x[ e[n] ];
-            }
-        }
-    }
-    x[v] = xnew / N1e.size();
-
-    TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(v);
-
-    // Check if this improves the mesh
-    //
-    // Note: To track element inversion we either need a normal computed
-    // from vertex normals, or assume the triangle was originaly not
-    // inverted. Now we do the latter.
-    //
-    // We accept any change that doesn't decreas worst metric for the
-    // triangle set.
-
-    bool bAccepted = false;
-    for (int iter=10; iter>0 && !bAccepted; iter--) {
-
-        if ((xold - x[v]).norm2() < 1e-8) {
-            // No change in position
-            //std::cout << "No change in position for " << v << "\n";
-            break;
-        }
-
-        Real oldworst = DBL_MAX, newworst = DBL_MAX;
-        for (Index it=0; it<N1.size(); it++) {
-            Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
-
-            if (metrics[ N1[it] ] < oldworst) {
-                oldworst = metrics[ N1[it] ];
-            }
-
-            if (newmetric < newworst) {
-                newworst = newmetric;
-            }
-        }
-        //std::cout << "cmp: " << newworst << " vs. " << oldworst << "\n";
-        if (newworst < (oldworst + m_sigma.getValue())) {
-            //std::cout << "   --rejected " << xold << " -> " << x[v] << "\n";
-            // The correct step size is best found empiricaly
-            //x[v] = (x[v] + xold)/2.0;
-            x[v] = (x[v] + xold)*2.0/3.0;
-        } else {
-            //std::cout << "   --accepted: " << xold << " -> " << x[v] << "\n";
-            bAccepted = true;
-        }
-    }
-
-    if (bAccepted) {
-        // Update metrics
-        for (Index it=0; it<N1.size(); it++) {
-            metrics[ N1[it] ] = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
-        }
-    }
-    // NOTE: Old position restore by caller (if needed).
-
-    return bAccepted;
-}
-
-template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothOptimizeMax(Index v, VecCoord &x, vector<Real> &metrics)
-{
-    Vec3 xold = x[v];
-
-#if 1
-    // Compute gradients
-    TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(v);
-    helper::vector<Vec3> grad(N1.size());
-    Real delta = m_precision/10.0;
-    // NOTE: Constrained to 2D!
-    for (int component=0; component<2; component++) {
-        x[v] = xold;
-        x[v][component] += delta;
-        for (Index it=0; it<N1.size(); it++) {
-            Real m = funcTriangle(m_container->getTriangle(N1[it]), x,
-                triInfo.getValue()[ N1[it] ].normal);
-            grad[it][component] = (m - metrics[ N1[it] ])/delta;
-        }
-    }
-
-    // Find smallest metric with non-zero gradient
-    Index imin = InvalidID;
-    Real mmin = DBL_MAX;
-    //std::cout << v << " metrics: ";
-    for (Index it=0; it<N1.size(); it++) {
-        if (metrics[ N1[it] ] < mmin && grad[it].norm2() > 1e-15) {
-            imin = it;
-            mmin = metrics[ N1[it] ];
-        }
-        //std::cout << metrics[ N1[it] ] << "(" << grad[it].norm() << "/"
-        //    << grad[it].norm2()<< "), ";
-    }
-    if (imin == InvalidID) {
-        //std::cout << "   doing nothing" << "\n";
-        return false;
-    //} else {
-    //    std::cout << "   using " << imin << "\n";
-    }
-
-    Vec3 step = grad[imin];
-#else
-    //
-    // Minimaze the mean, i.e.: F = 1/n Σ_i f_i
-    //
-    // TODO
-
-    Vec3 grad(0.0, 0.0, 0.0); // F = 1/n Σ_i f_i
-
-    // Compute gradients
-    TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(v);
-    helper::vector<Vec3> grad(N1.size());
-    Real delta = m_precision/10.0;
-    // NOTE: Constrained to 2D!
-    for (int component=0; component<2; component++) {
-        x[v] = xold;
-        x[v][component] += delta;
-        for (Index it=0; it<N1.size(); it++) {
-            Real m = funcTriangle(m_container->getTriangle(N1[it]), x,
-                triInfo.getValue()[ N1[it] ].normal);
-            grad[it][component] = (m - metrics[ N1[it] ])/delta;
-        }
-    }
-    Vec3 step = ...;
-#endif
-
-    // Find out step size
-    Real gamma = 0.01; // ≈ m_precision * 2^10
-
-    //gamma *= step.norm();
-    step.normalize();
-
-    // Note: The following method from [CTS98] underestimates the value and
-    //       leads to slow convergence. It is ok to start with large value, we
-    //       verify the benefit later anyway.
-    //for (Index it=0; it<N1.size(); it++) {
-    //    if (dot(grad[it], step) > 0)
-    //        continue;
-    //    Real tmp = (metrics[ N1[it] ] - metrics[ N1[imin] ]) / (
-    //        1.0 - dot(grad[it], step)); // dot(step, step) == 1 for unit step vector
-    //    assert(tmp > 0.0);
-    //    //if (tmp < 0.0) {
-    //    //    std::cout << "Eeeks! gamma=" << tmp << " partials:\n"
-    //    //        << "grad[imin] = " << grad[imin] << "\n"
-    //    //        << "grad[it]   = " << grad[it] << "\n"
-    //    //        << "m =  " << metrics[ N1[it] ] << "\n"
-    //    //        << "m' = " << metrics[ N1[imin] ] << "\n";
-    //    //}
-    //    if (tmp < gamma) {
-    //        gamma = tmp;
-    //    }
-    //}
-    // Fixed the previous
-    //for (Index it=0; it<N1.size(); it++) {
-    //    if (dot(grad[it], step) > 0)
-    //        continue;
-    //    Real tmp = (metrics[ N1[imin] ] - metrics[ N1[it] ]) /
-    //        dot(grad[it], step);
-    //    assert(tmp > 0.0);
-    //    //if (tmp < 0.0) {
-    //    //    std::cout << "Eeeks! gamma=" << tmp << " partials:\n"
-    //    //        << "grad[imin] = " << grad[imin] << "\n"
-    //    //        << "grad[it]   = " << grad[it] << "\n"
-    //    //        << "m =  " << metrics[ N1[it] ] << "\n"
-    //    //        << "m' = " << metrics[ N1[imin] ] << "\n";
-    //    //}
-    //    if (tmp < gamma) {
-    //        gamma = tmp;
-    //    }
-    //}
-    //std::cout << "gamma=" << gamma << " grad=" << step << "\n";
-
-    // If it's boundary node project it onto the boundary line
-    const PointInformation &pt = pointInfo.getValue()[v];
-    if (pt.isBoundary()) { // && !pt.isFixed()
-        step = pt.boundary * (pt.boundary*step);
-    }
-
-    x[v] = xold + gamma*step;
-
-    // Check if this improves the mesh
-    //
-    // Note: To track element inversion we either need a normal computed
-    // from vertex normals, or assume the triangle was originaly not
-    // inverted. Now we do the latter.
-    //
-    // We accept any change that doesn't decreas worst metric for the
-    // triangle set.
-
-    bool bAccepted = false;
-    for (int iter=10; iter>0 && !bAccepted; iter--) {
-
-        if ((xold - x[v]).norm2() < m_precision) {
-            // No change in position
-            //std::cout << "No change in position for " << v << "\n";
-            break;
-        }
-
-        Real oldworst = DBL_MAX, newworst = DBL_MAX;
-        for (Index it=0; it<N1.size(); it++) {
-            Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
-                triInfo.getValue()[ N1[it] ].normal);
-            if (isnan(newmetric)) {
-                // The operation leads to NaN value!
-                newworst = DBL_MIN;
-                break;
-            }
-
-            if (metrics[N1[it]] < oldworst) {
-                oldworst = metrics[N1[it]];
-            }
-
-            if (newmetric < newworst) {
-                newworst = newmetric;
-            }
-        }
-        //std::cout << "cmp: " << newworst << " vs. " << oldworst << "\n";
-        if (newworst < (oldworst + m_sigma.getValue())) {
-            //std::cout << "   --rejected " << xold << " -> " << x[v]
-            //    << " worst: " << oldworst << " -> " << newworst
-            //    << " (" << (newworst-oldworst) << ")\n";
-            //x[v] = (x[v] + xold)/2.0;
-            gamma *= 2.0/3.0;
-            //gamma /= 2.0;
-            x[v] = xold + gamma*step;
-        } else {
-            //std::cout << "   --accepted: " << xold << " -> " << x[v]
-            //    << " gamma=" << gamma << "\n";
-            //    << " worst: " << oldworst << " -> " << newworst
-            //    << " (" << (newworst-oldworst) << ")\n";
-            sumgamma += gamma; ngamma++;
-            if (gamma < mingamma) mingamma = gamma;
-            if (gamma > maxgamma) maxgamma = gamma;
-            bAccepted = true;
-        }
-    }
-
-    if (bAccepted) {
-        // Update metrics
-        for (Index it=0; it<N1.size(); it++) {
-            metrics[ N1[it] ] = funcTriangle(m_container->getTriangle(N1[it]), x,
-                triInfo.getValue()[ N1[it] ].normal);
-        }
-    }
-    // NOTE: Old position restored by caller (if needed).
-
-    return bAccepted;
-}
-
-template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothOptimizeMin(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals)
-{
-    Vec3 xold = x[v];
-
-    // Compute gradients
-    TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(v);
-    helper::vector<Vec3> grad(N1.size());
-    Real delta = 1e-5;
-    // NOTE: Constrained to 2D!
-    for (int component=0; component<2; component++) {
-        x[v] = xold;
-        x[v][component] += delta;
-        for (Index it=0; it<N1.size(); it++) {
-            Real m = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[N1[it]]);
-            grad[it][component] = (m - metrics[ N1[it] ])/delta;
-        }
-    }
-    //std::cout << "grads: " << grad << "\n";
-
-    // Find largest metric with non-zero gradient
-    Index imax = 0;
-    Real mmax = 0.0;
-    //std::cout << "metrics: ";
-    for (Index it=0; it<N1.size(); it++) {
-        if (metrics[ N1[it] ] > mmax && grad[it].norm2() > 1e-15) {
-            imax = it;
-            mmax = metrics[ N1[it] ];
-        }
-        //std::cout << metrics[ N1[it] ] << "(" << grad[it].norm() << "/"
-        //    << grad[it].norm2()<< "), ";
-    }
-    //std::cout << "\n";
-
-    Vec3 step = grad[imax];
-
-    // Find out step size
-    Real gamma = -0.05;
-
-    //gamma *= step.norm();
-    step.normalize();
-
-    // Note: The following method from [CTS98] underestimates the value and
-    //       leads to slow convergence. It is ok to start with large value, we
-    //       verify the benefit later anyway.
-    //for (Index it=0; it<N1.size(); it++) {
-    //    if (dot(grad[it], step) > 0)
-    //        continue;
-    //    Real tmp = (metrics[ N1[it] ] - metrics[ N1[imax] ]) / (
-    //        1.0 - dot(grad[it], step)); // dot(step, step) == 1 for unit step vector
-    //    assert(tmp > 0.0);
-    //    //if (tmp < 0.0) {
-    //    //    std::cout << "Eeeks! gamma=" << tmp << " partials:\n"
-    //    //        << "grad[imax] = " << grad[imax] << "\n"
-    //    //        << "grad[it]   = " << grad[it] << "\n"
-    //    //        << "m =  " << metrics[ N1[it] ] << "\n"
-    //    //        << "m' = " << metrics[ N1[imax] ] << "\n";
-    //    //}
-    //    if (tmp < gamma) {
-    //        gamma = tmp;
-    //    }
-    //}
-    // Fixed the previous
-    //for (Index it=0; it<N1.size(); it++) {
-    //    if (dot(grad[it], step) > 0)
-    //        continue;
-    //    Real tmp = (metrics[ N1[imax] ] - metrics[ N1[it] ]) /
-    //        dot(grad[it], step);
-    //    assert(tmp > 0.0);
-    //    //if (tmp < 0.0) {
-    //    //    std::cout << "Eeeks! gamma=" << tmp << " partials:\n"
-    //    //        << "grad[imax] = " << grad[imax] << "\n"
-    //    //        << "grad[it]   = " << grad[it] << "\n"
-    //    //        << "m =  " << metrics[ N1[it] ] << "\n"
-    //    //        << "m' = " << metrics[ N1[imax] ] << "\n";
-    //    //}
-    //    if (tmp < gamma) {
-    //        gamma = tmp;
-    //    }
-    //}
-    //std::cout << "gamma=" << gamma << " grad=" << step << "\n";
-    x[v] = xold + gamma*step;
-
-    // Check if this improves the mesh
-    //
-    // Note: To track element inversion we either need a normal computed
-    // from vertex normals, or assume the triangle was originaly not
-    // inverted. Now we do the latter.
-    //
-    // We accept any change that doesn't decreas worst metric for the
-    // triangle set.
-
-    bool bAccepted = false;
-    for (int iter=10; iter>0 && !bAccepted; iter--) {
-
-        if ((xold - x[v]).norm2() < 1e-8) {
-            // No change in position
-            //std::cout << "No change in position for " << v << "\n";
-            break;
-        }
-
-        //Real oldworst = 1.0, newworst = 1.0;
-        Real oldworst = 0.0, newworst = 0.0;
-        for (Index it=0; it<N1.size(); it++) {
-            Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
-
-            if (metrics[N1[it]] > oldworst) {
-                oldworst = metrics[N1[it]];
-            }
-
-            if (newmetric > newworst) {
-                newworst = newmetric;
-            }
-        }
-        //std::cout << "cmp: " << newworst << " vs. " << oldworst << "\n";
-        if (newworst > (oldworst - m_sigma.getValue())) {
-            //std::cout << "   --rejected " << xold << " -> " << x[v]
-            //    << " worst: " << oldworst << " -> " << newworst
-            //    << " (" << (newworst-oldworst) << ")\n";
-            //x[v] = (x[v] + xold)/2.0;
-            gamma *= 2.0/3.0;
-            //gamma /= 2.0;
-            x[v] = xold + gamma*step;
-        } else {
-            //std::cout << "   --accepted: " << xold << " -> " << x[v]
-            //    << " gamma=" << gamma << "\n"
-            //    << " worst: " << oldworst << " -> " << newworst
-            //    << " (" << (newworst-oldworst) << ")\n";
-            sumgamma += gamma; ngamma++;
-            if (gamma < mingamma) mingamma = gamma;
-            if (gamma > maxgamma) maxgamma = gamma;
-            bAccepted = true;
-        }
-    }
-
-    if (bAccepted) {
-        // Update metrics
-        for (Index it=0; it<N1.size(); it++) {
-            metrics[ N1[it] ] = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
-        }
-    }
-    // NOTE: Old position restore by caller (if needed).
-
-    return bAccepted;
-}
-
-template<class DataTypes>
-bool Test2DAdapter<DataTypes>::smoothPain2D(Index v, VecCoord &x, vector<Real> &metrics, vector<Vec3> normals)
-{
-    Real w = 0.5, sigma = 0.01;
-
-    Vec3 xold = x[v];
-    Vec2 old2 = Vec2(xold[0], xold[1]);
-
-    Mat22 A;
-    Vec2 q;
-
-    EdgesAroundVertex N1e = m_container->getEdgesAroundVertex(v);
-    for (Index ie=0; ie<N1e.size(); ie++) {
-        Edge e = m_container->getEdge(N1e[ie]); 
-
-        Mat22 M(Vec2(1.0,0.0), Vec2(0.0,1.0));
-        //Mat22 M = Mlist[ N1e[ie] ];
-
-        Vec3 other = x[ OTHER(v, e[0], e[1]) ];
-
-        A += M;
-        q += M * Vec2(other[0], other[1]);
-    }
-
-    Mat22 D;
-    for (int n=0; n<2; n++) {
-        // D_jj = max { A_jj , (1+s) Σ_m!=j |A_jm| }
-        Real offdiag = (1.0+sigma) * helper::rabs(A[n][(n+1)%2]);
-        if (A[n][n] < offdiag) {
-            D[n][n] = offdiag; 
-        } else {
-            D[n][n] = A[n][n];
-        }
-    }
-
-    // Solve: (D + A)(xnew - old2) = w(q - A old2)
-    // ==> new = (D + A)^{-1} w (q - A old2) + old2
-    Mat22 DAi;
-    DAi.invert(D+A);
-    Vec2 xnew = (q - A * old2) * w;
-    xnew = DAi * xnew;
-    xnew += old2;
-
-    x[v] = Vec3(xnew[0], xnew[1], 0.0);
-
-    // Check if this improves the mesh
-    //
-    // Note: To track element inversion we either need a normal computed
-    // from vertex normals, or assume the triangle was originaly not
-    // inverted. Now we do the latter.
-    //
-    // We accept any change that doesn't decreas worst metric for the
-    // triangle set.
-
-    TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(v);
-
-    bool bAccepted = false;
-    for (int iter=1; iter>0 && !bAccepted; iter--) {
-
-        if ((xold - x[v]).norm2() < 1e-8) {
-            // No change in position
-            //std::cout << "No change in position for " << v << "\n";
-            break;
-        }
-
-        Real oldworst = 1.0, newworst = 1.0;
-        for (Index it=0; it<N1.size(); it++) {
-            Real newmetric = funcTriangle(m_container->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
-
-            if (metrics[N1[it]] < oldworst) {
-                oldworst = metrics[N1[it]];
-            }
-
-            if (newmetric < newworst) {
-                newworst = newmetric;
-            }
-        }
-        //std::cout << "cmp: " << newworst << " vs. " << oldworst << "\n";
-        if (newworst < (oldworst + m_sigma.getValue())) {
-            //std::cout << "   --rejected " << xold << " -> " << x[v]
-            //    << " worst: " << oldworst << " -> " << newworst
-            //    << " (" << (newworst-oldworst) << ")\n";
-            x[v] = (x[v] + xold)/2.0;
-        } else {
-            //std::cout << "   --accepted: " << xold << " -> " << x[v]
-            //    << " gamma=" << gamma << "\n";
-            //    << " worst: " << oldworst << " -> " << newworst
-            //    << " (" << (newworst-oldworst) << ")\n";
-            bAccepted = true;
-        }
-    }
-
-    if (bAccepted) {
-        // Update metrics
-        for (Index it=0; it<N1.size(); it++) {
-            metrics[ N1[it] ] = funcTriangle(m_container->getTriangle(N1[it]), x,
-                triInfo.getValue()[ N1[it] ].normal);
-        }
-    }
-    // NOTE: Old position restore by caller (if needed).
-
-    return bAccepted;
-}
-
+#if 0 // TODO
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::swapEdge(Index triID)
 {
@@ -1164,6 +636,7 @@ void Test2DAdapter<DataTypes>::swapEdge(Index triID)
 
     // TODO: projection
 }
+#endif
 
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::computeTriangleNormal(const Triangle &t, const VecCoord &x, Vec3 &normal) const
@@ -1567,7 +1040,7 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
             sofa::defaulttype::Vec<4,float>(0.0, 1.0, 0.0, 1.0));
     }
 
-    surf.draw(vparams);
+    m_surf.draw(vparams);
 }
 
 } // namespace controller

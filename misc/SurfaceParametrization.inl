@@ -14,21 +14,23 @@ namespace sofa
 
 template <class Real>
 void SurfaceParametrization<Real>::init(
-    sofa::component::topology::TriangleSetTopologyContainer *_topology,
+    sofa::component::topology::TriangleSetTopologyContainer *topology,
     const VecVec3 &x)
 {
-    topology = _topology;
-    points.resize(x.size());
+    m_topology = topology;
+    m_points.resize(x.size());
 
 #if 1
     for (unsigned int i = 0; i < x.size(); i++) {
-        points[i] = x[i];
+        m_points[i] = x[i];
     }
 #else // Needs fixing!
 
+    if (m_topology == NULL) return;
+
     ptDone.resize(x.size(), false);
-    triDone.resize(topology->getNbTriangles(), false);
-    triBoundary.resize(topology->getNbTriangles(), false);
+    triDone.resize(m_topology->getNbTriangles(), false);
+    triBoundary.resize(m_topology->getNbTriangles(), false);
     helper::vector<Index> boundary;
     Mat33 R;
     Triangle t;
@@ -36,7 +38,7 @@ void SurfaceParametrization<Real>::init(
     // Pick first triangle arbitrarily and unfold it.
     // Let's start with triangle number 0.
     Index tId = 0;
-    t = topology->getTriangle(tId);
+    t = m_topology->getTriangle(tId);
     //computeFrame(R, t, x);
     R = Mat33(
         Vec3(1.0,0.0,0.0),
@@ -45,16 +47,16 @@ void SurfaceParametrization<Real>::init(
     //std::cout << "first: " << t << "\n";
 
     for (int i = 0; i < 3; i++) {
-        points[t[i]] = R * x[t[i]];
-        //std::cout << "point[" << t[i] << "] = " << points[t[i]] << "\n";
+        m_points[t[i]] = R * x[t[i]];
+        //std::cout << "point[" << t[i] << "] = " << m_points[t[i]] << "\n";
         ptDone[t[i]] = true;
     }
     triDone[tId] = true;
     // Mark boundary triangles (those that already have two points fixed)
-    const EdgesInTriangle &elist = topology->getEdgesInTriangle(tId);
+    const EdgesInTriangle &elist = m_topology->getEdgesInTriangle(tId);
     for (unsigned int i = 0; i < elist.size(); i++) {
         boundary.push_back(elist[i]); // Add edges into the queue.
-        const TrianglesAroundEdge &tpair = topology->getTrianglesAroundEdge(elist[i]);
+        const TrianglesAroundEdge &tpair = m_topology->getTrianglesAroundEdge(elist[i]);
         for (unsigned int j = 0; j < tpair.size(); j++) {
             triBoundary[tpair[j]] = true;
         }
@@ -70,7 +72,7 @@ void SurfaceParametrization<Real>::init(
         Index eId = boundary[0];
         boundary.erase(boundary.begin());
 
-        const TrianglesAroundEdge &tpair = topology->getTrianglesAroundEdge(eId);
+        const TrianglesAroundEdge &tpair = m_topology->getTrianglesAroundEdge(eId);
         // At most one triangle should be free.
         if (tpair.size() > 0 && !triDone[tpair[0]]) {
             tId = tpair[0];
@@ -81,7 +83,7 @@ void SurfaceParametrization<Real>::init(
         }
 
         // Find the free node.
-        t = topology->getTriangle(tId);
+        t = m_topology->getTriangle(tId);
         Index pId = InvalidID;
         for (int i = 0; i < 3; i++) {
             if (!ptDone[t[i]]) {
@@ -91,12 +93,12 @@ void SurfaceParametrization<Real>::init(
         }
         if (pId == InvalidID) continue;
 
-        projectPoint(pId, points[pId], x);
-        //std::cout << "point[" << pId << "] = " << points[pId] << "\n";
+        projectPoint(pId, m_points[pId], x);
+        //std::cout << "point[" << pId << "] = " << m_points[pId] << "\n";
         ptDone[pId] = true;
 
         // Update boundary info.
-        const TrianglesAroundVertex &N1 = topology->getTrianglesAroundVertex(pId);
+        const TrianglesAroundVertex &N1 = m_topology->getTrianglesAroundVertex(pId);
         for (unsigned int i = 0; i < N1.size(); i++) {
             tId = N1[i];
             // Check triangle state.
@@ -105,7 +107,7 @@ void SurfaceParametrization<Real>::init(
             triDone[tId] = (triState == FIXED);
             if (!triDone[tId]) {
                 // Check edge state.
-                EdgesInTriangle elist = topology->getEdgesInTriangle(tId);
+                EdgesInTriangle elist = m_topology->getEdgesInTriangle(tId);
                 for (int i = 0; i < 3; i++) {
                     if (getEdgeState(elist[i]) == FIXED) {
                         boundary.push_back(elist[i]);
@@ -121,14 +123,16 @@ void SurfaceParametrization<Real>::init(
 template <class Real>
 void SurfaceParametrization<Real>::projectPoint(const Index pId, Vec2 &outPos, const VecVec3 &x) const
 {
-    const TrianglesAroundVertex &N1 = topology->getTrianglesAroundVertex(pId);
+    if (m_topology == NULL) return;
+
+    const TrianglesAroundVertex &N1 = m_topology->getTrianglesAroundVertex(pId);
     int nTriangles = 0;
     outPos = Vec2(0,0);
     for (unsigned int i = 0; i < N1.size(); i++) {
         if (!triBoundary[N1[i]]) continue;
 
         Index tId = N1[i];
-        const Triangle &t = topology->getTriangle(tId);
+        const Triangle &t = m_topology->getTriangle(tId);
         //std::cout << "t=" << t << "\n";
         Mat33 R;
         computeFrame(R, t, x);
@@ -149,9 +153,9 @@ void SurfaceParametrization<Real>::projectPoint(const Index pId, Vec2 &outPos, c
         if (edge == InvalidID) continue; // this shouldn't happen
 
         // Scale triangle down and center on first node
-        Real elen1 = (points[t[edge]]-points[t[(edge+1)%3]]).norm();
+        Real elen1 = (m_points[t[edge]]-m_points[t[(edge+1)%3]]).norm();
         Real elen2 = (pts[edge]-pts[(edge+1)%3]).norm();
-        //std::cout << "elen1: " << elen1 << " = " << points[t[edge]] << " -- " << points[t[(edge+1)%3]] << "\n";
+        //std::cout << "elen1: " << elen1 << " = " << m_points[t[edge]] << " -- " << m_points[t[(edge+1)%3]] << "\n";
         //std::cout << "elen2: " << elen2 << " = " << pts[edge] << " -- " << pts[(edge+1)%3] << "\n";
         Real scale = elen1/elen2;
         for (int j = 0; j < 3; j++) {
@@ -160,7 +164,7 @@ void SurfaceParametrization<Real>::projectPoint(const Index pId, Vec2 &outPos, c
         }
 
         // Rotate to match the fixed edge
-        Vec2 e1 = points[t[(edge+1)%3]]-points[t[edge]];
+        Vec2 e1 = m_points[t[(edge+1)%3]]-m_points[t[edge]];
         Vec2 e2 = pts[(edge+1)%3]-pts[edge];
         //std::cout << "   " << e1 << " x " << e2 << "\n";
         e1.normalize();
@@ -176,7 +180,7 @@ void SurfaceParametrization<Real>::projectPoint(const Index pId, Vec2 &outPos, c
             pts[j] = R2 * pts[j];
         }
 
-        Vec2 shift = points[t[edge]] - pts[edge];
+        Vec2 shift = m_points[t[edge]] - pts[edge];
         for (int j = 0; j < 3; j++) {
             //std::cout << "4: " << pts[j] << " -- " << shift + pts[j] << "\n";
             pts[j] += shift;
@@ -224,7 +228,9 @@ void SurfaceParametrization<Real>::computeFrame(Mat33 &frame, const Triangle &t,
 template <class Real>
 typename SurfaceParametrization<Real>::ElementState SurfaceParametrization<Real>::getEdgeState(Index edgeId) const
 {
-    Edge e = topology->getEdge(edgeId);
+    if (m_topology == NULL) return FREE;
+
+    Edge e = m_topology->getEdge(edgeId);
     if (ptDone[e[0]] && ptDone[e[1]]) {
         return FIXED;
     }
@@ -234,7 +240,9 @@ typename SurfaceParametrization<Real>::ElementState SurfaceParametrization<Real>
 template <class Real>
 typename SurfaceParametrization<Real>::ElementState SurfaceParametrization<Real>::getTriangleState(Index triId) const
 {
-    Triangle t = topology->getTriangle(triId);
+    if (m_topology == NULL) return FREE;
+
+    Triangle t = m_topology->getTriangle(triId);
     int fixed = 0;
     for (int i = 0; i < 3; i++) {
         if (ptDone[t[i]]) fixed++;
@@ -279,14 +287,14 @@ void SurfaceParametrization<Real>::pointAdd(unsigned int pointIndex, const sofa:
     //std::cout << "pointAdd(" << pointIndex << ", " << elem << ")\n";
     Vec2 newPt;
     for (unsigned int i = 0; i < ancestors.size(); i++) {
-        newPt += points[ ancestors[i] ] * coeffs[i];
+        newPt += m_points[ ancestors[i] ] * coeffs[i];
     }
 
-    if (points.size() <= pointIndex) {
-        points.resize(pointIndex+1);
+    if (m_points.size() <= pointIndex) {
+        m_points.resize(pointIndex+1);
     }
 
-    points[pointIndex] = newPt;
+    m_points[pointIndex] = newPt;
 }
 
 template <class Real>
@@ -300,29 +308,31 @@ template <class Real>
 void SurfaceParametrization<Real>::pointSwap(unsigned int i1, unsigned int i2)
 {
     //std::cout << "pointSwap(" << i1 << ", " << i2 << ")\n";
-    Vec2 tmp = points[i1];
-    points[i1] = points[i2];
-    points[i2] = tmp;
+    Vec2 tmp = m_points[i1];
+    m_points[i1] = m_points[i2];
+    m_points[i2] = tmp;
 }
 
 template <class Real>
 void SurfaceParametrization<Real>::draw(const core::visual::VisualParams* /*vparams*/)
 {
-        glDisable(GL_LIGHTING);
-        glBegin(GL_LINES);
+    if (m_topology == NULL) return;
 
-        for (int i=0; i<topology->getNbTriangles(); ++i)
+    glDisable(GL_LIGHTING);
+    glBegin(GL_LINES);
+
+    for (int i=0; i<m_topology->getNbTriangles(); ++i)
+    {
+        const Triangle &t = m_topology->getTriangle(i);
+        for (int j=0; j<3; j++)
         {
-            const Triangle &t = topology->getTriangle(i);
-            for (int j=0; j<3; j++)
-            {
-                glColor4f(1.0, 1.0, 1.0, 1.0);
-                glVertex3f(points[t[j]][0], points[t[j]][1], 1.0f);
-                glVertex3f(points[t[(j+1)%3]][0], points[t[(j+1)%3]][1], 1.0f);
-            }
+            glColor4f(1.0, 1.0, 1.0, 1.0);
+            glVertex3f(m_points[t[j]][0], m_points[t[j]][1], 1.0f);
+            glVertex3f(m_points[t[(j+1)%3]][0], m_points[t[(j+1)%3]][1], 1.0f);
         }
+    }
 
-        glEnd();
+    glEnd();
 }
 
 } // namespace sofa

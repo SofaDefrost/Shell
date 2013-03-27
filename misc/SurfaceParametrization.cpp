@@ -4,7 +4,6 @@
 
 #include "../initPluginShells.h"
 #include "SurfaceParametrization.inl"
-//#include <sofa/core/ObjectFactory.h>
 
 namespace sofa
 {

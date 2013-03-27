@@ -47,7 +47,7 @@ class SurfaceParametrization
 
         enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 
-        SurfaceParametrization() : topology(NULL) {}
+        SurfaceParametrization() : m_topology(NULL) {}
 
         void init(
             sofa::component::topology::TriangleSetTopologyContainer *_topology,
@@ -71,9 +71,9 @@ class SurfaceParametrization
             FIXED
         };
 
-        sofa::component::topology::TriangleSetTopologyContainer *topology;
+        sofa::component::topology::TriangleSetTopologyContainer *m_topology;
 
-        VecVec2 points;
+        VecVec2 m_points;
         helper::vector<bool> ptDone, triDone, triBoundary; // Data for initialization.
 
 
