@@ -16,6 +16,8 @@
 
 #include <sofa/helper/vector.h>
 
+#include "misc/SurfaceParametrization.h"
+
 // Return non-zero if triangle with points (a,b,c) is defined in
 // counter-clockwise direction. (2D case)
 #define CCW(a,b,c) (\
@@ -52,52 +54,65 @@ class Optimize2DSurface
         typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
 
         typedef sofa::helper::vector<Real>      VecReal;
-        //typedef sofa::helper::vector<Vec2>      VecVec2;
+        typedef sofa::helper::vector<Vec2>      VecVec2;
         typedef sofa::helper::vector<Vec3>      VecVec3;
         //typedef sofa::helper::vector<Index>     VecIndex;
 
         enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 
         Optimize2DSurface(
-            sofa::component::controller::Test2DAdapter<DataTypes> *adapter)
+            sofa::component::controller::Test2DAdapter<DataTypes> *adapter,
+            SurfaceParametrization<Real> &surface)
             : m_adapter(adapter)
-            ,  m_topology(NULL) {}
+            , m_topology(NULL)
+            , m_surf(surface)
+            {}
 
-        void initValues(const VecVec3 &x, VecReal &metrics,
-            sofa::component::topology::TriangleSetTopologyContainer *topology) {
-            m_topology = topology;
+        void initValues(VecReal &metrics,
+            sofa::component::topology::TriangleSetTopologyContainer *topology);
 
-            normals.resize(m_topology->getNbTriangles());
-            m_orientation.resize(m_topology->getNbTriangles());
-
-            // Compute initial metrics and orientations
-            for (Index i=0; i < (unsigned int)m_topology->getNbTriangles(); i++) {
-                const Triangle &t = m_topology->getTriangle(i);
-                metrics[i] = funcTriangle(t, x, normals[i]);
-                if (isnan(metrics[i])) {
-                    std::cerr << "NaN value for triangle " << i << "\n";
-                }
-
-                m_orientation[i] = CCW(x[t[0]], x[t[1]], x[t[2]]);
-            }
-        }
-
-        bool smooth(Index v, VecVec3 &x, VecReal &metrics,
+        /**
+         * @brief Perform smoothing step for single point.
+         *
+         * @param v             Point to move.
+         * @param newPosition   Contains resulting position on return.
+         * @param tId           Triangle in which the new position lies.
+         * @param metrics       Vector of metrics for each triangle.
+         * @param sigma         Minimal improvement in metric to accept a
+         *                      change.
+         * @param precision     Precision of optimization based smoothing.
+         *
+         * @return 
+         */
+        bool smooth(Index v, Vec2 &newPosition, Index &tId, VecReal &metrics,
             const Real sigma, const Real precision) {
             m_sigma = sigma;
             m_precision = precision;
-            return smoothOptimizeMax(v, x, normals, metrics);
+            //return smoothLaplacian(v, metrics, newPosition, tId);
+            return smoothOptimizeMax(v, metrics, newPosition, tId);
         }
 
         /**
-         * @brief Distortion metric for a triangle to be computed.
+         * @brief Computes distortion metric for a triangle.
          *
-         * @param t         Triangle to compute the metric for.
-         * @param x         Vertices.
-         * @param normal    Surface normal for the triangle (to check for inversion).
+         * @param id    Triangle to compute the metric for.
          */
-        Real funcTriangle(const Triangle &t, const VecVec3 &x, const Vec3 &normal) const {
-            return  metricInverted(t, x, normal) * metricGeom(t, x, normal);
+        Real funcTriangle(Index  id) const {
+            if (m_topology == NULL) return 0.0;
+            return funcTriangle(m_topology->getTriangle(id),
+                m_surf.getPositions(),
+                m_orientation[id]);
+        }
+
+        /**
+         * @brief Computes distortion metric for a triangle.
+         *
+         * @param t             Triangle to compute the metric for.
+         * @param x             Vertices.
+         * @param orientation   Orientation of the triangle.
+         */
+        Real funcTriangle(const Triangle &t, const VecVec2 &x, bool orientation) const {
+            return  metricInverted(t, x, orientation) * metricGeom(t, x, orientation);
 
             // TODO: Simple sum is not good enough. Geometrical functionals
             // use negative value to designate inverted triangle. This
@@ -115,20 +130,23 @@ class Optimize2DSurface
          * @param x         Vertices.
          * @param triID     Triangle to relate computation to.
          */
-        Real metricGeom(const Triangle &t, const VecVec3 &x, const Index triID) const {
-            return metricGeom(t, x, normals[triID]);
+        Real metricGeom(const Triangle &t, const Index triID) const {
+
+            return metricGeom(t, m_surf.getPositions(), m_orientation[triID]);
         }
 
         /**
          * @brief Distortion metric for a triangle.
          *
-         * @param t         Triangle to compute the metric for.
-         * @param x         Vertices.
-         * @param normal    Surface normal for the triangle.
+         * @param t             Triangle to compute the metric for.
+         * @param x             Vertices.
+         * @param orientation   Orientation of the triangle.
          */
-        Real metricGeom(const Triangle &t, const VecVec3 &x, const Vec3 &normal) const {
-            //return metricGeomCTS(t, x, normal);
-            return metricGeomVL(t, x, normal);
+        Real metricGeom(const Triangle &t, const VecVec2 &x,
+            bool /*orientation*/) const {
+
+            return metricGeomCTS(t, x);
+            //return metricGeomVL(t, x);
             //return metricGeomCTSM(t, x, normal);
             //return metricGeomVLM(t, x, normal);
         }
@@ -138,6 +156,7 @@ class Optimize2DSurface
 
         sofa::component::controller::Test2DAdapter<DataTypes> *m_adapter;
         sofa::component::topology::TriangleSetTopologyContainer *m_topology;
+        SurfaceParametrization<Real> &m_surf;
 
         /// Orientation of each triangle.
         helper::vector<bool> m_orientation;
@@ -155,14 +174,18 @@ class Optimize2DSurface
 
 
         /**
-         * @brief Constrained Laplacian smoothing
+         * @brief Constrained Laplacian smoothing.
          *
-         * @param v         Vertex to move
-         * @param x         Current positions
-         * @param metrics   Current metrice values for elements
-         * @param normals   Original normals (to check for inversion)
+         * @param v             Vertex to move.
+         * @param metrics       Current metric values for elements.
+         * @param newPosition   New position of the point.
+         * @param tId           Triangle in which the new position lies.
+         *
+         * @returns True if new position was computed, in which case
+         *          newPosition contains the new position.
          */
-        bool smoothLaplacian(Index v, VecVec3 &x, VecReal &metrics, vector<Vec3> normals);
+        bool smoothLaplacian(Index v, VecReal &metrics, Vec2 &newPosition,
+            Index &tId);
 
         /**
          * @brief Optimization based smoothing
@@ -170,12 +193,16 @@ class Optimize2DSurface
          * Optimization based smoothing,
          * optimizes towards maximum of the functional.
          *
-         * @param v         Vertex to move
-         * @param x         Current positions
-         * @param metrics   Current metrice values for elements
-         * @param normals   Original normals (to check for inversion)
+         * @param v             Vertex to move.
+         * @param metrics       Current metric values for elements.
+         * @param newPosition   New position of the point.
+         * @param tId           Triangle in which the new position lies.
+         *
+         * @returns True if new position was computed, in which case
+         *          newPosition contains the new position.
          */
-        bool smoothOptimizeMax(Index v, VecVec3 &x, vector<Vec3> normals, VecReal &metrics);
+        bool smoothOptimizeMax(Index v, VecReal &metrics, Vec2 &newPosition,
+            Index &tId);
 
         /**
          * @brief Optimization based smoothing
@@ -206,39 +233,34 @@ class Optimize2DSurface
         /**
          * @brief Detects triangle inversion
          *
-         * @param t         Triangle to compute the metric for.
-         * @param x         Vertices.
-         * @param normal    Surface normal for the triangle (to check for inversion).
+         * @param t             Triangle to compute the metric for.
+         * @param x             Vertices.
+         * @param orientation   Orientation of the triangle.
          *
          * @returns Returns 1 if triangle is OK, -1 if it is inverted.
          */
-        Real metricInverted(const Triangle &t, const VecVec3 &x, const Vec3 &normal) const {
+        Real metricInverted(const Triangle &t, const VecVec2 &x, bool orientation) const {
             // Is triangle inverted?
-            //Vec3 nt;
-            //computeTriangleNormal(t, x, nt);
-            //return ((nt*normal) < 1e-15) ? -1.0 : 1.0;
-
             bool no = CCW(x[t[0]], x[t[1]], x[t[2]]);
-            return (false != no) ? -1.0 : 1.0;
+            return (orientation == no) ? 1.0 : -1.0;
         }
 
         /**
          * @brief Distortion metric for a triangle from [CTS98] (but probably due
          * to somebody else)
          *
-         * @param t         Triangle to compute the metric for.
-         * @param x         Vertices.
-         * @param normal    Surface normal for the triangle.
+         * @param t             Triangle to compute the metric for.
+         * @param x             Vertices.
          */
-        Real metricGeomCTS(const Triangle &t, const VecVec3 &x, const Vec3 &/*normal*/) const {
+        Real metricGeomCTS(const Triangle &t, const VecVec2 &x) const {
             // TODO: we can precompute these
-            Vec3 ab = x[ t[1] ] - x[ t[0] ];
-            Vec3 ca = x[ t[0] ] - x[ t[2] ];
-            Vec3 cb = x[ t[1] ] - x[ t[2] ];
+            Vec2 ab = x[ t[1] ] - x[ t[0] ];
+            Vec2 ca = x[ t[0] ] - x[ t[2] ];
+            Vec2 cb = x[ t[1] ] - x[ t[2] ];
 
             // Normalizing factor so that the matric is 1 in maximum
             Real m = 2 * sqrt(3);
-            m *= ca.cross(cb).norm(); // || CA × CB ||
+            m *= helper::rabs(cross(ca, cb)); // || CA × CB ||
             m /= ca.norm2() + ab.norm2() + cb.norm2();
 
             return m;
@@ -299,11 +321,11 @@ class Optimize2DSurface
          * @param x         Vertices.
          * @param normal    Surface normal for the triangle.
          */
-        Real metricGeomVL(const Triangle &t, const VecVec3 &x, const Vec3 &/*normal*/) const {
+        Real metricGeomVL(const Triangle &t, const VecVec2 &x) const {
             // TODO: we can precompute these
-            Vec3 ab = x[ t[1] ] - x[ t[0] ];
-            Vec3 ca = x[ t[0] ] - x[ t[2] ];
-            Vec3 cb = x[ t[1] ] - x[ t[2] ];
+            Vec2 ab = x[ t[1] ] - x[ t[0] ];
+            Vec2 ca = x[ t[0] ] - x[ t[2] ];
+            Vec2 cb = x[ t[1] ] - x[ t[2] ];
 
             Real p = ca.norm() + ab.norm() + cb.norm(); // perimeter
             Real ip = 1.0/p; // inverse
@@ -311,7 +333,7 @@ class Optimize2DSurface
             // TODO: verify this, the maximum seems to be at 2
             //Real m = 12 * sqrt(3);
             Real m = 6 * helper::rsqrt(3);
-            m *= ca.cross(cb).norm(); // || CA × CB ||
+            m *= helper::rabs(cross(ca, cb)); // || CA × CB ||
             m /= helper::rsqrt(p);
             Real f;
             if (p < ip) {
@@ -506,28 +528,37 @@ class Optimize2DSurface
         }
 
         // TODO: temporary, remove this!!!
-        void computeTriangleNormal(const Triangle &t, const VecVec3 &x, Vec3 &normal) const
-        {
-            Vec3 A, B;
-            A = x[ t[1] ] - x[ t[0] ];
-            B = x[ t[2] ] - x[ t[0] ];
+        //void computeTriangleNormal(const Triangle &t, const VecVec3 &x, Vec3 &normal) const
+        //{
+        //    Vec3 A, B;
+        //    A = x[ t[1] ] - x[ t[0] ];
+        //    B = x[ t[2] ] - x[ t[0] ];
 
-            Real An = A.norm(), Bn = B.norm();
-            if (An < 1e-20 || Bn < 1e-20) {
-                std::cerr << "Found degenerated triangle: "
-                    << x[ t[0] ] << " / " << x[ t[1] ] << " / " << x[ t[2] ]
-                    << " :: " << An << ", " << Bn << "\n";
+        //    Real An = A.norm(), Bn = B.norm();
+        //    if (An < 1e-20 || Bn < 1e-20) {
+        //        std::cerr << "Found degenerated triangle: "
+        //            << x[ t[0] ] << " / " << x[ t[1] ] << " / " << x[ t[2] ]
+        //            << " :: " << An << ", " << Bn << "\n";
 
-                normal = Vec3(0,0,0);
-                return;
-            }
+        //        normal = Vec3(0,0,0);
+        //        return;
+        //    }
 
-            A /= An;
-            B /= Bn;
-            normal = cross(A, B);
-            normal.normalize();
-        }
+        //    A /= An;
+        //    B /= Bn;
+        //    normal = cross(A, B);
+        //    normal.normalize();
+        //}
 
+        /**
+         * @brief Get the triangle in a given direction from a point.
+         *
+         * @param pId   Origin.
+         * @param dir   Direction.
+         *
+         * @return Triangle index or InvalidID if not found.
+         */
+        Index getTriangleInDirection(Index pId, const Vec2& dir) const;
 };
 
 }

@@ -100,6 +100,41 @@ void PointProjection<Real>::ProjectPoint(Vec3 &baryCoords, Index &triangleID,
         minVertex, minEdge, minTriangle);
 }
 
+// -----------------------------------------------------------------------------
+
+// Do some magic to constraint the coordinates inside the triangle
+// the requirements are:
+//    coef_a, coef_b, coef_c ≥ 0
+//    coef_a + coef_b + coef_c = 1
+template <class Real>
+//void ConstraintBaryCoords(Real &coef_a, Real &coef_b, Real &coef_c)
+void ConstraintBaryCoords(sofa::defaulttype::Vec<3, Real> &baryCoords)
+
+{
+    if (baryCoords[0] < 0.0) baryCoords[0] = 0.0;
+    if (baryCoords[1] < 0.0) baryCoords[1] = 0.0;
+    baryCoords[2] = 1.0 - (baryCoords[0] + baryCoords[1]);
+    if (baryCoords[2] < 0.0)
+    {
+        // We have to be carefull so as not to overshoot some other
+        // coefficient
+        if (baryCoords[0] < -baryCoords[2]/2.0) {
+            baryCoords[2] += baryCoords[0];
+            baryCoords[1] += baryCoords[2];
+            baryCoords[0] = 0.0;
+        } else if (baryCoords[1] < -baryCoords[2]/2.0) {
+            baryCoords[2] += baryCoords[1];
+            baryCoords[0] += baryCoords[2];
+            baryCoords[1] = 0.0;
+        } else {
+            baryCoords[0] += baryCoords[2]/2.0;
+            baryCoords[1] += baryCoords[2]/2.0;
+        }
+
+        baryCoords[2] = 0.0;
+    }
+}
+
 
 // --------------------------------------------------------------------------------------
 template <class Real>
@@ -128,32 +163,7 @@ void PointProjection<Real>::ComputeBaryCoords(
         coef_b = N*((c-p).cross(a-p));
         if (bConstraint)
         {
-            // Do some magic to constraint the coordinates inside the triangle
-            // the requirements are:
-            //    coef_a, coef_b, coef_c ≥ 0
-            //    coef_a + coef_b + coef_c = 1
-            if (coef_a < 0.0) coef_a = 0.0;
-            if (coef_b < 0.0) coef_b = 0.0;
             coef_c = 1.0 - (coef_a + coef_b);
-            if (coef_c < 0.0)
-            {
-                // We have to be carefull so as not to overshoot some other
-                // coefficient
-                if (coef_a < -coef_c/2.0) {
-                    coef_c += coef_a;
-                    coef_b += coef_c;
-                    coef_a = 0.0;
-                } else if (coef_b < -coef_c/2.0) {
-                    coef_c += coef_b;
-                    coef_a += coef_c;
-                    coef_b = 0.0;
-                } else {
-                    coef_a += coef_c/2.0;
-                    coef_b += coef_c/2.0;
-                }
-
-                coef_c = 0.0;
-            }
         }
         else
         {
@@ -164,8 +174,31 @@ void PointProjection<Real>::ComputeBaryCoords(
     baryCoords[0] = coef_a;
     baryCoords[1] = coef_b;
     baryCoords[2] = coef_c;
+
+    if (bConstraint) {
+        ConstraintBaryCoords<Real>(baryCoords);
+    }
 }
 
+// -----------------------------------------------------------------------------
+template <class Real>
+void PointProjection<Real>::ComputeBaryCoords(
+    Vec3 &baryCoords,
+    const Vec2 &p, const Vec2 &a, const Vec2 &b, const Vec2 &c, bool bConstraint)
+{
+    Mat33 m;
+    m(0,0) = 1;    m(0,1) = 1;    m(0,2) = 1;
+    m(1,0) = a[0]; m(1,1) = b[0]; m(1,2) = c[0];
+    m(2,0) = a[1]; m(2,1) = b[1]; m(2,2) = c[1];
+
+    Mat33 mi;
+    mi.invert(m);
+
+    baryCoords = mi * Vec3(1, p[0], p[1]);
+    if (bConstraint) {
+        ConstraintBaryCoords<Real>(baryCoords);
+    }
+}
 
 // -----------------------------------------------------------------------------
 template <class Real>

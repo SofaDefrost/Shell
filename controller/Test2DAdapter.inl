@@ -28,7 +28,7 @@
 //   + updates on point relocation
 //       * done by propagation of topological changes
 //   + factor out optimization related stuff
-//   - modify optimization process to use parametrized 2D surface 
+//   + modify optimization process to use parametrized 2D surface 
 //   - check if cutting still works
 //   - fix parametrization
 //   - compute metric tensors
@@ -222,7 +222,7 @@ Test2DAdapter<DataTypes>::Test2DAdapter()
 , m_precision(1e-8)
 , m_pointId(InvalidID)
 , m_pointTriId(InvalidID)
-, m_opt(this)
+, m_opt(this, m_surf)
 , pointInfo(initData(&pointInfo, "pointInfo", "Internal point data"))
 , triInfo(initData(&triInfo, "triInfo", "Internal triangle data"))
 {
@@ -382,7 +382,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     vector<Real> &functionals = *m_functionals.beginEdit();
 
     functionals.resize(nTriangles);
-    m_opt.initValues(x, functionals, m_container);
+    m_opt.initValues(functionals, m_container);
 
     //std::cout << "m: " << functionals << "\n";
     //mytimer.stop();
@@ -400,16 +400,20 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
             continue;
         }
 
-        Vec3 xold = x[i];
         //mytimer.start("Optimize");
-        if (!m_opt.smooth(i, x, functionals,
-                m_sigma.getValue(), m_precision)) {
-            x[i] = xold;
-        } else {
+        Vec2 newPos;
+        Index tId=InvalidID;
+        if (m_opt.smooth(i, newPos, tId,
+                functionals, m_sigma.getValue(), m_precision)) {
+            if (tId == InvalidID) {
+                std::cout << "BUG!\n";
+            }
             // Move the point
-
+            Vec3 xold = x[i];
+            Vec3 xnew = m_surf.getPointPosition(newPos, tId, x0);
+            //std::cout << "    moving " << xold << " -- " << xnew << "\n";
             //mytimer.step("Relocate");
-            relocatePoint(i, x[i]);
+            relocatePoint(i, xnew);
 
             // Update boundary vertices
             //mytimer.step("Recheck boundary");
@@ -431,8 +435,6 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
                     x0[ tri[1] ] * bary[1] +
                     x0[ tri[2] ] * bary[2];
             }
-
-
         }
         //mytimer.stop();
     }

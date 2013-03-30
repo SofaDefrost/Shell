@@ -131,7 +131,7 @@ void AdaptiveCuttingController<DataTypes>::onEndAnimationStep(const double /*dt*
         Real min = 1.0;
         for (unsigned int it=0; it<N1.size(); it++) {
             Real f = m_adapter->metricGeom(
-                m_container->getTriangle(N1[it]), x0, N1[it]);
+                m_container->getTriangle(N1[it]), N1[it]);
             if (f < min) min = f;
         }
         if (min < m_affinity.getValue()) {

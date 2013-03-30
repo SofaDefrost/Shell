@@ -334,11 +334,10 @@ public:
      * @brief Distortion metric for a triangle.
      *
      * @param t         Triangle to compute the metric for.
-     * @param x         Vertices.
      * @param triID     Triangle to relate computation to.
      */
-    Real metricGeom(const Triangle &t, const VecCoord &x, const Index triID) const {
-        return m_opt.metricGeom(t, x, triID);
+    Real metricGeom(const Triangle &t, const Index triID) const {
+        return m_opt.metricGeom(t, triID);
     }
 
 private:
@@ -356,6 +355,7 @@ private:
     /// Amount of precision that is acceptable for us.
     Real m_precision;
 
+    // TODO: to be removed.
     Real sumgamma, mingamma, maxgamma;
     int ngamma;
 

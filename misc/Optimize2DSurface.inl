@@ -2,6 +2,11 @@
 // Class for optimizing 2D function serving as a core for smoothing
 // triangular networks.
 //
+// NOTE:
+//  * To track element inversion we either need a priori information about
+//    orienation, or assume the triangle was originaly not inverted. Now we
+//    do the latter.
+//
 
 #include "controller/Test2DAdapter.h"
 #include "Optimize2DSurface.h"
@@ -16,44 +21,81 @@
 
 // Return non-zero if triangle with points (a,b,c) is defined in
 // counter-clockwise direction. 
-// NOTE: Constrained to 2D!
-#define CCW(a,b,c) (\
-    cross(Vec2(b[0]-a[0], b[1]-a[1]), \
-        Vec2(c[0]-a[0], c[1]-a[1])) > 1e-15)
+#define CCW(a,b,c) (cross(b-a, c-a) > 1e-15)
 
 namespace sofa
 {
 
 template <class DataTypes>
-bool Optimize2DSurface<DataTypes>::smoothLaplacian(Index v, VecVec3 &x, VecReal &metrics, vector<Vec3> normals)
+void Optimize2DSurface<DataTypes>::initValues(VecReal &metrics,
+    sofa::component::topology::TriangleSetTopologyContainer *topology)
+{
+    m_topology = topology;
+
+    const VecVec2 &x = m_surf.getPositions();
+
+    normals.resize(m_topology->getNbTriangles());
+    m_orientation.resize(m_topology->getNbTriangles());
+
+    // Compute initial metrics and orientations
+    for (Index i=0; i < (unsigned int)m_topology->getNbTriangles(); i++) {
+        const Triangle &t = m_topology->getTriangle(i);
+        m_orientation[i] = CCW(x[t[0]], x[t[1]], x[t[2]]);
+        metrics[i] = funcTriangle(t, x, m_orientation[i]);
+        if (isnan(metrics[i])) {
+            std::cerr << "NaN value for triangle " << i << "\n";
+        }
+
+    }
+}
+
+template <class DataTypes>
+bool Optimize2DSurface<DataTypes>::smoothLaplacian(Index v, VecReal &metrics,
+    Vec2 &newPosition, Index &tId)
 {
     if (m_topology == NULL) return false;
+    if (m_adapter == NULL) return false;
 
-    Vec3 xold = x[v];
+    tId = InvalidID;
+
+    const VecVec2 &x = m_surf.getPositions();
+    m_surf.storePoint(v);
+    Vec2 xold = x[v];
 
     // Compute new position
     EdgesAroundVertex N1e = m_topology->getEdgesAroundVertex(v);
 
     // Compute centroid of polygon from 1-ring around the vertex
-    Vec3 xnew(0,0,0);
+    Vec2 xnew(0,0);
     for (Index ie=0; ie<N1e.size(); ie++) {
         Edge e = m_topology->getEdge(N1e[ie]); 
-        for (int n=0; n<2; n++) {
-            if (e[n] != v) {
-                xnew += x[ e[n] ];
-            }
-        }
+        Index id = OTHER(v, e[0], e[1]);
+        xnew += x[id];
     }
-    x[v] = xnew / N1e.size();
+
+    xnew /= N1e.size();
+
+    // If it's boundary node project it onto the boundary line
+    if (m_adapter->isPointBoundary(v)) { // && !pt.isFixed()
+        // TODO: needs fixing
+        const Vec3 &bd = m_adapter->getPointBoundary(v);
+        Vec2 boundary;
+        boundary = bd; // TODO: keep this info in parameter space
+        xnew = boundary * (boundary*xnew);
+    }
+
+    Index targetTri = getTriangleInDirection(v, xnew-x[v]);
+    if (targetTri == InvalidID) {
+        std::cerr << __FUNCTION__ << ": Failed to get triangle in direction!"
+            " Origin: " << v << " at " << x[v] << " ;; target=" << xnew <<
+            "\n";
+        return false;
+    }
+    m_surf.movePoint(v, xnew, targetTri);
 
     TrianglesAroundVertex N1 = m_topology->getTrianglesAroundVertex(v);
 
-    // Check if this improves the mesh
-    //
-    // Note: To track element inversion we either need a normal computed
-    // from vertex normals, or assume the triangle was originaly not
-    // inverted. Now we do the latter.
-    //
+    // Check if this improves the mesh.
     // We accept any change that doesn't decreas worst metric for the
     // triangle set.
 
@@ -68,8 +110,7 @@ bool Optimize2DSurface<DataTypes>::smoothLaplacian(Index v, VecVec3 &x, VecReal 
 
         Real oldworst = DBL_MAX, newworst = DBL_MAX;
         for (Index it=0; it<N1.size(); it++) {
-            Real newmetric = funcTriangle(m_topology->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
+            Real newmetric = funcTriangle(N1[it]);
 
             if (metrics[ N1[it] ] < oldworst) {
                 oldworst = metrics[ N1[it] ];
@@ -84,9 +125,10 @@ bool Optimize2DSurface<DataTypes>::smoothLaplacian(Index v, VecVec3 &x, VecReal 
             //std::cout << "   --rejected " << xold << " -> " << x[v] << "\n";
             // The correct step size is best found empiricaly
             //x[v] = (x[v] + xold)/2.0;
-            x[v] = (x[v] + xold)*2.0/3.0;
+            m_surf.movePoint(v, (x[v] + xold)*2.0/3.0, targetTri);
         } else {
-            //std::cout << "   --accepted: " << xold << " -> " << x[v] << "\n";
+            //std::cout << "   --accepted: " << xold << " -> " << x[v] <<
+            //   " f=" << newworst << "\n";
             bAccepted = true;
         }
     }
@@ -94,36 +136,63 @@ bool Optimize2DSurface<DataTypes>::smoothLaplacian(Index v, VecVec3 &x, VecReal 
     if (bAccepted) {
         // Update metrics
         for (Index it=0; it<N1.size(); it++) {
-            metrics[ N1[it] ] = funcTriangle(m_topology->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
+            metrics[ N1[it] ] = funcTriangle(N1[it]);
         }
+        newPosition = x[v];
+        tId = targetTri;
     }
-    // NOTE: Old position restored by caller (if needed).
+
+    // Restore old position.
+    m_surf.restorePoint();
 
     return bAccepted;
 }
 
 template <class DataTypes>
-bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector<Vec3> normals, VecReal &metrics)
+bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecReal &metrics,
+    Vec2 &newPosition, Index &tId)
 {
     if (m_topology == NULL) return false;
+    if (m_adapter == NULL) return false;
 
-    Vec3 xold = x[v];
+    tId = InvalidID;
+
+    const VecVec2 &x = m_surf.getPositions();
+    m_surf.storePoint(v);
+    Vec2 xold = x[v];
 
 #if 1
     // Compute gradients
     TrianglesAroundVertex N1 = m_topology->getTrianglesAroundVertex(v);
-    helper::vector<Vec3> grad(N1.size());
+    VecVec2 grad(N1.size());
     Real delta = m_precision/10.0;
-    // NOTE: Constrained to 2D!
     for (int component=0; component<2; component++) {
-        x[v] = xold;
-        x[v][component] += delta;
+        Vec2 xnew = xold;
+        xnew[component] += delta;
+        Index targetTri = getTriangleInDirection(v, xnew-x[v]);
+        if (targetTri == InvalidID) {
+            // Try opposite direction
+            delta = -delta;
+            xnew[component] = xold[component] + delta;
+            targetTri = getTriangleInDirection(v, xnew-x[v]);
+            if (targetTri == InvalidID) {
+                std::cerr << "Problems computing gradients for point " <<
+                    v << " (dir=" << component << ")\n";
+
+                for (Index it=0; it<N1.size(); it++) {
+                    grad[it][component] = (Real)0.0;
+                }
+                continue;
+            }
+        }
+        m_surf.movePoint(v, xnew, targetTri);
+
         for (Index it=0; it<N1.size(); it++) {
-            Real m = funcTriangle(m_topology->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
+            Real m = funcTriangle(N1[it]);
             grad[it][component] = (m - metrics[ N1[it] ])/delta;
         }
+        m_surf.restorePoint();
+        m_surf.storePoint(v);
     }
 
     // Find smallest metric with non-zero gradient
@@ -145,14 +214,14 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector
     //    std::cout << "   using " << imin << "\n";
     }
 
-    Vec3 step = grad[imin];
+    Vec2 step = grad[imin];
 #else
     //
-    // Minimaze the mean, i.e.: F = 1/n ¿_i f_i
+    // Minimaze the mean, i.e.: F = 1/n Σ_i f_i
     //
     // TODO
 
-    Vec3 grad(0.0, 0.0, 0.0); // F = 1/n ¿_i f_i
+    Vec3 grad(0.0, 0.0, 0.0); // F = 1/n Σ_i f_i
 
     // Compute gradients
     TrianglesAroundVertex N1 = m_topology->getTrianglesAroundVertex(v);
@@ -172,7 +241,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector
 #endif
 
     // Find out step size
-    Real gamma = 0.01; // ¿ m_precision * 2^10
+    Real gamma = 0.01; // ≈ m_precision * 2^10
 
     //gamma *= step.norm();
     step.normalize();
@@ -218,12 +287,22 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector
     //std::cout << "gamma=" << gamma << " grad=" << step << "\n";
 
     // If it's boundary node project it onto the boundary line
-    if (m_adapter->isPointBoundary(v)) { // && !pt.isFixed()
-        const Vec3 &boundary = m_adapter->getPointBoundary(v);
-        step = boundary * (boundary*step);
-    }
+    if (m_adapter->isPointBoundary(v)) return false;
+    //if (m_adapter->isPointBoundary(v)) { // && !pt.isFixed()
+    //    // TODO: needs fixing
+    //    const Vec3 &bd = m_adapter->getPointBoundary(v);
+    //    Vec2 boundary;
+    //    boundary = bd; // TODO: keep this info in parameter space
+    //    step = boundary * (boundary*step);
+    //}
 
-    x[v] = xold + gamma*step;
+
+    Vec2 xnew = xold + gamma*step;
+    Index targetTri = getTriangleInDirection(v, xnew-x[v]);
+    tId = targetTri;
+    m_surf.movePoint(v, xnew, targetTri);
+    // Find out the target triangle to avoid repeted checks
+    targetTri = getTriangleInDirection(v, -step);
 
     // Check if this improves the mesh
     //
@@ -231,7 +310,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector
     // from vertex normals, or assume the triangle was originaly not
     // inverted. Now we do the latter.
     //
-    // We accept any change that doesn't decreas worst metric for the
+    // We accept any change that doesn't decrease worst metric for the
     // triangle set.
 
     bool bAccepted = false;
@@ -245,8 +324,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector
 
         Real oldworst = DBL_MAX, newworst = DBL_MAX;
         for (Index it=0; it<N1.size(); it++) {
-            Real newmetric = funcTriangle(m_topology->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
+            Real newmetric = funcTriangle(N1[it]);
             if (isnan(newmetric)) {
                 // The operation leads to NaN value!
                 newworst = DBL_MIN;
@@ -269,10 +347,11 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector
             //x[v] = (x[v] + xold)/2.0;
             gamma *= 2.0/3.0;
             //gamma /= 2.0;
-            x[v] = xold + gamma*step;
+            xnew = xold + gamma*step;
+            m_surf.movePoint(v, xnew, targetTri);
         } else {
             //std::cout << "   --accepted: " << xold << " -> " << x[v]
-            //    << " gamma=" << gamma << "\n";
+            //    << " gamma=" << gamma << "\n"
             //    << " worst: " << oldworst << " -> " << newworst
             //    << " (" << (newworst-oldworst) << ")\n";
             sumgamma += gamma; ngamma++;
@@ -285,11 +364,14 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector
     if (bAccepted) {
         // Update metrics
         for (Index it=0; it<N1.size(); it++) {
-            metrics[ N1[it] ] = funcTriangle(m_topology->getTriangle(N1[it]), x,
-                normals[ N1[it] ]);
+            metrics[ N1[it] ] = funcTriangle(N1[it]);
         }
+        newPosition = x[v];
+    } else {
+        tId = InvalidID;
     }
-    // NOTE: Old position restored by caller (if needed).
+
+    m_surf.restorePoint();
 
     return bAccepted;
 }
@@ -297,6 +379,8 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecVec3 &x, vector
 template <class DataTypes>
 bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index v, VecVec3 &x, VecReal &metrics, vector<Vec3> normals)
 {
+    return false;
+#if 0 // Needs fixing!
     if (m_topology == NULL) return false;
 
     Vec3 xold = x[v];
@@ -443,11 +527,14 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index v, VecVec3 &x, VecRea
     // NOTE: Old position restore by caller (if needed).
 
     return bAccepted;
+#endif
 }
 
 template <class DataTypes>
 bool Optimize2DSurface<DataTypes>::smoothPain2D(Index v, VecVec3 &x, VecReal &metrics, vector<Vec3> normals)
 {
+    return false;
+#if 0 // Needs fixing!
     if (m_topology == NULL) return false;
 
     Real w = 0.5, m_sigma = 0.01;
@@ -550,9 +637,53 @@ bool Optimize2DSurface<DataTypes>::smoothPain2D(Index v, VecVec3 &x, VecReal &me
     // NOTE: Old position restore by caller (if needed).
 
     return bAccepted;
+#endif
 }
+
+template <class DataTypes>
+typename Optimize2DSurface<DataTypes>::Index
+Optimize2DSurface<DataTypes>::getTriangleInDirection(Index pId,
+    const Vec2& dir) const
+{
+    const VecVec2 &x = m_surf.getPositions();
+
+    const TrianglesAroundVertex &N1 = m_topology->getTrianglesAroundVertex(pId);
+    for (unsigned int i=0; i < N1.size(); i++)
+    {
+        Index tId = N1[i];
+        const Triangle &t = this->m_topology->getTriangle(tId);
+
+        Vec2 e1, e2;
+        if (t[0] == pId) {
+            e1 = x[t[1]]-x[t[0]];
+            e2 = x[t[2]]-x[t[0]];
+        } else if (t[1] == pId) {
+            e1 = x[t[2]]-x[t[1]];
+            e2 = x[t[0]]-x[t[1]];
+        } else {
+            e1 = x[t[0]]-x[t[2]];
+            e2 = x[t[1]]-x[t[2]];
+        }
+
+        Vec2 n1, n2;
+        if (CCW(x[t[0]], x[t[1]], x[t[2]])) {
+            // 90° left
+            n1[0] = -e1[1]; n1[1] = e1[0];
+            n2[0] = -e2[1]; n2[1] = e2[0];
+        } else {
+            // 90° right
+            n1[0] = e1[1]; n1[1] = -e1[0];
+            n2[0] = e2[1]; n2[1] = -e2[0];
+        }
+
+        if (((dir*n1) >= -1e-15) && ((dir*n2) < 1e-15)) {
+            return tId;
+        }
+    }
+    return InvalidID;
+}
+
+} // namespace sofa
 
 #undef OTHER
 #undef CCW
-
-}

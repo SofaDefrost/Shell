@@ -20,7 +20,10 @@ class PointProjection
 {
 
     public:
+        typedef sofa::defaulttype::Vec<2, Real> Vec2;
         typedef sofa::defaulttype::Vec<3, Real> Vec3;
+
+        typedef sofa::defaulttype::Mat<3,3, Real> Mat33;
 
         typedef sofa::component::topology::TriangleSetTopologyContainer::Edge                   Edge;
         typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID             Index;
@@ -83,6 +86,24 @@ class PointProjection
         static void ComputeBaryCoords(
             Vec3 &baryCoords, const Vec3 &p,
             const Vec3 &a, const Vec3 &b, const Vec3 &c, bool bConstraint=true);
+
+        /**
+         *
+         * Compute barycentric coordinates of a point (2D case).
+         *
+         * Compute barycentric coordinates of point p in triangle whose
+         * vertices are a, b and c. If bConstraint is true constraint the
+         * coordinates to lie inside the triangle.
+         *
+         * @param baryCoords    The barycentric coordinates.
+         * @param a             Position of first triangle point.
+         * @param b             Position of second triangle point.
+         * @param c             Position of third triangle point.
+         * @param bConstraint   Constraint coordinates to lie inside triangle.
+         */
+        static void ComputeBaryCoords(
+            Vec3 &baryCoords, const Vec2 &p,
+            const Vec2 &a, const Vec2 &b, const Vec2 &c, bool bConstraint=true);
 
     private:
 

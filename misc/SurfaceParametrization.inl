@@ -6,6 +6,7 @@
 //      metric tensor the topology can become non-conforming.
 
 #include "SurfaceParametrization.h"
+#include "misc/PointProjection.h"
 
 #include <sofa/helper/rmath.h>
 
@@ -20,7 +21,7 @@ void SurfaceParametrization<Real>::init(
     m_topology = topology;
     m_points.resize(x.size());
 
-#if 1
+#if 0
     for (unsigned int i = 0; i < x.size(); i++) {
         m_points[i] = x[i];
     }
@@ -39,16 +40,12 @@ void SurfaceParametrization<Real>::init(
     // Let's start with triangle number 0.
     Index tId = 0;
     t = m_topology->getTriangle(tId);
-    //computeFrame(R, t, x);
-    R = Mat33(
-        Vec3(1.0,0.0,0.0),
-        Vec3(0.0,-1.0,0.0),
-        Vec3(0.0,0.0,-1.0));
+    computeFrame(R, t, x);
     //std::cout << "first: " << t << "\n";
 
     for (int i = 0; i < 3; i++) {
         m_points[t[i]] = R * x[t[i]];
-        //std::cout << "point[" << t[i] << "] = " << m_points[t[i]] << "\n";
+        std::cout << "point[" << t[i] << "] = " << m_points[t[i]] << "\n";
         ptDone[t[i]] = true;
     }
     triDone[tId] = true;
@@ -94,7 +91,7 @@ void SurfaceParametrization<Real>::init(
         if (pId == InvalidID) continue;
 
         projectPoint(pId, m_points[pId], x);
-        //std::cout << "point[" << pId << "] = " << m_points[pId] << "\n";
+        std::cout << "point[" << pId << "] = " << m_points[pId] << "\n";
         ptDone[pId] = true;
 
         // Update boundary info.
@@ -298,10 +295,12 @@ void SurfaceParametrization<Real>::pointAdd(unsigned int pointIndex, const sofa:
 }
 
 template <class Real>
-void SurfaceParametrization<Real>::pointRemove(unsigned int /*pointIndex*/)
+void SurfaceParametrization<Real>::pointRemove(unsigned int pointIndex)
 {
     //std::cout << "pointRemove(" << pointIndex << ")\n";
-    // Nothing to do here.
+    if (pointIndex == m_storedId) {
+        m_storedId = InvalidID;
+    }
 }
 
 template <class Real>
@@ -311,6 +310,37 @@ void SurfaceParametrization<Real>::pointSwap(unsigned int i1, unsigned int i2)
     Vec2 tmp = m_points[i1];
     m_points[i1] = m_points[i2];
     m_points[i2] = tmp;
+
+    if (i1 == m_storedId) {
+        m_storedId = i2;
+    } else if (i2 == m_storedId) {
+        m_storedId = i1;
+    }
+}
+
+template <class Real>
+typename SurfaceParametrization<Real>::Vec3
+SurfaceParametrization<Real>::getPointPosition(Vec2 position, Index tId,
+    const VecVec3 &x) const
+{
+    // Compute barycentric coordinates
+    Vec3 bary;
+    const Triangle &t = m_topology->getTriangle(tId);
+    PointProjection<Real>::ComputeBaryCoords(bary, position,
+        m_points[t[0]], m_points[t[1]], m_points[t[2]]);
+
+    // Compute new position
+    return (bary[0] * x[t[0]] +
+        bary[1] * x[t[1]] +
+        bary[2] * x[t[2]]);
+}
+
+template <class Real>
+void SurfaceParametrization<Real>::movePoint(Index p, const Vec2 &newPos,
+    Index /*targetTri*/)
+{
+    m_points[p] = newPos;
+    // TODO: compute bary. coords and compute new metric tensor 
 }
 
 template <class Real>
