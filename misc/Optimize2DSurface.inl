@@ -377,7 +377,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecReal &metrics,
 }
 
 template <class DataTypes>
-bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index v, VecVec3 &x, VecReal &metrics, vector<Vec3> normals)
+bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, vector<Vec3> /*normals*/)
 {
     return false;
 #if 0 // Needs fixing!
@@ -531,7 +531,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index v, VecVec3 &x, VecRea
 }
 
 template <class DataTypes>
-bool Optimize2DSurface<DataTypes>::smoothPain2D(Index v, VecVec3 &x, VecReal &metrics, vector<Vec3> normals)
+bool Optimize2DSurface<DataTypes>::smoothPain2D(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, vector<Vec3> /*normals*/)
 {
     return false;
 #if 0 // Needs fixing!

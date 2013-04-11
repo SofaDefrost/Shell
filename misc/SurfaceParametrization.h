@@ -44,6 +44,7 @@ class SurfaceParametrization
         typedef sofa::helper::vector<Vec2>      VecVec2;
         typedef sofa::helper::vector<Vec3>      VecVec3;
         typedef sofa::helper::vector<Index>     VecIndex;
+        typedef sofa::helper::vector<Mat22>     VecMat22;
 
         enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 
@@ -118,6 +119,87 @@ class SurfaceParametrization
          */
         void movePoint(Index p, const Vec2 &newPos, Index targetTri);
 
+        /**
+         * @name Distances and areas.
+         * @{ */
+
+        // NOTE: Big note! The following is (in a strict point of view) invalid
+        // because it assumes that the metric tensor varies linearly over the
+        // edge/triangle. For our barycentric mapping however the resulting
+        // metric space is piecewise-linear (for original metric) or it is
+        // constant over each triangle (for updated metric). But since
+        // piecewise-linear space would be difficult to integrate we use linear
+        // interpolation because it is more versatile than constant metric.
+
+        Real dist(const Edge &e) const {
+            return helper::rsqrt(dist2(e));
+        }
+
+        Real dist2(const Edge &e) const {
+            Vec2 v = m_points[ e[1] ] - m_points[ e[0] ];
+            Mat22 M = (m_metrics[ e[1] ] + m_metrics[ e[0] ])/2.0;
+            return v*(M*v);
+        }
+
+        Real area(const Triangle &t) const {
+
+            Real area = helper::rabs(cross(
+                    m_points[t[1]] - m_points[t[0]],
+                    m_points[t[2]] - m_points[t[0]]))/2.0;
+
+            // === Reddy. Introduction to the Finite Element Method. 1993
+            // n = 1, d = 1 
+            //const double GX[] = { 1.0/3.0 };
+            //const double GY[] = { 1.0/3.0 };
+            //const double GW[] = { 1.0 };
+            // n = 3, d = 2
+            const double GX[] = { 0.5,     0.5,     0.0 };
+            const double GY[] = { 0.5,     0.0,     0.5 };
+            const double GW[] = { 1.0/3.0, 1.0/3.0, 1.0/3.0 };
+            // n = 4, d = 3
+            //const double GX[] = { 1.0/3.0,    0.6,       0.2,       0.2 };
+            //const double GY[] = { 1.0/3.0,    0.2,       0.6,       0.2 };
+            //const double GW[] = { -27.0/48.0, 25.0/48.0, 25.0/48.0, 25.0/48.0 };
+            // n = 7, d = 5
+            //const double GX[] = { 1.0/3.0, 0.797426985353, 0.101286507323, 0.101286507323, 0.059715871789, 0.470142064105, 0.470142064105 };
+            //const double GY[] = { 1.0/3.0, 0.101286507323, 0.797426985353, 0.101286507323, 0.470142064105, 0.059715871789, 0.470142064105 };
+            //const double GW[] = { 0.225,   0.125939180544, 0.125939180544, 0.125939180544, 0.132394152788, 0.132394152788, 0.132394152788 };
+            // === http://www.electromagnetics.biz/integration.htm
+            // NOTE: The follwing assume 2A*I ... the weights sum to 0.5
+            // n = 6, d = 4 
+            //const double GX[] = { 0.8168476,  0.09157621, 0.09157621, 0.1081030, 0.4459485, 0.4459485 };
+            //const double GY[] = { 0.09157621, 0.8168476,  0.09157621, 0.4459485, 0.1081030, 0.4459485 };
+            //const double GW[] = { 0.05497587, 0.05497587, 0.05497587, 0.1116908, 0.1116908, 0.1116908 };
+            // n = 12, d = 6
+            //const double GX[] = { 0.5014265,  0.2492867,  0.2492867,  0.8738220,  0.06308901, 0.06308901, 0.6365025,  0.6365025,  0.05314505, 0.05314505, 0.3103525,  0.3103525  };
+            //const double GY[] = { 0.2492867,  0.5014265,  0.2492867,  0.06308901, 0.8738220,  0.06308901, 0.05314505, 0.3103525,  0.6365025,  0.3103525,  0.6365025,  0.05314505 };
+            //const double GW[] = { 0.05839314, 0.05839314, 0.05839314, 0.02542245, 0.02542245, 0.02542245, 0.04142554, 0.04142554, 0.04142554, 0.04142554, 0.04142554, 0.04142554 };
+            // n = 27, d = 11
+            //const double GX[] = { 0.9352701,   0.03236495,  0.03236495,  0.7612982,  0.1193509,  0.1193509,  0.06922210,   0.5346110, 0.5346110, 0.5933802, 0.2033099, 0.2033099, 0.2020614, 0.3989693, 0.3989693, 0.05017814, 0.05017814, 0.5932012, 0.5932012, 0.3566206, 0.3566206, 0.02102202, 0.02102202, 0.8074890, 0.8074890, 0.1714890, 0.1714890 };
+            //const double GY[] = { 0.03236495,  0.9352701,   0.03236495,  0.1193509,  0.7612982,  0.1193509,  0.5346110,    0.06922210, 0.5346110, 0.2033099, 0.5933802, 0.2033099, 0.3989693, 0.2020614, 0.3989693, 0.5932012, 0.3566206, 0.05017814, 0.3566206, 0.05017814, 0.5932012, 0.8074890, 0.1714890, 0.02102202, 0.1714890, 0.02102202, 0.8074890 };
+            //const double GW[] = { 0.006829866, 0.006829866, 0.006829866, 0.01809227, 0.01809227, 0.01809227, 0.0004635032, 0.0004635032, 0.0004635032, 0.02966149, 0.02966149, 0.02966149, 0.03857477, 0.03857477, 0.03857477, 0.02616856, 0.02616856, 0.02616856, 0.02616856, 0.02616856, 0.02616856, 0.01035383, 0.01035383, 0.01035383, 0.01035383, 0.01035383, 0.01035383 };
+
+            const int N=3;
+            Real I = 0.0;
+            //std::cout <<
+            //    determinant(M1b) << " " <<
+            //    determinant(M2b) << " " <<
+            //    determinant(M3b) << "\n  :: ";
+            for (int i = 0; i < N; i++) {
+                Mat22 M = m_metrics[t[0]]*GX[i] +
+                    m_metrics[t[1]]*GY[i] +
+                    m_metrics[t[2]]*(1.0-GX[i]-GY[i]);
+                I += GW[i] * sqrt(determinant(M));
+                //std::cout << determinant(M) << " ";
+            }
+            //std::cout << "\n  :: " << I << "\n";
+            return area*I;
+        }
+
+        virtual void getMetricTensor(Index tId, const Vec3 &bary, Mat22 &M) const;
+
+        /**  @} */
+
     private:
 
         enum ElementState {
@@ -132,6 +214,9 @@ class SurfaceParametrization
         /// Positions in the parameter space.
         VecVec2 m_points;
 
+        /// Metric tensors (first fundamental form).
+        VecMat22 m_metrics;
+
         // Data for initialization.
         helper::vector<bool> ptDone, triDone, triBoundary;
 
@@ -139,6 +224,7 @@ class SurfaceParametrization
         Vec2    m_storedPos;
         //Mat22 m_storedMetric;
 
+        virtual void initMetricTensors();
         void projectPoint(const Index pId, Vec2 &pt, const VecVec3 &x) const;
         void computeFrame(Mat33 &frame, const Triangle &t, const VecVec3 &x) const;
         ElementState getEdgeState(Index edgeId) const;

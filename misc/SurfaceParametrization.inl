@@ -20,6 +20,7 @@ void SurfaceParametrization<Real>::init(
 {
     m_topology = topology;
     m_points.resize(x.size());
+    m_metrics.resize(x.size());
 
 #if 0
     for (unsigned int i = 0; i < x.size(); i++) {
@@ -45,7 +46,7 @@ void SurfaceParametrization<Real>::init(
 
     for (int i = 0; i < 3; i++) {
         m_points[t[i]] = R * x[t[i]];
-        std::cout << "point[" << t[i] << "] = " << m_points[t[i]] << "\n";
+        //std::cout << "point[" << t[i] << "] = " << m_points[t[i]] << "\n";
         ptDone[t[i]] = true;
     }
     triDone[tId] = true;
@@ -91,7 +92,7 @@ void SurfaceParametrization<Real>::init(
         if (pId == InvalidID) continue;
 
         projectPoint(pId, m_points[pId], x);
-        std::cout << "point[" << pId << "] = " << m_points[pId] << "\n";
+        //std::cout << "point[" << pId << "] = " << m_points[pId] << "\n";
         ptDone[pId] = true;
 
         // Update boundary info.
@@ -115,6 +116,16 @@ void SurfaceParametrization<Real>::init(
 
     }
 #endif
+
+    initMetricTensors();
+}
+
+template <class Real>
+void SurfaceParametrization<Real>::initMetricTensors()
+{
+    for (unsigned int i = 0; i < m_metrics.size(); i++) {
+        m_metrics[i].identity();
+    }
 }
 
 template <class Real>
@@ -276,6 +287,7 @@ void SurfaceParametrization<Real>::getAngle(const Vec2 &u, const Vec2 &v, Real &
         //std::cout << "α = " << alpha << " (" << calpha << "/" << calpha2 << ") || " << u << " x " <<  v << "\n";
 }
 
+
 template <class Real>
 void SurfaceParametrization<Real>::pointAdd(unsigned int pointIndex, const sofa::core::topology::Point &/*elem*/,
     const sofa::helper::vector< unsigned int > &ancestors,
@@ -336,12 +348,27 @@ SurfaceParametrization<Real>::getPointPosition(Vec2 position, Index tId,
 }
 
 template <class Real>
+void SurfaceParametrization<Real>::getMetricTensor(Index /*tId*/, const Vec3 &/*bary*/, Mat22 &M) const
+{
+    M.identity();
+}
+
+template <class Real>
 void SurfaceParametrization<Real>::movePoint(Index p, const Vec2 &newPos,
-    Index /*targetTri*/)
+    Index targetTri)
 {
     m_points[p] = newPos;
-    // TODO: compute bary. coords and compute new metric tensor 
+
+    // Compute barycentric coordinates
+    Vec3 bary;
+    const Triangle &t = m_topology->getTriangle(targetTri);
+    PointProjection<Real>::ComputeBaryCoords(bary, newPos,
+        m_points[t[0]], m_points[t[1]], m_points[t[2]]);
+
+    // Estimate new metric tensor 
+    getMetricTensor(targetTri, bary, m_metrics[p]);
 }
+
 
 template <class Real>
 void SurfaceParametrization<Real>::draw(const core::visual::VisualParams* /*vparams*/)

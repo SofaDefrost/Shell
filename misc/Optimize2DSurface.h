@@ -145,10 +145,10 @@ class Optimize2DSurface
         Real metricGeom(const Triangle &t, const VecVec2 &x,
             bool /*orientation*/) const {
 
-            return metricGeomCTS(t, x);
+            //return metricGeomCTS(t, x);
             //return metricGeomVL(t, x);
-            //return metricGeomCTSM(t, x, normal);
-            //return metricGeomVLM(t, x, normal);
+            //return metricGeomCTSM(t, x);
+            return metricGeomVLM(t, x);
         }
 
 
@@ -272,42 +272,23 @@ class Optimize2DSurface
          *
          * @param t         Triangle to compute the metric for.
          * @param x         Vertices.
-         * @param normal    Surface normal for the triangle.
          */
-        Real metricGeomCTSM(const Triangle &t, const VecVec3 &x, const Vec3 &/*normal*/) const {
-            // TODO: we can precompute these
-            Vec3 ab = x[ t[1] ] - x[ t[0] ];
-            Vec3 ca = x[ t[0] ] - x[ t[2] ];
-            Vec3 cb = x[ t[1] ] - x[ t[2] ];
+        Real metricGeomCTSM(const Triangle &t, const VecVec2 &/*x*/) const {
 
-            // NOTE: Metric tensor is assumed linear over the triangle.
-            Mat33 M1, M2, M3;
-            getMetricTensor(x[t[0]], M1);
-            getMetricTensor(x[t[1]], M2);
-            getMetricTensor(x[t[2]], M3);
+            Real la2 = m_surf.dist2(Edge(t[0], t[1])),
+                 lb2 = m_surf.dist2(Edge(t[1], t[2])),
+                 lc2 = m_surf.dist2(Edge(t[2], t[0]));
 
-            Real la2 = norm2M(ca, (M1+M3)/2.0),
-                 lb2 = norm2M(ab, (M1+M2)/2.0),
-                 lc2 = norm2M(cb, (M2+M3)/2.0);
-            Real la = helper::rsqrt(la2),
-                 lb = helper::rsqrt(lb2),
-                 lc = helper::rsqrt(lc2);
-
-
-            Real s = (la + lb + lc)/2.0;
             // Normalizing factor so that the matric is 1 in maximum
             Real m = 4 * sqrt(3);
-            //m *= helper::rsqrt(s*(s-la)*(s-lb)*(s-lc));
-            m *= helper::rsqrt(
-                (la2 + lb2 + lc2)*(la2 + lb2 + lc2) +
-                - 2.0 * (la2*la2 + lb2*lb2 + lc2*lc2))/4.0;
+
+            m *= m_surf.area(t);
             m /= la2 + lb2 + lc2;
 
             if (isnan(m)) {
                 std::cerr << "got NaN\n"
-                    << M1 << " " << M2 << " " << M3 << "\n"
-                    << la << " " << lb << " " << lc << "\n"
-                    << s << " :: "  << (s*(s-la)*(s-lb)*(s-lc)) << "\n";
+                    << la2 << " " << lb2 << " " << lc2
+                    << " :: " << m_surf.area(t) << "\n";
 
             }
 
@@ -319,7 +300,6 @@ class Optimize2DSurface
          *
          * @param t         Triangle to compute the metric for.
          * @param x         Vertices.
-         * @param normal    Surface normal for the triangle.
          */
         Real metricGeomVL(const Triangle &t, const VecVec2 &x) const {
             // TODO: we can precompute these
@@ -328,21 +308,20 @@ class Optimize2DSurface
             Vec2 cb = x[ t[1] ] - x[ t[2] ];
 
             Real p = ca.norm() + ab.norm() + cb.norm(); // perimeter
-            Real ip = 1.0/p; // inverse
             // Normalizing factor so that the matric is 1 in maximum
-            // TODO: verify this, the maximum seems to be at 2
-            //Real m = 12 * sqrt(3);
-            Real m = 6 * helper::rsqrt(3);
-            m *= helper::rabs(cross(ca, cb)); // || CA × CB ||
-            m /= helper::rsqrt(p);
-            Real f;
-            if (p < ip) {
-                f = (p * (2-p));
-            } else {
-                f = (ip * (2-ip));
-            }
+            Real m = 18.0 / helper::rsqrt(3.0);
 
-            m *= ip * ip * ip;
+            m *= helper::rabs(cross(ca, cb)); // || CA × CB || = 2A
+            m /= p*p;
+
+            Real f;
+            Real pp = p/3.0, ipp = 1.0/pp;
+            if (pp < ipp) {
+                f = (pp * (2.0-pp));
+            } else {
+                f = (ipp * (2.0-ipp));
+            }
+            m *= f * f * f;
 
             return m;
         }
@@ -353,48 +332,29 @@ class Optimize2DSurface
          *
          * @param t         Triangle to compute the metric for.
          * @param x         Vertices.
-         * @param normal    Surface normal for the triangle.
          */
-        Real metricGeomVLM(const Triangle &t, const VecVec3 &x, const Vec3 &/*normal*/) const {
-            // TODO: we can precompute these
-            Vec3 ab = x[ t[1] ] - x[ t[0] ];
-            Vec3 ca = x[ t[0] ] - x[ t[2] ];
-            Vec3 cb = x[ t[1] ] - x[ t[2] ];
+        Real metricGeomVLM(const Triangle &t, const VecVec2 &/*x*/) const {
 
-            // NOTE: Metric tensor is assumed linear over the triangle.
-            Mat33 M1, M2, M3;
-            getMetricTensor(x[t[0]], M1);
-            getMetricTensor(x[t[1]], M2);
-            getMetricTensor(x[t[2]], M3);
+            Real la = m_surf.dist(Edge(t[0], t[1])),
+                 lb = m_surf.dist(Edge(t[1], t[2])),
+                 lc = m_surf.dist(Edge(t[2], t[0]));
 
-            Real la = normM(ca, (M1+M3)/2.0),
-                 lb = normM(ab, (M1+M2)/2.0),
-                 lc = normM(cb, (M2+M3)/2.0);
+            Real p = la + lb + lc;  // perimeter
 
-            Real p = la + lb + lc,  // perimeter
-                 //s = p/2.0,         // semiperimeter
-                 ip = 1.0/p;        // inverse
             // Normalizing factor so that the matric is 1 in maximum
-            // TODO: verify this, the maximum seems to be at 2
-            //----
-            // NOTE: Using Heron's formula to compute the area is numerically less
-            // complex and the introduction of sqrt doesn't matter because it can
-            // be merged with sqrt(p).
-            //Real m = 12 * sqrt(3);
-            //m *= helper::rsqrt((s-la)*(s-lb)*(s-lc)/2.0); // = A/sqrt(p)
-            //----
-            Real m = 6 * helper::rsqrt(3);
-            //m *= ca.cross(cb).norm(); // || CA × CB ||
-            m *= areaM(ab, ca, cb, M1, M2, M3);
-            m /= helper::rsqrt(p);
-            Real f;
-            if (p < ip) {
-                f = (p * (2-p));
-            } else {
-                f = (ip * (2-ip));
-            }
+            Real m = 36.0 / helper::rsqrt(3.0);
 
-            m *= ip * ip * ip;
+            m *= m_surf.area(t);
+            m /= p*p;
+
+            Real f;
+            Real pp = p/3.0, ipp = 1.0/pp;
+            if (pp < ipp) {
+                f = (pp * (2.0-pp));
+            } else {
+                f = (ipp * (2.0-ipp));
+            }
+            m *= f * f * f;
 
             return m;
         }
@@ -447,84 +407,6 @@ class Optimize2DSurface
             m = 1.0/(m + 1.0);
 
             return m;
-        }
-
-        Real normM(const Vec3 &v, const Mat33 &M) const {
-            return helper::rsqrt(v*(M*v));
-        }
-
-        Real norm2M(const Vec3 &v, const Mat33 &M) const {
-            return v*(M*v);
-        }
-
-        Real areaM( const Vec3 &/*ab*/, const Vec3 &ca, const Vec3 &cb,
-            const Mat33 &M1, const Mat33 &M2, const Mat33 &M3) const {
-            Real area = ca.cross(cb).norm()/2.0; // || CA × CB || = 2 * area
-
-            // === Reddy. Introduction to the Finite Element Method. 1993
-            // n = 1, d = 1 
-            //const double GX[] = { 1.0/3.0 };
-            //const double GY[] = { 1.0/3.0 };
-            //const double GW[] = { 1.0 };
-            // n = 3, d = 2
-            const double GX[] = { 0.5,     0.5,     0.0 };
-            const double GY[] = { 0.5,     0.0,     0.5 };
-            const double GW[] = { 1.0/3.0, 1.0/3.0, 1.0/3.0 };
-            // n = 4, d = 3
-            //const double GX[] = { 1.0/3.0,    0.6,       0.2,       0.2 };
-            //const double GY[] = { 1.0/3.0,    0.2,       0.6,       0.2 };
-            //const double GW[] = { -27.0/48.0, 25.0/48.0, 25.0/48.0, 25.0/48.0 };
-            // n = 7, d = 5
-            //const double GX[] = { 1.0/3.0, 0.797426985353, 0.101286507323, 0.101286507323, 0.059715871789, 0.470142064105, 0.470142064105 };
-            //const double GY[] = { 1.0/3.0, 0.101286507323, 0.797426985353, 0.101286507323, 0.470142064105, 0.059715871789, 0.470142064105 };
-            //const double GW[] = { 0.225,   0.125939180544, 0.125939180544, 0.125939180544, 0.132394152788, 0.132394152788, 0.132394152788 };
-            // === http://www.electromagnetics.biz/integration.htm
-            // NOTE: The follwing assume 2A*I ... the weights sum to 0.5
-            // n = 6, d = 4 
-            //const double GX[] = { 0.8168476,  0.09157621, 0.09157621, 0.1081030, 0.4459485, 0.4459485 };
-            //const double GY[] = { 0.09157621, 0.8168476,  0.09157621, 0.4459485, 0.1081030, 0.4459485 };
-            //const double GW[] = { 0.05497587, 0.05497587, 0.05497587, 0.1116908, 0.1116908, 0.1116908 };
-            // n = 12, d = 6
-            //const double GX[] = { 0.5014265,  0.2492867,  0.2492867,  0.8738220,  0.06308901, 0.06308901, 0.6365025,  0.6365025,  0.05314505, 0.05314505, 0.3103525,  0.3103525  };
-            //const double GY[] = { 0.2492867,  0.5014265,  0.2492867,  0.06308901, 0.8738220,  0.06308901, 0.05314505, 0.3103525,  0.6365025,  0.3103525,  0.6365025,  0.05314505 };
-            //const double GW[] = { 0.05839314, 0.05839314, 0.05839314, 0.02542245, 0.02542245, 0.02542245, 0.04142554, 0.04142554, 0.04142554, 0.04142554, 0.04142554, 0.04142554 };
-            // n = 27, d = 11
-            //const double GX[] = { 0.9352701,   0.03236495,  0.03236495,  0.7612982,  0.1193509,  0.1193509,  0.06922210,   0.5346110, 0.5346110, 0.5933802, 0.2033099, 0.2033099, 0.2020614, 0.3989693, 0.3989693, 0.05017814, 0.05017814, 0.5932012, 0.5932012, 0.3566206, 0.3566206, 0.02102202, 0.02102202, 0.8074890, 0.8074890, 0.1714890, 0.1714890 };
-            //const double GY[] = { 0.03236495,  0.9352701,   0.03236495,  0.1193509,  0.7612982,  0.1193509,  0.5346110,    0.06922210, 0.5346110, 0.2033099, 0.5933802, 0.2033099, 0.3989693, 0.2020614, 0.3989693, 0.5932012, 0.3566206, 0.05017814, 0.3566206, 0.05017814, 0.5932012, 0.8074890, 0.1714890, 0.02102202, 0.1714890, 0.02102202, 0.8074890 };
-            //const double GW[] = { 0.006829866, 0.006829866, 0.006829866, 0.01809227, 0.01809227, 0.01809227, 0.0004635032, 0.0004635032, 0.0004635032, 0.02966149, 0.02966149, 0.02966149, 0.03857477, 0.03857477, 0.03857477, 0.02616856, 0.02616856, 0.02616856, 0.02616856, 0.02616856, 0.02616856, 0.01035383, 0.01035383, 0.01035383, 0.01035383, 0.01035383, 0.01035383 };
-
-            Mat22 M1b(Vec2(M1[0][0], M1[0][1]), Vec2(M1[1][0], M1[1][1]));
-            Mat22 M2b(Vec2(M2[0][0], M2[0][1]), Vec2(M2[1][0], M2[1][1]));
-            Mat22 M3b(Vec2(M3[0][0], M3[0][1]), Vec2(M3[1][0], M3[1][1]));
-
-            const int N=3;
-            Real I = 0.0;
-            //std::cout <<
-            //    determinant(M1b) << " " <<
-            //    determinant(M2b) << " " <<
-            //    determinant(M3b) << "\n  :: ";
-            for (int i = 0; i < N; i++) {
-                Mat22 M = M1b*GX[i] + M2b*GY[i] + M3b*(1.0-GX[i]-GY[i]);
-                I += GW[i] * sqrt(determinant(M));
-                //std::cout << determinant(M) << " ";
-            }
-            //std::cout << "\n  :: " << I << "\n";
-            return area*I;
-        }
-
-        void getMetricTensor(const Vec3 &v, Mat33 &M) const {
-            const Real m = 128.0;
-            const Vec3 foo(1, 1, 0);
-            Real d = (v - foo).norm();
-            if (d < 0.4) {
-                //M = Mat33(Vec3(m,0,0), Vec3(0,1,0), Vec3(0,0,0));
-                M = Mat33(Vec3(m,0,0), Vec3(0,m,0), Vec3(0,0,0));
-            } else if (d >= 0.4 && d < 0.6) {
-                //M = Mat33(Vec3((0.6-d)*5*m,0,0), Vec3(0,1,0), Vec3(0,0,0));
-                M = Mat33(Vec3((0.6-d)*5*m,0,0), Vec3(0,(0.6-d)*5*m,0), Vec3(0,0,0));
-            } else {
-                M = Mat33(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,0));
-            }
         }
 
         // TODO: temporary, remove this!!!
