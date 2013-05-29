@@ -1,3 +1,4 @@
+% TODO
 % REMEMBER: After having produced the .bbl file, and prior to final submission,
 % you need to 'insert'  your .bbl file into your source .tex file so as to provide
 % ONE 'self-contained' source file.
@@ -62,7 +63,7 @@ Stephan\'e Cotin\\
        \email{...} % TODO
 }
 
-\date{30 May 2013}
+%\date{30 May 2013}
 
 \maketitle
 \begin{abstract}
@@ -98,7 +99,8 @@ that the capsule has also a global impact on the mechanical behaviour of the liv
 \terms{Theory} %TODO
 
 % NOT required for Proceedings
-\keywords{deformable liver model, Glisson's capsule, vascularization, real-time soft tissue modeling}
+%\keywords{deformable liver model, Glisson's capsule, vascularization, real-time soft tissue modeling}
+\keywords{deformable liver model}
 
 \section{Introduction} %{{{
 
@@ -310,15 +312,17 @@ together.
 %Where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
 The resulting system of linear equations is solved by direct solver based on Cholesky decomposition.
 
-\TG{We can also mention the mechanical mapping (like the one for vessels) as an
-alternative approach. The result is same for conforming surface mesh.}
+Alternatively, one can use a mechanical coupling similar to the one used in
+\cite{Peterlik2012} to be able to use an arbitrary surface mesh. Nevertheless,
+for conforming triangular mesh both methods lead to the same solution.
 
 %}}}
 
 %}}}
 
 
-\section{Experiments} %{{{
+\section{Aspiration Test} %{{{
+
 The model presented in the previous section was implemented in 
 SOFA\footnote{www.sofa-framework.org} and a set of
 numerical simulations was performed.
@@ -329,28 +333,6 @@ results reported in literature to validate the method.
 %stiffness plays an important role, the model of
 %the complete liver was subjected to global deformations.
 
-\TG{Here we have to decide wether to keep the values below as well as the Fig.
-2 and specify the values used to match Hollenstein separately. Or if we take
-just one set of values and redo the figure.}
-
-In the simulations we used material properties reported in the literature: for the 
-Glisson's capsule we used Young's modulus $E_c$=8.22\,MPa and thickness $t_c$=20\,$\mu$m~\cite{Umale2011},
-whereas for the vessel wall we applied stiffness $E_v$=0.62\,MPa and thickness $t_v$=200\,$\mu$m~\cite{Peterlik2012}.
-Since the values for parenchyma elasticity quite vary (usually between 2\,kPa to 5\,kPa), we perform the simulation 
-with $E_p$=3.5\,kPa.
-
-\begin{figure}
-  \includegraphics[height=3.5cm]{aspiration.jpg}
-  \caption{\label{fig-aspiration1} The SOFA simulation scene of the aspiration test.}
-\end{figure}
-
-\begin{figure}
-  \includegraphics[width=7cm]{aspiration.pdf}
-  \caption{\label{fig-aspiration2} Displacement profile of the cube in the
-  aspiration test.}
-\end{figure}
-
-\subsection{Local Deformations} %{{{
 During the contact with an instrument such as probe, needle, scalpel and others,
 a specific deformations take place in the vicinity of
 the instrument. This type of deformation may not necessarily induce the
@@ -359,14 +341,26 @@ local. Correct material properties are not only important to quantify the
 displacement, but also play an important role in capturing the correct area of
 the deformation or its profile near the instrument.
 
+\begin{figure}
+  \centering
+  \includegraphics[height=3.5cm]{aspiration.jpg}
+  \caption{\label{fig-aspiration1} The SOFA simulation scene of the aspiration test.}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=7cm]{aspiration.pdf}
+  \caption{\label{fig-aspiration2} Displacement profile of the cube in the
+  aspiration test with (blue) and without (black) the capusle.}
+\end{figure}
+
 A good example of such a local deformation is the aspiration test
 where the response of liver exposed locally to a negative pressure is measured.
 In~\cite{Hollenstein2006} it is reported that the Glisson's
 capsule has a non-negligible influence on the response of the tissue and modeling
 only the parenchyma leads to an overestimation of the deformation. 
-%We reproduced the test with our model and acquired similar results.
 The aspiration device consists of a tube 1\,cm in diameter and allows
-to control internal pressure in the tube. The test is performed by
+control of internal pressure in the tube. The test is performed by
 attaching the tube to the tissue and measuring the tissue response. We
 set up a simulation in SOFA to reproduce the experiment (see
 Fig.~\ref{fig-aspiration1}: we meshed a 15$\times$15$\times$15\,mm$^3$ 
@@ -375,11 +369,29 @@ resulting in 2648 tetrahedra. Then we attached a 1\,cm tube
 and applied a pressure of 3\,kPa inside the tube. The interaction between the tube and 
 tissue was modelled with friction contact. 
 
+\TG{Here we have to decide wether to keep the values below as well as the Fig.
+2 and specify the values used to match Hollenstein separately. Or if we take
+just one set of values and redo the figure.}
+
+In the simulations we used material properties reported in the literature: for the 
+Glisson's capsule we used Young's modulus $E_c$=8.22\,MPa and thickness $t_c$=20\,$\mu$m~\cite{Umale2011}.
+Since the values for parenchyma elasticity quite vary (usually between 2\,kPa to 5\,kPa), we perform the simulation 
+with $E_p$=3.5\,kPa.
+
 In Fig.~\ref{fig-aspiration2} the profiles of cuts in the middle of the
-test cube are presented showing significantly larger deformation in the model without capsule. This is in perfect 
-agreement with the results reported in~\cite{Hollenstein2006} and it can be concluded that 
-our composite model based on coupling the triangular and tetrahedral elements provides an accurate 
-model of parenchyma and capsule.
+test cube are presented showing significantly larger deformation in the model without capsule.
+We can observere that the deformation without the capsule is indeed overestimated approximately by the factor of 2. This is in perfect agreement with the results reported in~\cite{Hollenstein2006}
+
+Moreover, if we neglect the time-dependent behaviour we are able to reproduce
+the measurements presented in~\cite{Hollenstein2006} with less than 1\% error.
+Simulating the pressure of 3\,MPa and setting the elastic parameters to
+$E_p$=30\,kPa for parenchyma and $E_c$=3\,MPa and $t$=93\,$\mu$m for capsule.
+All the values lie within the measurements specified in the paper.
+\TG{add figure?}
+
+%and it can be concluded that 
+%our composite model based on coupling the triangular and tetrahedral elements provides an accurate 
+%model of parenchyma and capsule.
 
 %}}}
 
