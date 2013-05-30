@@ -99,7 +99,7 @@ that the capsule has also a global impact on the mechanical behaviour of the liv
 \terms{Theory} %TODO
 
 % NOT required for Proceedings
-%\keywords{deformable liver model, Glisson's capsule, vascularization, real-time soft tissue modeling}
+%\keywords{deformable liver model, Glisson's capsule, real-time soft tissue modeling}
 \keywords{deformable liver model}
 
 \section{Introduction} %{{{
@@ -383,11 +383,11 @@ test cube are presented showing significantly larger deformation in the model wi
 We can observere that the deformation without the capsule is indeed overestimated approximately by the factor of 2. This is in perfect agreement with the results reported in~\cite{Hollenstein2006}
 
 Moreover, if we neglect the time-dependent behaviour we are able to reproduce
-the measurements presented in~\cite{Hollenstein2006} with less than 1\% error.
-Simulating the pressure of 3\,MPa and setting the elastic parameters to
-$E_p$=30\,kPa for parenchyma and $E_c$=3\,MPa and $t$=93\,$\mu$m for capsule.
-All the values lie within the measurements specified in the paper.
-\TG{add figure?}
+the measurements presented in~\cite{Hollenstein2006,Nava2008} with less than 1\% error.
+In this case the simulation is performed with the pressure of 30\,kPa and with
+the following elastic parameters: $E_p$=30\,kPa for parenchyma and $E_c$=3\,MPa
+and $t$=93\,$\mu$m for capsule. All the values lie within the measurements
+specified in the paper. \TG{add figure?}
 
 %and it can be concluded that 
 %our composite model based on coupling the triangular and tetrahedral elements provides an accurate 
@@ -462,27 +462,43 @@ All the values lie within the measurements specified in the paper.
 
 %}}}
 
-\section{Future Work} %{{{
+\section{Present and Future Work} %{{{
 
-\TG{including vascularization; global deformation; stress the complexity of validation of global deformations}
+Presently we are working on the validation of the model also in context of
+global deformations where we believe the capsule plays also an essential role.
+This task is however complicated by the lack of biomechanical literature
+dealing with the response of the capsule.
+%The influence of the capsule on local level has been published in literature
+%before. However, to our knowledge it's influence on global scale deformation
+%has not been studied yet. We believe that the capsule has non-negligible impact
+%also on global level. 
+
+Our goal is to create complete liver model suitable for real-time medical
+simulations. For this a model accounting for all three main constituents
+(parenchyma, vascularization and capsule) is necessary. To achieve that we have
+integrated our model with the with the vasularization method proposed
+in~\cite{Peterlik2012}. In our future work we need to validate the model in the
+context of global and local deformations. This task is challenging because
+comparing in vivo measurements with the simulation is difficult due to complex
+boundary conditions. 
+\TG{ex-vivo: no information abou vessels; phantoms: cannot model capsule}
 
 %}}}
 
 \section{Conclusions} %{{{
-\TG{TODO}
-In the paper, a complete model of the liver was presented taking into account 
-three constituents of the organ, each being modelled with a different type 
-of finite elements: tetrahedral corotational model used for the parenchyma, serially 
-linked corotational beams based on Tymoshenko formulation employed to model the vascularization 
-and finally CST elements used for the capsule. 
-The model was first validated for local displacements: the aspiration test presented in~\cite{Hollenstein2006} 
-was successfully reproduced, showing a good agreement between the simulation and experiments. 
-Further, the model was used to demonstrate global influence of the capsule when the organ 
-undergoes large deformations. 
 
-In the future work, we plan to employ the proposed model for other organs where the capsule play an important role
-(for example kidneys). We will also focus on better description of the mechanical interactions and couplings among the organs and tissues in the abdominal 
-cavity via realistic modeling of boundary conditions using mechanical constraints and contacts.
+In the paper we presented a liver model accounting for the Glisson's capsule, a component that is often overlooked. Each constituent being modelled with a different type 
+of finite elements: tetrahedral corotational model used for the parenchyma and
+and CST membrane elements used for the capsule. 
+The model was validated for local displacements based on the the aspiration test presented in~\cite{Hollenstein2006} 
+was successfully reproduced, showing a good agreement between the simulation and experiments. 
+
+%Further, the model was used to demonstrate global influence of the capsule when the organ 
+%undergoes large deformations. 
+
+%In the future work, we plan to employ the proposed model for other organs where the capsule play an important role
+%(for example kidneys). We will also focus on better description of the mechanical interactions and couplings among the organs and tissues in the abdominal 
+%cavity via realistic modeling of boundary conditions using mechanical constraints and contacts.
 
 %}}}
 
