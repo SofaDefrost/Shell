@@ -30,7 +30,7 @@
 
 \begin{document}
 
-\title{Complete Real-Time Liver Model Including Glisson's Capsule, Vascularization and Parenchyma}
+\title{Modeling Liver with Glisson's Capsule in Real-Time Medical Simulations}
 %\subtitle{}
 
 \numberofauthors{4}
@@ -67,6 +67,7 @@ Stephan\'e Cotin\\
 
 \maketitle
 \begin{abstract}
+  \TODO{}
 The accurate mechanical modeling of liver is of a paramount interest in simulation-based operation planning 
 and computer-aided per-operative guidance. However, the realistic simulation of liver behaviour is a challenging task, 
 since the organ is composed of three constituents: parenchyma, vascularization and Glisson's capsule, each having different mechanical properties. While the 
@@ -124,6 +125,7 @@ properties of the tissue, for which the mechanical parameters have been reported
 Moreover, several methods have been proposed to model the hyperelastic behaviour at real-time rates, such as multiplicative Jacobian decomposition
 introduced in~\cite{Marchesseau2010}.
 
+\TG{The following paragraph is optional. Unnecessary but adds to the global context}
 The mechanical importance of the vascular structures in liver is studied in~\cite{Peterlik2012}. It shows that the 
 influence of vessels on the mechanical behaviour of the organ is significant. %, mainly if large deformations occur. 
 %Since a detailed modeling of the vessels would be extremely costly (mainly because of the small thickness of the vessel wall, 
@@ -175,7 +177,7 @@ based on two components: tetrahedral FE model of the
 parenchyma and
 triangular membrane elements used for the capsule.
 
-\subsection{Parenchyma and Vascularization} %{{{
+\subsection{Parenchyma} %{{{
 
 It is known that the parenchyma exhibits non-linear viscoelastic behaviour \cite{Marchesseau2010}.
 However, as we are mainly interested in the static equilibrium, we do not model the time-dependent
@@ -264,7 +266,7 @@ the corotational formulation for the CST elements.
 
 %}}}
 
-\subsection{Coupling Between Capsule and Parenchyma} %{{{
+\subsection{Coupling Between Capsule and\\Parenchyma} %{{{
 The literature reports high cohesion between capsule and parenchyma.
 Based on this property we assume there is no relative motion of the capsule \wrt\ the parenchyma.
 Although an arbitrary surface mesh could be used to model the capsule, we exploit 
@@ -356,9 +358,6 @@ the deformation or its profile near the instrument.
 
 A good example of such a local deformation is the aspiration test
 where the response of liver exposed locally to a negative pressure is measured.
-In~\cite{Hollenstein2006} it is reported that the Glisson's
-capsule has a non-negligible influence on the response of the tissue and modeling
-only the parenchyma leads to an overestimation of the deformation. 
 The aspiration device consists of a tube 1\,cm in diameter and allows
 control of internal pressure in the tube. The test is performed by
 attaching the tube to the tissue and measuring the tissue response. We
@@ -373,21 +372,24 @@ tissue was modelled with friction contact.
 2 and specify the values used to match Hollenstein separately. Or if we take
 just one set of values and redo the figure.}
 
-In the simulations we used material properties reported in the literature: for the 
+In the simulations we used material properties for a pig liver reported in the literature: for the 
 Glisson's capsule we used Young's modulus $E_c$=8.22\,MPa and thickness $t_c$=20\,$\mu$m~\cite{Umale2011}.
 Since the values for parenchyma elasticity quite vary (usually between 2\,kPa to 5\,kPa), we perform the simulation 
 with $E_p$=3.5\,kPa.
 
+In~\cite{Hollenstein2006} it is reported that the Glisson's
+capsule has a non-negligible influence on the response of the tissue and modeling
+only the parenchyma leads to an overestimation of the deformation up to the factor of 3. 
 In Fig.~\ref{fig-aspiration2} the profiles of cuts in the middle of the
 test cube are presented showing significantly larger deformation in the model without capsule.
-We can observere that the deformation without the capsule is indeed overestimated approximately by the factor of 2. This is in perfect agreement with the results reported in~\cite{Hollenstein2006}
+We can observere that the deformation without the capsule is indeed overestimated approximately by the factor of 2. This is in good agreement with the results reported in~\cite{Hollenstein2006}
 
 Moreover, if we neglect the time-dependent behaviour we are able to reproduce
 the measurements presented in~\cite{Hollenstein2006,Nava2008} with less than 1\% error.
-In this case the simulation is performed with the pressure of 30\,kPa and with
+In this case the simulation was performed with the pressure of 30\,kPa and with
 the following elastic parameters: $E_p$=30\,kPa for parenchyma and $E_c$=3\,MPa
 and $t$=93\,$\mu$m for capsule. All the values lie within the measurements
-specified in the paper. \TG{add figure?}
+specified in the paper. \TG{add figure like Fig. 2?}
 
 %and it can be concluded that 
 %our composite model based on coupling the triangular and tetrahedral elements provides an accurate 
@@ -465,7 +467,7 @@ specified in the paper. \TG{add figure?}
 \section{Present and Future Work} %{{{
 
 Presently we are working on the validation of the model also in context of
-global deformations where we believe the capsule plays also an essential role.
+global deformations where we believe the capsule also plays an essential role.
 This task is however complicated by the lack of biomechanical literature
 dealing with the response of the capsule.
 %The influence of the capsule on local level has been published in literature
@@ -476,7 +478,7 @@ dealing with the response of the capsule.
 Our goal is to create complete liver model suitable for real-time medical
 simulations. For this a model accounting for all three main constituents
 (parenchyma, vascularization and capsule) is necessary. To achieve that we have
-integrated our model with the with the vasularization method proposed
+integrated our model with the vasularization method proposed
 in~\cite{Peterlik2012}. In our future work we need to validate the model in the
 context of global and local deformations. This task is challenging because
 comparing in vivo measurements with the simulation is difficult due to complex
@@ -490,7 +492,7 @@ boundary conditions.
 In the paper we presented a liver model accounting for the Glisson's capsule, a component that is often overlooked. Each constituent being modelled with a different type 
 of finite elements: tetrahedral corotational model used for the parenchyma and
 and CST membrane elements used for the capsule. 
-The model was validated for local displacements based on the the aspiration test presented in~\cite{Hollenstein2006} 
+The model was validated in the context for local displacements based on the the aspiration test presented in~\cite{Hollenstein2006}. The aspiration test
 was successfully reproduced, showing a good agreement between the simulation and experiments. 
 
 %Further, the model was used to demonstrate global influence of the capsule when the organ 
