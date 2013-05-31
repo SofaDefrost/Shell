@@ -455,17 +455,16 @@ organ while modeling the local properties accurately.
 %}}}
 
 \section{Conclusions and Future Work} %{{{
-
-In the paper we presented a liver model accounting for the Glisson's capsule, a component that is often overlooked. Each constituent being modelled with a different type 
-of finite elements: tetrahedral corotational model used for the parenchyma and
-and CST membrane elements used for the capsule. 
-The model was validated in the context for local displacements based on the the aspiration test presented in~\cite{Hollenstein2006}. The aspiration test
-was successfully reproduced, showing a good agreement between the simulation and experiments. 
+In the paper we presented a model of tissue with capsule based on two separated models for parenchyma (corotational tetrahedral elements)
+and membrane (CST triangular elements). Employing a simulation scenario known as aspiration test, 
+we compared the model with experimental data provided in the literature 
+and verified the results obtained in the simulation w.r.t. to a standard computationally expensive model based entirely on volume elements~\cite{Hollenstein2006}. We obtained values which were in good correspondence with results reported in the literature. 
 
 Presently we are focusing on the validation of the model also in context of
-global deformations of the organ where we believe the capsule also plays an
-essential role. This task is however complicated by the lack of biomechanical
-literature dealing with the response of the capsule.
+global deformations of the organ where we believe the capsule plays an
+essential role as well. This task is however complicated due to the limited number of experimental studies dealing with 
+both the parenchyme and the capsule. 
+
 
 %Further, the model was used to demonstrate global influence of the capsule when the organ 
 %undergoes large deformations. 
