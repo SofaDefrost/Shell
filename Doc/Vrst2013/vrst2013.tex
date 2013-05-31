@@ -67,7 +67,6 @@ Stephan\'e Cotin\\
 
 \maketitle
 \begin{abstract}
-  \TODO{}
 The accurate mechanical modeling of liver is of a paramount interest in simulation-based operation planning 
 and computer-aided per-operative guidance. However, the realistic simulation of liver behaviour is a challenging task, 
 since the organ is composed of three constituents: parenchyma, vascularization and Glisson's capsule, 
@@ -262,8 +261,8 @@ element can be expressed as:
 %
 The values $x_{ij} = x_i - x_j$ and $y_{ij} = y_i - y_j$ are computed from
 the $x$ or $y$ coordinates of the nodes $i,j$ of the triangular element.
-The reader can refer to the respective literature for more thorough
-description~\cite{Felippa2003}.
+The reader can refer to the respective literature~\cite{Felippa2003} for more thorough
+description.
 
 Similarly as with model of parenchyma we use linear elastic material and employ
 the corotational formulation for the CST elements.
@@ -281,46 +280,46 @@ triangulated, we simply employ the triangles on the mesh surface to model the ca
 Using directly the boundary of the tetrahedral mesh does not only solve the
 problem of building the surface mesh, but has one more advantage: the nodes
 of the triangular mesh coincide with the nodes of the tetrahedral mesh, so no projection of one mesh onto the other is needed.
-Moreover, the stiffness matrices for capsule and parenchyma are then easily assembled
-together.
+Moreover, the stiffness matrices for capsule and parenchyma are then easily assembled together.
 % and solved as one system.
 %
 %\CD{The following may appear as "trivial"... maybe we can remove this part at the end if we need space} 
-%Without the loss of generality we can assume the tetrahedron consists of
-%nodes $p_1, p_2, p_3$ and $p_4$ and the boundary triangle has nodes $p_1, p_2$
-%and $p_3$. We can reorder the degrees of freedom so that the stiffness
-%matrix $\Mat{K}^t$ for the tetrahedron can be written as:
-%%
-%\begin{equation}
-%  \Mat{K}^t = \left[\begin{array}{c|c}
-%      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
-%      \hline
-%      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
-%  \end{array}\right]
-%\end{equation}
-%%
-%Then the assembled stiffness matrix for the element is:
-%%
-%\begin{equation}
-%  \Mat{K} = \left[\begin{array}{c|c}
-%      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
-%      \hline
-%      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
-%  \end{array}\right]
-%  +
-%  \left[\begin{array}{c|c}
-%      \Mat{K}^m & 0 \\
-%      \hline
-%      0 & 0 \\
-%  \end{array}\right]
-%\end{equation}
-%%
-%Where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
+Without the loss of generality we can assume the tetrahedron consists of
+nodes $p_1, p_2, p_3$ and $p_4$ and the boundary triangle has nodes $p_1, p_2$
+and $p_3$. We can reorder the degrees of freedom so that the stiffness
+matrix $\Mat{K}^t$ for the tetrahedron can be written as:
+%
+\begin{equation}
+  \Mat{K}^t = \left[\begin{array}{c|c}
+      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
+      \hline
+      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
+  \end{array}\right]
+\end{equation}
+%
+Then the assembled stiffness matrix for the element is:
+%
+\begin{equation}
+  \Mat{K} = \left[\begin{array}{c|c}
+      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
+      \hline
+      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
+  \end{array}\right]
+  +
+  \left[\begin{array}{c|c}
+      \Mat{K}^m & 0 \\
+      \hline
+      0 & 0 \\
+  \end{array}\right]
+\end{equation}
+%
+Where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
+
 The resulting system of linear equations is solved by direct solver based on Cholesky decomposition.
 
-Alternatively, one can use a mechanical coupling similar to the one used in
-\cite{Peterlik2012} to be able to use an arbitrary surface mesh. Nevertheless,
-for conforming triangular mesh both methods lead to the same solution.
+%Alternatively, one can use a mechanical coupling similar to the one used in
+%\cite{Peterlik2012} to be able to use an arbitrary surface mesh. Nevertheless,
+%for conforming triangular mesh both methods lead to the same solution.
 
 %}}}
 
@@ -328,7 +327,6 @@ for conforming triangular mesh both methods lead to the same solution.
 
 
 \section{Methods and Simulation} %{{{
-
 The model presented in the previous section was implemented in 
 SOFA\footnote{www.sofa-framework.org} and a set of
 numerical simulations was performed.
@@ -355,25 +353,32 @@ the deformation or its profile near the instrument.
 
 A good example of such a local deformation is the aspiration test
 where the response of liver exposed locally to a negative pressure is measured.
-The aspiration device consists of a tube 1\,cm in diameter and allows
-control of internal pressure in the tube. The test is performed by
+The aspiration device consists of a tube having 1\,cm in diameter and allows to
+control the pressure inside the tube. The test is performed by
 attaching the tube to the tissue and measuring the tissue response. We
 set up a simulation in SOFA to reproduce the experiment (see
 Fig.~\ref{fig-aspiration1}: we meshed a 15$\times$15$\times$15\,mm$^3$ 
-cube representing the tissue 
-resulting in 2648 tetrahedra. Then we attached a 1\,cm tube 
-and applied a pressure of 3\,kPa inside the tube. The interaction between the tube and 
-tissue was modelled with friction contact. 
+cube representing the tissue resulting in 2648 tetrahedra. Then we attached a 1\,cm tube 
+and applied a pressure of 3\,kPa inside the tube. 
 
-In the simulations we used material properties for a pig liver reported in the literature: for the 
-Glisson's capsule we used Young's modulus $E_c$=8.22\,MPa and thickness $t_c$=20\,$\mu$m~\cite{Umale2011}.
-Since the values for parenchyma elasticity quite vary (usually between 2\,kPa to 5\,kPa), we perform the simulation 
-with $E_p$=3.5\,kPa.
-
-%}}}
+Since the tube is in direct contact with the tissue, uni-lateral constraints with friction were chosen 
+to model this interaction properly. We opted for a method based on \emph{non-linear complementarity problem}  (NLCP)
+which allows for solution of the Signorini's problem to avoid any interpenetration between the colliding 
+objects (see~\cite{} for details). Since NLCP requires explicitly the computation of compliance matrix which 
+is homogeneous to the inverse of the stiffness matrix, we employed a direct solver based on LDL decomposition to 
+solve the system and compute the inverse matrices. 
 
 
 \section{Results and Discussion} %{{{
+As the first step, we evaluate the influence of the Glissons's capsule on the mechanical response of the tissue during
+the aspiration test. 
+In~\cite{Hollenstein2006} it is reported that the influence of the capsule is significant, as modeling 
+only the parenchyma without considering the membrane results in overestimation of the deformation by a factor of 2 to 3. 
+In order to verify this observation, we performed a simulation using capsule parameters measured experimentally on 
+ex-vivo pig liver~\cite{Umale2011}: Young's modulus of the membrane was set to $E_c$=8.22\,MPa and thickness was
+$t_c$=20\,$\mu$. 
+Since the values for parenchyma elasticity reported in the literature vary significantly being usually reported between 2\,kPa to 5\,kPa, 
+we employed a value $E_p$=3.5\,kPa for the Young's modulus of the parenchyma. 
 
 \begin{figure}
   \centering
@@ -382,12 +387,10 @@ with $E_p$=3.5\,kPa.
   aspiration test with (blue) and without (black) the capusle.}
 \end{figure}
 
-In~\cite{Hollenstein2006} it is reported that the Glisson's
-capsule has a non-negligible influence on the response of the tissue and modeling
-only the parenchyma leads to an overestimation of the deformation by a factor of 2 to 3. 
 In Fig.~\ref{fig-aspiration2} the profiles of cuts in the middle of the
-test cube are presented showing significantly larger deformation in the model without capsule.
-We can indeed observere that the deformation without the capsule is indeed overestimated approximately by a factor of 2. This is in perfect agreement with the results reported in the paper.% ~\cite{Hollenstein2006}
+test cube are presented showing significantly larger deformation in the model without capsule assuming that the same negative pressure was applied 
+on the tissue surface inside the tube. Moreover, it can be observed that the deformation without capculs is overestimated by a factor 
+close to 2, which is in perfect agreement with the results reported in~\cite{Hollenstein2006}.
 
 Moreover, we are able to reproduce
 the measurements presented in~\cite{Hollenstein2006,Nava2008} with less than 1\% error.
