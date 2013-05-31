@@ -361,6 +361,12 @@ Fig.~\ref{fig-aspiration1}: we meshed a 15$\times$15$\times$15\,mm$^3$
 cube representing the tissue resulting in 2648 tetrahedra. Then we attached a 1\,cm tube 
 and applied a pressure of 3\,kPa inside the tube. 
 
+\begin{figure}
+  \centering
+  \includegraphics[height=3.5cm]{displacement.pdf}
+  \caption{\label{fig-aspiration1} The }
+\end{figure}
+
 Since the tube is in direct contact with the tissue, uni-lateral constraints with friction were chosen 
 to model this interaction properly. We opted for a method based on \emph{non-linear complementarity problem}  (NLCP)
 where the non-linearity is introduced due to the friction. The NLCP
@@ -395,7 +401,7 @@ close to 2, which is in perfect agreement with the results reported in~\cite{Hol
 
 In the second step, we employed the simulation to reproduce the displacements values obtained via simulation in~\cite{Hollenstein2006,Nava2008}.
 Whereas the simulation in the referenced work was done on a mesh composed of tetrahedral elements for both the parenchyma 
-and the capsule, we modelled the capsule using the triangular elements as shown in section~\ref{}.
+and the capsule, we modelled the capsule using the triangular elements as shown in section~\ref{ss:capsuleModel}.
 
 Since the Young's moduli of neither parenchyma ($E_p$) nor capsule ($E_c$ were specified exactly, we obtained both as follows: first, 
 we performed a set of simulations without the capsule for different values of $E_p$: the value that provided a good match 
