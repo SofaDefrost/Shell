@@ -323,7 +323,7 @@ for conforming triangular mesh both methods lead to the same solution.
 %}}}
 
 
-\section{Aspiration Test} %{{{
+\section{Methods and Simulation} %{{{
 
 The model presented in the previous section was implemented in 
 SOFA\footnote{www.sofa-framework.org} and a set of
@@ -349,13 +349,6 @@ the deformation or its profile near the instrument.
   \caption{\label{fig-aspiration1} The SOFA simulation scene of the aspiration test.}
 \end{figure}
 
-\begin{figure}
-  \centering
-  \includegraphics[width=7cm]{aspiration.pdf}
-  \caption{\label{fig-aspiration2} Displacement profile of the cube in the
-  aspiration test with (blue) and without (black) the capusle.}
-\end{figure}
-
 A good example of such a local deformation is the aspiration test
 where the response of liver exposed locally to a negative pressure is measured.
 The aspiration device consists of a tube 1\,cm in diameter and allows
@@ -368,108 +361,47 @@ resulting in 2648 tetrahedra. Then we attached a 1\,cm tube
 and applied a pressure of 3\,kPa inside the tube. The interaction between the tube and 
 tissue was modelled with friction contact. 
 
-\TG{Here we have to decide wether to keep the values below as well as the Fig.
-2 and specify the values used to match Hollenstein separately. Or if we take
-just one set of values and redo the figure.}
-
 In the simulations we used material properties for a pig liver reported in the literature: for the 
 Glisson's capsule we used Young's modulus $E_c$=8.22\,MPa and thickness $t_c$=20\,$\mu$m~\cite{Umale2011}.
 Since the values for parenchyma elasticity quite vary (usually between 2\,kPa to 5\,kPa), we perform the simulation 
 with $E_p$=3.5\,kPa.
 
+%}}}
+
+
+\section{Results and Discussion} %{{{
+
+\begin{figure}
+  \centering
+  \includegraphics[width=7cm]{aspiration.pdf}
+  \caption{\label{fig-aspiration2} Displacement profile of the cube in the
+  aspiration test with (blue) and without (black) the capusle.}
+\end{figure}
+
 In~\cite{Hollenstein2006} it is reported that the Glisson's
 capsule has a non-negligible influence on the response of the tissue and modeling
-only the parenchyma leads to an overestimation of the deformation up to the factor of 3. 
+only the parenchyma leads to an overestimation of the deformation by a factor of 2 to 3. 
 In Fig.~\ref{fig-aspiration2} the profiles of cuts in the middle of the
 test cube are presented showing significantly larger deformation in the model without capsule.
-We can observere that the deformation without the capsule is indeed overestimated approximately by the factor of 2. This is in good agreement with the results reported in~\cite{Hollenstein2006}
+We can indeed observere that the deformation without the capsule is indeed overestimated approximately by a factor of 2. This is in perfect agreement with the results reported in the paper.% ~\cite{Hollenstein2006}
 
-Moreover, if we neglect the time-dependent behaviour we are able to reproduce
+Moreover, we are able to reproduce
 the measurements presented in~\cite{Hollenstein2006,Nava2008} with less than 1\% error.
-In this case the simulation was performed with the pressure of 30\,kPa and with
-the following elastic parameters: $E_p$=30\,kPa for parenchyma and $E_c$=3\,MPa
-and $t$=93\,$\mu$m for capsule. All the values lie within the measurements
-specified in the paper. \TG{add figure like Fig. 2?}
+We do not model the time-dependent behaviour though.
+In this simulation we prescribe the the internal pressure of 30\,kPa. The other
+parameters of the model were obtained like this: First we fix the stiffness of
+parenchyma to $E_p$=30\,kPa to match the scenerio without capsule. Then,
+assuming the thickness $t$=93\,$\mu$m of the capsule (reported as average in
+the paper) we run several simulations with different capsule stiffness $E_c$.
+We have found the lowest error is when $E_c$=3\,MPa. All the stiffness
+parameters lie within the ranges measured in the paper.
 
-%and it can be concluded that 
-%our composite model based on coupling the triangular and tetrahedral elements provides an accurate 
-%model of parenchyma and capsule.
+%In this case the simulation was performed with the pressure of 30\,kPa and with
+%the following elastic parameters: $E_p$=30\,kPa for parenchyma and $E_c$=3\,MPa
+%and $t$=93\,$\mu$m for capsule.
+%All the values lie within the measurements
+%specified in the paper. \TG{add figure like Fig. 2?}
 
-%}}}
-
-%\begin{figure*}
-%  \centering
-%    \includegraphics[width=.95\textwidth]{forceEvolution.pdf}
-%  \caption{\label{f:forceEvol}Evolution of forces during the simulation, where the supine data is deformed
-%towards the flank shape, and the stiffness of the capsule is increased from 0 to 8.22\,MPa after the initial equilibrium is achieved.}
-%\end{figure*}
-
-%\subsection{Global Deformations}
-%In the previous section we have shown that the composite model of parenchyma and 
-%capsule can be used to reproduce the \emph{local} behaviour of the tissue. In the following, 
-%we first present a real-time complete model of entire liver built from image data. 
-%Second, using this model we demonstrate the \emph{global} mechanical influence of the capsule when 
-%the model undergoes large deformations. 
-%
-%The complete model was constructed using contrast-enhanced CT data acquired on a female pig 
-%being positioned first in supine and then flank position. 
-%The liver and hepatic vein were segmented for both datasets  using semi-automatic methods available in ITKSnap~\footnote{www.itksnap.org}.
-%Further, an unstructured mesh was obtained from the segmented maps using CGAL~\footnote{www.cgal.org}. 
-%The semi-automatic method presented in~\cite{Peterlik2012} was 
-%then applied to the segmented map of the hepatic vein, resulting in linked-beam model. 
-%Finally, the model of the Glisson's capsule was constructed using the elements described in 
-%section~\ref{ss:capsuleModel} over the surface triangles extracted from the tetrahedral mesh. 
-%The complete model composed of 4266 tetrahedra, 188 beams and 1284 triangles was then 
-%used in simulation where external force representing the gravity was applied to the model, 
-%resulting in large deformations mainly in the area of lobes. The refresh rate of 22\,FPS 
-%was achieved on a desktop computer with Intel i7 CPU running at 3.4\,GHz and 8\,GB of memory. 
-%The simulation with gravity was also used as a first demonstration of the global influence of the capsule. 
-%In Fig.~\ref{f:global}a, the models with capsule (red) and without (yellow) are depicted after being 
-%deformed due to the gravity, showing a significant difference between the two models.  
-%
-%\begin{figure*}
-%  \centering
-%    \subfloat[]{\includegraphics[width=.32\textwidth]{gravity2.png}}
-%    \subfloat[]{\includegraphics[width=.32\textwidth]{registered.png}}
-%    \subfloat[]{\includegraphics[width=.32\textwidth]{distanceMap.png}}
-%    \caption{\label{f:global}%
-%      (a) Liver under gravity with (red) and without (yellow) capsule;
-%      (b) liver in supine (yellow) and flank (red) position;
-%      (c) Hausdorff distance map between registered version with and without capsule.}
-%\end{figure*}
-%
-%In order to demonstrate the influence of the capsule on a real deformation of the liver, we 
-%performed a following protocol employing the supine and flank models built from the CT data. 
-%First, we performed a rigid registration of the two organs \wrt\ the root point of the hepatic vein. 
-%As shown in Fig.~\ref{f:global}b, the liver undergoes very large deformation when the body 
-%is turned from the supine to the flank position, exceeding 6\,cm for some parts of the organ. 
-%In order to induce similar deformation, we extracted feature pairs from the vascular system of the liver:
-%we selected points such as bifurcations which can be identified easily in both supine and flank 
-%data resulting in a set of correspondences. In the next step, we used these correspondences as a non-homogeneous
-%boundary conditions (imposed via penalty term) in order to perform a deformable registration of the supine
-%model onto the flank data. During the registration, the response forces acting in the points with prescribed displacements
-%were calculated. It is important to emphasize that the goal of the simulation was not 
-%to perform an accurate registration of the flank and supine data, but the simulation was used 
-%as an example of a real deformation of the organ.
-%
-%The simulation was performed with the model composed of parenchyma,  vessels and capsule, however, zero stiffness was 
-%set for the last component.
-%Once the static equilibrium was achieved, the effect of the capsule was gradually switched 
-%on, \ie\ the stiffness of the membrane was slowly increased from 0 to 8.22\,MPa. The evolution of the force response in the 
-%points with prescribed displacements is depicted in Fig.~\ref{f:forceEvol} showing the change in the response as the effect
-%of the capsule is included. At the same time, the shape of the deformed liver with capsule was compared 
-%to the model without the capsule. A Hausdorff distance map for those cases is depicted in Fig.~\ref{f:global}c: in the red areas, the 
-%maximal difference exceeding 1.25\,cm was measured. We believe that this result confirms that the Glisson's capsule 
-%plays an important role in the global mechanical behaviour of the liver.
-
-%}}}
-
-\section{Present and Future Work} %{{{
-
-Presently we are working on the validation of the model also in context of
-global deformations where we believe the capsule also plays an essential role.
-This task is however complicated by the lack of biomechanical literature
-dealing with the response of the capsule.
 %The influence of the capsule on local level has been published in literature
 %before. However, to our knowledge it's influence on global scale deformation
 %has not been studied yet. We believe that the capsule has non-negligible impact
@@ -479,21 +411,32 @@ Our goal is to create complete liver model suitable for real-time medical
 simulations. For this a model accounting for all three main constituents
 (parenchyma, vascularization and capsule) is necessary. To achieve that we have
 integrated our model with the vasularization method proposed
-in~\cite{Peterlik2012}. In our future work we need to validate the model in the
-context of global and local deformations. This task is challenging because
-comparing in vivo measurements with the simulation is difficult due to complex
-boundary conditions. 
-\TG{ex-vivo: no information abou vessels; phantoms: cannot model capsule}
+in~\cite{Peterlik2012}. Adding the capsule did not signifficantly affect the
+performance since simulation speed of \TODO{XX FPS}%
+\footnote{\TODO{Measured on...}} was achieved. This suggests
+that the proposed technique is compatible with real-time simulation of whole
+organ while modeling the local properties accurately.
+
+%In our future work we need to validate the model in the
+%context of global and local deformations. This task is challenging because
+%comparing in vivo measurements with the simulation is difficult due to complex
+%boundary conditions. 
+%\TG{ex-vivo: no information abou vessels; phantoms: cannot model capsule}
 
 %}}}
 
-\section{Conclusions} %{{{
+\section{Conclusions and Future Work} %{{{
 
 In the paper we presented a liver model accounting for the Glisson's capsule, a component that is often overlooked. Each constituent being modelled with a different type 
 of finite elements: tetrahedral corotational model used for the parenchyma and
 and CST membrane elements used for the capsule. 
 The model was validated in the context for local displacements based on the the aspiration test presented in~\cite{Hollenstein2006}. The aspiration test
 was successfully reproduced, showing a good agreement between the simulation and experiments. 
+
+Presently we are focusing on the validation of the model also in context of
+global deformations of the organ where we believe the capsule also plays an
+essential role. This task is however complicated by the lack of biomechanical
+literature dealing with the response of the capsule.
 
 %Further, the model was used to demonstrate global influence of the capsule when the organ 
 %undergoes large deformations. 
