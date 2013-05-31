@@ -77,7 +77,7 @@ capsule has not been included in the modeling. In~\cite{Hollenstein2006,Ahn2010}
 plays an important role mainly in the vicinity of the surgical tools. Therefore, the accuracy of the liver response 
 in the vicinity of the surgical tool requires correct modeling of the capsule as a component of the liver model. 
 
-The measures perfomed on the capsule show report stiffness which is significanly higher that that of the parenchyma, however, 
+The measures performed on the capsule report stiffness which is significantly higher that that of the parenchyma, however, 
 the thickness of the membrane does not exceed 100$\mu$m. For this reasons, it is not possible to model the 
 capsule with standard volume elements usually employed for the parenchyma. In our approach, we rely of 
 corotational membrane elements based on constant-strain formulation, which are coupled mechanically to the underlying 
@@ -114,7 +114,7 @@ of accurate eligibility criteria for the patient.
 In this context, the pre-operational planning becomes a crucial task having a significant impact on the treatment. 
 
 Computer-aided physics-based medical simulation has proven to be an extremely useful technique in the area of medical training. 
-Nevertheless, whereas generic models are usually required in training simulators, accurate patient-specific modelling
+Nevertheless, whereas generic models are usually required in training simulators, accurate patient-specific modeling
 becomes necessary as soon as computer simulation is to be employed in the pre-operative planning. At the same time, 
 interactivity of such models remains an important aspect, requiring real-time simulation which is often difficult to 
 achieve given the complexity of soft tissues. 
@@ -126,7 +126,7 @@ properties of the tissue, for which the mechanical parameters have been reported
 Moreover, several methods have been proposed to model the hyperelastic behaviour at real-time rates, such as multiplicative Jacobian decomposition
 introduced in~\cite{Marchesseau2010}.
 
-\TG{The following paragraph is optional. Unnecessary but adds to the global context}
+%\TG{The following paragraph is optional. Unnecessary but adds to the global context}
 The mechanical importance of the vascular structures in liver is studied in~\cite{Peterlik2012}. It shows that the 
 influence of vessels on the mechanical behaviour of the organ is significant. %, mainly if large deformations occur. 
 %Since a detailed modeling of the vessels would be extremely costly (mainly because of the small thickness of the vessel wall, 
@@ -191,7 +191,7 @@ phenomena related to viscosity.
 %Peterl\'{i}k et al. \cite{Peterlik2012}.
 
 The parenchyma is modeled using corotational finite elements~\cite{Felippa2005}.
-Although it relies on linear stress-strain relationship, large displacements including rotations are modelled correctly. 
+Although it relies on linear stress-strain relationship, large displacements including rotations are modeled correctly. 
 While in the full non-linear formulation the stiffness matrix relates the forces $\Vec{f}$ and 
 displacements $\Vec{u}$ as $\Vec{f} = K(\Vec{u})$, the corotational model 
 requires the stiffness matrix $\Mat{K}_0$ of the system to be computed only once before the simulation begins. 
@@ -355,15 +355,9 @@ The aspiration device consists of a tube having 1\,cm in diameter and allows to
 control the pressure inside the tube. The test is performed by
 attaching the tube to the tissue and measuring the tissue response. We
 set up a simulation in SOFA to reproduce the experiment (see
-Fig.~\ref{fig-aspiration1}: we meshed a 15$\times$15$\times$15\,mm$^3$ 
+Fig.~\ref{fig-aspiration1}): we meshed a 15$\times$15$\times$15\,mm$^3$ 
 cube representing the tissue resulting in 2648 tetrahedra. Then we attached a 1\,cm tube 
 and applied a pressure of 3\,kPa inside the tube. 
-
-\begin{figure}
-  \centering
-  \includegraphics[height=3.5cm]{displacement.pdf}
-  \caption{\label{fig-aspiration1} The }
-\end{figure}
 
 Since the tube is in direct contact with the tissue, uni-lateral constraints with friction were chosen 
 to model this interaction properly. We opted for a method based on \emph{non-linear complementarity problem}  (NLCP)
@@ -375,13 +369,13 @@ solve the system and compute the inverse matrices.
 
 
 \section{Results and Discussion} %{{{
-As the first step, we evaluate the influence of the Glissons's capsule on the mechanical response of the tissue during
+As the first step, we evaluate the influence of the Glisson's capsule on the mechanical response of the tissue during
 the aspiration test. 
 In~\cite{Hollenstein2006} it is reported that the influence of the capsule is significant, as modeling 
 only the parenchyma without considering the membrane results in overestimation of the deformation by a factor of 2 to 3. 
 In order to verify this observation, we performed a simulation using capsule parameters measured experimentally on 
 ex-vivo pig liver~\cite{Umale2011}: Young's modulus of the membrane was set to $E_c$=8.22\,MPa and thickness was
-$t_c$=20\,$\mu$. 
+$t_c$=20\,$\mu$m. 
 Since the values for parenchyma elasticity reported in the literature vary significantly being usually reported between 2\,kPa to 5\,kPa, 
 we employed a value $E_p$=3.5\,kPa for the Young's modulus of the parenchyma. 
 
@@ -389,22 +383,29 @@ we employed a value $E_p$=3.5\,kPa for the Young's modulus of the parenchyma.
   \centering
   \includegraphics[width=7cm]{aspiration.pdf}
   \caption{\label{fig-aspiration2} Displacement profile of the cube in the
-  aspiration test with (blue) and without (black) the capusle.}
+  aspiration test with (blue) and without (black) the capsule.}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[height=3.5cm]{displacement.pdf}
+  \caption{\label{fig-aspiration3} Evolution of the displacement at the center
+  in time for test with (blue) and without (black) the capsule.}
 \end{figure}
 
 In Fig.~\ref{fig-aspiration2} the profiles of cuts in the middle of the
 test cube are presented showing significantly larger deformation in the model without capsule assuming that the same negative pressure was applied 
-on the tissue surface inside the tube. Moreover, it can be observed that the deformation without capculs is overestimated by a factor 
+on the tissue surface inside the tube. Moreover, it can be observed that the deformation without capsule is overestimated by a factor 
 close to 2, which is in perfect agreement with the results reported in~\cite{Hollenstein2006}.
 
 In the second step, we employed the simulation to reproduce the displacements values obtained via simulation in~\cite{Hollenstein2006,Nava2008}.
 Whereas the simulation in the referenced work was done on a mesh composed of tetrahedral elements for both the parenchyma 
-and the capsule, we modelled the capsule using the triangular elements as shown in section~\ref{ss:capsuleModel}.
+and the capsule, we modeled the capsule using the triangular elements as shown in section~\ref{ss:capsuleModel}.
 
-Since the Young's moduli of neither parenchyma ($E_p$) nor capsule ($E_c$ were specified exactly, we obtained both as follows: first, 
+Since the Young's moduli of neither parenchyma ($E_p$) nor capsule ($E_c$) were specified exactly, we obtained both as follows: first, 
 we performed a set of simulations without the capsule for different values of $E_p$: the value that provided a good match 
 with reported displacements was $E_p$=30\,kPa. 
-Then, we fixed the thickness of the capsule to be $T$=93\,$\mu$m (reported as the average value in the paper) and 
+Then, we fixed the thickness of the capsule to be $t$=93\,$\mu$m (reported as the average value in the paper) and 
 using $E_p$=30\,kPa, we ran the simulation repeatedly using the model with the capsule. In each simulation we 
 used different value $E_c$ of the Young's modulus for the capsule in order to minimize the displacement error w.r.t. the 
 reported values. The minimal value of error (not exceeding 1\%) was obtained for $E_c$=3\,MPa. This 
@@ -461,7 +462,7 @@ and verified the results obtained in the simulation w.r.t. to a standard computa
 Presently we are focusing on the validation of the model also in context of
 global deformations of the organ where we believe the capsule plays an
 essential role as well. This task is however complicated due to the limited number of experimental studies dealing with 
-both the parenchyme and the capsule. 
+both the parenchyma and the capsule. 
 
 
 %Further, the model was used to demonstrate global influence of the capsule when the organ 
