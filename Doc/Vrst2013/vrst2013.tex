@@ -326,7 +326,7 @@ The resulting system of linear equations is solved by direct solver based on Cho
 %}}}
 
 
-\section{Methods and Simulation} %{{{
+\section{Methods} %{{{
 The model presented in the previous section was implemented in 
 SOFA\footnote{www.sofa-framework.org} and a set of
 numerical simulations was performed.
@@ -363,8 +363,9 @@ and applied a pressure of 3\,kPa inside the tube.
 
 Since the tube is in direct contact with the tissue, uni-lateral constraints with friction were chosen 
 to model this interaction properly. We opted for a method based on \emph{non-linear complementarity problem}  (NLCP)
-which allows for solution of the Signorini's problem to avoid any interpenetration between the colliding 
-objects (see~\cite{} for details). Since NLCP requires explicitly the computation of compliance matrix which 
+where the non-linearity is introduced due to the friction. The NLCP
+allows for solution of the Signorini's problem to avoid any interpenetration between the colliding 
+objects (see~\cite{Duriez2006b} for details). Since NLCP requires explicitly the computation of compliance matrix which 
 is homogeneous to the inverse of the stiffness matrix, we employed a direct solver based on LDL decomposition to 
 solve the system and compute the inverse matrices. 
 
