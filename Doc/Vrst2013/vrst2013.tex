@@ -393,15 +393,18 @@ test cube are presented showing significantly larger deformation in the model wi
 on the tissue surface inside the tube. Moreover, it can be observed that the deformation without capculs is overestimated by a factor 
 close to 2, which is in perfect agreement with the results reported in~\cite{Hollenstein2006}.
 
-In the second step, we use our simulation to reproduce the displacements values measured experimentally in~\cite{Hollenstein2006,Nava2008}.
-Since the Young's moduli of neither parenchyma ($E_p$) nor capsule ($E_c$ were specified, we obtained both as follows: first, 
-performed a set of simulations without the capsule for different values of ($E_p$): the value that provided a good match 
-with reported displacement after applying the negative pressure of 30\,kPa inside the tube was $E_p$=30\,kPa. 
-The, we fixed the thickness of the capsule as $T$=93\,$\mu$m (reported as an average in the paper) and 
-using $E_p$=30\,kPa, we performed repeatedly the simulation with the capsule using different values of the Young's modulus
-of the capsule in order to minimize the displacement error. The minimal error (under 1\%) was obtained 
-for Young's modulus $E_c$=3\,MPa which lies in the range of capsule elasticity reported by experimental measurements.
+In the second step, we employed the simulation to reproduce the displacements values obtained via simulation in~\cite{Hollenstein2006,Nava2008}.
+Whereas the simulation in the referenced work was done on a mesh composed of tetrahedral elements for both the parenchyma 
+and the capsule, we modelled the capsule using the triangular elements as shown in section~\ref{}.
 
+Since the Young's moduli of neither parenchyma ($E_p$) nor capsule ($E_c$ were specified exactly, we obtained both as follows: first, 
+we performed a set of simulations without the capsule for different values of $E_p$: the value that provided a good match 
+with reported displacements was $E_p$=30\,kPa. 
+Then, we fixed the thickness of the capsule to be $T$=93\,$\mu$m (reported as the average value in the paper) and 
+using $E_p$=30\,kPa, we ran the simulation repeatedly using the model with the capsule. In each simulation we 
+used different value $E_c$ of the Young's modulus for the capsule in order to minimize the displacement error w.r.t. the 
+reported values. The minimal value of error (not exceeding 1\%) was obtained for $E_c$=3\,MPa. This 
+value lies in the range of capsule elasticity coefficients reported by experimental measurements.
 
 %Moreover, we are able to reproduce
 %the measurements presented in~\cite{Hollenstein2006,Nava2008} with less than 1\% error.
@@ -425,14 +428,16 @@ for Young's modulus $E_c$=3\,MPa which lies in the range of capsule elasticity r
 %has not been studied yet. We believe that the capsule has non-negligible impact
 %also on global level. 
 
-Our goal is to create complete liver model suitable for real-time medical
-simulations. For this a model accounting for all three main constituents
-(parenchyma, vascularization and capsule) is necessary. To achieve that we have
-integrated our model with the vasularization method proposed
-in~\cite{Peterlik2012}. Adding the capsule did not signifficantly affect the
-performance since simulation speed of \TODO{XX FPS}%
-\footnote{\TODO{Measured on...}} was achieved. This suggests
-that the proposed technique is compatible with real-time simulation of whole
+In the scenario presented in this paper, we focus on local influence of the capsule.
+Nevertheless, it is possible to employ the actual model to demonstrate the global 
+impact of the capsule and to further validate the accuracy of such a complete model w.r.t. experimental measures. 
+Detailed description of such validation is however beyond the scope of this paper. 
+In spite of this we would like to emphasize that we have already integrated the
+capsule model with vascularized liver model described in~\cite{Peterlik2012}. 
+Adding the capsule did not affect the
+performance significantly: a visual refresh rate exceeding 25\,FPS was achieved on a
+PC with CPU Intel CPU i7-2630QM running at 3.00 GHz.
+This suggests that the proposed technique is compatible with real-time simulation of whole
 organ while modeling the local properties accurately.
 
 %In our future work we need to validate the model in the
