@@ -47,20 +47,20 @@ Tom\'a\v{s} Golembiovsk\'y\\
 Igor Peterl\'ik\\
        \affaddr{Institut Hospitalo-Universitaire}\\
        \affaddr{Strasbourg, France}\\
-       \email{...} % TODO
+       \email{Igor.Peterlik@ihu-strasbourg.eu} % TODO
 % 3rd. author
 \alignauthor
 Christian Duriez\\
        \affaddr{INRIA}\\
        \affaddr{Lille, France}\\
-       \email{...} % TODO
+       \email{Christian.Duriez@inria.fr} % TODO
 \and
 % 4th. author
 \alignauthor
 Stephan\'e Cotin\\
        \affaddr{INRIA}\\
        \affaddr{Lille, France}\\
-       \email{...} % TODO
+       \email{Stephane.Cotin@inria.fr} % TODO
 }
 
 %\date{30 May 2013}
@@ -70,16 +70,20 @@ Stephan\'e Cotin\\
   \TODO{}
 The accurate mechanical modeling of liver is of a paramount interest in simulation-based operation planning 
 and computer-aided per-operative guidance. However, the realistic simulation of liver behaviour is a challenging task, 
-since the organ is composed of three constituents: parenchyma, vascularization and Glisson's capsule, each having different mechanical properties. While the 
-mechanical influence of vessels on both global and local behaviour of the organ has been measured and modelled previously~\cite{Peterlik2012}, only local 
-effects have been studied in the case of Glisson's capsule~\cite{Hollenstein2006,Ahn2010}. 
+since the organ is composed of three constituents: parenchyma, vascularization and Glisson's capsule, 
+each having different mechanical properties. 
 
-In this paper we introduce what we believe is the first real-time model of liver taking into account all three constituents, each being simulated 
-employing a different finite element formulation.
-Using the proposed model, we focus on the role of the Glisson's capsule: first, we show that the model is able to reproduce correctly
-the local effects of the capsule in so called aspiration test. Second, based on CT image data of porcine abdominal cavity acquired in supine and flank 
-positions, we demonstrate 
-that the capsule has also a global impact on the mechanical behaviour of the liver in the case when the organ undergoes large deformations. 
+While a real-time simulation of vascularized liver has been already described in~\cite{Peterlik2012}, the Glisson's 
+capsule has not been included in the modeling. In~\cite{Hollenstein2006,Ahn2010} it is shown that the capsule 
+plays an important role mainly in the vicinity of the surgical tools. Therefore, the accuracy of the liver response 
+in the vicinity of the surgical tool requires correct modeling of the capsule as a component of the liver model. 
+
+The measures perfomed on the capsule show report stiffness which is significanly higher that that of the parenchyma, however, 
+the thickness of the membrane does not exceed 100$\mu$m. For this reasons, it is not possible to model the 
+capsule with standard volume elements usually employed for the parenchyma. In our approach, we rely of 
+corotational membrane elements based on constant-strain formulation, which are coupled mechanically to the underlying 
+tetrahedra. We show that using this model we are able to reproduce the experiments reported in~\cite{Hollenstein2006}, 
+while maintaining the real-time aspect of the simulation. 
 
 %This work provides a complete physical model for the deformations of the liver with its three constituents: parenchyma, vessels and the Glisson's capsule.
 %Some recent experimental results \cite{Ahn2010} have shown that there is a significant difference of stiffness between the Glisson's capsule and the parenchyma. 
