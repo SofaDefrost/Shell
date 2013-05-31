@@ -57,7 +57,7 @@ Christian Duriez\\
 \and
 % 4th. author
 \alignauthor
-Stephan\'e Cotin\\
+St\'ephane Cotin\\
        \affaddr{INRIA}\\
        \affaddr{Lille, France}\\
        \email{Stephane.Cotin@inria.fr} % TODO
@@ -393,16 +393,26 @@ test cube are presented showing significantly larger deformation in the model wi
 on the tissue surface inside the tube. Moreover, it can be observed that the deformation without capculs is overestimated by a factor 
 close to 2, which is in perfect agreement with the results reported in~\cite{Hollenstein2006}.
 
-Moreover, we are able to reproduce
-the measurements presented in~\cite{Hollenstein2006,Nava2008} with less than 1\% error.
-We do not model the time-dependent behaviour though.
-In this simulation we prescribe the the internal pressure of 30\,kPa. The other
-parameters of the model were obtained like this: First we fix the stiffness of
-parenchyma to $E_p$=30\,kPa to match the scenerio without capsule. Then,
-assuming the thickness $t$=93\,$\mu$m of the capsule (reported as average in
-the paper) we run several simulations with different capsule stiffness $E_c$.
-We have found the lowest error is when $E_c$=3\,MPa. All the stiffness
-parameters lie within the ranges measured in the paper.
+In the second step, we use our simulation to reproduce the displacements values measured experimentally in~\cite{Hollenstein2006,Nava2008}.
+Since the Young's moduli of neither parenchyma ($E_p$) nor capsule ($E_c$ were specified, we obtained both as follows: first, 
+performed a set of simulations without the capsule for different values of ($E_p$): the value that provided a good match 
+with reported displacement after applying the negative pressure of 30\,kPa inside the tube was $E_p$=30\,kPa. 
+The, we fixed the thickness of the capsule as $T$=93\,$\mu$m (reported as an average in the paper) and 
+using $E_p$=30\,kPa, we performed repeatedly the simulation with the capsule using different values of the Young's modulus
+of the capsule in order to minimize the displacement error. The minimal error (under 1\%) was obtained 
+for Young's modulus $E_c$=3\,MPa which lies in the range of capsule elasticity reported by experimental measurements.
+
+
+%Moreover, we are able to reproduce
+%the measurements presented in~\cite{Hollenstein2006,Nava2008} with less than 1\% error.
+%We do not model the time-dependent behaviour though.
+%In this simulation we prescribe the the internal pressure of 30\,kPa. The other
+%parameters of the model were obtained like this: First we fix the stiffness of
+%parenchyma to $E_p$=30\,kPa to match the scenerio without capsule. Then,
+%assuming the thickness $t$=93\,$\mu$m of the capsule (reported as average in
+%the paper) we run several simulations with different capsule stiffness $E_c$.
+%We have found the lowest error is when $E_c$=3\,MPa. All the stiffness
+%parameters lie within the ranges measured in the paper.
 
 %In this case the simulation was performed with the pressure of 30\,kPa and with
 %the following elastic parameters: $E_p$=30\,kPa for parenchyma and $E_c$=3\,MPa
