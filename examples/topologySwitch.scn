@@ -75,7 +75,7 @@
                 edgeBaryCoords="0.333 0.6666 0    0.6666 0.3333 0"
                 triangleBaryCoords="0.3333 0.3333 0"
                 />
-            <BezierShellInterpolation template="Rigid" name="bsInterp" />
+            <BezierShellInterpolationM template="Rigid" name="bsInterp" />
         </Node>
 
         <Node>

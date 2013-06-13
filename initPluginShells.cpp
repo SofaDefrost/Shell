@@ -89,6 +89,7 @@ namespace component
 
 		componentlist += " BezierShellForceField";
 		componentlist += " BezierShellInterpolation";
+		componentlist += " BezierShellInterpolationM";
 		componentlist += " BezierShellMechanicalMapping";
 
 		componentlist += " JoinMeshPoints";
@@ -122,6 +123,7 @@ SOFA_LINK_CLASS(CstFEMForceField)
 
 SOFA_LINK_CLASS(BezierShellForceField)
 SOFA_LINK_CLASS(BezierShellInterpolation)
+SOFA_LINK_CLASS(BezierShellInterpolationM)
 SOFA_LINK_CLASS(BezierShellMechanicalMapping)
 
 SOFA_LINK_CLASS(JoinMeshPoints)

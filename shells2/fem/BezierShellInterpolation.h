@@ -46,6 +46,7 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         typedef typename DataTypes::VecCoord VecCoord;
         typedef typename DataTypes::VecDeriv VecDeriv;
         typedef typename DataTypes::VecReal VecReal;
+        typedef typename DataTypes::MatrixDeriv MatrixDeriv;
         typedef typename DataTypes::Coord Coord;
         typedef typename DataTypes::Deriv Deriv;
         typedef typename Coord::value_type Real;
@@ -288,10 +289,6 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         //void interpolateOnBTriangle(Index triID, const VecVec3d& nodes, const Vec3& baryCoord,
         //    Vec3& point, Vec3& normal, Vec3& t0, Vec3 &t1,
         //    Vec3& D2t0, Vec3& D2t01, Vec3& D2t1);
-
-        void applyOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, helper::WriteAccessor< Data<VecVec3> > &out);
-        void applyJOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, const VecDeriv& in, helper::WriteAccessor< Data<VecVec3> > &out);
-        void applyJTOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, const VecVec3& in, helper::WriteAccessor< Data<VecDeriv> > &out);
 
     protected:
         // pointer on mechanical state of the simulation

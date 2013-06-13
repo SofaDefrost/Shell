@@ -29,6 +29,7 @@ SOURCES =   initPluginShells.cpp \
             mapping/BendingPlateMechanicalMapping.cpp \
             mapping/BezierTriangleMechanicalMapping.cpp \
             shells2/fem/BezierShellInterpolation.cpp \
+            shells2/fem/BezierShellInterpolationM.cpp \
             shells2/forcefield/BezierShellForceField.cpp \
             shells2/mapping/BezierShellMechanicalMapping.cpp \
             misc/PointProjection.cpp \
@@ -58,6 +59,8 @@ HEADERS =   initPluginShells.h \
             mapping/BezierTriangleMechanicalMapping.inl \
             shells2/fem/BezierShellInterpolation.h \
             shells2/fem/BezierShellInterpolation.inl \
+            shells2/fem/BezierShellInterpolationM.h \
+            shells2/fem/BezierShellInterpolationM.inl \
             shells2/forcefield/BezierShellForceField.h \
             shells2/forcefield/BezierShellForceField.inl \
             shells2/mapping/BezierShellMechanicalMapping.h \

@@ -42,7 +42,7 @@
 
 #include <sofa/defaulttype/VecTypes.h>
 
-#include "../fem/BezierShellInterpolation.h"
+#include "../fem/BezierShellInterpolationM.h"
 
 
 namespace sofa
@@ -89,8 +89,8 @@ public:
 
     typedef helper::Quater<Real> Quat;
 
-    typedef typename sofa::component::fem::BezierShellInterpolation<TIn>::ShapeFunctions ShapeFunctions;
-    typedef typename sofa::component::fem::BezierShellInterpolation<TIn>::VecShapeFunctions VecShapeFunctions;
+    typedef typename sofa::component::fem::BezierShellInterpolationM<TIn,TOut>::ShapeFunctions ShapeFunctions;
+    typedef typename sofa::component::fem::BezierShellInterpolationM<TIn,TOut>::VecShapeFunctions VecShapeFunctions;
 
     typedef sofa::core::topology::BaseMeshTopology::index_type Index;
     //typedef BaseMeshTopology::Edge              Edge;
@@ -107,7 +107,7 @@ public:
     : Inherit(from, to)
     , inputTopo(NULL)
     , outputTopo(NULL)
-    , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
+    , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolationM object"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , measureStress(initData(&measureStress, false, "measureStress","Tell forcefield to measure stress values at mapped points"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
@@ -178,7 +178,7 @@ protected:
     : Inherit()
     , inputTopo(NULL)
     , outputTopo(NULL)
-    , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
+    , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolationM object"))
     , measureError(initData(&measureError, false, "measureError","Error with high resolution mesh"))
     , measureStress(initData(&measureStress, false, "measureStress","Tell forcefield to measure stress values at mapped points"))
     , targetTopology(initLink("targetTopology","Targeted high resolution topology"))
@@ -203,7 +203,7 @@ protected:
         BaseMeshTopology* outputTopo;
 
         SingleLink<BezierShellMechanicalMapping<TIn, TOut>,
-            sofa::component::fem::BezierShellInterpolation<TIn>,
+            sofa::component::fem::BezierShellInterpolationM<TIn,TOut>,
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> bsInterpolation;
 
         Data<bool> measureError;
