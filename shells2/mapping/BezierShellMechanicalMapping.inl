@@ -724,11 +724,28 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPara
     //std::cout << "time applyJT = " << stop-start << std::endl;
 }
 
-//template <class TIn, class TOut>
-//void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/)
-//{
-//    serr << "applyJT(const core::ConstraintParams*, Data<InMatrixDeriv>&, const Data<OutMatrixDeriv>&) NOT implemented" << sendl;
-//}
+template <class TIn, class TOut>
+void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const ConstraintParams* cparams, Data<InMatrixDeriv>& dOut, const Data<OutMatrixDeriv>& dIn)
+{
+    //std::cout << "---------------- ApplyJT (constraints) --------------" << std::endl;
+
+    helper::WriteAccessor< Data<InMatrixDeriv> > out = dOut;
+    helper::ReadAccessor< Data<OutMatrixDeriv> > in = dIn;
+
+    if (!inputTopo || !outputTopo)
+    {
+        serr << "applyJT() was called before init()" << sendl;
+        return;
+    }
+    if (inputTopo->getNbTriangles() <= 0)
+    {
+        serr << "applyJT() requires an input triangular topology" << sendl;
+        return;
+    }
+
+    bsInterpolation->applyJTOnBTriangle(projN, projElements, dIn.getValue(cparams), *dOut.beginEdit(cparams));
+    dOut.endEdit(cparams);
+}
 
 
 #if 0 // TODO {{{

@@ -95,8 +95,15 @@ class BezierShellInterpolationM : public BezierShellInterpolation<TIn>
         void applyOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, helper::WriteAccessor< Data<VecVec3> > &out);
         void applyJOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, const InVecDeriv& in, helper::WriteAccessor< Data<OutVecDeriv> > &out);
         void applyJTOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, const OutVecDeriv& in, helper::WriteAccessor< Data<InVecDeriv> > &out);
+        void applyJTOnBTriangle(VecShapeFunctions projN, VecIndex projElements,
+            const OutMatrixDeriv& in, InMatrixDeriv &out);
 
     protected:
+
+        void applyJTCore(const InVecCoord &xSim, const VecVec3d &x,
+            const Index &triId, const ShapeFunctions &N, const OutCoord &force,
+            Vec3 &f1, Vec3 &f2, Vec3 &f3, Vec3 &f1r, Vec3 &f2r, Vec3 &f3r);
+
 
 };
 

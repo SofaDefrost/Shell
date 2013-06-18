@@ -198,92 +198,147 @@ void BezierShellInterpolationM<TIn,TOut>::applyJTOnBTriangle(
     out.resize(projElements.size());
     for (Index i=0; i<projElements.size(); i++)
     {
-        if (in[i] == Vec3(0,0,0)) continue;
-
         sofa::core::topology::Triangle tri= this->inputTopology->getTriangle(projElements[i]);
-        const BTri& bTri = getBezierTriangle(projElements[i]);
 
+        Vec3 f1, f2, f3;    // resulting linear forces on corner nodes 
+        Vec3 f1r, f2r, f3r; // resulting torques
+
+        applyJTCore(xSim, x, projElements[i], projN[i], in[i],
+            f1, f2, f3, f1r, f2r, f3r);
+
+        getVCenter(out[ tri[0] ]) += f1;
+        getVCenter(out[ tri[1] ]) += f2;
+        getVCenter(out[ tri[2] ]) += f3;
+
+        getVOrientation(out[ tri[0] ]) += f1r;
+        getVOrientation(out[ tri[1] ]) += f2r;
+        getVOrientation(out[ tri[2] ]) += f3r;
+    }
+}
+
+template <class TIn, class TOut>
+void BezierShellInterpolationM<TIn,TOut>::applyJTOnBTriangle(
+    VecShapeFunctions projN, VecIndex projElements,
+    const OutMatrixDeriv& in, InMatrixDeriv &out)
+{
+    const InVecCoord& xSim = this->mState->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecVec3d& x = this->mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
+    typename Out::MatrixDeriv::RowConstIterator rowItEnd = in.end();
+
+    for (typename OutMatrixDeriv::RowConstIterator rowIt = in.begin();
+        rowIt != rowItEnd; ++rowIt)
+    {
+        typename OutMatrixDeriv::ColConstIterator colItEnd = rowIt.end();
+        typename OutMatrixDeriv::ColConstIterator colIt = rowIt.begin();
+
+        if (colIt != colItEnd)
+        {
+            typename InMatrixDeriv::RowIterator o = out.writeLine(rowIt.index());
+            for ( ; colIt != colItEnd; ++colIt)
+            {
+                Vec3 f1, f2, f3;    // resulting linear velocities on corner nodes 
+                Vec3 f1r, f2r, f3r; // resulting angular velocities
+
+                Index ptId = colIt.index();
+                applyJTCore(xSim, x, projElements[ptId], projN[ptId], colIt.val(),
+                    f1, f2, f3, f1r, f2r, f3r);
+
+                sofa::core::topology::Triangle tri = this->inputTopology->getTriangle(projElements[ptId]);
+                o.addCol(tri[0], -InDeriv(f1, f1r));
+                o.addCol(tri[1], -InDeriv(f2, f2r));
+                o.addCol(tri[2], -InDeriv(f3, f3r));
+                //std::cout << InDeriv(f1, f1r) << "   " <<
+                //    InDeriv(f2, f2r) << "   " <<
+                //    InDeriv(f3, f3r) << "   " << std::endl;
+
+            }
+        }
+    }
+}
+
+template <class TIn, class TOut>
+void BezierShellInterpolationM<TIn,TOut>::applyJTCore(
+    const InVecCoord &xSim, const VecVec3d &x,
+    const Index &triId, const ShapeFunctions &N, const OutCoord &force,
+    Vec3 &f1, Vec3 &f2, Vec3 &f3, Vec3 &f1r, Vec3 &f2r, Vec3 &f3r)
+{
+    if (force == Vec3(0,0,0)) {
+        f1 = f2 = f3 = f1r = f2r = f3r = Vec3(0,0,0);
+        return;
+    }
+
+    const sofa::core::topology::Triangle &tri = this->inputTopology->getTriangle(triId);
+    const BTri& bTri = getBezierTriangle(triId);
+
+    Vec3 fn;
+
+    // Compute the influence on the corner nodes
+    f1 = force * N[0];
+    f2 = force * N[1];
+    f3 = force * N[2];
+
+    // Now the influence through other nodes
+
+    fn = force * N[3];
+    if (fn != Vec3(0,0,0))
+    {
+        f1 += fn;
+        f1r += cross((x[ bTri[3] ] - x[ bTri[0] ]), fn);
+    }
+
+    fn = force * N[4];
+    if (fn != Vec3(0,0,0))
+    {
+        f1 += fn;
+        f1r += cross((x[ bTri[4] ] - x[ bTri[0] ]), fn);
+    }
+
+    fn = force * N[5];
+    if (fn != Vec3(0,0,0))
+    {
+        f2 += fn;
+        f2r += cross((x[ bTri[5] ] - x[ bTri[1] ]), fn);
+    }
+
+    fn = force * N[6];
+    if (fn != Vec3(0,0,0))
+    {
+        f2 += fn;
+        f2r += cross((x[ bTri[6] ] - x[ bTri[1] ]), fn);
+    }
+
+    fn = force * N[7];
+    if (fn != Vec3(0,0,0))
+    {
+        f3 += fn;
+        f3r += cross((x[ bTri[7] ] - x[ bTri[2] ]), fn);
+    }
+
+    fn = force * N[8];
+    if (fn != Vec3(0,0,0))
+    {
+        f3 += fn;
+        f3r += cross((x[ bTri[8] ] - x[ bTri[2] ]), fn);
+    }
+
+    fn = force * N[9]/3;
+    if (fn != Vec3(0,0,0))
+    {
         // Rotation matrices at corner nodes
         Mat33 R[3];
         xSim[ tri[0] ].getOrientation().toMatrix(R[0]);
         xSim[ tri[1] ].getOrientation().toMatrix(R[1]);
         xSim[ tri[2] ].getOrientation().toMatrix(R[2]);
 
-            Vec3 f1, f2, f3;    // resulting linear forces on corner nodes 
-            Vec3 f1r, f2r, f3r; // resulting torques
-            Vec3 fn;
-
-            const ShapeFunctions& N = projN[i];
-
-            // Compute the influence on the corner nodes
-            f1 = in[i] * N[0];
-            f2 = in[i] * N[1];
-            f3 = in[i] * N[2];
-
-            // Now the influence through other nodes
-
-            fn = in[i] * N[3];
-            if (fn != Vec3(0,0,0))
-            {
-                f1 += fn;
-                f1r += cross((x[ bTri[3] ] - x[ bTri[0] ]), fn);
-            }
-
-            fn = in[i] * N[4];
-            if (fn != Vec3(0,0,0))
-            {
-                f1 += fn;
-                f1r += cross((x[ bTri[4] ] - x[ bTri[0] ]), fn);
-            }
-
-            fn = in[i] * N[5];
-            if (fn != Vec3(0,0,0))
-            {
-                f2 += fn;
-                f2r += cross((x[ bTri[5] ] - x[ bTri[1] ]), fn);
-            }
-
-            fn = in[i] * N[6];
-            if (fn != Vec3(0,0,0))
-            {
-                f2 += fn;
-                f2r += cross((x[ bTri[6] ] - x[ bTri[1] ]), fn);
-            }
-
-            fn = in[i] * N[7];
-            if (fn != Vec3(0,0,0))
-            {
-                f3 += fn;
-                f3r += cross((x[ bTri[7] ] - x[ bTri[2] ]), fn);
-            }
-
-            fn = in[i] * N[8];
-            if (fn != Vec3(0,0,0))
-            {
-                f3 += fn;
-                f3r += cross((x[ bTri[8] ] - x[ bTri[2] ]), fn);
-            }
-
-            fn = in[i] * N[9]/3;
-            if (fn != Vec3(0,0,0))
-            {
-                f1 += fn;
-                f2 += fn;
-                f3 += fn;
-                f1r += cross(R[0]*(getSegment(bTri[3]) + getSegment(bTri[4])), fn);
-                f2r += cross(R[1]*(getSegment(bTri[5]) + getSegment(bTri[6])), fn);
-                f3r += cross(R[2]*(getSegment(bTri[7]) + getSegment(bTri[8])), fn);
-            }
-
-            getVCenter(out[ tri[0] ]) += f1;
-            getVCenter(out[ tri[1] ]) += f2;
-            getVCenter(out[ tri[2] ]) += f3;
-
-            getVOrientation(out[ tri[0] ]) += f1r;
-            getVOrientation(out[ tri[1] ]) += f2r;
-            getVOrientation(out[ tri[2] ]) += f3r;
+        f1 += fn;
+        f2 += fn;
+        f3 += fn;
+        f1r += cross(R[0]*(getSegment(bTri[3]) + getSegment(bTri[4])), fn);
+        f2r += cross(R[1]*(getSegment(bTri[5]) + getSegment(bTri[6])), fn);
+        f3r += cross(R[2]*(getSegment(bTri[7]) + getSegment(bTri[8])), fn);
     }
 }
+
 
 } // namespace fem
 
