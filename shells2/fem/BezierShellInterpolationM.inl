@@ -244,13 +244,9 @@ void BezierShellInterpolationM<TIn,TOut>::applyJTOnBTriangle(
                     f1, f2, f3, f1r, f2r, f3r);
 
                 sofa::core::topology::Triangle tri = this->inputTopology->getTriangle(projElements[ptId]);
-                o.addCol(tri[0], -InDeriv(f1, f1r));
-                o.addCol(tri[1], -InDeriv(f2, f2r));
-                o.addCol(tri[2], -InDeriv(f3, f3r));
-                //std::cout << InDeriv(f1, f1r) << "   " <<
-                //    InDeriv(f2, f2r) << "   " <<
-                //    InDeriv(f3, f3r) << "   " << std::endl;
-
+                o.addCol(tri[0], InDeriv(f1, f1r));
+                o.addCol(tri[1], InDeriv(f2, f2r));
+                o.addCol(tri[2], InDeriv(f3, f3r));
             }
         }
     }
