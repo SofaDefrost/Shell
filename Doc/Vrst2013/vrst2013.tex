@@ -1,15 +1,6 @@
-% TODO
-% REMEMBER: After having produced the .bbl file, and prior to final submission,
-% you need to 'insert'  your .bbl file into your source .tex file so as to provide
-% ONE 'self-contained' source file.
+\documentclass[sposored]{acmsiggraph}
 
-\documentclass{acm_proc_article-sp}
-
-\usepackage{caption}
-\DeclareCaptionType{copyrightbox}
 \usepackage{amsmath}
-%\usepackage{makeidx}
-%\usepackage[pdftex]{graphicx} ... we have to use ps/eps
 \usepackage{subfig}
 
 \def\wrt{w.\,r.\,t.}
@@ -17,53 +8,63 @@
 \def\ie{i.\,e.}
 \def\Dash{\nobreak\,---\penalty-500\,}
 
-%%% Comments
-\usepackage{color}
-\newcommand{\TG}[1]{{\color{blue}\textbf{TG: #1}}}
-\newcommand{\CD}[1]{{\color{green}\textbf{CD: #1}}}
-\newcommand{\IP}[1]{{\color{cyan}\textbf{IP: #1}}}
-\newcommand{\TODO}[1]{{\color{red}\textbf{TODO: #1}}}
-%%%
-
 \renewcommand{\Vec}[1]{\mathbf{#1}}
 \newcommand{\Mat}[1]{\mathbf{#1}}
 
-\begin{document}
-
 \title{Modeling Liver with Glisson's Capsule in Real-Time Medical Simulations}
-%\subtitle{}
 
-\numberofauthors{4}
+%TODO
 \author{
-% 1st. author
-\alignauthor
-Tom\'a\v{s} Golembiovsk\'y\\
-       \affaddr{Faculty of Informatics}\\
-       \affaddr{Masaryk University}\\
-       \affaddr{Brno, Czech Republic}\\
-       \email{nyoxi@ics.muni.cz}
-% 2nd. author
-\alignauthor
-Igor Peterl\'ik\\
-       \affaddr{Institut Hospitalo-Universitaire}\\
-       \affaddr{Strasbourg, France}\\
-       \email{Igor.Peterlik@ihu-strasbourg.eu}
-% 3rd. author
-\alignauthor
-Christian Duriez\\
-       \affaddr{INRIA}\\
-       \affaddr{Lille, France}\\
-       \email{Christian.Duriez@inria.fr}
-\and
-% 4th. author
-\alignauthor
-St\'ephane Cotin\\
-       \affaddr{INRIA}\\
-       \affaddr{Lille, France}\\
-       \email{Stephane.Cotin@inria.fr}
+\begin{tabular}[t]{cccc}%
+  Tom\'a\v{s} Golembiovsk\'y\thanks{nyoxi@ics.muni.cz} &
+  Igor Peterl\'ik &
+  Christian Duriez &
+  St\'ephane Cotin \\
+%
+  Faculty of Informatics &
+  Institut Hospitalo-Universitaire &
+  INRIA &
+  INRIA \\
+%
+  Masaryk University &
+  Strasbourg, France &
+  Lille, France &
+  Lille, France \\
+%
+  Brno, Czech Republic
+\end{tabular}
 }
+%\affiliation{foobar}
+%\numberofauthors{4}
+%\author{%
+%Tom\'a\v{s} Golembiovsk\'y\\
+%       \affaddr{Faculty of Informatics}\\
+%       \affaddr{Masaryk University}\\
+%       \affaddr{Brno, Czech Republic}\\
+%       \email{nyoxi@ics.muni.cz}
+%% 2nd. author
+%\alignauthor
+%Igor Peterl\'ik\\
+%       \affaddr{Institut Hospitalo-Universitaire}\\
+%       \affaddr{Strasbourg, France}\\
+%       \email{Igor.Peterlik@ihu-strasbourg.eu}
+%% 3rd. author
+%\alignauthor
+%Christian Duriez\\
+%       \affaddr{INRIA}\\
+%       \affaddr{Lille, France}\\
+%       \email{Christian.Duriez@inria.fr}
+%\and
+%% 4th. author
+%\alignauthor
+%St\'ephane Cotin\\
+%       \affaddr{INRIA}\\
+%       \affaddr{Lille, France}\\
+%       \email{Stephane.Cotin@inria.fr}
+%}
+\pdfauthor{Tom\'a\v{s} Golembiovsk\'y}
 
-%\date{30 May 2013}
+\begin{document}
 
 \maketitle
 \begin{abstract}
@@ -95,14 +96,18 @@ while maintaining the real-time aspect of the simulation.
 \end{abstract}
 
 % Categories
-\category{I.6.5}{Simulation and Modeling}{Model Development}
-\category{J.3}{Life and Medical Sciences}{Health}
+\begin{CRcatlist}
+  \CRcat{I.6.5}{Simulation and Modeling}{Model Development}
+  \CRcat{J.3}{Life and Medical Sciences}{Health};
+\end{CRcatlist}
 
+\keywords{deformable liver model, Glisson's capsule}
 
-\terms{Modeling and Simulation}
+\keywordlist
 
-% NOT required for Proceedings
-\keywords{deformable liver model, Glisson's capsule, real-time soft tissue modeling}
+\TOGlinkslist
+
+\copyrightspace
 
 \section{Introduction} %{{{
 
@@ -478,7 +483,7 @@ both the parenchyma and the capsule.
 % ---- Bibliography ----
 %
 
-\bibliographystyle{abbrv}
+\bibliographystyle{acmsiggraph}
 \bibliography{bibdata}
 
 \end{document}
