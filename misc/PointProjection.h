@@ -15,6 +15,11 @@
 namespace sofa
 {
 
+/**
+ * @brief Projection of points onto 3D triangular surface.
+ *
+ * @tparam Real Real type to use.
+ */
 template <class Real>
 class PointProjection
 {
@@ -39,6 +44,11 @@ class PointProjection
 
         enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 
+        /**
+         * @brief Class initialization.
+         *
+         * @param _topology Associated triangular topology.
+         */
         PointProjection(sofa::component::topology::TriangleSetTopologyContainer &_topology) :
             topology(_topology) {}
 

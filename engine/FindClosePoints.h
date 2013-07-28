@@ -18,6 +18,11 @@ namespace component
 namespace engine
 {
 
+/**
+ * @brief Finds points whose distance is smaller than defined threshold.
+ *
+ * @tparam DataTypes Associated data type.
+ */
 template <class DataTypes>
 class FindClosePoints : public sofa::core::DataEngine
 {

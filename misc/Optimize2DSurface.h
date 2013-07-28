@@ -29,6 +29,11 @@ namespace sofa
 
 namespace component { namespace controller { template <class DataTypes> class Test2DAdapter; } }
 
+/**
+ * @brief Optimization of real function on 2D surface.
+ *
+ * @tparam DataTypes    Associated DataType.
+ */
 template <class DataTypes>
 class Optimize2DSurface
 {
@@ -60,6 +65,12 @@ class Optimize2DSurface
 
         enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 
+        /**
+         * @brief Class initialization.
+         *
+         * @param adapter Associated Adapter object.
+         * @param surface Surface parametrization to use for 3D->2D transformation.
+         */
         Optimize2DSurface(
             sofa::component::controller::Test2DAdapter<DataTypes> *adapter,
             SurfaceParametrization<Real> &surface)
@@ -68,6 +79,12 @@ class Optimize2DSurface
             , m_surf(surface)
             {}
 
+        /**
+         * @brief Compute inital function values.
+         *
+         * @param metrics Output vector of values.
+         * @param topology Associated triangular topology.
+         */
         void initValues(VecReal &metrics,
             sofa::component::topology::TriangleSetTopologyContainer *topology);
 
@@ -82,7 +99,7 @@ class Optimize2DSurface
          *                      change.
          * @param precision     Precision of optimization based smoothing.
          *
-         * @return 
+         * @return True if step leads to an improvement.
          */
         bool smooth(Index v, Vec2 &newPosition, Index &tId, VecReal &metrics,
             const Real sigma, const Real precision) {

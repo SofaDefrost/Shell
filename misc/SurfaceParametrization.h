@@ -21,6 +21,14 @@
 namespace sofa
 {
 
+/**
+ * @brief Parametrization of 3D surface in 2D domain.
+ *
+ * Parametrization of 3D surface in 2D domain. Serves also as a base class for
+ * more specialized projections.
+ *
+ * @tparam Real Real type to use.
+ */
 template <class Real>
 class SurfaceParametrization
 {
@@ -108,6 +116,9 @@ class SurfaceParametrization
          */
         Vec3 getPointPosition(Vec2 position, Index tId, const VecVec3 &x) const;
 
+        /**
+         * @brief Positions of points in parameter space.
+         */
         const VecVec2& getPositions() { return m_points; }
 
         /**
@@ -131,16 +142,31 @@ class SurfaceParametrization
         // piecewise-linear space would be difficult to integrate we use linear
         // interpolation because it is more versatile than constant metric.
 
+        /**
+         * @brief Compute length of an edge.
+         *
+         * @param e Edge.
+         */
         Real dist(const Edge &e) const {
             return helper::rsqrt(dist2(e));
         }
 
+        /**
+         * @brief Compute square of the length of an edge.
+         *
+         * @param e Edge.
+         */
         Real dist2(const Edge &e) const {
             Vec2 v = m_points[ e[1] ] - m_points[ e[0] ];
             Mat22 M = (m_metrics[ e[1] ] + m_metrics[ e[0] ])/2.0;
             return v*(M*v);
         }
 
+        /**
+         * @brief Compute area of the triangle.
+         *
+         * @param t Triangle.
+         */
         Real area(const Triangle &t) const {
 
             Real area = helper::rabs(cross(
@@ -196,6 +222,13 @@ class SurfaceParametrization
             return area*I;
         }
 
+        /**
+         * @brief Return metric tensor of a point inside the triangle.
+         *
+         * @param tId   Triangle ID.
+         * @param bary  Barycentric coordinates of the point.
+         * @param M     Computed metric tensor.
+         */
         virtual void getMetricTensor(Index tId, const Vec3 &bary, Mat22 &M) const;
 
         /**  @} */

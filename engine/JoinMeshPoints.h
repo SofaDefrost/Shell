@@ -19,6 +19,12 @@ namespace component
 namespace engine
 {
 
+/**
+ * @brief Joins two or more points of the mesh together and updates the
+ * topology accordingly.
+ *
+ * @tparam DataTypes Associated data type.
+ */
 template <class DataTypes>
 class JoinMeshPoints : public sofa::core::DataEngine
 {
@@ -55,8 +61,15 @@ public:
 
     // TODO: add methods to find out the inverse mappings
 
-    // Return index of a node in input topology based on the triangle and node
-    // ID in output topology.
+    /**
+     * @brief Get index of a node in input topology based on the triangle and
+     * node ID in output topology.
+     *
+     * @param triangleId Triangle from output topology.
+     * @param nodeId     Node in output topology.
+     *
+     * @return Node from input topology.
+     */
     Index getSrcNodeFromTri(Index triangleId, Index nodeId) {
         if (triangleId < f_output_triangles.getValue().size()) {
             if (nodeId < f_output_position.getValue().size()) {
