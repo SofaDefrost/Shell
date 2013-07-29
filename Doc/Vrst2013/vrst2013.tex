@@ -78,7 +78,7 @@ capsule has not been included in the modeling. In~\cite{Hollenstein2006,Ahn2010}
 plays an important role mainly in the vicinity of the surgical tools. Therefore, the accuracy of the liver response 
 in the vicinity of the surgical tool requires correct modeling of the capsule as a component of the liver model. 
 
-The measures performed on the capsule report stiffness which is significantly higher that that of the parenchyma, however, 
+The measures performed on the capsule report stiffness which is significantly higher than that of the parenchyma, however, 
 the thickness of the membrane does not exceed 100$\mu$m. For this reasons, it is not possible to model the 
 capsule with standard volume elements usually employed for the parenchyma. In our approach, we rely of 
 corotational membrane elements based on constant-strain formulation, which are coupled mechanically to the underlying 
@@ -201,7 +201,7 @@ While in the full non-linear formulation the stiffness matrix relates the forces
 displacements $\Vec{u}$ as $\Vec{f} = K(\Vec{u})$, the corotational model 
 requires the stiffness matrix $\Mat{K}_0$ of the system to be computed only once before the simulation begins. 
 Then, in each step, the motion of each element $e$ is decomposed into rigid rotation $\Mat{R}^e$ and local deformation. 
-The rotations are then used to update each local element stiffness matrix as $\Mat{R}\Mat{K}_0\Mat{R}^{\top}$
+The rotations are then used to update each local element stiffness matrix as $\Mat{R}^e\Mat{K}_0{\Mat{R}^e}^{\top}$
 whereas the deformations are used to compute the linear strain in the local corotational frame.
 There are several ways of computing the corotational frame for elements; we rely on
 the geometrical method proposed in \cite{Nesme2005}.
@@ -402,6 +402,7 @@ In Fig.~\ref{fig-aspiration2} the profiles of cuts in the middle of the
 test cube are presented showing significantly larger deformation in the model without capsule assuming that the same negative pressure was applied 
 on the tissue surface inside the tube. Moreover, it can be observed that the deformation without capsule is overestimated by a factor 
 close to 2, which is in perfect agreement with the results reported in~\cite{Hollenstein2006}.
+Figure~\ref{fig-aspiration3} presents the evolution of displacement in time at central node on the cube surface. The effect of increased combined stiffness is clearly visible.
 
 In the second step, we employed the simulation to reproduce the displacements values obtained via simulation in~\cite{Hollenstein2006,Nava2008}.
 Whereas the simulation in the referenced work was done on a mesh composed of tetrahedral elements for both the parenchyma 
