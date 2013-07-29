@@ -79,7 +79,7 @@ plays an important role mainly in the vicinity of the surgical tools. Therefore,
 in the vicinity of the surgical tool requires correct modeling of the capsule as a component of the liver model. 
 
 The measures performed on the capsule report stiffness which is significantly higher than that of the parenchyma, however, 
-the thickness of the membrane does not exceed 100$\mu$m. For this reasons, it is not possible to model the 
+the thickness of the membrane does not exceed 100$\mu$m. For this reason, it is not possible to model the 
 capsule with standard volume elements usually employed for the parenchyma. In our approach, we rely of 
 corotational membrane elements based on constant-strain formulation, which are coupled mechanically to the underlying 
 tetrahedra. We show that using this model we are able to reproduce the experiments reported in~\cite{Hollenstein2006}, 
@@ -136,7 +136,7 @@ The mechanical importance of the vascular structures in liver is studied in~\cit
 influence of vessels on the mechanical behaviour of the organ is significant. %, mainly if large deformations occur. 
 %Since a detailed modeling of the vessels would be extremely costly (mainly because of the small thickness of the vessel wall, 
 %the authors propose a composite model allowing for real-time simulation of entire liver with vascularization.
-Since a detailed modeling of the vessels would be extremely costly (mainly because of the small thickness of the vessel wall, 
+Since a detailed modeling of the vessels would be extremely costly (mainly because of the small thickness of the vessel wall), 
 the authors propose a composite model allowing for real-time simulation.
 
 
@@ -296,11 +296,11 @@ matrix $\Mat{K}^t$ for the tetrahedron can be written as:
   \Mat{K}^t = \left[\begin{array}{c|c}
       \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
       \hline
-      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
+      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\.
   \end{array}\right]
 \end{equation}
 %
-Then the assembled stiffness matrix for the element is:
+Hence, the assembled stiffness matrix for the element is
 %
 \begin{equation}
   \Mat{K} = \left[\begin{array}{c|c}
@@ -316,7 +316,7 @@ Then the assembled stiffness matrix for the element is:
   \end{array}\right]
 \end{equation}
 %
-Where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
+where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
 
 The resulting system of linear equations is solved by direct solver based on Cholesky decomposition.
 
@@ -341,7 +341,7 @@ results reported in literature to validate the method.
 %the complete liver was subjected to global deformations.
 
 During the contact with an instrument such as probe, needle, scalpel and others,
-a specific deformations take place in the vicinity of
+specific deformations take place in the vicinity of
 the instrument. This type of deformation may not necessarily induce the
 deformation of the object as a whole and therefore can be considered as
 local. Correct material properties are not only important to quantify the
@@ -402,7 +402,7 @@ In Fig.~\ref{fig-aspiration2} the profiles of cuts in the middle of the
 test cube are presented showing significantly larger deformation in the model without capsule assuming that the same negative pressure was applied 
 on the tissue surface inside the tube. Moreover, it can be observed that the deformation without capsule is overestimated by a factor 
 close to 2, which is in perfect agreement with the results reported in~\cite{Hollenstein2006}.
-Figure~\ref{fig-aspiration3} presents the evolution of displacement in time at central node on the cube surface. The effect of increased combined stiffness is clearly visible.
+Fig.~\ref{fig-aspiration3} presents the evolution of displacement in time at central node on the cube surface. The effect of increased combined stiffness is clearly visible.
 
 In the second step, we employed the simulation to reproduce the displacements values obtained via simulation in~\cite{Hollenstein2006,Nava2008}.
 Whereas the simulation in the referenced work was done on a mesh composed of tetrahedral elements for both the parenchyma 
