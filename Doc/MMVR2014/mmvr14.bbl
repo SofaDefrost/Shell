@@ -1,0 +1,76 @@
+\begin{thebibliography}{10}
+
+\bibitem{Ahn2010}
+Bummo Ahn and Jung Kim.
+\newblock Measurement and characterization of soft tissue behavior with surface
+  deformation and force response under large deformations.
+\newblock {\em Medical Image Analysis}, 14(2):138--148, 2010.
+
+\bibitem{Duriez2006b}
+Christian Duriez, Frederic Dubois, Abderrahmane Kheddar, and Claude Andriot.
+\newblock Realistic haptic rendering of interacting deformable objects in
+  virtual environments.
+\newblock {\em IEEE Transactions on Visualization and Computer Graphics},
+  12(1):36--47, 2006.
+
+\bibitem{Felippa2005}
+C.A. Felippa and B.~Haugen.
+\newblock A unified formulation of small-strain corotational finite elements:
+  I. theory.
+\newblock {\em CMAME}, 194(21-24):2285--2335, 2005.
+
+\bibitem{Felippa2003}
+Carlos~A. Felippa.
+\newblock A study of optimal membrane triangles with drilling freedoms.
+\newblock {\em CMAME}, 192(16-18):2125--2168, 2003.
+
+\bibitem{Gao2009}
+Zhan Gao, T.~Kim, D.L. James, and J.P. Desai.
+\newblock Semi-automated soft-tissue acquisition and modeling for surgical
+  simulation.
+\newblock In {\em Automation Science and Engineering}, 2009.
+
+\bibitem{Hollenstein2006}
+Marc Hollenstein, Alessandro Nava, Davide Valtorta, Jess~G. Snedeker, and
+  Edoardo Mazza.
+\newblock Mechanical characterization of the liver capsule and parenchyma.
+\newblock In {\em Biomedical Simulation}, volume 4072 of {\em LNCS}, pages
+  150--158. Springer Berlin Heidelberg, 2006.
+
+\bibitem{Kerdok2006}
+Amy~E. Kerdok, Mark~P. Ottensmeyer, and Robert~D. Howe.
+\newblock Effects of perfusion on the viscoelastic characteristics of liver.
+\newblock {\em Journal of Biomechanics}, 39(12):2221--2231, 2006.
+
+\bibitem{Marchesseau2010}
+Stéphanie Marchesseau, Tobias Heimann, Simon Chatelin, Rémy Willinger, and
+  Hervé Delingette.
+\newblock Multiplicative jacobian energy decomposition method for fast porous
+  visco-hyperelastic soft tissue model.
+\newblock In {\em MICCAI 2010}, volume 6361 of {\em LNCS}, pages 235--242.
+  2010.
+
+\bibitem{Nava2008}
+A.~Nava, E.~Mazza, M.~Furrer, P.~Villiger, and W.H. Reinhart.
+\newblock In vivo mechanical characterization of human liver.
+\newblock {\em Medical Image Analysis}, 12(2):203--216, 2008.
+
+\bibitem{Nesme2005}
+Matthieu Nesme, Yohan Payan, and Fran\c{c}ois Faure.
+\newblock Efficient, physically plausible finite elements.
+\newblock In J.~Dingliana and F.~Ganovelli, editors, {\em Eurographics (short
+  papers)}, august 2005.
+
+\bibitem{Peterlik2012}
+Igor Peterl\'{i}k, Christian Duriez, and St\'{e}phane Cotin.
+\newblock Modeling and real-time simulation of a vascularized liver tissue.
+\newblock In {\em MICCAI 2012}, volume 7510 of {\em LNCS}, pages 50--57, 2012.
+
+\bibitem{Umale2011}
+Sagar Umale, Simon Chatelin, Nicolas Bourdet, Caroline Deck, Michele Diana,
+  Parag Dhumane, Luc Soler, Jacques Marescaux, and Remy Willinger.
+\newblock Experimental in vitro mechanical characterization of porcine
+  glisson's capsule and hepatic veins.
+\newblock {\em Journal of Biomechanics}, 44(9), 2011.
+
+\end{thebibliography}
