@@ -6,10 +6,27 @@
 % tetrahedral FE model of the  parenchyma and triangular membrane elements used for the capsule.
 
 % \subsection{Biomechanical Models and Coupling}
-It is known that the parenchyma exhibits non-linear viscoelastic behavior \cite{Marchesseau2010}.
-However, as we are mainly interested in the static equilibrium, we do not model the time-dependent
-phenomena related to viscosity. In the simulation we employ corotational finite elements~\cite{Felippa2005}.
-Although it relies on linear stress-strain relationship, large displacements including rotations are modeled correctly.
+%It is known that the parenchyma exhibits non-linear viscoelastic behavior \cite{Marchesseau2010}.
+Since in this paper, we are mainly interested in the static equilibrium, we do not model the time-dependent
+phenomena related to viscosity. In the simulation we employ corotational finite elements;
+There are several ways of computing the corotational frame for elements; we rely on the geometrical method proposed in~\cite{Nesme2005}.
+%although it relies on linear stress-strain relationship, large displacements including rotations are modeled correctly.
+Denoting $p$ a generic tetrahedral element of the parenchyma, the 12$\times$12 element stiffness matrix is then computed as
+\begin{equation}
+\Mat{K}_p = \int_{V_p} \Mat{B}_p^\top \Mat{D}_p \Mat{B}_p dV
+\end{equation}
+where $\Mat{B}_p$ is the strain-displacement matrix and $\Mat{D}_p$ is the stress-strain matrix.
+
+While the thickness of a vessel wall does not exceed 250$\mu$m~\cite{Forauer2003}, stiffness of 0.62$\pm$0.41\,MPa has been reported 
+in~\cite{Umale2011}, being quite important when compared to the parenchyma. Due to this property, vessels influence 
+the mechanical response of the tissue as illustrated in~\cite{Peterlik2012}. Since the vessel wall cannot be modeled 
+with tetrahedral elements if the real-time aspect of the simulation is to be preserved, 
+serially-linked beam elements based on Tymoshenko formulation are employed, taking into account the hollow 
+structure of the vessels via moments of inertia. 
+%to model the vessels which allows for correct simulation of large deformations as it is based on the corotational framework 
+%similar to the one used for the parenchyma. 
+For an arbitrary beam element representing a segment of a vessel, the corresponding local stiffness matrix $\Mat{K}_v$ is computed as shown in~\cite{Duriez2006}.
+
 % Briefly, the motion of each element $e$ is decomposed into rigid rotation $\Mat{R}^e$ and local deformation in each step of the simulation. 
 % The rotations are then used to update each local element stiffness matrix as $\Mat{R}^e\Mat{K}_0{\Mat{R}^e}^{\top}$
 % whereas the deformations are used to compute the linear strain in the local corotational frame.
@@ -56,8 +73,7 @@ Although it relies on linear stress-strain relationship, large displacements inc
 
 % \subsection{Glisson's Capsule} %{{{
 % \label{ss:capsuleModel}
-The thickness of the Glisson's capsule is relatively small: the values in range of 10-20
-$\mu$m have been reported in~\cite{Umale2011}.
+The thickness of the Glisson's capsule is also very small: the values in range of 10-20 $\mu$m have been reported in~\cite{Umale2011}.
 It is not possible to model such thin structure with classical tetrahedral
 elements:
 %if the real-time aspect of the simulation is to be preserved.
@@ -67,94 +83,120 @@ dense mesh to avoid numerical instabilities and thus would significantly
 violate the speed requirements imposed for medical simulators.
 Instead, modeling the capsule with two-dimensional elements that abstract from the
 thickness in the third dimension seems
-to be a natural choice. In the elasticity theory, this functionality is usually provided by membrane and shell elements.
-Based on the observation of its behaviour, we also
-assume negligible bending forces and propose a model based on membrane
-elements. 
+to be a natural choice. In the elasticity theory, this functionality is usually provided by membrane elements.
+%Based on the observation of its behaviour, we also
+%assume negligible bending forces and propose a model based on membrane
+%elements. 
 To maintain simplicity of the composite model we choose simple triangular
 elements with constant strain (CST).
 
-The computation of elastic stiffness matrix follows the common derivation
-%
-\begin{eqnarray}
-  \Mat{K}^m & = & \int_V \Mat{B}^T \Mat{E} \Mat{B} dV     \label{mem1} \\
-            & = & h \int_A \Mat{B}^T \Mat{E} \Mat{B} dA   \label{mem2} \\
-            & = & h A \Mat{B}^T \Mat{E} \Mat{B}           \label{mem3}
-\end{eqnarray}
-%
-where $\Mat{B}$ is the strain-displacement matrix, $\Mat{E}$ the material
-matrix, $h$ is the thickness and $A$ area of the element. In the previous
-\eqref{mem2} follows from the fact that we assume constant thickness of the
-element and \eqref{mem3} follows from the fact that the strain-displacement
-matrix is constant in our case. The strain-displacement matrix for the CST
-element can be expressed as:
+The 9$\times$9 stiffness matrix $\Mat{K}_m$ is given as 
 %
 \begin{equation}
-  \Mat{B} = \frac{1}{2A} \begin{bmatrix}
-    y_{23} & 0      & y_{31} & 0      & y_{12} & 0 \\
-         0 & x_{32} & 0      & x_{13} & 0      & x_{21} \\
-    x_{32} & y_{23} & x_{13} & y_{31} & x_{21} & y_{12}
-  \end{bmatrix}
+ \Mat{K}_c = \int_{S_c} \Mat{B}_c^\top \Mat{D}_c \Mat{B}_c dS 
 \end{equation}
-%
-The values $x_{ij} = x_i - x_j$ and $y_{ij} = y_i - y_j$ are computed from
-the $x$ or $y$ coordinates of the nodes $i,j$ of the triangular element.
-The reader can refer to the respective literature~\cite{Felippa2003} for more thorough
-description.
+where $\Mat{B}_c$ and $\Mat{D}_c$ are strain-displacement and strain-stress matrices, respectively. 
 
-Similarly as with model of parenchyma we use linear elastic material and employ
-the corotational formulation for the CST elements.
+
+The complete model of the liver takes into account all three components described above by combining the contribution 
+of parenchyma, vessels and capsule. The coupling between the vessel elements (beams) and parenchyma elements (tetrahedra)
+is described in detail in~\cite{Peterlik2012}. Briefly, each vessel node (having 6 degrees of freedom to account for torques in vessels) 
+is coupled with a tetrahedra in which it is located via barycentric coordinates. This coupling remains constant during 
+the simulation and can be described via matrix $\Mat{J}_{v\rightarrow p}$ which is a 12$\times$6 Jacobian matrix of the coupling.
+
+The coupling between the parenchyma and capsule is straightforward, since the triangles used as the 
+domain for the CST formulations are the surface faces of the volume mesh. Therefore, for given triangle 
+with vertices $v_1$, $v_2$ and $v_3$, the corresponding tetrahedron (sharing the same vertices is found) and 
+a 9$\times$12 permutation matrix $\Mat{P}_{c\rightarrow p}$ mapping the triangle vertices to tetrahedra vertices is computed. 
+
+Without loss of generality, let us suppose a tetrahedral element $e$ 
+which receives a mechanical contribution from both the capsule and vessels. The composite element stiffness matrix $\Mat{K}_e$
+is then computed as:
+\begin{equation}
+\Mat{K}_e = \Mat{K}_p + \Mat{J}_{v\rightarrow p} \Mat{K}_v \Mat{J}^\top_{v\rightarrow p} + \Mat{P}_{c\rightarrow p} \Mat{K}_c \Mat{P}_{c\rightarrow p}^\top.
+\end{equation}
+
+
+% 
+% \begin{eqnarray}
+%   \Mat{K}^m & = & \int_V \Mat{B}^T \Mat{E} \Mat{B} dV     \label{mem1} \\
+%             & = & h \int_A \Mat{B}^T \Mat{E} \Mat{B} dA   \label{mem2} \\
+%             & = & h A \Mat{B}^T \Mat{E} \Mat{B}           \label{mem3}
+% \end{eqnarray}
+% %
+% where $\Mat{B}$ is the strain-displacement matrix, $\Mat{E}$ the material
+% matrix, $h$ is the thickness and $A$ area of the element. In the previous
+% \eqref{mem2} follows from the fact that we assume constant thickness of the
+% element and \eqref{mem3} follows from the fact that the strain-displacement
+% matrix is constant in our case. The strain-displacement matrix for the CST
+% element can be expressed as:
+% %
+% \begin{equation}
+%   \Mat{B} = \frac{1}{2A} \begin{bmatrix}
+%     y_{23} & 0      & y_{31} & 0      & y_{12} & 0 \\
+%          0 & x_{32} & 0      & x_{13} & 0      & x_{21} \\
+%     x_{32} & y_{23} & x_{13} & y_{31} & x_{21} & y_{12}
+%   \end{bmatrix}
+% \end{equation}
+% %
+% The values $x_{ij} = x_i - x_j$ and $y_{ij} = y_i - y_j$ are computed from
+% the $x$ or $y$ coordinates of the nodes $i,j$ of the triangular element.
+% The reader can refer to the respective literature~\cite{Felippa2003} for more thorough
+% description.
+% 
+% Similarly as with model of parenchyma we use linear elastic material and employ
+% the corotational formulation for the CST elements.
 
 %}}}
 
 %\subsection{Mechanical Coupling between Parenchyma and Capsule} %{{{
-The literature reports high cohesion between capsule and parenchyma.
-Based on this property we assume there is no relative motion of the capsule \wrt\ the parenchyma.
-Although an arbitrary surface mesh could be used to model the capsule, we exploit 
-the fact that the parenchyma is modeled by tetrahedral elements having
-triangular faces. Thus, as the boundary of the volumetric mesh is already
-triangulated, we simply employ the triangles on the mesh surface to model the capsule.
-
-Using directly the boundary of the tetrahedral mesh does not only solve the
-problem of building the surface mesh, but has one more advantage: the nodes
-of the triangular mesh coincide with the nodes of the tetrahedral mesh, so no projection of one mesh onto the other is needed.
-and the stiffness matrices for capsule and parenchyma are then easily assembled together by adding the mechanical contribution 
-of a triangle to the corresponding tetrahedron.
-% and solved as one system.
-%
-%\CD{The following may appear as "trivial"... maybe we can remove this part at the end if we need space} 
-Without the loss of generality we can assume the tetrahedron consists of
-nodes $p_1, p_2, p_3$ and $p_4$ and the boundary triangle has nodes $p_1, p_2$
-and $p_3$. We can reorder the degrees of freedom so that the stiffness
-matrix $\Mat{K}^t$ for the tetrahedron can be written as:
-%
-\begin{equation}
-  \Mat{K}^t = \left[\begin{array}{c|c}
-      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
-      \hline
-      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\.
-  \end{array}\right]
-\end{equation}
-%
-Hence, the assembled stiffness matrix for the element is
-%
-\begin{equation}
-  \Mat{K} = \left[\begin{array}{c|c}
-      \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
-      \hline
-      \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
-  \end{array}\right]
-  +
-  \left[\begin{array}{c|c}
-      \Mat{K}^m & 0 \\
-      \hline
-      0 & 0 \\
-  \end{array}\right]
-\end{equation}
-%
-where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
-
-The resulting system of linear equations is solved by direct solver based on Cholesky decomposition.
+% The literature reports high cohesion between capsule and parenchyma.
+% Based on this property we assume there is no relative motion of the capsule \wrt\ the parenchyma.
+% Although an arbitrary surface mesh could be used to model the capsule, we exploit 
+% the fact that the parenchyma is modeled by tetrahedral elements having
+% triangular faces. Thus, as the boundary of the volumetric mesh is already
+% triangulated, we simply employ the triangles on the mesh surface to model the capsule.
+% 
+% Using directly the boundary of the tetrahedral mesh does not only solve the
+% problem of building the surface mesh, but has one more advantage: the nodes
+% of the triangular mesh coincide with the nodes of the tetrahedral mesh, so no projection of one mesh onto the other is needed.
+% and the stiffness matrices for capsule and parenchyma are then easily assembled together by adding the mechanical contribution 
+% of a triangle to the corresponding tetrahedron.
+% % and solved as one system.
+% %
+% %\CD{The following may appear as "trivial"... maybe we can remove this part at the end if we need space} 
+% Without the loss of generality we can assume the tetrahedron consists of
+% nodes $p_1, p_2, p_3$ and $p_4$ and the boundary triangle has nodes $p_1, p_2$
+% and $p_3$. We can reorder the degrees of freedom so that the stiffness
+% matrix $\Mat{K}^t$ for the tetrahedron can be written as:
+% %
+% \begin{equation}
+%   \Mat{K}^t = \left[\begin{array}{c|c}
+%       \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
+%       \hline
+%       \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\.
+%   \end{array}\right]
+% \end{equation}
+% %
+% Hence, the assembled stiffness matrix for the element is
+% %
+% \begin{equation}
+%   \Mat{K} = \left[\begin{array}{c|c}
+%       \Mat{K}^t_{1-3,1-3} & \Mat{K}^t_{1-3,4} \\
+%       \hline
+%       \Mat{K}^t_{4,1-3} & \Mat{K}^t_{4,4} \\
+%   \end{array}\right]
+%   +
+%   \left[\begin{array}{c|c}
+%       \Mat{K}^m & 0 \\
+%       \hline
+%       0 & 0 \\
+%   \end{array}\right]
+% \end{equation}
+% %
+% where $\Mat{K}^m$ is the stiffness matrix of the triangular membrane.
+% 
+% The resulting system of linear equations is solved by direct solver based on Cholesky decomposition.
 
 %Alternatively, one can use a mechanical coupling similar to the one used in
 %\cite{Peterlik2012} to be able to use an arbitrary surface mesh. Nevertheless,
