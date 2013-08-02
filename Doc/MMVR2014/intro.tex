@@ -10,16 +10,15 @@ of accurate eligibility criteria for the patient.
 %In this context, the pre-operational planning becomes a crucial task having a significant impact on the treatment. 
 
 Computer-aided physics-based medical simulation has proven to be an extremely useful technique in the area of medical training. 
-Nevertheless, whereas generic models are usually required in training simulators, accurate patient-specific modeling
+Whereas generic models are usually required in training simulators, accurate patient-specific modeling
 becomes necessary as soon as computer simulation is to be employed in the pre-operative planning. 
 %At the same time, 
 %interactivity of such models remains an important aspect, requiring real-time simulation which is often difficult to 
 %achieve given the complexity of soft tissues. 
-%
 When simulating the behavior of human liver, the task of real-time accurate modeling is challenging, mainly because of the complex structure 
 of this organ composed of three main constituents: \emph{parenchyma}, \emph{vascular networks} and \emph{Glisson's capsule}.
 The parenchyma has certainly been the most studied component of the liver; actually researchers agree on hyperelastic 
-properties of the tissue, for which the mechanical parameters have been reported for example in~\cite{Kerdok2006,Gao2009}. 
+properties of the tissue, for which the mechanical parameters have been reported for example in~\cite{Kerdok2006}.%,Gao2009}. 
 Moreover, several methods have been proposed to model the hyperelastic behaviour at real-time rates, such as multiplicative Jacobian decomposition
 introduced in~\cite{Marchesseau2010}.
 %
@@ -44,6 +43,7 @@ in vivo on human patients during the operation, confirming the mechanical import
 
 In this paper we present preliminary results of our work on the complete liver model. 
 We present a real-time composite model accounting for parenchyma and Glisson's capsule, compatible with previously proposed vascularized model~\cite{Peterlik2012}.
+We also show that the capsule has a significant impact on the mechanical response of the organ. 
 %The model is based on two different finite element representations for each constituent coupled together.
 %The main contribution of the paper is twofold: first, we present a real-time model of the liver, including
 %the parenchyma, vascularization and Glisson's capsule. The model is based on three different finite element representations for each constituent,

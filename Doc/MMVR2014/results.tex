@@ -26,11 +26,11 @@ In Fig.~\ref{fig-aspiration2} the profiles of cuts in the middle of the
 test cube are presented showing significantly larger deformation in the model without capsule assuming that the same negative pressure was applied 
 on the tissue surface inside the tube. Moreover, it can be observed that the deformation without capsule is overestimated by a factor 
 close to 2, which is in perfect agreement with the results reported in~\cite{Hollenstein2006}.
-Fig.~\ref{fig-aspiration3} presents the evolution of displacement in time at central node on the cube surface. The effect of increased combined stiffness is clearly visible.
+Fig.~\ref{fig-aspiration3} presents the evolution of displacement in time at central node on the cube surface showing clear the effect of increased combined stiffness.
 
 Further, we employed the simulation to reproduce the displacements values obtained via simulation in~\cite{Hollenstein2006,Nava2008}.
 Whereas the simulation in the referenced work was done on a mesh composed of tetrahedral elements for both the parenchyma 
-and the capsule, we modeled the capsule using the triangular elements as shown in section~\ref{ss:capsuleModel}.
+and the capsule, we employ the membrane CST elements.
 
 Since the Young's moduli of neither parenchyma ($E_p$) nor capsule ($E_c$) were specified exactly, we obtained both as follows: first, 
 we performed a set of simulations without the capsule for different values of $E_p$: the value that provided a good match 
@@ -85,9 +85,8 @@ value lies in the range of capsule elasticity coefficients reported by experimen
 
 
 \subsection{Global Deformation of Complete Model}
-The complete model was constructed using contrast-enhanced CT data acquired on a female pig
-being positioned first in supine and then flank position.
-The liver and hepatic vein were segmented for both datasets  using semi-automatic methods available in ITKSnap~\footnote{www.itksnap.org}.
+The complete model was constructed using contrast-enhanced CT data acquired on a female pig.
+The liver and hepatic vein were segmented using semi-automatic methods available in ITKSnap~\footnote{www.itksnap.org}.
 A tetrahedral mesh was obtained from the segmented maps using CGAL~\footnote{www.cgal.org}.
 The semi-automatic method presented in~\cite{Peterlik2012} was
 then applied to the segmented map of the hepatic vein, resulting in linked-beam model.
@@ -98,7 +97,7 @@ used in simulation where external force representing the gravity was applied to 
 resulting in large deformations mainly in the area of lobes. The refresh rate of 22\,FPS
 was achieved on a desktop computer with Intel i7 CPU running at 3.4\,GHz and 8\,GB of memory.
 The simulation with gravity was also used as a first demonstration of the global influence of the capsule.
-In Fig.~\ref{f:global}a, the models with capsule (red) and without (yellow) are depicted after being
+In Fig.~\ref{f:gravity}a, the models with capsule (red) and without (yellow) are depicted after being
 deformed due to the gravity, showing a significant difference between the two models.
 
 
