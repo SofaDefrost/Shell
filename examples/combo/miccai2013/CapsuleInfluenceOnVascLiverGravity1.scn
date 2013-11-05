@@ -45,13 +45,13 @@
 			<BarycentricMapping input="@../LiverMO" output="@LiverVisu"/>
 		</Node>
 		
-		<Node name="Capsule" activated="1">
+<!--		<Node name="Capsule" activated="1">
 			<TriangleSetTopologyContainer name="topo" />
 			<TriangleSetTopologyModifier name="Modifier" />
 			<Tetra2TriangleTopologicalMapping input="@../Container" output="@." />
-<!-- 			<Mesh src="@../sloader" name="surface" /> -->
+			<Mesh src="@../sloader" name="surface" />
 			<CstFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="20e-6" corotated="true"/>
-		</Node>
+		</Node>-->
 		
 
 		<MappedBeamToTetraForceField mappedFEM="PortalVein/BeamFEM" mappedMechObject="PortalVein/BeamMO" mapping="PortalVein/BeamTetraMapping" printLog="1"/>
@@ -63,7 +63,7 @@
 			<BeamFEMForceField name="BeamFEM" radius="0.003" radiusInner="0.0029"  youngModulus="0.62e6" poissonRatio="0.40"/>
 			<BarycentricMapping name="BeamTetraMapping" input="@../LiverMO" output="@BeamMO"/>			
 
-			<Node name="VisuThread">
+<!--			<Node name="VisuThread">
 				
 				<Object type="MechanicalObject" name="Quads" />
 				<include href="Objects/QuadSetTopology.xml"/>
@@ -73,7 +73,7 @@
 					<Object type="OglModel" name="Visual" color="1 0.0 0.0 0.5" />
 					<Object type="IdentityMapping" object1="Quads" object2="Visual"/>
 				</Node>
-			</Node>
+			</Node>-->
 		</Node>		
 		
 	</Node>

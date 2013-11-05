@@ -23,6 +23,7 @@
         <!--<EulerImplicitSolver/>-->
         <StaticSolver applyIncrementFactor="true" />
         <SparseLDLSolver name="precond"/>
+<!-- 	<SparseTAUCSSolver/> -->
         <!--<CGLinearSolver iterations="30" tolerance="1e-12" threshold="1e-12"/>-->
 
         <TetrahedronSetTopologyContainer name="Container" src="@/LiverMesh/vloader"/>
@@ -106,6 +107,7 @@
         <!--<EulerImplicitSolver/>-->
         <StaticSolver applyIncrementFactor="true" />
         <SparseLDLSolver />
+<!-- 	<SparseTAUCSSolver/> -->
         <!--<CGLinearSolver iterations="200" tolerance="1e-18" threshold="1e-18"/>-->
 
         <TetrahedronSetTopologyContainer name="Container" src="@/LiverMesh/vloader"/>
@@ -157,6 +159,7 @@
         <!--<EulerImplicitSolver/>-->
         <StaticSolver applyIncrementFactor="true" />
         <SparseLDLSolver />
+<!-- 	<SparseTAUCSSolver/> -->
         <!--<CGLinearSolver iterations="200" tolerance="1e-18" threshold="1e-18"/>-->
 
         <TetrahedronSetTopologyContainer name="Container" src="@/LiverMesh/vloader"/>

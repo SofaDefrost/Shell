@@ -23,14 +23,14 @@
 	</Node>
 
         <Node name="VolMesh">
-            <MeshVTKLoader name="loader"  filename="cube100k.vtk"
+	    <MeshVTKLoader name="loader"  filename="../cube2739.vtk"
                 rotation="0 -90 0" scale3d="0.03 0.03 0.03" translation="0.14 -0.015 -0.015" />
             <TetrahedronSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="VolMO" />
         </Node>
 
         <Node name="SurfMesh">
-            <MeshObjLoader name="loader" filename="cube100k.obj"
+	    <MeshObjLoader name="loader" filename="../cube2739.obj"
                 rotation="0 -90 0" scale3d="0.03 0.03 0.03" translation="0.14 -0.015 -0.015" />
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="SurfMO" />
@@ -91,17 +91,18 @@
 		<EulerImplicit name="cg_odesolver" printLog="false"/>
                 <!--<CGLinearSolver iterations="200" name="linear solver" tolerance="1.0e-9" threshold="1.0e-9" />-->
                 <SparseLDLSolver/> 
+		
 
                 <Mesh src="@/VolMesh/loader" />
                 <MechanicalObject src="@/VolMesh/loader"/>
 
-                <!--<TetrahedronFEMForceField name="FEM" youngModulus="2870" poissonRatio="0.45" computeGlobalMatrix="false" method="large"/>-->
+                <TetrahedronFEMForceField name="FEM" youngModulus="2870" poissonRatio="0.45" computeGlobalMatrix="false" method="large"/>
                 <!-- Parameters:
                      shear modulus μ = G = E/(2*(1+ν))
                      bulk modulus  κ = K = E/(3*(1-2*ν))
                 -->
-                <MJEDTetrahedralForceField name="FEM" materialName="NeoHookean"
-                    ParameterSet="989.6552 9566.667" considerInversion="true" printLog="true" />
+<!--                 <MJEDTetrahedralForceField name="FEM" materialName="NeoHookean" -->
+<!--                     ParameterSet="989.6552 9566.667" considerInversion="true" printLog="true" /> -->
 
 		<UniformMass mass="0.0025"/>
 		<BoxROI name="box_roi" box="0.139 -0.016 -0.016    0.141 0.016 0.016" drawBoxes="true"/>

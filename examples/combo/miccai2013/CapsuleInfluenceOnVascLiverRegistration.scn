@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0"?>
 <Node name="root" dt="0.1" gravity="0 0 0">
+	<RequiredPlugin pluginName="SofaMiscForcefieldDev"/>
+	<RequiredPlugin pluginName="shells"/>
+	
 	<VisualStyle displayFlags="hideCollisionModels hideForceFields hideBehaviorModels showVisualModels showWireframe" />
 	
  	<Node name="target">
@@ -8,12 +11,12 @@
 	</Node> 
 	
 	<Node name="liver1">		
-<!-- 		<EulerImplicitSolver/> -->
-		<StaticSolver applyIncrementFactor="true"/>
+		<EulerImplicitSolver/>
+<!-- 		<StaticSolver applyIncrementFactor="true"/> -->
 <!-- 		<SparseLDLSolver/> -->
 <!-- 		<PCGLinearSolver preconditioners="precond" iterations="100" tolerance="1e-15"/> -->
-<!-- 		<SparseLDLSolver name="precond"/> -->
-		<CGLinearSolver iterations="100" tolerance="1e-12" threshold="1e-12"/>
+		<SparseLDLSolver name="precond"/>
+<!-- 		<CGLinearSolver iterations="100" tolerance="1e-12" threshold="1e-12"/> -->
 		
 		<MeshVTKLoader name="vloader" filename="Data_Pig210213/mesh13.vtk" flipNormals="false" scale3d="0.001 0.001 0.001"/>
 		<MeshObjLoader name="sloader" filename="Data_Pig210213/Supine_Liver_SmDec.obj" scale3d="0.001 0.001 0.001"/>
@@ -34,12 +37,11 @@
 		
 <!-- 		<VTKExporter filename="complete.vtk" XMLformat="false" listening="true" edges="0" triangles="0" quads="0" tetras="1"  exportEveryNumberOfSteps="50"/>   	 -->
 
-<!-- 		<Mapped3DoFForceField mappedFEM="sourcePoints/SourceFF" mappedMechObject="sourcePoints/SourceMO" mapping="sourcePoints/SourceMapping" printLog="1"/> -->
-		
+		<Mapped3DoFForceField mappedFEM="sourcePoints/SourceFF" mappedMechObject="sourcePoints/SourceMO" mapping="sourcePoints/SourceMapping" printLog="1"/>		
 		<Node name="sourcePoints">
 <!-- 			<VisualStyle displayFlags="hideCollisionModels showForceFields hideBehaviorModels showVisualModels showWireframe" /> -->
 			<include href="Data_Pig210213/SourceMO.xml" scale3d="0.001 0.001 0.001"/>
-			<RestShapeSpringsForceField name="SourceFF" angularStiffness="0" stiffness="1e3" external_rest_shape="../../target/TargetMO" drawSpring="1" forceDir="" numDTAppl="0" startDTAppl="100" listening="1"/>
+			<RestShapeSpringsForceField name="SourceFF" angularStiffness="0" stiffness="1e3" external_rest_shape="../../target/TargetMO" drawSpring="1" forceDir="forces" numDTAppl="0" startDTAppl="100" listening="1"/>
 			<BarycentricMapping name="SourceMapping" input="@../LiverMO" output="@SourceMO" mapMatrices="false"/>
 		</Node>
 		
@@ -73,13 +75,13 @@
 			</Node>
 		</Node>
 		
-		<EvolutionParameterController name="paramControl" template="Vec3d" numDTAppl="10" startDTAppl="80" printLog="0" listening="1"/>
+<!--		<EvolutionParameterController name="paramControl" template="Vec3d" numDTAppl="10" startDTAppl="80" printLog="0" listening="1"/>
 		<Node name="Capsule">
 			<TriangleSetTopologyContainer name="topo" />
 			<TriangleSetTopologyModifier name="Modifier" />
 			<Tetra2TriangleTopologicalMapping input="@../Container" output="@." />
 			<CstFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="20e-6" corotated="true" stiffnessFactor="@../paramControl.factor" />
-		</Node>
+		</Node>-->
 		
 <!--		<Node name="visual">
 			<VisualStyle displayFlags="hideCollisionModels hideForceFields hideMappings hideBehaviorModels showVisualModels hideWireframe" />			
@@ -207,7 +209,7 @@
 		
 	</Node>	
 	
-	<Node name="visual" activated="0">
+	<Node name="visual" activated="1">
 		<VisualStyle displayFlags="hideCollisionModels hideForceFields hideMappings hideBehaviorModels showVisualModels showWireframe" />
 		<MeshObjLoader name="loader" filename="Data_Pig210213/Flank_LiverT_SmDec.obj" scale3d="0.001 0.001 0.001" translation="-0.0123639   0.0268951  -0.0295875"/>
 		<Mesh src="@./loader" name="surface" />

@@ -16,6 +16,7 @@
 
 <Node name="root" dt="0.01" gravity="0 0 0">
 	<VisualStyle displayFlags="showVisual hideForceFields hideCollisionModels" />
+	<RequiredPlugin pluginName="shells"/>
 
         <FreeMotionAnimationLoop />
 	<GenericConstraintSolver tolerance="1e-8" printLog="false"/>
@@ -49,8 +50,8 @@
         </Node>
 
         <Node name="TubeMesh">
-            <MeshObjLoader name="loader" filename="tube.obj"
-                scale3d="0.01 0.01 0.01" translation="0 0.0206 0" />
+            <MeshObjLoader name="loader" filename="tube.obj" scale3d="0.01 0.01 0.01" translation="0 0.0206 0" />
+<!-- 	    <MeshSTLLoader name="loader" filename="tubeHalf.stl" scale3d="0.01 0.01 0.01" translation="0 0.0206 0" /> -->
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="TubeMO" />
         </Node>
@@ -107,7 +108,7 @@
 
                 <Node name="Tri">
                     <TriangleSetTopologyContainer name="topoTri" triangles="@../top.trianglesInROI" />
-                    <CstFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="20e-6" corotated="true" />
+<!-- 		    <CstFEMForceField name="FEM" youngModulus="8e6" poissonRatio="0.45" thickness="20e-6" corotated="true" /> -->
 
                     <SphereROI name="sphere" centers="0 0.015 0" radii="0.005" drawSphere="true" />
                     <SurfacePressureForceField name="SP"
@@ -142,12 +143,12 @@
         </Node>
 
         <Node name="TubeRender">
-            <MeshObjLoader name="loader" filename="tube.obj"
-                scale3d="0.01 0.01 0.01" translation="0 0.0201 0" />
+<!--             <MeshObjLoader name="loader" filename="tube.obj" scale3d="0.01 0.01 0.01" translation="0 0.0201 0" /> -->
+		<MeshSTLLoader name="loader" filename="tubeHalf.stl" scale3d="0.01 0.01 0.01" translation="0 0.0201 0" />
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="TubeMO" />
             <Node name="Visual">
-                <OglModel color="0.75 0.75 0.75 0.5" alphaBlend="true" />
+                <OglModel color="0.75 0.75 0.75 0.15" alphaBlend="true" />
                 <IdentityMapping input="@.." output="@."/>
             </Node>
         </Node>
