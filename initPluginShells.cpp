@@ -80,17 +80,17 @@ namespace component
 	{
 		std::string componentlist;
 		
-		componentlist += " TriangularBendingFEMForceField";
-		componentlist += " BendingPlateMechanicalMapping";
-		componentlist += " BezierTriangularBendingFEMForceField";
-		componentlist += " BezierTriangleMechanicalMapping";
-		componentlist += " TriangularShellForceField";
+        //componentlist += " TriangularBendingFEMForceField";
+        //componentlist += " BendingPlateMechanicalMapping";
+        //componentlist += " BezierTriangularBendingFEMForceField";
+        //componentlist += " BezierTriangleMechanicalMapping";
+        //componentlist += " TriangularShellForceField";
 		componentlist += " CstFEMForceField";
 
-		componentlist += " BezierShellForceField";
-		componentlist += " BezierShellInterpolation";
-		componentlist += " BezierShellInterpolationM";
-		componentlist += " BezierShellMechanicalMapping";
+        //componentlist += " BezierShellForceField";
+        //componentlist += " BezierShellInterpolation";
+        //componentlist += " BezierShellInterpolationM";
+        //componentlist += " BezierShellMechanicalMapping";
 
 		componentlist += " JoinMeshPoints";
 		componentlist += " FindClosePoints";
@@ -114,17 +114,17 @@ namespace component
 }
 
 
-SOFA_LINK_CLASS(TriangularBendingFEMForceField)
-SOFA_LINK_CLASS(BendingPlateMechanicalMapping)
-SOFA_LINK_CLASS(BezierTriangularBendingFEMForceField)
-SOFA_LINK_CLASS(BezierTriangleMechanicalMapping)
-SOFA_LINK_CLASS(TriangularShellForceField)
+//SOFA_LINK_CLASS(TriangularBendingFEMForceField)
+//SOFA_LINK_CLASS(BendingPlateMechanicalMapping)
+//SOFA_LINK_CLASS(BezierTriangularBendingFEMForceField)
+//SOFA_LINK_CLASS(BezierTriangleMechanicalMapping)
+//SOFA_LINK_CLASS(TriangularShellForceField)
 SOFA_LINK_CLASS(CstFEMForceField)
 
-SOFA_LINK_CLASS(BezierShellForceField)
-SOFA_LINK_CLASS(BezierShellInterpolation)
-SOFA_LINK_CLASS(BezierShellInterpolationM)
-SOFA_LINK_CLASS(BezierShellMechanicalMapping)
+//SOFA_LINK_CLASS(BezierShellForceField)
+//SOFA_LINK_CLASS(BezierShellInterpolation)
+//SOFA_LINK_CLASS(BezierShellInterpolationM)
+//SOFA_LINK_CLASS(BezierShellMechanicalMapping)
 
 SOFA_LINK_CLASS(JoinMeshPoints)
 SOFA_LINK_CLASS(FindClosePoints)
