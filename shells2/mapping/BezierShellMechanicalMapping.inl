@@ -29,6 +29,7 @@
 #include <sofa/component/topology/TriangleSetTopologyContainer.h>
 #include <sofa/component/collision/MinProximityIntersection.h>
 #include <sofa/simulation/common/Simulation.h>
+#include <sofa/core/ConstraintParams.h>
 //#include <sofa/helper/system/thread/CTime.h>
 
 #include <sofa/component/forcefield/ConstantForceField.h>
@@ -725,7 +726,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPara
 }
 
 template <class TIn, class TOut>
-void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const ConstraintParams* cparams, Data<InMatrixDeriv>& dOut, const Data<OutMatrixDeriv>& dIn)
+void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const sofa::core::ConstraintParams* cparams, Data<InMatrixDeriv>& dOut, const Data<OutMatrixDeriv>& dIn)
 {
     //std::cout << "---------------- ApplyJT (constraints) --------------" << std::endl;
 

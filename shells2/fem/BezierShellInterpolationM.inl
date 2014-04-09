@@ -87,7 +87,7 @@ void BezierShellInterpolationM<TIn,TOut>::applyOnBTriangle(
     out.resize(projElements.size());
     for (Index i=0; i<projElements.size(); i++)
     {
-        interpolateOnBTriangle(projElements[i], nodes, projN[i], out[i]);
+        this->interpolateOnBTriangle(projElements[i], nodes, projN[i], out[i]);
     }
 }
 
@@ -111,7 +111,7 @@ void BezierShellInterpolationM<TIn,TOut>::applyJOnBTriangle(
     for (Index i=0; i<(Index)this->inputTopology->getNbTriangles(); i++)
     {
         sofa::core::topology::Triangle tri= this->inputTopology->getTriangle(i);
-        const BTri& bTri = getBezierTriangle(i);
+        const BTri& bTri = this->getBezierTriangle(i);
 
         // Velocities in corner nodes
         v[ bTri[0] ] = in[ tri[0] ].getVCenter();
@@ -176,7 +176,7 @@ void BezierShellInterpolationM<TIn,TOut>::applyJOnBTriangle(
     out.resize(projElements.size());
     for (Index i=0; i<projElements.size(); i++)
     {
-        interpolateOnBTriangle(projElements[i], v, projN[i], out[i]);
+        this->interpolateOnBTriangle(projElements[i], v, projN[i], out[i]);
     }
 }
 
@@ -264,7 +264,7 @@ void BezierShellInterpolationM<TIn,TOut>::applyJTCore(
     }
 
     const sofa::core::topology::Triangle &tri = this->inputTopology->getTriangle(triId);
-    const BTri& bTri = getBezierTriangle(triId);
+    const BTri& bTri = this->getBezierTriangle(triId);
 
     Vec3 fn;
 
@@ -329,9 +329,9 @@ void BezierShellInterpolationM<TIn,TOut>::applyJTCore(
         f1 += fn;
         f2 += fn;
         f3 += fn;
-        f1r += cross(R[0]*(getSegment(bTri[3]) + getSegment(bTri[4])), fn);
-        f2r += cross(R[1]*(getSegment(bTri[5]) + getSegment(bTri[6])), fn);
-        f3r += cross(R[2]*(getSegment(bTri[7]) + getSegment(bTri[8])), fn);
+        f1r += cross(R[0]*(this->getSegment(bTri[3]) + this->getSegment(bTri[4])), fn);
+        f2r += cross(R[1]*(this->getSegment(bTri[5]) + this->getSegment(bTri[6])), fn);
+        f3r += cross(R[2]*(this->getSegment(bTri[7]) + this->getSegment(bTri[8])), fn);
     }
 }
 
