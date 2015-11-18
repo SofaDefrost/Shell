@@ -38,7 +38,7 @@
 #include <sofa/component/component.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TopologyData.h>
+#include <TopologyData.h>
 
 
 // Uncomment the following to use quaternions instead of matrices for
@@ -203,6 +203,8 @@ public:
         virtual void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) ;
         virtual void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix);
         ////virtual void handleTopologyChange();
+
+        virtual SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& x) const { return 0; }
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
 

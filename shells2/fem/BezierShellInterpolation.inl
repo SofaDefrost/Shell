@@ -5,7 +5,7 @@
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TopologyData.inl>
+#include <TopologyData.inl>
 //#include <sofa/component/topology/GridTopology.h>
 #include <sofa/helper/decompose.h>
 //#include <sofa/helper/gl/template.h>
@@ -186,7 +186,7 @@ BezierShellInterpolation<DataTypes>::BezierShellInterpolation()
 template <class DataTypes>
 void BezierShellInterpolation<DataTypes>::init()
 {
-    this->getContext()->get(mState, BaseContext::SearchUp);
+    this->getContext()->get(mState, sofa::core::objectmodel::BaseContext::SearchUp);
     if (!mState) {
         serr << "No MechanicalState for the simulation found" << sendl;
         return;

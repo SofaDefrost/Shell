@@ -36,8 +36,8 @@
 #include <vector>
 #include <sofa/defaulttype/Vec3Types.h>
 //#include <assert.h>
-#include <sofa/component/topology/TopologyData.inl>
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
+#include <TopologyData.inl>
+#include <TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
 #include "../controller/MeshChangedEvent.h"
 
@@ -161,7 +161,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
         // Check if there is same number of nodes
         const VecCoord &rx = restShape.get()->f_position.getValue();
         if (!mapTopology) {
-            if (rx.size() != this->mstate->getX0()->size()) {
+            if (rx.size() != this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
                 serr << "Different number of nodes in rest shape and mechanical state!" << sendl;
             }
         } else if (rx.size() != topologyMapper.get()->f_input_position.getValue().size()) {
@@ -203,7 +203,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
         // Check normal count
     if (normals.getValue().size() == 0) {
         serr << "No normals defined, assuming flat triangles" << sendl;
-    } else if (normals.getValue().size() != this->mstate->getX0()->size()) {
+    } else if (normals.getValue().size() != this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
         serr << "Normals count doesn't correspond with nodes count" << sendl;
         return;
     }
@@ -283,7 +283,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
             // if rest shape is fixed but we have mapped topology use it
             ? topologyMapper.get()->f_input_position.getValue()
             // otherwise just take rest shape in mechanical state
-            : *this->mstate->getX0()
+            : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
           );
 
     const helper::vector<Vec3>& norms = (restShape.get() != NULL)
@@ -1634,7 +1634,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
     {
 
         // Gets vertices of rest and initial positions respectively
-        const VecCoord& x0 = *this->mstate->getX0();
+        const VecCoord& x0 = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
 
 
         helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());

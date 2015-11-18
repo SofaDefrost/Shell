@@ -5,7 +5,7 @@
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TopologyData.inl>
+#include <TopologyData.inl>
 //#include <sofa/component/topology/GridTopology.h>
 #include <sofa/helper/decompose.h>
 //#include <sofa/helper/gl/template.h>
@@ -82,7 +82,7 @@ void BezierShellInterpolationM<TIn,TOut>::applyOnBTriangle(
         return;
     }
 
-    const VecVec3d& nodes = *this->mStateNodes->getX();
+    const VecVec3d& nodes = this->mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     out.resize(projElements.size());
     for (Index i=0; i<projElements.size(); i++)

@@ -36,8 +36,8 @@
 #include <vector>
 #include <sofa/defaulttype/Vec3Types.h>
 //#include <assert.h>
-#include <sofa/component/topology/TopologyData.inl>
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
+#include <TopologyData.inl>
+#include <TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
 
 #include <sofa/defaulttype/SolidTypes.h>
@@ -225,7 +225,7 @@ template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
         // Check if there is same number of nodes
         const VecCoord &rx = restShape.get()->f_position.getValue();
         if (!mapTopology) {
-            if (rx.size() != this->mstate->getX0()->size()) {
+            if (rx.size() != this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
                 serr << "Different number of nodes in rest shape and mechanical state!" << sendl;
             }
         } else if (rx.size() != topologyMapper.get()->f_input_position.getValue().size()) {
@@ -315,7 +315,7 @@ void BezierShellForceField<DataTypes>::initTriangle(const int i)
             // if rest shape is fixed but we have mapped topology use it
             ? topologyMapper.get()->f_input_position.getValue()
             // otherwise just take rest shape in mechanical state
-            : *this->mstate->getX0()
+            : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
           );
 
     // Compute the initial position and rotation of the reference frame

@@ -26,13 +26,13 @@
 #define SOFA_COMPONENT_MAPPING_BEZIERSHELLMECHANICALMAPPING_INL
 
 #include "BezierShellMechanicalMapping.h"
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
-#include <sofa/component/collision/MinProximityIntersection.h>
+#include <TriangleSetTopologyContainer.h>
+#include <MinProximityIntersection.h>
 #include <sofa/simulation/common/Simulation.h>
 #include <sofa/core/ConstraintParams.h>
 //#include <sofa/helper/system/thread/CTime.h>
 
-#include <sofa/component/forcefield/ConstantForceField.h>
+#include <ConstantForceField.h>
 
 #include "../forcefield/BezierShellForceField.h"
 #include "../../misc/PointProjection.h"
@@ -90,13 +90,13 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
         return;
     }
 
-    const OutVecCoord &outVertices = *this->toModel->getX();
+    const OutVecCoord &outVertices = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     barycentricCoordinates.clear();
     barycentricCoordinates.resize(outVertices.size());
 
     // Retrieves 'in' vertices and triangles
-    const InVecCoord &inVerticesRigid = *this->fromModel->getX();
+    const InVecCoord &inVerticesRigid = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
     OutVecCoord inVertices;
@@ -330,11 +330,11 @@ typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapp
 {
     // Mesh 1
     MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
-    const OutVecCoord &vertices1 = *mState1->getX();
+    const OutVecCoord &vertices1 = mState1->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     // Mesh 2
     MechanicalState<Out>* mState2 = dynamic_cast<MechanicalState<Out>*> (topo2->getContext()->getMechanicalState());
-    const OutVecCoord &vertices2 = *mState2->getX();
+    const OutVecCoord &vertices2 = mState2->read(sofa::core::ConstVecCoordId::position())->getValue();
     const SeqEdges edges2 = topo2->getEdges();
     const SeqTriangles triangles2 = topo2->getTriangles();
 

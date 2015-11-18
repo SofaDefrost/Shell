@@ -10,15 +10,15 @@
 
 #include "../../initPluginShells.h"
 #include <sofa/core/behavior/MechanicalState.h>
-#include <sofa/component/container/MechanicalObject.h>
-#include <sofa/component/topology/Mesh2PointTopologicalMapping.h>
+#include <MechanicalObject.h>
+#include <Mesh2PointTopologicalMapping.h>
 //#include <sofa/core/behavior/Mass.h>
 //#include <sofa/core/objectmodel/Data.h>
 #include <sofa/defaulttype/SolidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TopologyData.h>
+#include <TopologyData.h>
 #include <sofa/simulation/common/AnimateBeginEvent.h>
 
 #include <sofa/helper/vector.h>
@@ -241,7 +241,7 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         void getBezierNodes(ElementID elemID, sofa::helper::fixed_array<Vec3,10>& bn)
         {
             const BTri& btri = getBezierTriangle(elemID);
-            const VecVec3d& x = *mStateNodes->getX();
+            const VecVec3d& x = mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
             for (int i=0; i<10; i++) {
                 bn[i] = x[ btri[i] ];
             }
@@ -267,11 +267,11 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         }
 
         void interpolateOnBTriangle(Index triID, const ShapeFunctions& N, Vec3& point) {
-            interpolateOnBTriangle(triID, *mStateNodes->getX(), N, point);
+            interpolateOnBTriangle(triID, mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue(), N, point);
         }
 
         void interpolateOnBTriangle(Index triID, const Vec3& baryCoord, Vec3& point) {
-            interpolateOnBTriangle(triID, *mStateNodes->getX(), baryCoord, point);
+            interpolateOnBTriangle(triID, mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue(), baryCoord, point);
         }
 
         //
@@ -281,7 +281,7 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
             Vec3& point, Vec3& normal, Vec3& t0, Vec3 &t1);
         void interpolateOnBTriangle(Index triID, const Vec3& baryCoord,
             Vec3& point, Vec3& normal, Vec3& t0, Vec3 &t1) {
-            interpolateOnBTriangle(triID, *mStateNodes->getX(), baryCoord,
+            interpolateOnBTriangle(triID, mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue(), baryCoord,
                 point, normal, t0, t1);
         }
 

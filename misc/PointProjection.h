@@ -5,7 +5,7 @@
 #ifndef POINTPROJECTION_H
 #define POINTPROJECTION_H
 
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
+#include <TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Vec.h>

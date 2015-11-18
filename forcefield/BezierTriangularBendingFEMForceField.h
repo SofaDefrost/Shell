@@ -37,7 +37,7 @@
 #include <sofa/component/component.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TopologyData.h>
+#include <TopologyData.h>
 
 #include "../controller/MeshInterpolator.h"
 #include "../engine/JoinMeshPoints.h"
@@ -229,6 +229,8 @@ public:
         virtual void addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/);
         //virtual double getPotentialEnergy(const VecCoord& x) const;
         virtual void handleTopologyChange();
+
+        virtual SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& x) const { return 0; }
 
         virtual void draw(const core::visual::VisualParams* vparams);
 

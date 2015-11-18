@@ -27,7 +27,7 @@
 
 #include "TriangularShellForceField.h"
 #include <sofa/core/behavior/ForceField.inl>
-#include <sofa/component/topology/TopologyData.inl>
+#include <TopologyData.inl>
 #include <sofa/helper/gl/template.h>
 #include <sofa/helper/rmath.h>
 #include <sofa/helper/system/gl.h>
@@ -393,7 +393,7 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     tinfo->measure[2].id = c; tinfo->measure[2].point = Vec3(0,1,0);
 
     // Gets vertices of rest positions
-    const VecCoord& x0 = *this->mstate->getX0();
+    const VecCoord& x0 = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     // Rotation from global to local frame
     Transformation R0;

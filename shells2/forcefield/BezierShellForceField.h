@@ -32,7 +32,7 @@
 #include <sofa/component/component.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TopologyData.h>
+#include <TopologyData.h>
 
 #include <sofa/helper/OptionsGroup.h>
 
@@ -243,6 +243,8 @@ public:
         virtual void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) ;
         virtual void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix);
         virtual void handleTopologyChange();
+
+        virtual SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& x) const { return 0; }
 
         virtual void draw(const core::visual::VisualParams* vparams);
 

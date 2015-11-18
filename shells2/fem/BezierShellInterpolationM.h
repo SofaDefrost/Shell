@@ -12,15 +12,15 @@
 #include "BezierShellInterpolation.h"
 
 #include <sofa/core/behavior/MechanicalState.h>
-#include <sofa/component/container/MechanicalObject.h>
-#include <sofa/component/topology/Mesh2PointTopologicalMapping.h>
+#include <MechanicalObject.h>
+#include <Mesh2PointTopologicalMapping.h>
 //#include <sofa/core/behavior/Mass.h>
 //#include <sofa/core/objectmodel/Data.h>
 #include <sofa/defaulttype/SolidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/topology/TopologyData.h>
+#include <TopologyData.h>
 #include <sofa/simulation/common/AnimateBeginEvent.h>
 
 #include <sofa/helper/vector.h>

@@ -26,11 +26,11 @@
 #define SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
 
 #include "BezierTriangleMechanicalMapping.h"
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
-#include <sofa/component/collision/MinProximityIntersection.h>
+#include <TriangleSetTopologyContainer.h>
+#include <MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
 
-#include <sofa/component/forcefield/ConstantForceField.h>
+#include <ConstantForceField.h>
 
 namespace sofa
 {
@@ -116,20 +116,20 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
 
         if (normals.getValue().size() == 0) {
             serr << "No normals defined, assuming flat triangles" << sendl;
-        } else if (normals.getValue().size() != this->fromModel->getX0()->size()) {
+        } else if (normals.getValue().size() != this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
             serr << "Normals count doesn't correspond with nodes count" << sendl;
             return;
         }
     }
 
-    const OutVecCoord &outVertices = *this->toModel->getX();
+    const OutVecCoord &outVertices = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     barycentricCoordinates.clear();
     barycentricCoordinates.resize(outVertices.size());
 
     // Retrieves 'in' vertices and triangles
-    const InVecCoord &inVerticesRigid = *this->fromModel->getX();
-    const InVecCoord &inVerticesRigid0 = *this->fromModel->getX0();
+    const InVecCoord &inVerticesRigid = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const InVecCoord &inVerticesRigid0 = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
     OutVecCoord inVertices;
@@ -444,11 +444,11 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
 {
     // Mesh 1
     MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
-    const OutVecCoord &vertices1 = *mState1->getX();
+    const OutVecCoord &vertices1 = mState1->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     // Mesh 2
     MechanicalState<Out>* mState2 = dynamic_cast<MechanicalState<Out>*> (topo2->getContext()->getMechanicalState());
-    const OutVecCoord &vertices2 = *mState2->getX();
+    const OutVecCoord &vertices2 = mState2->read(sofa::core::ConstVecCoordId::position())->getValue();
     const SeqEdges edges2 = topo2->getEdges();
     const SeqTriangles triangles2 = topo2->getTriangles();
 
@@ -850,7 +850,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
     // List of in triangles
     const SeqTriangles& inTriangles = inputTopo->getTriangles();
     //const helper::vector<Rigid>& inVertices = *this->fromModel->getX();
-    const InVecCoord& inVertices = *this->fromModel->getX();
+    const InVecCoord& inVertices = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     // Compute nodes of the Bézier triangle for each input triangle
     for (unsigned int t=0; t<inTriangles.size();t++)
@@ -1044,8 +1044,8 @@ const BaseMatrix* BezierTriangleMechanicalMapping<TIn, TOut>::getJ(const core::M
             return NULL;
         }
 
-        const OutVecCoord& out = *this->toModel->getX();
-        const InVecCoord& in = *this->fromModel->getX();
+        const OutVecCoord& out = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const InVecCoord& in = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
         // Initialize the matrix
         if (matrixJ.get() == 0 ||
@@ -1064,7 +1064,7 @@ const BaseMatrix* BezierTriangleMechanicalMapping<TIn, TOut>::getJ(const core::M
         Mat33 I(Vec3(1, 0, 0), Vec3(0, 1, 0), Vec3(0, 0, 1));
 
         const SeqTriangles& inTriangles = inputTopo->getTriangles();
-        const InVecCoord& inVertices = *this->fromModel->getX();
+        const InVecCoord& inVertices = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
         // Go through all input triangles
         for (unsigned int t=0; t<inTriangles.size();t++)
@@ -1185,7 +1185,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
 
     // List of in triangles
     const SeqTriangles& inTriangles = inputTopo->getTriangles();
-    const InVecCoord& inVertices = *this->fromModel->getX();
+    const InVecCoord& inVertices = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     // Compute nodes of the Bézier triangle for each input triangle
     for (unsigned int t=0; t<inTriangles.size();t++)
@@ -1351,7 +1351,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw(const core::visual::Visual
         return;
     }
 
-    const OutVecCoord &outVertices = *this->toModel->getX();
+    const OutVecCoord &outVertices = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     if(vparams->displayFlags().getShowVisualModels())
     {

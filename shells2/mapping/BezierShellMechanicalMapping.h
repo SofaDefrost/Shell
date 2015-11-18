@@ -36,8 +36,8 @@
 
 #include <sofa/helper/gl/GLSLShader.h>
 
-#include <sofa/component/linearsolver/CompressedRowSparseMatrix.h>
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
+#include <CompressedRowSparseMatrix.h>
+#include <TriangleSetTopologyContainer.h>
 #include <sofa/simulation/common/AnimateBeginEvent.h>
 
 #include <sofa/defaulttype/VecTypes.h>

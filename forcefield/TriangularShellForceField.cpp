@@ -27,7 +27,7 @@
 #include "TriangularShellForceField.inl"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/RigidTypes.h>
-#include <sofa/component/container/MechanicalObject.h>
+#include <MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
 
 
