@@ -5,7 +5,7 @@
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <TopologyData.inl>
+#include <SofaBaseTopology/TopologyData.inl>
 //#include <sofa/component/topology/GridTopology.h>
 #include <sofa/helper/decompose.h>
 //#include <sofa/helper/gl/template.h>
@@ -69,7 +69,7 @@ void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1
 
     helper::vector<Index> tris;
 
-    if (src1.second != (int)topology::BaseMeshTopology::InvalidID)
+    if (src1.second != (int)core::topology::BaseMeshTopology::InvalidID)
     {
         switch(src1.first)
         {
@@ -95,7 +95,7 @@ void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1
         }
     }
 
-    if (src2.second != (int)topology::BaseMeshTopology::InvalidID)
+    if (src2.second != (int)core::topology::BaseMeshTopology::InvalidID)
     {
         switch(src2.first)
         {
@@ -143,7 +143,7 @@ void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1
 template<class DataTypes>
 void BezierShellInterpolation<DataTypes>::TriangleInfoHandler::applyCreateFunction(
     unsigned int triIndex, TriangleInformation &tInfo,
-    const topology::Triangle &/*elem*/,
+    const core::topology::BaseMeshTopology::Triangle &/*elem*/,
     const sofa::helper::vector< unsigned int > &/*ancestors*/,
     const sofa::helper::vector< double > &/*coeffs*/)
 {
@@ -220,7 +220,7 @@ void BezierShellInterpolation<DataTypes>::init()
     triInfo.endEdit();
 
     // Verify that the inputs are coherents
-    const vector< vector<int> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
+    const helper::vector< helper::vector<int> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
     if( (int) mapEdge.size() != inputTopology->getNbEdges() )
     {
         serr<<"Problem in Mesh2PointTopologicalMapping:mapEdge.size() != inputTopology->getNbEdges()"<<sendl;
@@ -302,9 +302,9 @@ void BezierShellInterpolation<DataTypes>::initTriangle(Index triIndex,
 
     BTri &btri = tInfo.btri;
 
-    const vector< vector<int> >& mapPoint = bezierM2P->getPointsMappedFromPoint();
-    const vector< vector<int> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
-    const vector< vector<int> >& mapTri = bezierM2P->getPointsMappedFromTriangle();
+    const helper::vector< helper::vector<int> >& mapPoint = bezierM2P->getPointsMappedFromPoint();
+    const helper::vector< helper::vector<int> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
+    const helper::vector< helper::vector<int> >& mapTri = bezierM2P->getPointsMappedFromTriangle();
 
     btri[0] = mapPoint[tri[0]][0];
     btri[1] = mapPoint[tri[1]][0];

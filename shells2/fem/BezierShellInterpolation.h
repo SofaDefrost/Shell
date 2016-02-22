@@ -10,15 +10,15 @@
 
 #include "../../initPluginShells.h"
 #include <sofa/core/behavior/MechanicalState.h>
-#include <MechanicalObject.h>
-#include <Mesh2PointTopologicalMapping.h>
+#include <SofaBaseMechanics/MechanicalObject.h>
+#include <SofaTopologyMapping/Mesh2PointTopologicalMapping.h>
 //#include <sofa/core/behavior/Mass.h>
 //#include <sofa/core/objectmodel/Data.h>
 #include <sofa/defaulttype/SolidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <TopologyData.h>
+#include <SofaBaseTopology/TopologyData.h>
 #include <sofa/simulation/common/AnimateBeginEvent.h>
 
 #include <sofa/helper/vector.h>
@@ -26,6 +26,7 @@
 //#include <sofa/defaulttype/Mat.h>
 
 #include <sofa/core/objectmodel/BaseObject.h>
+
 
 namespace sofa
 {
@@ -88,9 +89,9 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
                 inline friend std::istream& operator>> ( std::istream& in, PointInformation& /*pi*/ ) { return in; }
         };
 
-        class PointInfoHandler : public topology::TopologyDataHandler<topology::Point, sofa::helper::vector<PointInformation> >
+        class PointInfoHandler : public topology::TopologyDataHandler<core::topology::BaseMeshTopology::Point, sofa::helper::vector<PointInformation> >
         {
-            typedef topology::TopologyDataHandler<topology::Point, sofa::helper::vector<PointInformation> > Inherited;
+            typedef topology::TopologyDataHandler<core::topology::BaseMeshTopology::Point, sofa::helper::vector<PointInformation> > Inherited;
 
             public:
                 PointInfoHandler(BezierShellInterpolation<DataTypes> *_bsi, topology::PointData<sofa::helper::vector<PointInformation> >* _data) : Inherited(_data), bsi(_bsi) {}
@@ -128,9 +129,9 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
                 inline friend std::istream& operator>> ( std::istream& in, TriangleInformation& /*ti*/ ) { return in; }
         };
 
-        class TriangleInfoHandler : public topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> >
+        class TriangleInfoHandler : public topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::helper::vector<TriangleInformation> >
         {
-            typedef topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
+            typedef topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
 
             public:
                 TriangleInfoHandler(BezierShellInterpolation<DataTypes> *_bsi, topology::TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : Inherited(_data), bsi(_bsi) {}
@@ -142,14 +143,14 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
                     const sofa::helper::vector< double > &coeffs)
                 {
                     applyCreateFunction(triIndex, tInfo,
-                    topology::Triangle(topology::BaseMeshTopology::InvalidID, topology::BaseMeshTopology::InvalidID, topology::BaseMeshTopology::InvalidID),
+                    core::topology::BaseMeshTopology::Triangle(core::topology::BaseMeshTopology::InvalidID, core::topology::BaseMeshTopology::InvalidID, core::topology::BaseMeshTopology::InvalidID),
                     ancestors, coeffs);
                 }
 
                 void applyCreateFunction(
                     unsigned int triIndex,
                     TriangleInformation &tInfo,
-                    const topology::Triangle &elem,
+                    const core::topology::BaseMeshTopology::Triangle &elem,
                     const sofa::helper::vector< unsigned int > &ancestors,
                     const sofa::helper::vector< double > &coeffs);
 

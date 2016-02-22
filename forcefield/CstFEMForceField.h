@@ -30,7 +30,7 @@
 #include <sofa/core/objectmodel/Data.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <TopologyData.h>
+#include <SofaBaseTopology/TopologyData.h>
 
 
 namespace sofa

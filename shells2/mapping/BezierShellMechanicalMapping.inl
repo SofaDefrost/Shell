@@ -26,13 +26,13 @@
 #define SOFA_COMPONENT_MAPPING_BEZIERSHELLMECHANICALMAPPING_INL
 
 #include "BezierShellMechanicalMapping.h"
-#include <TriangleSetTopologyContainer.h>
-#include <MinProximityIntersection.h>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <SofaBaseCollision/MinProximityIntersection.h>
 #include <sofa/simulation/common/Simulation.h>
 #include <sofa/core/ConstraintParams.h>
 //#include <sofa/helper/system/thread/CTime.h>
 
-#include <ConstantForceField.h>
+#include <SofaBoundaryCondition/ConstantForceField.h>
 
 #include "../forcefield/BezierShellForceField.h"
 #include "../../misc/PointProjection.h"

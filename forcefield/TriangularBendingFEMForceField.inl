@@ -39,8 +39,8 @@
 #include <assert.h>
 #include <map>
 #include <utility>
-#include <TopologyData.inl>
-#include <TriangleSetTopologyContainer.h>
+#include <SofaBaseTopology/TopologyData.inl>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/simulation/common/AnimateEndEvent.h>

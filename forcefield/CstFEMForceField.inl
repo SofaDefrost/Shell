@@ -27,7 +27,7 @@
 
 #include "CstFEMForceField.h"
 //#include <sofa/core/behavior/ForceField.inl>
-#include <TopologyData.inl>
+#include <SofaBaseTopology/TopologyData.inl>
 #include <sofa/helper/rmath.h>
 #include <sofa/defaulttype/Vec3Types.h>
 #include <sofa/simulation/common/AnimateBeginEvent.h>

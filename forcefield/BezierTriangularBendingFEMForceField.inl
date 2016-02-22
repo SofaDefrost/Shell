@@ -36,8 +36,8 @@
 #include <vector>
 #include <sofa/defaulttype/Vec3Types.h>
 //#include <assert.h>
-#include <TopologyData.inl>
-#include <TriangleSetTopologyContainer.h>
+#include <SofaBaseTopology/TopologyData.inl>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
 #include "../controller/MeshChangedEvent.h"
 

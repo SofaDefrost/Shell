@@ -35,10 +35,10 @@
 #include <sofa/core/objectmodel/Data.h>
 #include <sofa/helper/OptionsGroup.h>
 
-#include <sofa/component/component.h>
+//#include <sofa/component/component.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <TopologyData.h>
+#include <SofaBaseTopology/TopologyData.h>
 
 
 // Uncomment the following to use quaternions instead of matrices for

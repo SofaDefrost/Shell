@@ -26,11 +26,11 @@
 #define SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
 
 #include "BendingPlateMechanicalMapping.h"
-#include <TriangleSetTopologyContainer.h>
-#include <MinProximityIntersection.h>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <SofaBaseCollision/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
 
-#include <ConstantForceField.h>
+#include <SofaBoundaryCondition/ConstantForceField.h>
 
 namespace sofa
 {
@@ -110,7 +110,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
                 case 1 :
                     for (unsigned int j=0; j<listClosestVertices.size(); j++)
                     {
-                        TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex( listClosestVertices[j] );
+                        BaseMeshTopology::TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex( listClosestVertices[j] );
                         for (unsigned int t=0; t<trianglesAroundVertex.size(); t++)
                         {
                             triangleID = trianglesAroundVertex[t];
@@ -144,7 +144,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
                 case 2 :
                     for (unsigned int j=0; j<listClosestEdges.size(); j++)
                     {
-                        TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge( listClosestEdges[j] );
+                        BaseMeshTopology::TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge( listClosestEdges[j] );
                         for (unsigned int t=0; t<trianglesAroundEdge.size(); t++)
                         {
                             triangleID = trianglesAroundEdge[t];

@@ -26,7 +26,7 @@
 #include "TriangularBendingFEMForceField.inl"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/RigidTypes.h>
-#include <MechanicalObject.h>
+#include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
 #include "../initPluginShells.h"
 

@@ -29,10 +29,10 @@
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/objectmodel/Data.h>
 
-#include <sofa/component/component.h>
+//#include <sofa/component/component.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <TopologyData.h>
+#include <SofaBaseTopology/TopologyData.h>
 
 #include <sofa/helper/OptionsGroup.h>
 
@@ -217,9 +217,9 @@ public:
                 }
         };
 
-        class TriangleHandler : public topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> >
+        class TriangleHandler : public topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::helper::vector<TriangleInformation> >
         {
-            typedef topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
+            typedef TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
             public:
                 TriangleHandler(BezierShellForceField<DataTypes>* _ff, TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : Inherited(_data), ff(_ff) {}
 

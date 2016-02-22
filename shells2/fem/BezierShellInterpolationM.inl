@@ -5,7 +5,7 @@
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <TopologyData.inl>
+#include <SofaBaseTopology/TopologyData.inl>
 //#include <sofa/component/topology/GridTopology.h>
 #include <sofa/helper/decompose.h>
 //#include <sofa/helper/gl/template.h>

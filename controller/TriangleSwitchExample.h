@@ -1,15 +1,15 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_H
 #define SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_H
 
-#include <sofa/component/component.h>
-#include <Controller.h>
+//#include <sofa/component/component.h>
+#include <SofaUserInteraction/Controller.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Vec.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
-#include <TriangleSetTopologyContainer.h>
-#include <TriangleSetTopologyModifier.h>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <SofaBaseTopology/TriangleSetTopologyModifier.h>
 
 namespace sofa
 {

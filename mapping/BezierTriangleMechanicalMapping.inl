@@ -26,11 +26,11 @@
 #define SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
 
 #include "BezierTriangleMechanicalMapping.h"
-#include <TriangleSetTopologyContainer.h>
-#include <MinProximityIntersection.h>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <SofaBaseCollision/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
 
-#include <ConstantForceField.h>
+#include <SofaBoundaryCondition/ConstantForceField.h>
 
 namespace sofa
 {
@@ -205,7 +205,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         if (which == 0)
         {
             // If it is a vertex, consider one of the triangles attached to it
-            TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex(closestVertex);
+            BaseMeshTopology::TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex(closestVertex);
             if (trianglesAroundVertex.size() <= 0)
             {
                 serr << "No triangles attached to vertex " << closestVertex << sendl;
@@ -230,7 +230,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         if (which == 1)
         {
             // If it is an edge, consider one of the triangles attached to it
-            TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge(closestEdge);
+            BaseMeshTopology::TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge(closestEdge);
             if (trianglesAroundEdge.size() <= 0)
             {
                 serr << "No triangles attached to edge " << closestEdge << sendl;

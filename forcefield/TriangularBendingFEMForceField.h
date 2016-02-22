@@ -34,10 +34,10 @@
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/objectmodel/Data.h>
 
-#include <sofa/component/component.h>
+//#include <sofa/component/component.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <TopologyData.h>
+#include <SofaBaseTopology/TopologyData.h>
 
 #include "../controller/MeshInterpolator.h"
 #include "../engine/JoinMeshPoints.h"

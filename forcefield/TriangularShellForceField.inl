@@ -27,7 +27,7 @@
 
 #include "TriangularShellForceField.h"
 #include <sofa/core/behavior/ForceField.inl>
-#include <TopologyData.inl>
+#include <SofaBaseTopology/TopologyData.inl>
 #include <sofa/helper/gl/template.h>
 #include <sofa/helper/rmath.h>
 #include <sofa/helper/system/gl.h>

@@ -27,7 +27,7 @@
 #include "CstFEMForceField.inl"
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/Vec.h>
-#include <MechanicalObject.h>
+#include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
 
 

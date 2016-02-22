@@ -36,7 +36,7 @@
 
 #include <sofa/helper/gl/GLSLShader.h>
 
-#include <TriangleSetTopologyContainer.h>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
 #include "../forcefield/TriangularBendingFEMForceField.h"
 //#include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>

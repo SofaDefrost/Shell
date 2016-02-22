@@ -1,9 +1,12 @@
-#include(${SOFA_CMAKE_DIR}/preProject.cmake)
-project("sofa-shells")
+cmake_minimum_required(VERSION 2.8)
+project(SofaShells)
 
 set(SOFASHELLS_MAJOR_VERSION 1)
 set(SOFASHELLS_MINOR_VERSION 0)
 set(SOFASHELLS_VERSION ${SOFASHELLS_MAJOR_VERSION}.${SOFASHELLS_MINOR_VERSION})
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+
 
 set(HEADER_FILES
 
@@ -44,7 +47,8 @@ set(HEADER_FILES
 set(SOURCE_FILES
 
 		initPluginShells.cpp 
-		controller/MeshInterpolator.cpp 
+                controller/MeshChangedEvent.cpp
+                controller/MeshInterpolator.cpp
 		controller/TriangleSwitchExample.cpp 
 		engine/JoinMeshPoints.cpp 
 		engine/FindClosePoints.cpp 
@@ -108,8 +112,7 @@ endif()
 #include_directories("${SOFA_APPLICATIONS_PLUGINS_DIR}")
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
-#AddCompilerDefinitions("SOFA_BUILD_SHELLS")
-#AddLinkerDependencies(SofaComponentBase SofaHelper SofaBaseTopology SofaUserInteraction)
+
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_SOFASHELLS")
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 
@@ -123,7 +126,6 @@ target_link_libraries(${PROJECT_NAME} SofaComponentBase SofaHelper SofaBaseTopol
 
 sofa_create_package(sofa-shells ${SOFASHELLS_VERSION} ${PROJECT_NAME} sofa-shells)
 
-#include(${SOFA_CMAKE_DIR}/postProject.cmake)
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 SET_PROPERTY(TARGET ${PROJECT_NAME}	PROPERTY FOLDER "plugins")
 

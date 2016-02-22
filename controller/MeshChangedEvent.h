@@ -22,6 +22,8 @@ class MeshChangedEvent : public sofa::core::objectmodel::Event
 {
 public:
 
+    SOFA_EVENT_H( MeshChangedEvent )
+
     MeshChangedEvent(double _alpha) : alpha(_alpha)
     {}
 
