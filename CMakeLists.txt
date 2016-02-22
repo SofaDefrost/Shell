@@ -1,4 +1,9 @@
-include(${SOFA_CMAKE_DIR}/preProject.cmake)
+#include(${SOFA_CMAKE_DIR}/preProject.cmake)
+project("sofa-shells")
+
+set(SOFASHELLS_MAJOR_VERSION 1)
+set(SOFASHELLS_MINOR_VERSION 0)
+set(SOFASHELLS_VERSION ${SOFASHELLS_MAJOR_VERSION}.${SOFASHELLS_MINOR_VERSION})
 
 set(HEADER_FILES
 
@@ -99,13 +104,27 @@ endif()
 # 
 # endif()
 
-include_directories("${SOFA_EXTLIBS_DIR}")
-include_directories("${SOFA_APPLICATIONS_PLUGINS_DIR}")
+#include_directories("${SOFA_EXTLIBS_DIR}")
+#include_directories("${SOFA_APPLICATIONS_PLUGINS_DIR}")
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
+#AddCompilerDefinitions("SOFA_BUILD_SHELLS")
+#AddLinkerDependencies(SofaComponentBase SofaHelper SofaBaseTopology SofaUserInteraction)
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_SOFASHELLS")
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 
-AddCompilerDefinitions("SOFA_BUILD_SHELLS")
-AddLinkerDependencies(SofaComponentBase SofaHelper SofaBaseTopology SofaUserInteraction)
+target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>")
+target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>")
+target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include>")
+
+find_package(SofaFramework REQUIRED)
+
+target_link_libraries(${PROJECT_NAME} SofaComponentBase SofaHelper SofaBaseTopology SofaUserInteraction)
+
+sofa_create_package(sofa-shells ${SOFASHELLS_VERSION} ${PROJECT_NAME} sofa-shells)
+
+#include(${SOFA_CMAKE_DIR}/postProject.cmake)
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+SET_PROPERTY(TARGET ${PROJECT_NAME}	PROPERTY FOLDER "plugins")
 
 
-include(${SOFA_CMAKE_DIR}/postProject.cmake)
