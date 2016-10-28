@@ -43,7 +43,7 @@
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
 #include <sofa/core/visual/VisualParams.h>
-#include <sofa/simulation/common/AnimateEndEvent.h>
+#include <sofa/simulation/AnimateEndEvent.h>
 
 #include "../controller/MeshChangedEvent.h"
 
@@ -379,7 +379,8 @@ void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const V
         Real distance = (G-point).norm2();
 
         // Stores distances (automatically sorted)
-        closestTrianglesData.insert( std::make_pair<Real,Vec3>(distance,G));
+        std::make_pair<Real,Vec3 >(1.0,Vec3());
+        closestTrianglesData.insert( std::make_pair(distance,G));
     }
 
     // Returns the 3 closest points

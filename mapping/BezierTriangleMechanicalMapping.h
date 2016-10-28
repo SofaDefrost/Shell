@@ -39,7 +39,7 @@
 #include <SofaBaseLinearSolver/CompressedRowSparseMatrix.h>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 //#include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
-#include <sofa/simulation/common/AnimateBeginEvent.h>
+#include <sofa/simulation/AnimateBeginEvent.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 

@@ -28,7 +28,7 @@
 #include "BezierShellMechanicalMapping.h"
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <SofaBaseCollision/MinProximityIntersection.h>
-#include <sofa/simulation/common/Simulation.h>
+#include <sofa/simulation/Simulation.h>
 #include <sofa/core/ConstraintParams.h>
 //#include <sofa/helper/system/thread/CTime.h>
 

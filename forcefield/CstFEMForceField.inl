@@ -30,7 +30,7 @@
 #include <SofaBaseTopology/TopologyData.inl>
 #include <sofa/helper/rmath.h>
 #include <sofa/defaulttype/Vec3Types.h>
-#include <sofa/simulation/common/AnimateBeginEvent.h>
+#include <sofa/simulation/AnimateBeginEvent.h>
 
 #ifdef _WIN32
 #include <windows.h>
