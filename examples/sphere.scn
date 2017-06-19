@@ -53,7 +53,7 @@
         <TriangularBendingFEMForceField name="FEM" bending="true"
         <TriangularShellForceField name="FEM"
         -->
-        <BezierTriangularBendingFEMForceField name="FEM" normals="@/Mesh/mesh.normalsList"
+        <BezierTriangularBendingFEMForceField name="FEM" normals="@/Mesh/mesh.normals"
             youngModulus="1.092e6" poissonRatio="0.33" thickness="0.1"/>
 
         <!--
@@ -87,8 +87,8 @@
             <!--
             <BendingPlateMechanicalMapping input="@.." output="@." />
             -->
-            <BezierTriangleMechanicalMapping input="@.." output="@." normals="@/Mesh/mesh.normalsList"
-                checkJacobian="false" printLog="true" />
+            <BezierTriangleMechanicalMapping input="@.." output="@." normals="@/Mesh/mesh.normals"
+                printLog="true" />
             <!--<TriangleSetGeometryAlgorithms name="GeomAlgo" template="Vec3d" drawEdges="1" drawColorEdges="1 0.2 0.2" />-->
             <Node>
                 <OglModel name="Visual" color="red"/>
