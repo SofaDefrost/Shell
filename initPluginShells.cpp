@@ -63,7 +63,7 @@ namespace component
 
 	const char* getModuleName()
 	{
-		return "Plugin SHELLS";
+        return "SofaShells";
 	}
 
 	const char* getModuleVersion()
