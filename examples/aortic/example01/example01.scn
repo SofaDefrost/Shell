@@ -5,7 +5,7 @@
     <!-- This example show how to use JoinMeshPoints if you have two starting meshes and no node map -->
 
     <!-- Original mesh -->
-    <Node name="splitMesh">
+    <Node name="splitMesh" activated="0">
         <VisualStyle displayFlags="showWireframe" />
         <MeshObjLoader name="loader" filename="splitMesh.obj" />
         <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
@@ -65,7 +65,8 @@
             <BoxROI name="Side2" box="2.75 -1.1 -1.1  2.76 1.1 1.1" drawSize="0"/>
             <FixedConstraint indices="@Side2.indices" />
 
-            <TriangularBendingFEMForceField
+            
+            <!--<TriangularBendingFEMForceField
                 bending="true"
                 poissonRatio="0.5"
                 thickness="0.1"
@@ -73,7 +74,8 @@
 
                 restShape="@../interp"
                 topologyMapper="@/joinedMesh/join"
-                />
+            />-->
+            <TriangularShellForceField poissonRatio="0.5"   thickness="0.1" youngModulus="10000" />
 
             <Node>
                 <OglModel name="visual" color="1 0.5 0.5" />
