@@ -970,8 +970,71 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPar
 
 
 template <class TIn, class TOut>
-void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/)
+void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& dOut, const Data<OutMatrixDeriv>& dIn)
 {
+
+    // TODO : Unique verification and put the component in "dead mode" if there is missing inoformation
+
+    if (!inputTopo || !outputTopo)
+    {
+        serr << "BendingPlateMechanicalMapping applyJT() was called before init()" << sendl;
+        return;
+    }
+    if (inputTopo->getNbTriangles() <= 0)
+    {
+        serr << "BendingPlateMechanicalMapping applyJT() requires an input triangular topology" << sendl;
+        return;
+    }
+
+    if (!triangularBendingForcefield)
+    {
+        serr << "No TriangularBendingForcefield has been found" << sendl;
+        this->getContext()->get(triangularBendingForcefield);
+        return;
+    }
+
+
+    /*
+    helper::WriteAccessor< Data<InVecDeriv> > out = dOut;
+    helper::ReadAccessor< Data<OutVecDeriv> > in = dIn;
+
+    bsInterpolation->applyJTOnBTriangle(projN, projElements,
+        in.ref(), out);
+
+
+    const OutMatrixDeriv& in, InMatrixDeriv &out
+    const InVecCoord& xSim = this->mState->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecVec3d& x = this->mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
+    typename Out::MatrixDeriv::RowConstIterator rowItEnd = in.end();
+
+    for (typename OutMatrixDeriv::RowConstIterator rowIt = in.begin();
+        rowIt != rowItEnd; ++rowIt)
+    {
+        typename OutMatrixDeriv::ColConstIterator colItEnd = rowIt.end();
+        typename OutMatrixDeriv::ColConstIterator colIt = rowIt.begin();
+
+        if (colIt != colItEnd)
+        {
+            typename InMatrixDeriv::RowIterator o = out.writeLine(rowIt.index());
+            for ( ; colIt != colItEnd; ++colIt)
+            {
+                Vec3 f1, f2, f3;    // resulting linear velocities on corner nodes
+                Vec3 f1r, f2r, f3r; // resulting angular velocities
+
+                Index ptId = colIt.index();
+                applyJTCore(xSim, x, projElements[ptId], projN[ptId], colIt.val(),
+                    f1, f2, f3, f1r, f2r, f3r);
+
+                sofa::core::topology::Triangle tri = this->inputTopology->getTriangle(projElements[ptId]);
+                o.addCol(tri[0], InDeriv(f1, f1r));
+                o.addCol(tri[1], InDeriv(f2, f2r));
+                o.addCol(tri[2], InDeriv(f3, f3r));
+            }
+        }
+    }
+
+    */
+
 
 }
 
