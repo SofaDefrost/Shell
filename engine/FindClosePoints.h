@@ -54,7 +54,7 @@ public:
 
     void init();
     void reinit();
-    void update();
+    void doUpdate();
 
     // Data
     Data<Real>      f_input_threshold;

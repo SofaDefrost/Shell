@@ -57,7 +57,7 @@ public:
 
     void init();
     void reinit();
-    void update();
+    void doUpdate();
 
     // TODO: add methods to find out the inverse mappings
 

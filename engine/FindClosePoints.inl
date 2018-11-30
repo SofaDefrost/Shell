@@ -46,9 +46,8 @@ void FindClosePoints<DataTypes>::reinit()
 }
 
 template <class DataTypes>
-void FindClosePoints<DataTypes>::update()
+void FindClosePoints<DataTypes>::doUpdate()
 {
-    cleanDirty();
 
     Real threshold = f_input_threshold.getValue();
     const VecCoord& points = f_input_position.getValue();

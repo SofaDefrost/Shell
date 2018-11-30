@@ -78,9 +78,8 @@ void JoinMeshPoints<DataTypes>::reinit()
 }
 
 template <class DataTypes>
-void JoinMeshPoints<DataTypes>::update()
+void JoinMeshPoints<DataTypes>::doUpdate()
 {
-    cleanDirty();
 
     const helper::vector< helper::fixed_array <Index,2> >& inJP = f_input_joinPoints.getValue();
 	const VecCoord& inPt = f_input_position.getValue();
