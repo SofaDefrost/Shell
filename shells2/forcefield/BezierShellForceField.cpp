@@ -41,28 +41,12 @@ namespace forcefield
 
 using namespace sofa::defaulttype;
 
-
-
-SOFA_DECL_CLASS(BezierShellForceField)
-
-
 // Register in the Factory
 int BezierShellForceFieldClass = core::RegisterObject("Triangular finite elements with bending based on Bézier triangle formulation")
-#ifndef SOFA_FLOAT
-.add< BezierShellForceField<Rigid3dTypes> >()
-#endif
-#ifndef SOFA_DOUBLE
-.add< BezierShellForceField<Rigid3fTypes> >()
-#endif
+.add< BezierShellForceField<Rigid3Types> >()
 ;
 
-#ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API BezierShellForceField<Rigid3dTypes>;
-#endif
-#ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API BezierShellForceField<Rigid3fTypes>;
-#endif
-
+template class SOFA_SHELLS_API BezierShellForceField<Rigid3Types>;
 
 } // namespace forcefield
 

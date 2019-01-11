@@ -42,27 +42,12 @@ namespace forcefield
 
 using namespace sofa::defaulttype;
 
-
-
-SOFA_DECL_CLASS(CstFEMForceField)
-
-
 // Register in the Factory
 int CstFEMForceFieldClass = core::RegisterObject("Constant Strain Triangular membrane element")
-#ifndef SOFA_FLOAT
-.add< CstFEMForceField<Vec3dTypes> >(true)
-#endif
-#ifndef SOFA_DOUBLE
-.add< CstFEMForceField<Vec3fTypes> >()
-#endif
+.add< CstFEMForceField<Vec3Types> >(true)
 ;
 
-#ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API CstFEMForceField<Vec3dTypes>;
-#endif
-#ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API CstFEMForceField<Vec3fTypes>;
-#endif
+template class SOFA_SHELLS_API CstFEMForceField<Vec3Types>;
 
 
 } // namespace forcefield

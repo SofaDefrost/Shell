@@ -67,18 +67,18 @@ public:
 #if defined(WIN32) && !defined(SOFA_COMPONENT_ENGINE_FINDCLOSEPOINTS_CPP)
 #pragma warning(disable : 4231)
 #ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec1dTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec2dTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec3dTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid2dTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid3dTypes>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec1Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec2Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec3Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid2Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid3Types>;
 #endif //SOFA_FLOAT
 #ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec1fTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec2fTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec3fTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid2fTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid3fTypes>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec1Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec2Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec3Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid2Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid3Types>;
 #endif //SOFA_DOUBLE
 
 

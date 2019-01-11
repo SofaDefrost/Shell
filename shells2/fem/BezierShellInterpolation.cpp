@@ -17,24 +17,12 @@ namespace fem
 using namespace sofa::defaulttype;
 
 
-SOFA_DECL_CLASS(BezierShellInterpolation)
-
 // Register in the Factory
 int BezierShellInterpolationClass = core::RegisterObject("Bezier Shell Interpolation")
-#ifndef SOFA_FLOAT
-.add< BezierShellInterpolation<Rigid3dTypes> >()
-#endif
-#ifndef SOFA_DOUBLE
-.add< BezierShellInterpolation<Rigid3fTypes> >()
-#endif
+.add< BezierShellInterpolation<Rigid3Types> >()
 ;
 
-#ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API BezierShellInterpolation<Rigid3dTypes>;
-#endif
-#ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API BezierShellInterpolation<Rigid3fTypes>;
-#endif
+template class SOFA_SHELLS_API BezierShellInterpolation<Rigid3Types>;
 
 } // namespace fem
 

@@ -12,48 +12,21 @@ namespace component
 namespace engine
 {
 
-SOFA_DECL_CLASS(FindClosePoints)
-
 int FindClosePointsClass = core::RegisterObject(
     "Finds points whose distance is smaller than defined threshold")
 
-#ifdef SOFA_FLOAT
-.add< FindClosePoints<defaulttype::Vec3fTypes> >(true) // default template
-#else
-.add< FindClosePoints<defaulttype::Vec3dTypes> >(true) // default template
-# ifndef SOFA_DOUBLE
-.add< FindClosePoints<defaulttype::Vec3fTypes> >()
-# endif
-#endif
-
-#ifndef SOFA_FLOAT
-.add< FindClosePoints<defaulttype::Vec1dTypes> >()
-.add< FindClosePoints<defaulttype::Vec2dTypes> >()
-.add< FindClosePoints<defaulttype::Rigid2dTypes> >()
-.add< FindClosePoints<defaulttype::Rigid3dTypes> >()
-#endif //SOFA_FLOAT
-#ifndef SOFA_DOUBLE
-.add< FindClosePoints<defaulttype::Vec1fTypes> >()
-.add< FindClosePoints<defaulttype::Vec2fTypes> >()
-.add< FindClosePoints<defaulttype::Rigid2fTypes> >()
-.add< FindClosePoints<defaulttype::Rigid3fTypes> >()
-#endif //SOFA_DOUBLE
+.add< FindClosePoints<defaulttype::Vec3Types> >(true) // default template
+.add< FindClosePoints<defaulttype::Vec1Types> >()
+.add< FindClosePoints<defaulttype::Vec2Types> >()
+.add< FindClosePoints<defaulttype::Rigid2Types> >()
+.add< FindClosePoints<defaulttype::Rigid3Types> >()
 ;
 
-#ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec1dTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec2dTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec3dTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid2dTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid3dTypes>;
-#endif //SOFA_FLOAT
-#ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec1fTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec2fTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec3fTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid2fTypes>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid3fTypes>;
-#endif //SOFA_DOUBLE
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec1Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec2Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec3Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid2Types>;
+template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid3Types>;
 
 
 } // namespace constraint

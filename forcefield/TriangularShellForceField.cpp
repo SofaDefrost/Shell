@@ -42,27 +42,12 @@ namespace forcefield
 
 using namespace sofa::defaulttype;
 
-
-
-SOFA_DECL_CLASS(TriangularShellForceField)
-
-
 // Register in the Factory
 int TriangularShellForceFieldClass = core::RegisterObject("Triangular finite elements with bending")
-#ifndef SOFA_FLOAT
-.add< TriangularShellForceField<Rigid3dTypes> >()
-#endif
-#ifndef SOFA_DOUBLE
-.add< TriangularShellForceField<Rigid3fTypes> >()
-#endif
+.add< TriangularShellForceField<Rigid3Types> >()
 ;
 
-#ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API TriangularShellForceField<Rigid3dTypes>;
-#endif
-#ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API TriangularShellForceField<Rigid3fTypes>;
-#endif
+template class SOFA_SHELLS_API TriangularShellForceField<Rigid3Types>;
 
 
 } // namespace forcefield

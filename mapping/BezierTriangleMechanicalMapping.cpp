@@ -42,38 +42,11 @@ using namespace sofa::defaulttype;
 using namespace core;
 using namespace core::behavior;
 
-SOFA_DECL_CLASS(BezierTriangleMechanicalMapping)
-
 int BezierTriangleMechanicalMappingClass = core::RegisterObject("Mechanical mapping between triangular shell and a cloud of points")
-#ifndef SOFA_FLOAT
-.add< BezierTriangleMechanicalMapping< Rigid3dTypes, Vec3dTypes > >()
-#endif
-#ifndef SOFA_DOUBLE
-.add< BezierTriangleMechanicalMapping< Rigid3fTypes, Vec3fTypes > >()
-#endif
-#ifndef SOFA_FLOAT
-#ifndef SOFA_DOUBLE
-.add< BezierTriangleMechanicalMapping< Rigid3dTypes, Vec3fTypes > >()
-.add< BezierTriangleMechanicalMapping< Rigid3fTypes, Vec3dTypes > >()
-#endif
-#endif
+.add< BezierTriangleMechanicalMapping< Rigid3Types, Vec3Types > >()
 ;
 
-
-#ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API BezierTriangleMechanicalMapping< Rigid3dTypes, Vec3dTypes >;
-#endif
-#ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API BezierTriangleMechanicalMapping< Rigid3fTypes, Vec3fTypes >;
-#endif
-
-#ifndef SOFA_FLOAT
-#ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API BezierTriangleMechanicalMapping< Rigid3dTypes, Vec3fTypes >;
-template class SOFA_SHELLS_API BezierTriangleMechanicalMapping< Rigid3fTypes, Vec3dTypes >;
-#endif
-#endif
-
+template class SOFA_SHELLS_API BezierTriangleMechanicalMapping< Rigid3Types, Vec3Types >;
 
 } // namespace mapping
 
