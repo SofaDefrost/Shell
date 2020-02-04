@@ -79,19 +79,8 @@ namespace component
 	const char* getModuleComponentList()
 	{
 		std::string componentlist;
-		
-        //componentlist += " TriangularBendingFEMForceField";
-        //componentlist += " BendingPlateMechanicalMapping";
-        //componentlist += " BezierTriangularBendingFEMForceField";
-        //componentlist += " BezierTriangleMechanicalMapping";
-        //componentlist += " TriangularShellForceField";
+
 		componentlist += " CstFEMForceField";
-
-        //componentlist += " BezierShellForceField";
-        //componentlist += " BezierShellInterpolation";
-        //componentlist += " BezierShellInterpolationM";
-        //componentlist += " BezierShellMechanicalMapping";
-
 		componentlist += " JoinMeshPoints";
 		componentlist += " FindClosePoints";
 		componentlist += " MeshInterpolator";

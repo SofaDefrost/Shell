@@ -1,22 +1,21 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_ADAPTIVECUTTINGCONTROLLER_H
 #define SOFA_COMPONENT_CONTROLLER_ADAPTIVECUTTINGCONTROLLER_H
 
-#include <sofa/component/component.h>
-#include <sofa/component/controller/Controller.h>
+#include <SofaUserInteraction/Controller.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Vec.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/collision/MouseInteractor.h>
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
-#include <sofa/component/topology/TriangleSetTopologyModifier.h>
-#include <sofa/component/topology/TriangleSetTopologyAlgorithms.h>
-#include <sofa/component/topology/TriangleSetGeometryAlgorithms.h>
-#include <sofa/component/topology/TopologyData.h>
+#include <SofaUserInteraction/MouseInteractor.h>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <SofaBaseTopology/TriangleSetTopologyModifier.h>
+#include <SofaBaseTopology/TriangleSetTopologyAlgorithms.h>
+#include <SofaBaseTopology/TriangleSetGeometryAlgorithms.h>
+#include <SofaBaseTopology/TopologyData.h>
 
-#include <sofa/gui/PickHandler.h>
+//#include <sofa/gui/PickHandler.h>
 
 #include <sofa/helper/map.h>
 #include <sofa/helper/vector.h>

@@ -46,20 +46,12 @@
 #include <sofa/core/objectmodel/KeypressedEvent.h>
 #include <sofa/core/visual/VisualParams.h>  
 #include <sofa/helper/rmath.h>
-//#include <sofa/helper/system/thread/debug.h>
 #include <sofa/helper/SimpleTimer.h>
-#include <sofa/component/topology/TopologyData.inl>
+#include <SofaBaseTopology/TopologyData.inl>
 
-//#include <sofa/component/collision/ComponentMouseInteraction.h>
-//#include <sofa/component/collision/PointModel.h>
-//#include <sofa/component/collision/LineModel.h>
-#include <sofa/component/collision/TriangleModel.h>
+#include <SofaMeshCollision/TriangleModel.h>
 
-#include <sofa/gui/GUIManager.h>
-#include <sofa/gui/BaseGUI.h>
-#include <sofa/gui/BaseViewer.h>
-
-#include "misc/PointProjection.h"
+#include "../misc/PointProjection.h"
 
 #include "Test2DAdapter.h"
 
@@ -87,7 +79,7 @@ template<class DataTypes>
 void Test2DAdapter<DataTypes>::PointInfoHandler:: applyCreateFunction(
     unsigned int pointIndex,
     PointInformation &/*pInfo*/,
-    const topology::Point &point,
+    const sofa::core::topology::Point &point,
     const sofa::helper::vector< unsigned int > &ancestors,
     const sofa::helper::vector< double > &coeffs)
 {
@@ -137,7 +129,7 @@ void Test2DAdapter<DataTypes>::PointInfoHandler::swap(unsigned int i1,
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::TriangleInfoHandler::applyCreateFunction(
     unsigned int triangleIndex, TriangleInformation &tInfo,
-    const topology::Triangle& elem,
+    const sofa::core::topology::Triangle& elem,
     const sofa::helper::vector< unsigned int > &/*ancestors*/,
     const sofa::helper::vector< double > &/*coeffs*/)
 {
@@ -379,7 +371,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     //start = timer.getTime();
 
     //mytimer.start("Init");
-    vector<Real> &functionals = *m_functionals.beginEdit();
+    sofa::helper::vector<Real> &functionals = *m_functionals.beginEdit();
 
     functionals.resize(nTriangles);
     m_opt.initValues(functionals, m_container);

@@ -7,12 +7,11 @@
 #include "../initPluginShells.h"
 
 #include <float.h>
-
 #include <sofa/helper/rmath.h>
 
 #include "../misc/PointProjection.h"
-
 #include "AdaptiveCuttingController.h"
+#include <SofaMeshCollision/TriangleModel.h>
 
 #define OTHER(x, a, b) ((x == a) ? b : a)
 
@@ -54,31 +53,31 @@ void AdaptiveCuttingController<DataTypes>::init()
 {
     this->getContext()->get(m_adapter);
     if (m_adapter == NULL) {
-        serr << "Unable to find Test2DAdapter component" << sendl;
+        msg_error() << "Unable to find Test2DAdapter component";
         return;
     }
 
     m_state = dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes>*> (this->getContext()->getMechanicalState());
     if (!m_state) {
-        serr << "Unable to find MechanicalState" << sendl;
+        msg_error() << "Unable to find MechanicalState";
         return;
     }
 
     this->getContext()->get(m_container);
     if (m_container == NULL) {
-        serr << "Unable to find triangular topology" << sendl;
+        msg_error() << "Unable to find triangular topology";
         return;
     }
 
     this->getContext()->get(m_algoGeom);
     if (m_algoGeom == NULL) {
-        serr << "Unable to find TriangleSetGeometryAlgorithms" << sendl;
+        msg_error() << "Unable to find TriangleSetGeometryAlgorithms";
         return;
     }
 
     this->getContext()->get(m_algoTopo);
     if (m_algoTopo == NULL) {
-        serr << "Unable to find TriangleSetTopologyAlgorithms" << sendl;
+        msg_error() << "Unable to find TriangleSetTopologyAlgorithms";
         return;
     }
 
@@ -92,7 +91,7 @@ void AdaptiveCuttingController<DataTypes>::reinit()
     this->f_listening.endEdit();
 
     if (m_affinity.getValue() < 0.0 || m_affinity.getValue() > 1.0) {
-        serr << "Affinity must be between 0 and 1." << sendl;
+        msg_error() << "Affinity must be between 0 and 1.";
         *m_affinity.beginEdit() = 0.7;
         m_affinity.endEdit();
     }
@@ -307,7 +306,7 @@ void AdaptiveCuttingController<DataTypes>::setTrackedPoint(
         }
 
         if (newId == InvalidID) {
-            serr << "Failed to pick a point!" << sendl;
+            msg_error() << "Failed to pick a point!";
         } else {
             switchPoint(picked.point, picked.indexCollisionElement, newId,
                 newCutEdge);
@@ -354,7 +353,7 @@ void AdaptiveCuttingController<DataTypes>::addCuttingPoint()
     if (!m_algoTopo || !m_algoGeom) return;
 
     if (m_pointId == InvalidID) {
-        serr << "BUG! Attempted cutting with no point tracked." << sendl;
+        msg_error() << "BUG! Attempted cutting with no point tracked.";
         return;
     }
 
@@ -384,7 +383,7 @@ void AdaptiveCuttingController<DataTypes>::addCuttingPoint()
         // points quitckly. Another possibility is waiting a few iterations
         // before adding another cut point, but this will only work if the
         // cut point is not last (end of the cut).
-        serr << "Failed to insert cut point! Tracking too slow." << sendl;
+        msg_error() << "Failed to insert cut point! Tracking too slow.";
         return;
     } else if (m_adapter->isPointNormal(m_pointId)) {
         m_adapter->relocatePoint(m_pointId, m_point, m_pointTriId, false);
@@ -394,7 +393,7 @@ void AdaptiveCuttingController<DataTypes>::addCuttingPoint()
         // project the target position onto the boundary nodes. Fixed points,
         // of course, have to be kept intact. Or alternatively we may prevent
         // attachment to fixed nodes completely.
-        serr << "Handling of boundary/fixed nodes is not implemented!" << serr;
+        msg_error() << "Handling of boundary/fixed nodes is not implemented!";
     }
 
 
@@ -407,7 +406,7 @@ void AdaptiveCuttingController<DataTypes>::addCuttingPoint()
     // Get another point in that direction.
     Index tId = m_algoGeom->getTriangleInDirection(m_pointId, dir);
     if (tId == InvalidID) {
-        serr << "BUG! Nothing in cutting direction!" << sendl;
+        msg_error() << "BUG! Nothing in cutting direction!";
         return;
     }
 

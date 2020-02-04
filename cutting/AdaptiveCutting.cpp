@@ -2,11 +2,8 @@
 
 #include <sofa/core/ObjectFactory.h>
 #include <sofa/defaulttype/Vec3Types.h>
-//#include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/helper/Factory.inl>
-#include <sofa/gui/OperationFactory.h>
-
-//#include "AdaptiveCutting.inl"
+#include <sofa/gui/PickHandler.h>
 #include "AdaptiveCutting.h"
 
 namespace sofa
@@ -65,7 +62,7 @@ template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<defaulttype::Vec3dTypes
 namespace gui
 {
 
-int AdaptiveCuttingOperationReg = RegisterOperation("AdaptiveCutting")
+int AdaptiveCuttingOperationReg = sofa::gui::RegisterOperation("AdaptiveCutting")
     .add< AdaptiveCuttingOperation >();
 
 void AdaptiveCuttingOperation::start()
@@ -93,7 +90,7 @@ void AdaptiveCuttingOperation::wait()
 {
     // Update the position in the adaptivity component
     if (!pickHandle) return;
-    BodyPicked *picked = pickHandle->getLastPicked();
+    sofa::component::collision::BodyPicked *picked = pickHandle->getLastPicked();
     if (!picked) return;
 
     CuttingAdapter *ca = getAdapter();
@@ -106,7 +103,7 @@ component::controller::CuttingAdapter* AdaptiveCuttingOperation::getAdapter()
 {
     if (!pickHandle) return NULL;
 
-    BodyPicked *picked = pickHandle->getLastPicked();
+    sofa::component::collision::BodyPicked *picked = pickHandle->getLastPicked();
     if (!picked) return NULL;
 
     component::controller::CuttingAdapter *ca = NULL;

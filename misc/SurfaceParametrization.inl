@@ -6,7 +6,7 @@
 //      metric tensor the topology can become non-conforming.
 
 #include "SurfaceParametrization.h"
-#include "misc/PointProjection.h"
+#include "../misc/PointProjection.h"
 
 #include <sofa/helper/rmath.h>
 
@@ -371,25 +371,28 @@ void SurfaceParametrization<Real>::movePoint(Index p, const Vec2 &newPos,
 
 
 template <class Real>
-void SurfaceParametrization<Real>::draw(const core::visual::VisualParams* /*vparams*/)
+void SurfaceParametrization<Real>::draw(const core::visual::VisualParams* vparams)
 {
     if (m_topology == NULL) return;
 
-    glDisable(GL_LIGHTING);
-    glBegin(GL_LINES);
+    vparams->drawTool()->saveLastState();
+    vparams->drawTool()->disableLighting();
+
+    std::vector< sofa::defaulttype::Vector3 > points;
+    sofa::defaulttype::Vec4f color(1.0, 1.0, 1.0, 1.0);
 
     for (int i=0; i<m_topology->getNbTriangles(); ++i)
     {
         const Triangle &t = m_topology->getTriangle(i);
         for (int j=0; j<3; j++)
         {
-            glColor4f(1.0, 1.0, 1.0, 1.0);
-            glVertex3f(m_points[t[j]][0], m_points[t[j]][1], 1.0f);
-            glVertex3f(m_points[t[(j+1)%3]][0], m_points[t[(j+1)%3]][1], 1.0f);
+            points.push_back(sofa::defaulttype::Vector3(m_points[t[j]][0], m_points[t[j]][1], 1.0f));
+            points.push_back(sofa::defaulttype::Vector3(m_points[t[(j+1)%3]][0], m_points[t[(j+1)%3]][1], 1.0f));
         }
     }
+    vparams->drawTool()->drawLines(points, 1.0, color);
 
-    glEnd();
+    vparams->drawTool()->restoreLastState();
 }
 
 } // namespace sofa

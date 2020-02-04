@@ -11,7 +11,7 @@
 #include <sofa/core/topology/TopologyHandler.h>
 #include <sofa/core/visual/VisualParams.h>
 
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Vec.h>

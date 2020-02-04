@@ -8,7 +8,7 @@
 //    do the latter.
 //
 
-#include "controller/Test2DAdapter.h"
+#include "../controller/Test2DAdapter.h"
 #include "Optimize2DSurface.h"
 
 
@@ -42,7 +42,7 @@ void Optimize2DSurface<DataTypes>::initValues(VecReal &metrics,
         const Triangle &t = m_topology->getTriangle(i);
         m_orientation[i] = CCW(x[t[0]], x[t[1]], x[t[2]]);
         metrics[i] = funcTriangle(t, x, m_orientation[i]);
-        if (isnan(metrics[i])) {
+        if (std::isnan(metrics[i])) {
             std::cerr << "NaN value for triangle " << i << "\n";
         }
 
@@ -325,7 +325,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecReal &metrics,
         Real oldworst = DBL_MAX, newworst = DBL_MAX;
         for (Index it=0; it<N1.size(); it++) {
             Real newmetric = funcTriangle(N1[it]);
-            if (isnan(newmetric)) {
+            if (std::isnan(newmetric)) {
                 // The operation leads to NaN value!
                 newworst = DBL_MIN;
                 break;
@@ -377,7 +377,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecReal &metrics,
 }
 
 template <class DataTypes>
-bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, vector<Vec3> /*normals*/)
+bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, sofa::helper::vector<Vec3> /*normals*/)
 {
     return false;
 #if 0 // Needs fixing!
@@ -531,7 +531,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index /*v*/, VecVec3 &/*x*/
 }
 
 template <class DataTypes>
-bool Optimize2DSurface<DataTypes>::smoothPain2D(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, vector<Vec3> /*normals*/)
+bool Optimize2DSurface<DataTypes>::smoothPain2D(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, sofa::helper::vector<Vec3> /*normals*/)
 {
     return false;
 #if 0 // Needs fixing!

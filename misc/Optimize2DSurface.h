@@ -6,17 +6,14 @@
 #ifndef OPTIMIZE2DFUNCTION_H
 #define OPTIMIZE2DFUNCTION_H
 
-//#include <sofa/core/topology/TopologyHandler.h>
-//#include <sofa/core/visual/VisualParams.h>
-
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Vec.h>
 
 #include <sofa/helper/vector.h>
 
-#include "misc/SurfaceParametrization.h"
+#include "../misc/SurfaceParametrization.h"
 
 // Return non-zero if triangle with points (a,b,c) is defined in
 // counter-clockwise direction. (2D case)
@@ -232,7 +229,7 @@ class Optimize2DSurface
          * @param metrics   Current metrice values for elements
          * @param normals   Original normals (to check for inversion)
          */
-        bool smoothOptimizeMin(Index v, VecVec3 &x, VecReal &metrics, vector<Vec3> normals);
+        bool smoothOptimizeMin(Index v, VecVec3 &x, VecReal &metrics, sofa::helper::vector<Vec3> normals);
 
         /**
          * @brief Smoothing based on method of Pain et al. [PUdOG01]
@@ -245,7 +242,7 @@ class Optimize2DSurface
          * @param metrics   Current metrice values for elements
          * @param normals   Original normals (to check for inversion)
          */
-        bool smoothPain2D(Index v, VecVec3 &x, VecReal &metrics, vector<Vec3> normals);
+        bool smoothPain2D(Index v, VecVec3 &x, VecReal &metrics, sofa::helper::vector<Vec3> normals);
 
         /**
          * @brief Detects triangle inversion
@@ -302,7 +299,7 @@ class Optimize2DSurface
             m *= m_surf.area(t);
             m /= la2 + lb2 + lc2;
 
-            if (isnan(m)) {
+            if (std::isnan(m)) {
                 std::cerr << "got NaN\n"
                     << la2 << " " << lb2 << " " << lc2
                     << " :: " << m_surf.area(t) << "\n";

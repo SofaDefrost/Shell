@@ -1,13 +1,11 @@
 #ifndef SOFA_GUI_ADAPTIVECUTTING_H
 #define SOFA_GUI_ADAPTIVECUTTING_H
 
-//#include <sofa/core/objectmodel/ConfigurationSetting.h>
-#include <sofa/component/component.h>
-#include <sofa/component/configurationsetting/MouseButtonSetting.h>
-#include <sofa/component/collision/MouseInteractor.h>
-//#include <sofa/component/collision/BaseContactMapper.h>
-#include <sofa/component/collision/InteractionPerformer.h>
+#include <SofaGraphComponent/MouseButtonSetting.h>
+#include <SofaUserInteraction/MouseInteractor.h>
+#include <SofaUserInteraction/InteractionPerformer.h>
 #include <sofa/gui/MouseOperations.h>
+#include <sofa/gui/OperationFactory.h>
 
 #include "../controller/AdaptiveCuttingController.h"
 
@@ -31,7 +29,7 @@ protected:
     AdaptiveCuttingSetting() { }
 
 public:
-    std::string getOperationType() { return "AdaptiveCutting"; }
+    std::string getOperationType() override { return "AdaptiveCutting"; }
 };
 
 } // namespace configurationsetting

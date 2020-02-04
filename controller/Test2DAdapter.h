@@ -1,28 +1,25 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_H
 #define SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_H
 
-#include <sofa/component/component.h>
-#include <sofa/component/controller/Controller.h>
+#include <SofaUserInteraction/Controller.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Vec.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <sofa/component/collision/MouseInteractor.h>
-#include <sofa/component/topology/TriangleSetTopologyContainer.h>
-#include <sofa/component/topology/TriangleSetTopologyModifier.h>
-#include <sofa/component/topology/TriangleSetTopologyAlgorithms.h>
-#include <sofa/component/topology/TriangleSetGeometryAlgorithms.h>
-#include <sofa/component/topology/TopologyData.h>
-
-#include <sofa/gui/PickHandler.h>
+#include <SofaUserInteraction/MouseInteractor.h>
+#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <SofaBaseTopology/TriangleSetTopologyModifier.h>
+#include <SofaBaseTopology/TriangleSetTopologyAlgorithms.h>
+#include <SofaBaseTopology/TriangleSetGeometryAlgorithms.h>
+#include <SofaBaseTopology/TopologyData.h>
 
 #include <sofa/helper/map.h>
 #include <sofa/helper/vector.h>
 
-#include "misc/Optimize2DSurface.h"
-#include "misc/SurfaceParametrization.h"
+#include "../misc/Optimize2DSurface.h"
+#include "../misc/SurfaceParametrization.h"
 
 namespace sofa
 {
@@ -162,23 +159,23 @@ public:
             inline friend std::istream& operator>> ( std::istream& in, PointInformation& /*pi*/ ) { return in; }
     };
 
-    class PointInfoHandler : public topology::TopologyDataHandler<topology::Point, sofa::helper::vector<PointInformation> >
+    class PointInfoHandler : public sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::helper::vector<PointInformation> >
     {
         public:
-            typedef topology::TopologyDataHandler<topology::Point, sofa::helper::vector<PointInformation> > Inherited;
-            PointInfoHandler(Test2DAdapter<DataTypes>* _adapter, topology::PointData<sofa::helper::vector<PointInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
+            typedef sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::helper::vector<PointInformation> > Inherited;
+            PointInfoHandler(Test2DAdapter<DataTypes>* _adapter, sofa::component::topology::PointData<sofa::helper::vector<PointInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
 
             void applyCreateFunction(
                 unsigned int pointIndex,
                 PointInformation &pInfo,
                 const sofa::helper::vector< unsigned int > &ancestors,
                 const sofa::helper::vector< double > &coeffs)
-            { applyCreateFunction(pointIndex, pInfo, topology::BaseMeshTopology::InvalidID, ancestors, coeffs); }
+            { applyCreateFunction(pointIndex, pInfo, sofa::core::topology::BaseMeshTopology::InvalidID, ancestors, coeffs); }
 
             void applyCreateFunction(
                 unsigned int pointIndex,
                 PointInformation &pInfo,
-                const topology::Point &elem,
+                const sofa::core::topology::Point &elem,
                 const sofa::helper::vector< unsigned int > &ancestors,
                 const sofa::helper::vector< double > &coeffs);
 
@@ -206,19 +203,19 @@ public:
             inline friend std::istream& operator>> ( std::istream& in, TriangleInformation& /*ti*/ ) { return in; }
     };
 
-    class TriangleInfoHandler : public topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> >
+    class TriangleInfoHandler : public sofa::component::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::helper::vector<TriangleInformation> >
     {
         public:
-            typedef topology::TopologyDataHandler<topology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
+            typedef sofa::component::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
 
             TriangleInfoHandler(
                 Test2DAdapter<DataTypes> *_adapter,
-                topology::TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
+                sofa::component::topology::TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
 
             void applyCreateFunction(
                 unsigned int triangleIndex,
                 TriangleInformation &tInfo,
-                const topology::Triangle &elem,
+                const sofa::core::topology::Triangle &elem,
                 const sofa::helper::vector< unsigned int > &ancestors,
                 const sofa::helper::vector< double > &coeffs);
 
