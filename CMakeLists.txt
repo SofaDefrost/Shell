@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 2.8)
-project(SofaShells)
+cmake_minimum_required(VERSION 3.1)
+project(SofaShells VERSION 1.0)
 
-set(SOFASHELLS_MAJOR_VERSION 1)
-set(SOFASHELLS_MINOR_VERSION 0)
-set(SOFASHELLS_VERSION ${SOFASHELLS_MAJOR_VERSION}.${SOFASHELLS_MINOR_VERSION})
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+find_package(SofaFramework REQUIRED)
+find_package(SofaBase REQUIRED)
+find_package(SofaGeneral REQUIRED)
+find_package(SofaCommon REQUIRED)
+find_package(SofaGui QUIET)
+find_package(SofaOpenglVisual QUIET)
 
 
 set(HEADER_FILES
@@ -47,8 +48,8 @@ set(HEADER_FILES
 set(SOURCE_FILES
 
 		initPluginShells.cpp 
-                controller/MeshChangedEvent.cpp
-                controller/MeshInterpolator.cpp
+		controller/MeshChangedEvent.cpp
+		controller/MeshInterpolator.cpp
 		controller/TriangleSwitchExample.cpp 
 		engine/JoinMeshPoints.cpp 
 		engine/FindClosePoints.cpp 
@@ -67,13 +68,11 @@ set(SOURCE_FILES
 	)
 	
 	
-	
-set(README_FILES
+set(README_FILE "SofaShells.txt" )
 
-
-	)
 
 option(SOFA-PLUGIN_SHELLS_ADAPTIVITY "Enables shells adaptivity" OFF)
+
 
 if(SOFA-PLUGIN_SHELLS_ADAPTIVITY)
 	set(COMPILER_DEFINE "SOFA_BUILD_SHELLS_ADAPTIVITY")
@@ -83,50 +82,60 @@ if(SOFA-PLUGIN_SHELLS_ADAPTIVITY)
 		controller/AdaptiveCuttingController.h 
 		controller/AdaptiveCuttingController.inl 
 		controller/Test2DAdapter.h 
-		controller/Test2DAdapter.inl 
-		cutting/AdaptiveCutting.h 
+		controller/Test2DAdapter.inl
 		misc/Optimize2DSurface.h 
 		misc/Optimize2DSurface.inl 
 		misc/SurfaceParametrization.h 
 		misc/SurfaceParametrization.inl 
 	)
 
+
    	list(APPEND SOURCE_FILES
 	
 		controller/AdaptiveCuttingController.cpp 
 		controller/Test2DAdapter.cpp 
-		cutting/AdaptiveCutting.cpp 
 		misc/Optimize2DSurface.cpp 
 		misc/SurfaceParametrization.cpp
-	)	
+	)
+
+
+	if(SofaGui_FOUND AND SofaOpenglVisual_FOUND)
+
+		list(APPEND HEADER_FILES
+			cutting/AdaptiveCutting.h
+			)
+
+		list(APPEND SOURCE_FILES
+			cutting/AdaptiveCutting.cpp
+			)
+
+	endif()
+
 endif()
 
 
-# if(LINUX OR APPLE)
-# 
-# 	include_directories("/usr/include/suitesparse/")
-# 
-# endif()
-
-#include_directories("${SOFA_EXTLIBS_DIR}")
-#include_directories("${SOFA_APPLICATIONS_PLUGINS_DIR}")
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_SOFASHELLS")
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>")
-target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>")
 target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include>")
 
-find_package(SofaFramework REQUIRED)
+target_link_libraries(${PROJECT_NAME} SofaComponentBase SofaMeshCollision SofaGraphComponent SofaCore SofaHelper SofaBaseTopology SofaUserInteraction)
+if(SofaGui_FOUND)
+	target_link_libraries(${PROJECT_NAME} SofaGuiMain SofaOpenglVisual)
+endif()
 
-target_link_libraries(${PROJECT_NAME} SofaComponentBase SofaHelper SofaBaseTopology SofaUserInteraction)
 
-sofa_create_package(sofa-shells ${SOFASHELLS_VERSION} ${PROJECT_NAME} sofa-shells)
+## Install rules for the library and headers; CMake package configurations files
+sofa_generate_package(
+    NAME SofaShells VERSION ${PROJECT_VERSION}
+    TARGETS ${PROJECT_NAME}
+    INCLUDE_INSTALL_DIR SofaShells
+    EXAMPLE_INSTALL_DIR examples
+    RELOCATABLE "plugins"
+    )
 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
-SET_PROPERTY(TARGET ${PROJECT_NAME}	PROPERTY FOLDER "plugins")
-
-
+SET_PROPERTY(TARGET ${PROJECT_NAME} PROPERTY FOLDER "plugins")
