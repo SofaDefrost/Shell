@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.1)
-project(SofaShells VERSION 1.0)
+cmake_minimum_required(VERSION 3.12)
+project(SofaShells VERSION 1.0 LANGUAGES CXX)
 
 find_package(SofaFramework REQUIRED)
 find_package(SofaBase REQUIRED)
@@ -8,70 +8,72 @@ find_package(SofaCommon REQUIRED)
 find_package(SofaGui QUIET)
 find_package(SofaOpenglVisual QUIET)
 
+set(README_FILE "SofaShells.txt" )
+set(SOFASHELLS_SRC_DIR src/SofaShells)
+
+option(SOFA-PLUGIN_SHELLS_ADAPTIVITY "Enables shells adaptivity" OFF)
+
 
 set(HEADER_FILES
 
-		initPluginShells.h 
-		controller/MeshChangedEvent.h 
-		controller/MeshInterpolator.h 
-		controller/MeshInterpolator.inl 
-		controller/TriangleSwitchExample.h 
-		controller/TriangleSwitchExample.inl 
-		engine/JoinMeshPoints.h 
-		engine/JoinMeshPoints.inl 
-		engine/FindClosePoints.h 
-		engine/FindClosePoints.inl 
-		forcefield/BezierTriangularBendingFEMForceField.h 
-		forcefield/BezierTriangularBendingFEMForceField.inl 
-		forcefield/CstFEMForceField.h 
-		forcefield/CstFEMForceField.inl 
-		forcefield/TriangularBendingFEMForceField.h 
-		forcefield/TriangularBendingFEMForceField.inl 
-		forcefield/TriangularShellForceField.h 
-		forcefield/TriangularShellForceField.inl 
-		mapping/BendingPlateMechanicalMapping.h 
-		mapping/BendingPlateMechanicalMapping.inl 
-		mapping/BezierTriangleMechanicalMapping.h 
-		mapping/BezierTriangleMechanicalMapping.inl 
-		shells2/fem/BezierShellInterpolation.h 
-		shells2/fem/BezierShellInterpolation.inl 
-		shells2/fem/BezierShellInterpolationM.h 
-		shells2/fem/BezierShellInterpolationM.inl 
-		shells2/forcefield/BezierShellForceField.h 
-		shells2/forcefield/BezierShellForceField.inl 
-		shells2/mapping/BezierShellMechanicalMapping.h 
-		shells2/mapping/BezierShellMechanicalMapping.inl 
-		misc/PointProjection.h 
-		misc/PointProjection.inl 
+		${SOFAMJEDFEM_SRC_DIR}/initPluginShells.h 
+		${SOFAMJEDFEM_SRC_DIR}/controller/MeshChangedEvent.h 
+		${SOFAMJEDFEM_SRC_DIR}/controller/MeshInterpolator.h 
+		${SOFAMJEDFEM_SRC_DIR}/controller/MeshInterpolator.inl 
+		${SOFAMJEDFEM_SRC_DIR}/controller/TriangleSwitchExample.h 
+		${SOFAMJEDFEM_SRC_DIR}/controller/TriangleSwitchExample.inl 
+		${SOFAMJEDFEM_SRC_DIR}/engine/JoinMeshPoints.h 
+		${SOFAMJEDFEM_SRC_DIR}/engine/JoinMeshPoints.inl 
+		${SOFAMJEDFEM_SRC_DIR}/engine/FindClosePoints.h 
+		${SOFAMJEDFEM_SRC_DIR}/engine/FindClosePoints.inl 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/BezierTriangularBendingFEMForceField.h 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/BezierTriangularBendingFEMForceField.inl 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/CstFEMForceField.h 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/CstFEMForceField.inl 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/TriangularBendingFEMForceField.h 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/TriangularBendingFEMForceField.inl 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/TriangularShellForceField.h 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/TriangularShellForceField.inl 
+		${SOFAMJEDFEM_SRC_DIR}/mapping/BendingPlateMechanicalMapping.h 
+		${SOFAMJEDFEM_SRC_DIR}/mapping/BendingPlateMechanicalMapping.inl 
+		${SOFAMJEDFEM_SRC_DIR}/mapping/BezierTriangleMechanicalMapping.h 
+		${SOFAMJEDFEM_SRC_DIR}/mapping/BezierTriangleMechanicalMapping.inl 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/fem/BezierShellInterpolation.h 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/fem/BezierShellInterpolation.inl 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/fem/BezierShellInterpolationM.h 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/fem/BezierShellInterpolationM.inl 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/forcefield/BezierShellForceField.h 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/forcefield/BezierShellForceField.inl 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/mapping/BezierShellMechanicalMapping.h 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/mapping/BezierShellMechanicalMapping.inl 
+		${SOFAMJEDFEM_SRC_DIR}/misc/PointProjection.h 
+		${SOFAMJEDFEM_SRC_DIR}/misc/PointProjection.inl 
 	)
 
 set(SOURCE_FILES
 
-		initPluginShells.cpp 
-		controller/MeshChangedEvent.cpp
-		controller/MeshInterpolator.cpp
-		controller/TriangleSwitchExample.cpp 
-		engine/JoinMeshPoints.cpp 
-		engine/FindClosePoints.cpp 
-		forcefield/BezierTriangularBendingFEMForceField.cpp 
-		forcefield/CstFEMForceField.cpp 
-		forcefield/TriangularBendingFEMForceField.cpp 
-		forcefield/TriangularShellForceField.cpp 
-		mapping/BendingPlateMechanicalMapping.cpp 
-		mapping/BezierTriangleMechanicalMapping.cpp 
-		shells2/fem/BezierShellInterpolation.cpp 
-		shells2/fem/BezierShellInterpolationM.cpp 
-		shells2/forcefield/BezierShellForceField.cpp 
-		shells2/mapping/BezierShellMechanicalMapping.cpp 
-		misc/PointProjection.cpp
-
+		${SOFAMJEDFEM_SRC_DIR}/initPluginShells.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/controller/MeshChangedEvent.cpp
+		${SOFAMJEDFEM_SRC_DIR}/controller/MeshInterpolator.cpp
+		${SOFAMJEDFEM_SRC_DIR}/controller/TriangleSwitchExample.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/engine/JoinMeshPoints.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/engine/FindClosePoints.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/BezierTriangularBendingFEMForceField.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/CstFEMForceField.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/TriangularBendingFEMForceField.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/forcefield/TriangularShellForceField.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/mapping/BendingPlateMechanicalMapping.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/mapping/BezierTriangleMechanicalMapping.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/fem/BezierShellInterpolation.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/fem/BezierShellInterpolationM.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/forcefield/BezierShellForceField.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/shells2/mapping/BezierShellMechanicalMapping.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/misc/PointProjection.cpp
 	)
 	
 	
-set(README_FILE "SofaShells.txt" )
 
 
-option(SOFA-PLUGIN_SHELLS_ADAPTIVITY "Enables shells adaptivity" OFF)
 
 
 if(SOFA-PLUGIN_SHELLS_ADAPTIVITY)
@@ -79,34 +81,34 @@ if(SOFA-PLUGIN_SHELLS_ADAPTIVITY)
 	
 	list(APPEND HEADER_FILES
 	
-		controller/AdaptiveCuttingController.h 
-		controller/AdaptiveCuttingController.inl 
-		controller/Test2DAdapter.h 
-		controller/Test2DAdapter.inl
-		misc/Optimize2DSurface.h 
-		misc/Optimize2DSurface.inl 
-		misc/SurfaceParametrization.h 
-		misc/SurfaceParametrization.inl 
+		${SOFAMJEDFEM_SRC_DIR}/controller/AdaptiveCuttingController.h 
+		${SOFAMJEDFEM_SRC_DIR}/controller/AdaptiveCuttingController.inl 
+		${SOFAMJEDFEM_SRC_DIR}/controller/Test2DAdapter.h 
+		${SOFAMJEDFEM_SRC_DIR}/controller/Test2DAdapter.inl
+		${SOFAMJEDFEM_SRC_DIR}/misc/Optimize2DSurface.h 
+		${SOFAMJEDFEM_SRC_DIR}/misc/Optimize2DSurface.inl 
+		${SOFAMJEDFEM_SRC_DIR}/misc/SurfaceParametrization.h 
+		${SOFAMJEDFEM_SRC_DIR}/misc/SurfaceParametrization.inl 
 	)
 
 
    	list(APPEND SOURCE_FILES
 	
-		controller/AdaptiveCuttingController.cpp 
-		controller/Test2DAdapter.cpp 
-		misc/Optimize2DSurface.cpp 
-		misc/SurfaceParametrization.cpp
+		${SOFAMJEDFEM_SRC_DIR}/controller/AdaptiveCuttingController.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/controller/Test2DAdapter.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/misc/Optimize2DSurface.cpp 
+		${SOFAMJEDFEM_SRC_DIR}/misc/SurfaceParametrization.cpp
 	)
 
 
 	if(SofaGui_FOUND AND SofaOpenglVisual_FOUND)
 
 		list(APPEND HEADER_FILES
-			cutting/AdaptiveCutting.h
+			${SOFAMJEDFEM_SRC_DIR}/cutting/AdaptiveCutting.h
 			)
 
 		list(APPEND SOURCE_FILES
-			cutting/AdaptiveCutting.cpp
+			${SOFAMJEDFEM_SRC_DIR}/cutting/AdaptiveCutting.cpp
 			)
 
 	endif()
@@ -114,28 +116,23 @@ if(SOFA-PLUGIN_SHELLS_ADAPTIVITY)
 endif()
 
 
-
+# Create the plugin library
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_SOFASHELLS")
-
-target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>")
-target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include>")
-
+# Link the plugin library to its dependency
 target_link_libraries(${PROJECT_NAME} SofaComponentBase SofaMeshCollision SofaGraphComponent SofaCore SofaHelper SofaBaseTopology SofaUserInteraction)
+
 if(SofaGui_FOUND)
 	target_link_libraries(${PROJECT_NAME} SofaGuiMain SofaOpenglVisual)
 endif()
 
 
-## Install rules for the library and headers; CMake package configurations files
-sofa_generate_package(
-    NAME SofaShells VERSION ${PROJECT_VERSION}
-    TARGETS ${PROJECT_NAME}
-    INCLUDE_INSTALL_DIR SofaShells
-    EXAMPLE_INSTALL_DIR examples
+# Create package Config, Version & Target files
+sofa_create_package_with_targets(
+    PACKAGE_NAME ${PROJECT_NAME}
+    PACKAGE_VERSION ${PROJECT_VERSION}
+    TARGETS ${PROJECT_NAME} AUTO_SET_TARGET_PROPERTIES
+    INCLUDE_SOURCE_DIR "src"
+    INCLUDE_INSTALL_DIR ${PROJECT_NAME}
     RELOCATABLE "plugins"
     )
-
-SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
-SET_PROPERTY(TARGET ${PROJECT_NAME} PROPERTY FOLDER "plugins")
