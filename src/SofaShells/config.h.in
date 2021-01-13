@@ -24,23 +24,16 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
+#pragma once
 
-#ifndef INIT_PLUGIN_SHELLS_H
-#define INIT_PLUGIN_SHELLS_H
+#include <sofa/config.h>
 
-#ifndef WIN32
-	#define SOFA_EXPORT_DYNAMIC_LIBRARY
-	#define SOFA_IMPORT_DYNAMIC_LIBRARY
-    #define SOFA_SHELLS_API
+#define SOFASHELLS_VERSION @PROJECT_VERSION@
+
+#ifdef SOFA_BUILD_SOFASHELLS
+#  define SOFA_TARGET @PROJECT_NAME@
+#  define SOFA_SHELLS_API SOFA_EXPORT_DYNAMIC_LIBRARY
 #else
-	#ifdef SOFA_BUILD_SHELLS
-		#define SOFA_EXPORT_DYNAMIC_LIBRARY __declspec( dllexport )
-		#define SOFA_SHELLS_API SOFA_EXPORT_DYNAMIC_LIBRARY
-	#else
-		#define SOFA_IMPORT_DYNAMIC_LIBRARY __declspec( dllimport )
-		#define SOFA_SHELLS_API SOFA_IMPORT_DYNAMIC_LIBRARY
-	#endif
+#  define SOFA_SHELLS_API  SOFA_IMPORT_DYNAMIC_LIBRARY
 #endif
 
-
-#endif // #ifndef INIT_PLUGIN_SHELLS_H
