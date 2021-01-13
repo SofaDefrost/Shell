@@ -4,22 +4,18 @@ project(SofaShells VERSION 1.0 LANGUAGES CXX)
 find_package(SofaFramework REQUIRED)
 find_package(SofaBase REQUIRED)
 find_package(SofaGeneral REQUIRED)
-
-#SofaBoundaryCondition
-
-#SofaBoundaryCondition;SofaGeneralMeshCollision;SofaGeneralVisual;SofaGraphComponent;SofaGeneralAnimationLoop;SofaGeneralDeformable;SofaGeneralEngine;SofaGeneralExplicitOdeSolver;SofaGeneralImplicitOdeSolver;SofaGeneralLinearSolver;SofaGeneralRigid;SofaGeneralObjectInteraction;SofaGeneralSimpleFem;SofaGeneralTopology;SofaTopologyMapping;SofaUserInteraction;SofaConstraint;SofaGeneralLoader
-
-#SofaSimpleFem;SofaRigid;SofaDeformable;SofaObjectInteraction;SofaMeshCollision;SofaEngine;SofaExplicitOdeSolver;SofaImplicitOdeSolver;SofaLoader
-
-
-
-find_package(SofaCommon REQUIRED)
+find_package(SofaBoundaryCondition REQUIRED)
+find_package(SofaUserInteraction REQUIRED)
+find_package(SofaMeshCollision REQUIRED)
+find_package(SofaGraphComponent REQUIRED)
 
 find_package(SofaGui QUIET)
 find_package(SofaOpenglVisual QUIET)
 
+
 set(README_FILE "SofaShells.txt" )
 set(SOFASHELLS_SRC_DIR src/SofaShells)
+
 
 option(SOFA-PLUGIN_SHELLS_ADAPTIVITY "Enables shells adaptivity" OFF)
 

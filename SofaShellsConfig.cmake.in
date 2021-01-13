@@ -6,11 +6,13 @@
 set(SOFASHELLS_HAVE_SOFAGUI @SOFASHELLS_HAVE_SOFAGUI@)
 set(SOFASHELLS_HAVE_SOFAOPENGLVISUAL @SOFASHELLS_HAVE_SOFAOPENGLVISUAL@)
 
+find_package(SofaFramework REQUIRED)
 find_package(SofaBase REQUIRED)
 find_package(SofaGeneral REQUIRED)
-find_package(SofaFramework REQUIRED)
-find_package(SofaCommon REQUIRED)
-
+find_package(SofaBoundaryCondition REQUIRED)
+find_package(SofaUserInteraction REQUIRED)
+find_package(SofaMeshCollision REQUIRED)
+find_package(SofaGraphComponent REQUIRED)
 
 if(SOFASHELLS_HAVE_SOFAGUI AND SOFASHELLS_HAVE_SOFAOPENGLVISUAL)
     find_package(SofaGui REQUIRED)
