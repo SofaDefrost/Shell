@@ -25,17 +25,15 @@
 #ifndef SOFA_COMPONENT_MAPPING_BEZIERSHELLMECHANICALMAPPING_INL
 #define SOFA_COMPONENT_MAPPING_BEZIERSHELLMECHANICALMAPPING_INL
 
-#include "BezierShellMechanicalMapping.h"
+#include <SofaShells/shells2/mapping/BezierShellMechanicalMapping.h>
+#include <SofaShells/shells2/forcefield/BezierShellForceField.h>
+#include <SofaShells/misc/PointProjection.h>
+
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <SofaBaseCollision/MinProximityIntersection.h>
-#include <sofa/simulation/Simulation.h>
 #include <sofa/core/ConstraintParams.h>
-//#include <sofa/helper/system/thread/CTime.h>
 
 #include <SofaBoundaryCondition/ConstantForceField.h>
-
-#include "../forcefield/BezierShellForceField.h"
-#include "../../misc/PointProjection.h"
 
 // We have own code to check the getJ() because checkJacobian sucks (at this
 // point in time).
@@ -378,8 +376,7 @@ template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParams * /*mparams*/, Data<OutVecCoord>& dOut, const Data<InVecCoord>& dIn)
 {
     helper::WriteAccessor< Data<OutVecCoord> > out = dOut;
-    helper::ReadAccessor< Data<InVecCoord> > in = dIn;
-
+    SOFA_UNUSED(dIn);
 
     //std::cout << "---------------- Apply ----------------------------" << std::endl;
 
@@ -400,7 +397,7 @@ template <class TIn, class TOut>
 void BezierShellMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalParams* /*mparams*/, Data<OutVecDeriv>& dOut, const Data<InVecDeriv>& dIn)
 {
     helper::WriteAccessor< Data<OutVecDeriv> > out = dOut;
-    helper::ReadAccessor< Data<InVecDeriv> > in = dIn;
+    SOFA_UNUSED(dIn);
 
     //std::cout << "---------------- ApplyJ ----------------------------" << std::endl;
 
@@ -731,7 +728,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const sofa::core::Constrai
     //std::cout << "---------------- ApplyJT (constraints) --------------" << std::endl;
 
     helper::WriteAccessor< Data<InMatrixDeriv> > out = dOut;
-    helper::ReadAccessor< Data<OutMatrixDeriv> > in = dIn;
+    SOFA_UNUSED(dIn);
 
     if (!inputTopo || !outputTopo)
     {
@@ -744,8 +741,8 @@ void BezierShellMechanicalMapping<TIn, TOut>::applyJT(const sofa::core::Constrai
         return;
     }
 
-    bsInterpolation->applyJTOnBTriangle(projN, projElements, dIn.getValue(cparams), *dOut.beginEdit(cparams));
-    dOut.endEdit(cparams);
+    bsInterpolation->applyJTOnBTriangle(projN, projElements, dIn.getValue(), *dOut.beginEdit());
+    dOut.endEdit();
 }
 
 

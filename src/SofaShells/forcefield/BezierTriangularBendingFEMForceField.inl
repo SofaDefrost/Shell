@@ -25,21 +25,21 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_BEZIER_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_BEZIER_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 
-#include "BezierTriangularBendingFEMForceField.h"
+#include <SofaShells/forcefield/BezierTriangularBendingFEMForceField.h>
 #include <sofa/core/behavior/ForceField.inl>
-#include <sofa/helper/gl/template.h>
+#include <sofa/gl/template.h>
 #include <sofa/helper/rmath.h>
-#include <sofa/helper/system/gl.h>
-#include <sofa/helper/gl/template.h>
+#include <sofa/gl/gl.h>
+#include <sofa/gl/template.h>
 #include <sofa/helper/system/thread/debug.h>
 #include <iostream> //for debugging
 #include <vector>
-#include <sofa/defaulttype/Vec3Types.h>
+#include <sofa/defaulttype/VecTypes.h>
 //#include <assert.h>
 #include <SofaBaseTopology/TopologyData.inl>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
-#include "../controller/MeshChangedEvent.h"
+#include <SofaShells/controller/MeshChangedEvent.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -217,7 +217,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
     /// Prepare to store info in the triangle array
     triangleInf.resize(_topology->getNbTriangles());
 
-    for (int i=0; i<_topology->getNbTriangles(); ++i)
+    for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
     {
         triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
     }
@@ -1507,7 +1507,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::M
 
     double kFactor = mparams->kFactor();
 
-    for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
+    for(sofa::Index t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
             TriangleInformation *tinfo = &triangleInf[t];
             const Triangle triangle = _topology->getTriangle(t);
@@ -1645,7 +1645,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
         glDisable(GL_LIGHTING);
         glBegin(GL_POINTS);
 
-        for (int i=0; i<_topology->getNbTriangles(); ++i)
+        for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
         {
             TriangleInformation *tinfo = &triangleInf[i];
 
@@ -1670,7 +1670,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
         glPointSize(1);
 
         // Render the frame of each element
-        for (int i=0; i<_topology->getNbTriangles(); ++i)
+        for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
         {
             TriangleInformation *tinfo = &triangleInf[i];
 

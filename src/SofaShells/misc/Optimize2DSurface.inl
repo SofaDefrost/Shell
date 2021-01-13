@@ -8,13 +8,10 @@
 //    do the latter.
 //
 
-#include "../controller/Test2DAdapter.h"
-#include "Optimize2DSurface.h"
-
+#include <SofaShells/controller/Test2DAdapter.h>
+#include <SofaShells/misc/Optimize2DSurface.h>
 
 #include <float.h>
-//#include <cmath>
-
 #include <sofa/helper/rmath.h>
 
 #define OTHER(x, a, b) ((x == a) ? b : a)

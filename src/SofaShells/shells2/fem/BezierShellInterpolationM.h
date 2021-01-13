@@ -8,14 +8,13 @@
 #ifndef SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATIONM_H
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATIONM_H
 
-#include "../../initPluginShells.h"
-#include "BezierShellInterpolation.h"
+#include <SofaShells/config.h>
+#include <SofaShells/shells2/fem/BezierShellInterpolation.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <SofaBaseMechanics/MechanicalObject.h>
-#include <SofaTopologyMapping/Mesh2PointTopologicalMapping.h>
-//#include <sofa/core/behavior/Mass.h>
-//#include <sofa/core/objectmodel/Data.h>
+//#include <SofaTopologyMapping/Mesh2PointTopologicalMapping.h>
+
 #include <sofa/defaulttype/SolidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
@@ -25,7 +24,6 @@
 
 #include <sofa/helper/vector.h>
 #include <sofa/defaulttype/Vec.h>
-//#include <sofa/defaulttype/Mat.h>
 
 #include <sofa/core/objectmodel/BaseObject.h>
 
@@ -82,7 +80,7 @@ class BezierShellInterpolationM : public BezierShellInterpolation<TIn>
         BezierShellInterpolationM() {}
         virtual ~BezierShellInterpolationM() {}
 
-        virtual std::string getTemplateName() const
+        virtual std::string getTemplateName() const override
         {
             return templateName(this);
         }

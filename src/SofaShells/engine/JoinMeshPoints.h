@@ -7,8 +7,7 @@
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
-//#include <sofa/component/component.h>
-#include "../initPluginShells.h"
+#include <SofaShells/config.h>
 
 namespace sofa
 {
@@ -45,7 +44,7 @@ protected:
 
 public:
 
-    virtual std::string getTemplateName() const
+    std::string getTemplateName() const override
     {
         return templateName(this);
     }
@@ -55,9 +54,9 @@ public:
         return DataTypes::Name();
     }
 
-    void init();
-    void reinit();
-    void doUpdate();
+    void init() override;
+    void reinit() override;
+    void doUpdate() override;
 
     // TODO: add methods to find out the inverse mappings
 

@@ -1,7 +1,7 @@
 #ifndef SOFA_COMPONENT_ENGINE_FINDCLOSEPOINTS_INL
 #define SOFA_COMPONENT_ENGINE_FINDCLOSEPOINTS_INL
 
-#include "FindClosePoints.h"
+#include <SofaShells/engine/FindClosePoints.h>
 
 namespace sofa
 {

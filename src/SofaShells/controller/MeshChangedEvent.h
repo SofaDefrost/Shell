@@ -2,9 +2,9 @@
 #define SOFA_CORE_OBJECTMODEL_MESHCHANGEDEVENT_H
 
 #include <sofa/core/objectmodel/Event.h>
-#include <sofa/defaulttype/Vec3Types.h>
+#include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Quat.h>
-#include <sofa/helper/system/config.h>
+#include <SofaShells/config.h>
 
 namespace sofa
 {

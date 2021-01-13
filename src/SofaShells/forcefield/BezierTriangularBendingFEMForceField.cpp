@@ -23,12 +23,12 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #define SOFA_COMPONENT_FORCEFIELD_BEZIER_TRIANGULAR_BENDING_FEM_FORCEFIELD_CPP
-#include "BezierTriangularBendingFEMForceField.inl"
+#include <SofaShells/forcefield/BezierTriangularBendingFEMForceField.inl>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
-#include "../initPluginShells.h"
+#include <SofaShells/config.h>
 
 
 namespace sofa

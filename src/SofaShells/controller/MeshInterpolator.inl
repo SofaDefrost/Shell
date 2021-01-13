@@ -1,8 +1,8 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_MESHINTERPOLATION_INL
 #define SOFA_COMPONENT_FORCEFIELD_MESHINTERPOLATION_INL
 
-#include "MeshInterpolator.h"
-#include "MeshChangedEvent.h"
+#include <SofaShells/controller/MeshInterpolator.h>
+#include <SofaShells/controller/MeshChangedEvent.h>
 
 
 namespace sofa

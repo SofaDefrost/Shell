@@ -2,7 +2,7 @@
 // Class for performing projection of points onto triangular surface
 //
 
-#include "PointProjection.h"
+#include <SofaShells/misc/PointProjection.h>
 
 #include <sofa/helper/rmath.h>
 

@@ -25,17 +25,17 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_BEZIERSHELLFORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_BEZIERSHELLFORCEFIELD_INL
 
-#include "BezierShellForceField.h"
+#include <SofaShells/shells2/forcefield/BezierShellForceField.h>
 #include <sofa/core/behavior/ForceField.inl>
-#include <sofa/helper/gl/template.h>
+#include <sofa/gl/template.h>
 #include <sofa/helper/rmath.h>
-#include <sofa/helper/system/gl.h>
-#include <sofa/helper/gl/template.h>
+#include <sofa/gl/gl.h>
+#include <sofa/gl/template.h>
 #include <sofa/helper/system/thread/debug.h>
 #include <iostream> //for debugging
 #include <vector>
-#include <sofa/defaulttype/Vec3Types.h>
-//#include <assert.h>
+#include <sofa/defaulttype/VecTypes.h>
+
 #include <SofaBaseTopology/TopologyData.inl>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
@@ -44,7 +44,7 @@
 
 #include <sofa/helper/decompose.h>
 
-#include "../../controller/MeshChangedEvent.h"
+#include <SofaShells/controller/MeshChangedEvent.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -255,7 +255,7 @@ template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
     /// Prepare to store info in the triangle array
     triangleInf.resize(_topology->getNbTriangles());
 
-    for (int i=0; i<_topology->getNbTriangles(); ++i)
+    for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
     {
         triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
     }
@@ -1903,7 +1903,7 @@ void BezierShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams
 
     //std::cout<<"***\n kFactor ="<<kFactor<<" \n***"<<std::endl;
 
-    for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
+    for(sofa::Index t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
             TriangleInformation *tinfo = &triangleInf[t];
             const Triangle triangle = _topology->getTriangle(t);
@@ -2102,7 +2102,7 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
         glBegin(GL_POINTS);
 
         sofa::helper::fixed_array<Vec3,10> bn;
-        for (int i=0; i<_topology->getNbTriangles(); ++i)
+        for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
         {
             TriangleInformation *tinfo = &triangleInf[i];
             bsInterpolation->getBezierNodes(tinfo->elementID, bn);
@@ -2124,7 +2124,7 @@ void BezierShellForceField<DataTypes>::draw(const core::visual::VisualParams* vp
 
         // Render the frame of each element
         if (f_drawFrame.getValue()) {
-        for (int i=0; i<_topology->getNbTriangles(); ++i)
+        for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
         {
             TriangleInformation *tinfo = &triangleInf[i];
 

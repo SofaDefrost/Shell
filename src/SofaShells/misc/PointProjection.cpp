@@ -2,8 +2,8 @@
 // Class for performing projection of points onto triangular surface
 //
 
-#include "../initPluginShells.h"
-#include "PointProjection.inl"
+#include <SofaShells/config.h>
+#include <SofaShells/misc/PointProjection.inl>
 
 namespace sofa
 {

@@ -8,12 +8,11 @@
 #ifndef SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_H
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_H
 
-#include "../../initPluginShells.h"
+#include <SofaShells/config.h>
 #include <sofa/core/behavior/MechanicalState.h>
 #include <SofaBaseMechanics/MechanicalObject.h>
 #include <SofaTopologyMapping/Mesh2PointTopologicalMapping.h>
-//#include <sofa/core/behavior/Mass.h>
-//#include <sofa/core/objectmodel/Data.h>
+
 #include <sofa/defaulttype/SolidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
@@ -52,10 +51,8 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         typedef typename DataTypes::Deriv Deriv;
         typedef typename Coord::value_type Real;
 
-        typedef sofa::core::topology::BaseMeshTopology::index_type Index;
+        typedef sofa::Index Index;
         typedef sofa::core::topology::BaseMeshTopology::TriangleID ElementID;
-        //typedef sofa::helper::vector<BaseMeshTopology::EdgeID> VecElementID;
-        //typedef sofa::helper::vector<BaseMeshTopology::Edge> VecEdges;
         typedef helper::vector<Index> VecIndex;
 
         typedef typename  sofa::defaulttype::SolidTypes<Real>::Transform Transform;
@@ -168,7 +165,7 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
             if(triHandler) delete triHandler;
         }
 
-        virtual std::string getTemplateName() const
+        virtual std::string getTemplateName() const override
         {
             return templateName(this);
         }
@@ -193,14 +190,14 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         /**
          * @brief SceneGraph callback initialization method.
          */
-        void init();
+        void init() override;
 
         /**
          * @brief SceneGraph callback backward initialization method.
          */
-        void bwdInit();
+        void bwdInit() override;
 
-        void reinit() { init(); bwdInit(); }
+        void reinit() override { init(); bwdInit(); }
 
         /**
          * @brief SceneGraph callback backward reset method.
@@ -211,7 +208,7 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
          * @brief SceneGraph callback to handle event
          * Update the positions of Bézier points
          */
-        void handleEvent(core::objectmodel::Event *event)
+        void handleEvent(core::objectmodel::Event *event) override
         {
             if (dynamic_cast< sofa::simulation::AnimateBeginEvent *>(event))
             {
@@ -219,7 +216,7 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
             }
         }
 
-        void draw(const core::visual::VisualParams* vparams);
+        void draw(const core::visual::VisualParams* vparams) override;
 
         //
         // Accessors

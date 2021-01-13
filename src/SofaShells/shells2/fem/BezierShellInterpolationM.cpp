@@ -1,5 +1,5 @@
-#include "../../initPluginShells.h"
-#include "BezierShellInterpolationM.inl"
+#include <SofaShells/config.h>
+#include <SofaShells/shells2/fem/BezierShellInterpolationM.inl>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/ObjectFactory.h>

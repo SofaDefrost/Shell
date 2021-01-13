@@ -1,20 +1,14 @@
 #ifndef SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 
-#include "BezierShellInterpolation.h"
+#include <SofaShells/shells2/fem/BezierShellInterpolation.h>
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <SofaBaseTopology/TopologyData.inl>
-//#include <sofa/component/topology/GridTopology.h>
+
 #include <sofa/helper/decompose.h>
-//#include <sofa/helper/gl/template.h>
-//#include <sofa/helper/gl/Axis.h>
-//#include <sofa/helper/rmath.h>
-//#include <assert.h>
-//#include <iostream>
-//#include <set>
-//#include <sofa/helper/system/gl.h>
+
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/defaulttype/VecTypes.h>
@@ -23,11 +17,10 @@
 //#include <sofa/defaulttype/SolidTypes.inl>
 #include <sofa/helper/OptionsGroup.h>
 
-#include <sofa/helper/gl/Cylinder.h>
+#include <sofa/gl/Cylinder.h>
+#include <sofa/gl/Axis.h>
 #include <sofa/simulation/Simulation.h>
 #include <sofa/core/visual/VisualParams.h>
-#include <sofa/helper/gl/Axis.h>
-//#include <sofa/simulation/Node.h>
 
 
 //
@@ -220,7 +213,7 @@ void BezierShellInterpolation<DataTypes>::init()
     triInfo.endEdit();
 
     // Verify that the inputs are coherents
-    const helper::vector< helper::vector<int> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
+    const helper::vector< helper::vector<sofa::Index> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
     if( (int) mapEdge.size() != inputTopology->getNbEdges() )
     {
         serr<<"Problem in Mesh2PointTopologicalMapping:mapEdge.size() != inputTopology->getNbEdges()"<<sendl;
@@ -302,9 +295,9 @@ void BezierShellInterpolation<DataTypes>::initTriangle(Index triIndex,
 
     BTri &btri = tInfo.btri;
 
-    const helper::vector< helper::vector<int> >& mapPoint = bezierM2P->getPointsMappedFromPoint();
-    const helper::vector< helper::vector<int> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
-    const helper::vector< helper::vector<int> >& mapTri = bezierM2P->getPointsMappedFromTriangle();
+    const helper::vector< helper::vector<sofa::Index> >& mapPoint = bezierM2P->getPointsMappedFromPoint();
+    const helper::vector< helper::vector<sofa::Index> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
+    const helper::vector< helper::vector<sofa::Index> >& mapTri = bezierM2P->getPointsMappedFromTriangle();
 
     btri[0] = mapPoint[tri[0]][0];
     btri[1] = mapPoint[tri[1]][0];

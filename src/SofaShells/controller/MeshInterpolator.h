@@ -1,13 +1,12 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_MESHINTERPOLATION_H
 #define SOFA_COMPONENT_CONTROLLER_MESHINTERPOLATION_H
 
-//#include <sofa/component/component.h>
 #include <SofaUserInteraction/Controller.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Vec.h>
 
-#include "../initPluginShells.h"
+#include <SofaShells/config.h>
 
 namespace sofa
 {
@@ -39,10 +38,10 @@ protected:
 
 public:
 
-    virtual void init();
-    virtual void reinit();
+    void init() override;
+    void reinit() override;
 
-    virtual std::string getTemplateName() const
+    std::string getTemplateName() const override
     {
         return templateName(this);
     }
@@ -64,7 +63,7 @@ public:
     Data<VecCoord>          f_position;
     Data<helper::vector<Vec3> > f_normals;
 
-    virtual void onEndAnimationStep(const double dt);
+    void onEndAnimationStep(const double dt) override;
 
     Real getInterpolationVar() { return alpha; }
 

@@ -28,13 +28,10 @@
 
 #include <sofa/core/Mapping.h>
 
-
-
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/helper/vector.h>
 
-
-#include <sofa/helper/gl/GLSLShader.h>
+#include <sofa/gl/GLSLShader.h>
 
 #include <SofaBaseLinearSolver/CompressedRowSparseMatrix.h>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
@@ -42,7 +39,7 @@
 
 #include <sofa/defaulttype/VecTypes.h>
 
-#include "../fem/BezierShellInterpolationM.h"
+#include <SofaShells/shells2/fem/BezierShellInterpolationM.h>
 
 
 namespace sofa
@@ -92,8 +89,7 @@ public:
     typedef typename sofa::component::fem::BezierShellInterpolationM<TIn,TOut>::ShapeFunctions ShapeFunctions;
     typedef typename sofa::component::fem::BezierShellInterpolationM<TIn,TOut>::VecShapeFunctions VecShapeFunctions;
 
-    typedef sofa::core::topology::BaseMeshTopology::index_type Index;
-    //typedef BaseMeshTopology::Edge              Edge;
+    typedef sofa::Index Index;
     typedef BaseMeshTopology::SeqEdges          SeqEdges;
     typedef BaseMeshTopology::Triangle          Triangle;
     typedef BaseMeshTopology::SeqTriangles      SeqTriangles;
@@ -120,16 +116,15 @@ public:
     {
     }
 
-    void init();
-    void reinit();
+    void init() override;
+    void reinit() override;
     //virtual void draw(const core::visual::VisualParams* vparams);
 
 
-    void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in);
-    //const sofa::defaulttype::BaseMatrix* getJ(const core::MechanicalParams * mparams);
-    void applyJ(const core::MechanicalParams *mparams, Data<OutVecDeriv>& out, const Data<InVecDeriv>& in);
-    void applyJT(const core::MechanicalParams *mparams, Data<InVecDeriv>& out, const Data<OutVecDeriv>& in);
-    void applyJT(const core::ConstraintParams *cparams, Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in);
+    void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in) override;
+    void applyJ(const core::MechanicalParams *mparams, Data<OutVecDeriv>& out, const Data<InVecDeriv>& in) override;
+    void applyJT(const core::MechanicalParams *mparams, Data<InVecDeriv>& out, const Data<OutVecDeriv>& in) override;
+    void applyJT(const core::ConstraintParams *cparams, Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in) override;
 
 
 #if 0
@@ -163,7 +158,7 @@ public:
 #endif
 
 
-    void handleEvent(sofa::core::objectmodel::Event *event) {
+    void handleEvent(sofa::core::objectmodel::Event *event) override {
         if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
         {
             //std::cout << "begin\n";
@@ -197,7 +192,7 @@ protected:
 
     } TriangleInformation;
 
-        helper::gl::GLSLShader shader;
+        gl::GLSLShader shader;
 
         BaseMeshTopology* inputTopo;
         BaseMeshTopology* outputTopo;

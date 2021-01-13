@@ -25,17 +25,16 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 
-#include "TriangularBendingFEMForceField.h"
+#include <SofaShells/forcefield/TriangularBendingFEMForceField.h>
 #include <sofa/core/behavior/ForceField.inl>
-#include <sofa/helper/gl/template.h>
-#include <sofa/helper/system/gl.h>
-#include <sofa/helper/gl/template.h>
+#include <sofa/gl/template.h>
+#include <sofa/gl/gl.h>
 #include <sofa/helper/system/thread/debug.h>
 #include <fstream> // for reading the file
 #include <iostream> //for debugging
 #include <vector>
 #include <algorithm>
-#include <sofa/defaulttype/Vec3Types.h>
+#include <sofa/defaulttype/VecTypes.h>
 #include <assert.h>
 #include <map>
 #include <utility>
@@ -45,7 +44,7 @@
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/simulation/AnimateEndEvent.h>
 
-#include "../controller/MeshChangedEvent.h"
+#include <SofaShells/controller/MeshChangedEvent.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -436,7 +435,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
     /// Prepare to store info in the triangle array
     triangleInf.resize(_topology->getNbTriangles());
 
-    for (int i=0; i<_topology->getNbTriangles(); ++i)
+    for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
     {
         triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
     }
@@ -1246,7 +1245,7 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::Mechani
 
     double kFactor = mparams->kFactor();
 
-    for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
+    for(sofa::Index t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
             TriangleInformation *tinfo = &triangleInf[t];
             const Triangle triangle = _topology->getTriangle(t);
@@ -1450,7 +1449,7 @@ void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualP
 
         int nbTriangles=_topology->getNbTriangles();
 
-        for (int i=0; i<nbTriangles; i++) {
+        for (sofa::Index i=0; i<nbTriangles; i++) {
             const TriangleInformation &tinfo = triangleInfo[i];
             if ((x[tinfo.a].getCenter() - x0[tinfo.a0].getCenter()).norm() > 1e-8) {
                 points.push_back(x[tinfo.a].getCenter());

@@ -7,7 +7,7 @@
 #include <sofa/gui/MouseOperations.h>
 #include <sofa/gui/OperationFactory.h>
 
-#include "../controller/AdaptiveCuttingController.h"
+#include <SofaShells/controller/AdaptiveCuttingController.h>
 
 namespace sofa
 {

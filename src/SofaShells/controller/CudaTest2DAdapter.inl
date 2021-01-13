@@ -3,8 +3,8 @@
 
 #include <sofa/gpu/cuda/mycuda.h>
 #include <sofa/helper/system/thread/debug.h>
-#include "CudaTest2DAdapter.h"
-#include "Test2DAdapter.inl"
+#include <SofaShells/controller/CudaTest2DAdapter.h>
+#include <SofaShells/controllerTest2DAdapter.inl>
 
 extern "C"
 {

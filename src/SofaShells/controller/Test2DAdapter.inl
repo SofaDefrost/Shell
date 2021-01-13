@@ -38,7 +38,7 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 #define SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 
-#include "../initPluginShells.h"
+#include <SofaShells/config.h>
 
 #include <map>
 #include <float.h>
@@ -51,9 +51,8 @@
 
 #include <SofaMeshCollision/TriangleModel.h>
 
-#include "../misc/PointProjection.h"
-
-#include "Test2DAdapter.h"
+#include <SofaShells/misc/PointProjection.h>
+#include <SofaShells/controller/Test2DAdapter.h>
 
 #define OTHER(x, a, b) ((x == a) ? b : a)
 

@@ -1,7 +1,7 @@
 
-#include "../initPluginShells.h"
+#include <SofaShells/config.h>
 #include <sofa/gpu/cuda/CudaTypes.h>
-#include "CudaTest2DAdapter.inl"
+#include <SofaShells/controller/CudaTest2DAdapter.inl>
 #include <sofa/core/ObjectFactory.h>
 
 

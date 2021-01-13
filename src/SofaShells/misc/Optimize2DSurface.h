@@ -13,7 +13,7 @@
 
 #include <sofa/helper/vector.h>
 
-#include "../misc/SurfaceParametrization.h"
+#include <SofaShells/misc/SurfaceParametrization.h>
 
 // Return non-zero if triangle with points (a,b,c) is defined in
 // counter-clockwise direction. (2D case)

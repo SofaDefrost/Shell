@@ -28,24 +28,20 @@
 
 #include <sofa/core/Mapping.h>
 
-
-
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/helper/vector.h>
 
-
-#include <sofa/helper/gl/GLSLShader.h>
+#include <sofa/gl/GLSLShader.h>
 
 #include <SofaBaseLinearSolver/CompressedRowSparseMatrix.h>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
-//#include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
 #include <sofa/simulation/AnimateBeginEvent.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 
 #include <sofa/helper/system/thread/CTime.h>
 
-#include "../forcefield/BezierTriangularBendingFEMForceField.h"
+#include <SofaShells/forcefield/BezierTriangularBendingFEMForceField.h>
 
 // Use quaternions for rotations
 //#define ROTQ
@@ -101,7 +97,7 @@ public:
     typedef helper::Quater<Real> Quat;
 
 
-    typedef sofa::core::topology::BaseMeshTopology::index_type Index;
+    typedef sofa::Index Index;
     //typedef BaseMeshTopology::Edge              Edge;
     typedef BaseMeshTopology::SeqEdges          SeqEdges;
     typedef BaseMeshTopology::Triangle          Triangle;
@@ -131,16 +127,16 @@ public:
     {
     }
 
-    void init();
-    void reinit();
-    virtual void draw(const core::visual::VisualParams* vparams);
+    void init() override;
+    void reinit() override;
+    void draw(const core::visual::VisualParams* vparams) override;
 
 
-    void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in);
-    const sofa::defaulttype::BaseMatrix* getJ(const core::MechanicalParams * mparams);
-    void applyJ(const core::MechanicalParams *mparams, Data<OutVecDeriv>& out, const Data<InVecDeriv>& in);
-    void applyJT(const core::MechanicalParams *mparams, Data<InVecDeriv>& out, const Data<OutVecDeriv>& in);
-    void applyJT(const core::ConstraintParams *cparams, Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in);
+    void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in) override;
+    const sofa::defaulttype::BaseMatrix* getJ(const core::MechanicalParams * mparams) override;
+    void applyJ(const core::MechanicalParams *mparams, Data<OutVecDeriv>& out, const Data<InVecDeriv>& in) override;
+    void applyJT(const core::MechanicalParams *mparams, Data<InVecDeriv>& out, const Data<OutVecDeriv>& in) override;
+    void applyJT(const core::ConstraintParams *cparams, Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in) override;
 
 
 #if 0
@@ -174,7 +170,7 @@ public:
 #endif
 
 
-    void handleEvent(sofa::core::objectmodel::Event *event) {
+    void handleEvent(sofa::core::objectmodel::Event *event) override {
         if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
         {
             //std::cout << "begin\n";
@@ -219,54 +215,54 @@ protected:
 
     } TriangleInformation;
 
-        helper::gl::GLSLShader shader;
+    gl::GLSLShader shader;
 
-        BaseMeshTopology* inputTopo;
-        BaseMeshTopology* outputTopo;
+    BaseMeshTopology* inputTopo;
+    BaseMeshTopology* outputTopo;
 
     // Pointer to the forcefield associated with the input topology
     BezierFF* bezierForcefield;
 
-        Data< helper::vector<Vec3> > normals;
-        Data<bool> measureError;
-        SingleLink<BezierTriangleMechanicalMapping<TIn, TOut>,
-            sofa::core::topology::BaseMeshTopology,
-            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
+    Data< helper::vector<Vec3> > normals;
+    Data<bool> measureError;
+    SingleLink<BezierTriangleMechanicalMapping<TIn, TOut>,
+    sofa::core::topology::BaseMeshTopology,
+    BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
 
-        TriangleSetTopologyContainer* topologyTarget;
-        const OutVecCoord& verticesTarget;
-        const SeqTriangles& trianglesTarget;
+    TriangleSetTopologyContainer* topologyTarget;
+    const OutVecCoord verticesTarget;
+    const SeqTriangles trianglesTarget;
 
-        helper::vector<Vec3> colourMapping;
-        helper::vector<Vec3> coloursPerVertex;
-        helper::vector<Real> vectorErrorCoarse;
-        helper::vector<Real> vectorErrorTarget;
+    helper::vector<Vec3> colourMapping;
+    helper::vector<Vec3> coloursPerVertex;
+    helper::vector<Real> vectorErrorCoarse;
+    helper::vector<Real> vectorErrorTarget;
 
-        helper::vector<TriangleInformation> triangleInfo;
+    helper::vector<TriangleInformation> triangleInfo;
 
-        std::auto_ptr<MatrixType> matrixJ;
-        bool updateJ;
+    std::auto_ptr<MatrixType> matrixJ;
+    bool updateJ;
 
-        // Pointer on the topological mapping to retrieve the list of edges
-        // XXX: The edges are no longer there!!!
-        //TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
+    // Pointer on the topological mapping to retrieve the list of edges
+    // XXX: The edges are no longer there!!!
+    //TriangleSubdivisionTopologicalMapping* triangleSubdivisionTopologicalMapping;
 
-        void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
-        void MeasureError();
-        Real DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError);
-        void ComputeNormals(helper::vector<Vec3> &normals);
-        void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals);
+    void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
+    void MeasureError();
+    Real DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError);
+    void ComputeNormals(helper::vector<Vec3> &normals);
+    void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals);
 
-        // Computes the barycentric coordinates of a vertex within a triangle
-        void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c, bool bConstraint = true);
+    // Computes the barycentric coordinates of a vertex within a triangle
+    void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c, bool bConstraint = true);
 
-        // NOTE: The following funcitons return *square* of the distance!
-        Real FindClosestPoint(unsigned int& closestVerticex, const Vec3& point, const OutVecCoord &inVertices);
-        Real FindClosestEdge(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges);
-        Real FindClosestTriangle(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
+    // NOTE: The following funcitons return *square* of the distance!
+    Real FindClosestPoint(unsigned int& closestVerticex, const Vec3& point, const OutVecCoord &inVertices);
+    Real FindClosestEdge(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges);
+    Real FindClosestTriangle(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
 
-        // Contains the barycentric coordinates of the point within a triangle
-        sofa::helper::vector<Vec3> barycentricCoordinates;
+    // Contains the barycentric coordinates of the point within a triangle
+    sofa::helper::vector<Vec3> barycentricCoordinates;
 };
 
 } // namespace mapping

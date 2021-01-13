@@ -34,13 +34,11 @@
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/objectmodel/Data.h>
 
-//#include <sofa/component/component.h>
-
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <SofaBaseTopology/TopologyData.h>
 
-#include "../controller/MeshInterpolator.h"
-#include "../engine/JoinMeshPoints.h"
+#include <SofaShells/controller/MeshInterpolator.h>
+#include <SofaShells/engine/JoinMeshPoints.h>
 
 
 // Uncomment the following to use quaternions instead of matrices for
@@ -98,7 +96,7 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
 
         typedef Vec3Types::VecCoord VecCoordHigh;
 
-        typedef sofa::core::topology::BaseMeshTopology::index_type Index;
+        typedef sofa::Index Index;
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
         typedef sofa::core::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
 
@@ -221,18 +219,17 @@ public:
         BezierTriangularBendingFEMForceField();
 
         virtual ~BezierTriangularBendingFEMForceField();
-        virtual void init();
-        virtual void reinit();
-        virtual void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) ;
-        virtual void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) ;
-        virtual void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix);
-        virtual void addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/);
-        //virtual double getPotentialEnergy(const VecCoord& x) const;
-        virtual void handleTopologyChange();
+        void init() override;
+        void reinit() override;
+        void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) override ;
+        void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) override ;
+        void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix) override;
+        void addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/) override;
+        void handleTopologyChange() override;
 
-        virtual SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& x) const { return 0; }
+        SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& /*x*/) const override { return 0; }
 
-        virtual void draw(const core::visual::VisualParams* vparams);
+        void draw(const core::visual::VisualParams* vparams) override;
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
 
@@ -257,7 +254,7 @@ public:
             const VecCoord& x, const helper::vector<Vec3>& norms,
             helper::fixed_array<Vec3,10> &bezierPoints);
 
-        void handleEvent(sofa::core::objectmodel::Event *event);
+        void handleEvent(sofa::core::objectmodel::Event *event) override;
 
         const TriangleInformation& getTriangleInfo(Index t) {
             return triangleInfo.getValue()[t];

@@ -2,8 +2,8 @@
 // Class for parametrizing 3D surface in 2D domain.
 //
 
-#include "../initPluginShells.h"
-#include "SurfaceParametrization.inl"
+#include <SofaShells/config.h>
+#include <SofaShells/misc/SurfaceParametrization.inl>
 
 namespace sofa
 {

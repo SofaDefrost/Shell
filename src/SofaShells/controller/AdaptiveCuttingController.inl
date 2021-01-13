@@ -4,13 +4,13 @@
 // TODO
 // - protect/unprotect cut edges (m_cutEdge,m_cutList)
 
-#include "../initPluginShells.h"
+#include <SofaShells/config.h>
 
 #include <float.h>
 #include <sofa/helper/rmath.h>
 
-#include "../misc/PointProjection.h"
-#include "AdaptiveCuttingController.h"
+#include <SofaShells/misc/PointProjection.h>
+#include <SofaShells/controller/AdaptiveCuttingController.h>
 #include <SofaMeshCollision/TriangleModel.h>
 
 #define OTHER(x, a, b) ((x == a) ? b : a)

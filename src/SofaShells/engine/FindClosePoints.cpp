@@ -1,7 +1,7 @@
 #define SOFA_COMPONENT_ENGINE_FINDCLOSEPOINTS_CPP
-#include "FindClosePoints.inl"
+#include <SofaShells/engine/FindClosePoints.inl>
 #include <sofa/core/ObjectFactory.h>
-#include "../initPluginShells.h"
+#include <SofaShells/config.h>
 
 namespace sofa
 {

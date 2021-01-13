@@ -29,16 +29,14 @@
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/objectmodel/Data.h>
 
-//#include <sofa/component/component.h>
-
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <SofaBaseTopology/TopologyData.h>
 
 #include <sofa/helper/OptionsGroup.h>
 
-#include "../../controller/MeshInterpolator.h"
-#include "../../engine/JoinMeshPoints.h"
-#include "../fem/BezierShellInterpolation.h"
+#include <SofaShells/controller/MeshInterpolator.h>
+#include <SofaShells/engine/JoinMeshPoints.h>
+#include <SofaShells/shells2/fem/BezierShellInterpolation.h>
 
 
 // Uncomment the following to use quaternions instead of matrices for
@@ -96,7 +94,7 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
 
         typedef Vec3Types::VecCoord VecCoordHigh;
 
-        typedef sofa::core::topology::BaseMeshTopology::index_type Index;
+        typedef sofa::Index Index;
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
         typedef sofa::core::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
         typedef helper::vector<Index> VecIndex;
@@ -237,16 +235,16 @@ public:
         BezierShellForceField();
 
         virtual ~BezierShellForceField();
-        virtual void init();
-        virtual void reinit();
-        virtual void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) ;
-        virtual void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) ;
-        virtual void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix);
-        virtual void handleTopologyChange();
+        void init() override;
+        void reinit() override;
+        void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) override;
+        void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) override;
+        void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix) override;
+        void handleTopologyChange() override;
 
-        virtual SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& x) const { return 0; }
+        SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& /*x*/) const override { return 0; }
 
-        virtual void draw(const core::visual::VisualParams* vparams);
+        void draw(const core::visual::VisualParams* vparams) override;
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
 
@@ -263,29 +261,30 @@ public:
 
         // Allow transition between rest shapes
         SingleLink<BezierShellForceField<DataTypes>,
-            sofa::component::controller::MeshInterpolator<DataTypes>,
-            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> restShape;
+        sofa::component::controller::MeshInterpolator<DataTypes>,
+        BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> restShape;
 
         // Indirect rest shape indexing (e.g. for "joining" two meshes)
         bool mapTopology;
         SingleLink<BezierShellForceField<DataTypes>,
-            sofa::component::engine::JoinMeshPoints<DataTypes>,
-            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> topologyMapper;
+        sofa::component::engine::JoinMeshPoints<DataTypes>,
+        BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> topologyMapper;
 
         // Bezier shell interpolation
         SingleLink<BezierShellForceField<DataTypes>,
-            sofa::component::fem::BezierShellInterpolation<DataTypes>,
-            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> bsInterpolation;
+        sofa::component::fem::BezierShellInterpolation<DataTypes>,
+        BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> bsInterpolation;
 
 
 
         static void computeEdgeBezierPoints(const Index& a, const Index& b, const Index& c,
-            const VecCoord& x, const helper::vector<Vec3>& norms,
-            helper::fixed_array<Vec3,10> &bezierPoints);
+        const VecCoord& x, const helper::vector<Vec3>& norms,
+        helper::fixed_array<Vec3,10> &bezierPoints);
 
-        void handleEvent(sofa::core::objectmodel::Event *event);
+        void handleEvent(sofa::core::objectmodel::Event *event) override;
 
-        const TriangleInformation& getTriangleInfo(Index t) {
+        const TriangleInformation& getTriangleInfo(Index t)
+        {
             return triangleInfo.getValue()[t];
         }
 

@@ -1,5 +1,5 @@
-#include "../initPluginShells.h"
-#include "AdaptiveCuttingController.inl"
+#include <SofaShells/config.h>
+#include <SofaShells/cutting/AdaptiveCuttingController.inl>
 #include <sofa/core/ObjectFactory.h>
 
 

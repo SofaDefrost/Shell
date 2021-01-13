@@ -25,11 +25,10 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_CST_FEM_FORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_CST_FEM_FORCEFIELD_INL
 
-#include "CstFEMForceField.h"
-//#include <sofa/core/behavior/ForceField.inl>
+#include <SofaShells/forcefield/CstFEMForceField.h>
 #include <SofaBaseTopology/TopologyData.inl>
 #include <sofa/helper/rmath.h>
-#include <sofa/defaulttype/Vec3Types.h>
+#include <sofa/defaulttype/VecTypes.h>
 #include <sofa/simulation/AnimateBeginEvent.h>
 
 #ifdef _WIN32
@@ -150,7 +149,7 @@ template <class DataTypes> void CstFEMForceField<DataTypes>::reinit()
     /// Prepare to store info in the triangle array
     ti.resize(_topology->getNbTriangles());
 
-    for (int i=0; i<_topology->getNbTriangles(); ++i)
+    for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
     {
 
         triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
@@ -558,7 +557,7 @@ void CstFEMForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* mpa
     }
 #endif
 
-    for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
+    for(sofa::Index t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
         const TriangleInformation &tinfo = triangleInf[t];
         const Triangle triangle = _topology->getTriangle(t);

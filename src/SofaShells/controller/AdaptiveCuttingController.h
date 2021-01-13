@@ -15,12 +15,10 @@
 #include <SofaBaseTopology/TriangleSetGeometryAlgorithms.h>
 #include <SofaBaseTopology/TopologyData.h>
 
-//#include <sofa/gui/PickHandler.h>
-
 #include <sofa/helper/map.h>
 #include <sofa/helper/vector.h>
 
-#include "Test2DAdapter.h"
+#include <SofaShells/controller/Test2DAdapter.h>
 
 namespace sofa
 {

@@ -1,7 +1,7 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_INL
 #define SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_INL
 
-#include "TriangleSwitchExample.h"
+#include <SofaShells/controller/TriangleSwitchExample.h>
 
 namespace sofa
 {
@@ -76,7 +76,7 @@ void TriangleSwitchExample<DataTypes>::onEndAnimationStep(const double /*dt*/)
     SeqTriangles add_list;
     VecIndex remove_list;
 
-    for (Index i=0; (int)i < m_container->getNbTriangles()-1; i+=2) {
+    for (Index i=0; i < m_container->getNbTriangles()-1; i+=2) {
         Triangle t1, t2, t1n, t2n;
         t1 = m_container->getTriangle(i);
         t2 = m_container->getTriangle(i+1);

@@ -1,7 +1,7 @@
 #ifndef SOFA_COMPONENT_ENGINE_JOINMESHPOINTS_INL
 #define SOFA_COMPONENT_ENGINE_JOINMESHPOINTS_INL
 
-#include "JoinMeshPoints.h"
+#include <SofaShells/engine/JoinMeshPoints.h>
 
 namespace sofa
 {

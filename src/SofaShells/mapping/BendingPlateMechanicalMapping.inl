@@ -25,7 +25,7 @@
 #ifndef SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
 #define SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
 
-#include "BendingPlateMechanicalMapping.h"
+#include <SofaShells/mapping/BendingPlateMechanicalMapping.h>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <SofaBaseCollision/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
@@ -972,6 +972,8 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPar
 template <class TIn, class TOut>
 void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& dOut, const Data<OutMatrixDeriv>& dIn)
 {
+    SOFA_UNUSED(dIn);
+    SOFA_UNUSED(dOut);
 
     // TODO : Unique verification and put the component in "dead mode" if there is missing inoformation
 

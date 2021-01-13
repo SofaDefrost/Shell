@@ -1,5 +1,6 @@
 
-#include "MeshChangedEvent.h"
+#include <SofaShells/controller/MeshChangedEvent.h>
+
 namespace sofa
 {
 

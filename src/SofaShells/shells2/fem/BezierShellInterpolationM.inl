@@ -1,32 +1,23 @@
 #ifndef SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 
-#include "BezierShellInterpolationM.h"
+#include <SofaShells/shells2/fem/BezierShellInterpolationM.h>
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <SofaBaseTopology/TopologyData.inl>
-//#include <sofa/component/topology/GridTopology.h>
 #include <sofa/helper/decompose.h>
-//#include <sofa/helper/gl/template.h>
-//#include <sofa/helper/gl/Axis.h>
-//#include <sofa/helper/rmath.h>
-//#include <assert.h>
-//#include <iostream>
-//#include <set>
-//#include <sofa/helper/system/gl.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 
-//#include <sofa/defaulttype/SolidTypes.inl>
 #include <sofa/helper/OptionsGroup.h>
 
-#include <sofa/helper/gl/Cylinder.h>
+#include <sofa/gl/Cylinder.h>
+#include <sofa/gl/Axis.h>
 #include <sofa/simulation/Simulation.h>
 #include <sofa/core/visual/VisualParams.h>
-#include <sofa/helper/gl/Axis.h>
 //#include <sofa/simulation/Node.h>
 
 

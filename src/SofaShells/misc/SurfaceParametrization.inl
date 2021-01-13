@@ -5,8 +5,8 @@
 //   -- Can we use edge swapping at all? It seems that because of a varying
 //      metric tensor the topology can become non-conforming.
 
-#include "SurfaceParametrization.h"
-#include "../misc/PointProjection.h"
+#include <SofaShells/misc/SurfaceParametrization.h>
+#include <SofaShells/misc//PointProjection.h>
 
 #include <sofa/helper/rmath.h>
 

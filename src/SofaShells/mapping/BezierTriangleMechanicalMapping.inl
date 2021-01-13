@@ -25,7 +25,7 @@
 #ifndef SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
 #define SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
 
-#include "BezierTriangleMechanicalMapping.h"
+#include <SofaShells/mapping/BezierTriangleMechanicalMapping.h>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <SofaBaseCollision/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
@@ -1049,8 +1049,8 @@ const BaseMatrix* BezierTriangleMechanicalMapping<TIn, TOut>::getJ(const core::M
 
         // Initialize the matrix
         if (matrixJ.get() == 0 ||
-            matrixJ->rowBSize() != out.size() ||
-            matrixJ->colBSize() != in.size())
+            sofa::Size(matrixJ->rowBSize()) != out.size() ||
+            sofa::Size(matrixJ->colBSize()) != in.size())
         {
             matrixJ.reset(new MatrixType(
                     out.size() * NOut,

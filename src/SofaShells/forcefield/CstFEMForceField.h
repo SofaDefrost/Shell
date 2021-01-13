@@ -81,7 +81,7 @@ class CstFEMForceField : public core::behavior::ForceField<DataTypes>
 
         typedef Vec3Types::VecCoord VecCoordHigh;
 
-        typedef sofa::core::topology::BaseMeshTopology::index_type Index;
+        typedef sofa::Index Index;
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
         typedef sofa::core::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
 
@@ -156,13 +156,13 @@ public:
         CstFEMForceField();
 
         virtual ~CstFEMForceField();
-        virtual void init();
-        virtual void reinit();
-        virtual void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) ;
-        virtual void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) ;
-        virtual void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix);
+        void init() override;
+        void reinit() override;
+        void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) override ;
+        void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) override ;
+        void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix) override;
 
-        virtual SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& x) const { return 0; }
+        SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& x) const override { return 0; }
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
 

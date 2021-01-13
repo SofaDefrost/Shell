@@ -22,12 +22,12 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#include "BezierShellForceField.inl"
+#include <SofaShells/shells2/forcefield/BezierShellForceField.inl>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
-#include "../../initPluginShells.h"
+#include <SofaShells/config.h>
 
 
 namespace sofa

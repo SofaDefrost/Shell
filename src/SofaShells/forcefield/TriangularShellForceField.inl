@@ -25,19 +25,19 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 
-#include "TriangularShellForceField.h"
+#include <SofaShells/forcefield/TriangularShellForceField.h>
 #include <sofa/core/behavior/ForceField.inl>
 #include <SofaBaseTopology/TopologyData.inl>
-#include <sofa/helper/gl/template.h>
+#include <sofa/gl/template.h>
 #include <sofa/helper/rmath.h>
-#include <sofa/helper/system/gl.h>
-#include <sofa/helper/gl/template.h>
+#include <sofa/gl/gl.h>
+#include <sofa/gl/template.h>
 #include <sofa/helper/system/thread/debug.h>
 #include <fstream> // for reading the file
 #include <iostream> //for debugging
 #include <vector>
 #include <algorithm>
-#include <sofa/defaulttype/Vec3Types.h>
+#include <sofa/defaulttype/VecTypes.h>
 #include <assert.h>
 #include <map>
 #include <utility>
@@ -219,7 +219,7 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     /// Prepare to store info in the triangle array
     ti.resize(_topology->getNbTriangles());
 
-    for (int i=0; i<_topology->getNbTriangles(); ++i)
+    for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
     {
 
         triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
@@ -322,7 +322,7 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
     #endif
     // XXX: Matrix not necessarily empty!
 
-    for(int t=0 ; t != _topology->getNbTriangles() ; ++t)
+    for(sofa::Index t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
             const TriangleInformation &tinfo = triangleInf[t];
             const Triangle triangle = _topology->getTriangle(t);

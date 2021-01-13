@@ -5,7 +5,7 @@ find_package(SofaFramework REQUIRED)
 find_package(SofaBase REQUIRED)
 find_package(SofaGeneral REQUIRED)
 
-
+#SofaBoundaryCondition
 
 #SofaBoundaryCondition;SofaGeneralMeshCollision;SofaGeneralVisual;SofaGraphComponent;SofaGeneralAnimationLoop;SofaGeneralDeformable;SofaGeneralEngine;SofaGeneralExplicitOdeSolver;SofaGeneralImplicitOdeSolver;SofaGeneralLinearSolver;SofaGeneralRigid;SofaGeneralObjectInteraction;SofaGeneralSimpleFem;SofaGeneralTopology;SofaTopologyMapping;SofaUserInteraction;SofaConstraint;SofaGeneralLoader
 
@@ -130,7 +130,7 @@ endif()
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
 
 # Link the plugin library to its dependency
-target_link_libraries(${PROJECT_NAME} SofaComponentBase SofaMeshCollision SofaGraphComponent SofaCore SofaHelper SofaBaseTopology SofaUserInteraction)
+target_link_libraries(${PROJECT_NAME} SofaCore SofaHelper SofaBaseCollision SofaBaseTopology SofaBaseLinearSolver SofaBaseMechanics SofaUserInteraction SofaMeshCollision SofaGraphComponent SofaBoundaryCondition Sofa.GL)
 
 if(SofaGui_FOUND AND SofaOpenglVisual_FOUND)
 	target_link_libraries(${PROJECT_NAME} SofaGuiMain SofaOpenglVisual)

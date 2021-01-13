@@ -1,10 +1,10 @@
-#include "../initPluginShells.h"
+#include <SofaShells/config.h>
 
 #include <sofa/core/ObjectFactory.h>
-#include <sofa/defaulttype/Vec3Types.h>
+#include <sofa/defaulttype/VecTypes.h>
 #include <sofa/helper/Factory.inl>
 #include <sofa/gui/PickHandler.h>
-#include "AdaptiveCutting.h"
+#include <SofaShells/cutting/AdaptiveCutting.h>
 
 namespace sofa
 {

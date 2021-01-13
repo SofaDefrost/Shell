@@ -2,7 +2,7 @@
 #define CUDA_TEST2DADAPTER_H
 
 #include <sofa/gpu/cuda/CudaTypes.h>
-#include "Test2DAdapter.h"
+#include <SofaShells/controller/Test2DAdapter.h>
 
 #include <sofa/helper/fixed_array.h>
 #include <sofa/helper/vector.h>

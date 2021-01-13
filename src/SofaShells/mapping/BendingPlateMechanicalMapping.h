@@ -33,16 +33,12 @@
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/helper/vector.h>
 
-
-#include <sofa/helper/gl/GLSLShader.h>
-
+#include <sofa/gl/GLSLShader.h>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
-#include "../forcefield/TriangularBendingFEMForceField.h"
-//#include <sofa/component/topology/TriangleSubdivisionTopologicalMapping.h>
+#include <SofaShells/forcefield/TriangularBendingFEMForceField.h>
 
 #include <sofa/defaulttype/VecTypes.h>
-
 #include <sofa/helper/system/thread/CTime.h>
 
 
@@ -110,15 +106,15 @@ public:
     {
     }
 
-    void init();
-    void reinit();
-    virtual void draw(const core::visual::VisualParams* vparams);
+    void init() override;
+    void reinit() override;
+    void draw(const core::visual::VisualParams* vparams) override;
 
 
-    void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in);
-    void applyJ(const core::MechanicalParams *mparams, Data<OutVecDeriv>& out, const Data<InVecDeriv>& in);
-    void applyJT(const core::MechanicalParams *mparams, Data<InVecDeriv>& out, const Data<OutVecDeriv>& in);
-    void applyJT(const core::ConstraintParams *cparams, Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in);
+    void apply(const core::MechanicalParams *mparams, Data<OutVecCoord>& out, const Data<InVecCoord>& in) override;
+    void applyJ(const core::MechanicalParams *mparams, Data<OutVecDeriv>& out, const Data<InVecDeriv>& in) override;
+    void applyJT(const core::MechanicalParams *mparams, Data<InVecDeriv>& out, const Data<OutVecDeriv>& in) override;
+    void applyJT(const core::ConstraintParams *cparams, Data<InMatrixDeriv>& out, const Data<OutMatrixDeriv>& in) override;
 
 protected:
 
@@ -131,7 +127,7 @@ protected:
     {
     }
 
-        helper::gl::GLSLShader shader;
+        gl::GLSLShader shader;
 
         BaseMeshTopology* inputTopo;
         BaseMeshTopology* outputTopo;

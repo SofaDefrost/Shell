@@ -3,8 +3,8 @@
 // triangular networks.
 //
 
-#include "../initPluginShells.h"
-#include "Optimize2DSurface.inl"
+#include <SofaShells/config.h>
+#include <SofaShells/misc/Optimize2DSurface.inl>
 
 namespace sofa
 {

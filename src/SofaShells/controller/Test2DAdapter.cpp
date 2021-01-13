@@ -1,5 +1,5 @@
-#include "../initPluginShells.h"
-#include "Test2DAdapter.inl"
+#include <SofaShells/config.h>
+#include <SofaShells/controller/Test2DAdapter.inl>
 #include <sofa/core/ObjectFactory.h>
 
 

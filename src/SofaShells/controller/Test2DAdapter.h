@@ -18,8 +18,8 @@
 #include <sofa/helper/map.h>
 #include <sofa/helper/vector.h>
 
-#include "../misc/Optimize2DSurface.h"
-#include "../misc/SurfaceParametrization.h"
+#include <SofaShells/misc/Optimize2DSurface.h>
+#include <SofaShells/misc/SurfaceParametrization.h>
 
 namespace sofa
 {

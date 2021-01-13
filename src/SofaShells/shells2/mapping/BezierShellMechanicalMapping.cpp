@@ -23,11 +23,11 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 
-#include "BezierShellMechanicalMapping.inl"
+#include <SofaShells/shells2/mapping/BezierShellMechanicalMapping.inl>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/ObjectFactory.h>
-#include "../../initPluginShells.h"
+#include <SofaShells/config.h>
 
 namespace sofa
 {

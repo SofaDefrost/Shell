@@ -1,7 +1,6 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_H
 #define SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_H
 
-//#include <sofa/component/component.h>
 #include <SofaUserInteraction/Controller.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
@@ -46,10 +45,10 @@ protected:
 
 public:
 
-    virtual void init();
-    virtual void reinit();
+    void init() override;
+    void reinit() override;
 
-    virtual std::string getTemplateName() const
+    std::string getTemplateName() const override
     {
         return templateName(this);
     }
@@ -61,7 +60,7 @@ public:
 
     Data<unsigned int>      f_interval;
 
-    virtual void onEndAnimationStep(const double dt);
+    void onEndAnimationStep(const double dt) override;
 
     void computeTriangleNormal(const Triangle &t, Vec3 &normal);
 
