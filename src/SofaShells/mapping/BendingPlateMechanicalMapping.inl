@@ -569,7 +569,7 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
         A[0][1] = A[1][0] = AB*AC;
         b[0] = AP*AB;
         b[1] = AP*AC;
-        const double det = determinant(A);
+        const double det = defaulttype::determinant(A);
 
         double alpha = (b[0]*A[1][1] - b[1]*A[0][1])/det;
         double beta  = (b[1]*A[0][0] - b[0]*A[1][0])/det;

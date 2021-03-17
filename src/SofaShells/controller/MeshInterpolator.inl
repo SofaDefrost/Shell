@@ -141,7 +141,7 @@ void MeshInterpolator<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     // Send signal about change
     core::objectmodel::MeshChangedEvent mcEvent(alpha);
-    this->getContext()->propagateEvent(sofa::core::ExecParams::defaultInstance(), &mcEvent);
+    this->getContext()->propagateEvent(sofa::core::execparams::defaultInstance(), &mcEvent);
 }
 
 // I do not know how to switch between these two implementations cleanly

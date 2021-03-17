@@ -129,7 +129,7 @@ add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILE
 target_link_libraries(${PROJECT_NAME} SofaCore SofaHelper SofaBaseCollision SofaBaseTopology SofaBaseLinearSolver SofaBaseMechanics SofaUserInteraction SofaMeshCollision SofaGraphComponent SofaBoundaryCondition Sofa.GL)
 
 if(SofaGui_FOUND AND SofaOpenglVisual_FOUND)
-	target_link_libraries(${PROJECT_NAME} SofaGuiMain SofaOpenglVisual)
+	target_link_libraries(${PROJECT_NAME} SofaGui SofaOpenglVisual)
 endif()
 
 

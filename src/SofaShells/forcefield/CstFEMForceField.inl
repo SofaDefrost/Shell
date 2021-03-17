@@ -30,6 +30,7 @@
 #include <sofa/helper/rmath.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/simulation/AnimateBeginEvent.h>
+#include <sofa/core/behavior/MultiMatrixAccessor.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -186,7 +187,7 @@ void CstFEMForceField<DataTypes>::addDForce(const sofa::core::MechanicalParams* 
     VecDeriv& df        = *(datadF.beginEdit());
     const VecDeriv& dp  =   datadX.getValue()  ;
 
-    double kFactor = mparams->kFactor();
+    Real kFactor = (Real)sofa::core::mechanicalparams::kFactor(mparams);
 
     //std::cout << "--addDForce" << std::endl;
 
@@ -540,7 +541,7 @@ void CstFEMForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* mpa
     sofa::core::behavior::MultiMatrixAccessor::MatrixRef r = matrix->getMatrix(this->mstate);
     helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
-    double kFactor = mparams->kFactor();
+    Real kFactor = (Real)sofa::core::mechanicalparams::kFactor(mparams);
 
 #ifdef PRINT
     r.matrix->clear();
