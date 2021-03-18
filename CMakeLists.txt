@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
-project(SofaShells)
+cmake_minimum_required(VERSION 3.1)
+project(SofaShells VERSION 1.0)
 
 set(SOFASHELLS_MAJOR_VERSION 1)
 set(SOFASHELLS_MINOR_VERSION 0)
@@ -122,9 +122,17 @@ target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include>"
 
 find_package(SofaFramework REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} SofaComponentBase SofaHelper SofaBaseTopology SofaUserInteraction)
+target_link_libraries(${PROJECT_NAME} SofaHelper SofaBaseTopology SofaUserInteraction)
 
-sofa_create_package(sofa-shells ${SOFASHELLS_VERSION} ${PROJECT_NAME} sofa-shells)
+## Install rules for the library and headers; CMake package configurations files
+sofa_generate_package(
+    NAME sofa-shells
+    VERSION ${PROJECT_VERSION}
+    TARGETS ${PROJECT_NAME}
+    EXAMPLE_INSTALL_DIR examples
+    RELOCATABLE "plugins"
+    )
+
 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 SET_PROPERTY(TARGET ${PROJECT_NAME}	PROPERTY FOLDER "plugins")
