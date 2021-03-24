@@ -156,7 +156,6 @@ void TriangleSwitchExample<DataTypes>::onEndAnimationStep(const double /*dt*/)
     m_modifier->addTriangles(add_list);
     m_modifier->removeTriangles(remove_list, true, true);
     m_modifier->notifyEndingEvent();
-    m_modifier->propagateTopologicalChanges();
 }
 
 // Computes triangle normal
