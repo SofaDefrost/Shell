@@ -53,6 +53,8 @@ namespace fem
 //    std::cout << __FUNCTION__ << " pt " << pointIndex << std::endl;
 //}
 
+
+/*
 template<class DataTypes>
 void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1, unsigned int i2)
 {
@@ -131,7 +133,7 @@ void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1
     Inherited::swap(i1, i2);
 
     bsi->updateBezierPoints();
-}
+}*/
 
 template<class DataTypes>
 void BezierShellInterpolation<DataTypes>::TriangleInfoHandler::applyCreateFunction(
@@ -202,12 +204,12 @@ void BezierShellInterpolation<DataTypes>::init()
         return;
     }
 
-    pointInfo.createTopologicalEngine(bezierM2P->getTo(), pointHandler);
+    pointInfo.createTopologyHandler(bezierM2P->getTo(), pointHandler);
     pointInfo.registerTopologicalData();
     pointInfo.beginEdit()->resize(dynamic_cast<topology::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
     pointInfo.endEdit();
 
-    triInfo.createTopologicalEngine(inputTopology, triHandler);
+    triInfo.createTopologyHandler(inputTopology, triHandler);
     triInfo.registerTopologicalData();
     triInfo.beginEdit()->resize(dynamic_cast<topology::TriangleSetTopologyContainer*>(inputTopology)->getNumberOfElements());
     triInfo.endEdit();

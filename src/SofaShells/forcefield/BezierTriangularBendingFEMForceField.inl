@@ -123,7 +123,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
     _topology = this->getContext()->getMeshTopology();
 
     // Create specific handler for TriangleData
-    triangleInfo.createTopologicalEngine(_topology, triangleHandler);
+    triangleInfo.createTopologyHandler(_topology, triangleHandler);
     triangleInfo.registerTopologicalData();
 
     reinit();

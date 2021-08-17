@@ -92,7 +92,7 @@ void BezierShellForceField<DataTypes>::TriangleHandler::applyCreateFunction(unsi
     }
 }
 
-template<class DataTypes>
+/*template<class DataTypes>
 void BezierShellForceField<DataTypes>::TriangleHandler::swap(unsigned int i1, unsigned int i2)
 {
     if (ff) {
@@ -105,7 +105,7 @@ void BezierShellForceField<DataTypes>::TriangleHandler::swap(unsigned int i1, un
     }
 
     Inherited::swap(i1, i2);
-}
+}*/
 
 // --------------------------------------------------------------------------------------
 // ---
@@ -173,7 +173,7 @@ void BezierShellForceField<DataTypes>::init()
     _topology = this->getContext()->getMeshTopology();
 
     // Create specific handler for TriangleData
-    triangleInfo.createTopologicalEngine(_topology, triangleHandler);
+    triangleInfo.createTopologyHandler(_topology, triangleHandler);
     triangleInfo.registerTopologicalData();
 
     reinit();

@@ -58,7 +58,7 @@ public:
     Data<Real>      f_input_threshold;
     Data<VecCoord>  f_input_position;
 
-    Data< helper::vector< helper::fixed_array<Index,2> > > f_output_closePoints;
+    Data< type::vector< type::fixed_array<Index,2> > > f_output_closePoints;
 
 };
 

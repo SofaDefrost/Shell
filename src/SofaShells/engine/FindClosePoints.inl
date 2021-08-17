@@ -52,14 +52,14 @@ void FindClosePoints<DataTypes>::doUpdate()
     Real threshold = f_input_threshold.getValue();
     const VecCoord& points = f_input_position.getValue();
 
-    helper::vector< helper::fixed_array<Index,2> >& list = *f_output_closePoints.beginEdit();
+    helper::vector< type::fixed_array<Index,2> >& list = *f_output_closePoints.beginEdit();
     list.clear();
 
     if (points.size() > 1) {
         for (Index i=0; i<points.size()-1; i++) {
             for (Index j=i+1; j<points.size(); j++) {
                 if ((points[i] - points[j]).norm() <= threshold) {
-                    list.push_back(helper::fixed_array<Index,2>(i,j));
+                    list.push_back(type::fixed_array<Index,2>(i,j));
                 }
             }
         }

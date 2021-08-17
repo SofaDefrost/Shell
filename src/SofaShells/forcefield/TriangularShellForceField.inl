@@ -142,7 +142,7 @@ void TriangularShellForceField<DataTypes>::init()
     }
 
     // Create specific handler for TriangleData
-    triangleInfo.createTopologicalEngine(_topology, triangleHandler);
+    triangleInfo.createTopologyHandler(_topology, triangleHandler);
     triangleInfo.registerTopologicalData();
 
     reinit();
