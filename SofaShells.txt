@@ -1,0 +1,20 @@
+
+************************************
+*         SofaShells.txt           *
+************************************
+
+
+AUTHOR :
+ - Thomas Golembiovsky
+ - Christian Duriez
+ - Olivier Comas
+ - Igor Peterlik
+ - Stéphane Cotin
+
+
+LICENCE :
+ - GPL
+
+
+
+OTHER COMMENTS :

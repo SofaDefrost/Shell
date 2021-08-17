@@ -1,7 +1,0 @@
-# CMake package configuration file for the sofa-shells plugin
-
-@PACKAGE_INIT@
-
-find_package(SofaFramework REQUIRED)
-
-check_required_components(sofa-shells)
