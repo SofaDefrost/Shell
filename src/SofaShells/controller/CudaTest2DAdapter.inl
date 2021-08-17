@@ -350,7 +350,7 @@ void Test2DAdapter< gpu::cuda::CudaVec3fTypes >::colourGraph()
     data.colours.clear();
 
     int ncolours = 0;
-    helper::vector<int> c(m_container->getNbPoints(), -1);
+    type::vector<int> c(m_container->getNbPoints(), -1);
 
     for (Index v=0; (int)v<m_container->getNbPoints(); v++) {
 

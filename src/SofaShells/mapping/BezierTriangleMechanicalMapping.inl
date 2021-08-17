@@ -140,7 +140,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
     const SeqEdges &inEdges = inputTopo->getEdges();
     const SeqTriangles &inTriangles = inputTopo->getTriangles();
 
-    const helper::vector<Vec3>& norms = normals.getValue();
+    const type::vector<Vec3>& norms = normals.getValue();
 
     // Iterates over 'in' triangles
     triangleInfo.resize(inTriangles.size());
@@ -440,7 +440,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::MeasureError()
 }
 
 template <class TIn, class TOut>
-typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError)
+typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanicalMapping<TIn, TOut>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, type::vector<Real> &vectorError)
 {
     // Mesh 1
     MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
@@ -577,7 +577,7 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
         computeBaryCoefs(bary, point,
             pointTriangle1, pointTriangle2, pointTriangle3, false);
         if ((bary[0] < 0.0) || (bary[1] < 0.0) || (bary[2] < 0.0) ||
-            (rabs(1.0 - (bary[0] + bary[1] + bary[2])) > 1e-10)) {
+            (helper::rabs(1.0 - (bary[0] + bary[1] + bary[2])) > 1e-10)) {
             // Point projected onto the plane of the triangle lies outside
             // of the triangle. Some vertex or edge will be more
             // appropriate.
@@ -849,7 +849,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
 
     // List of in triangles
     const SeqTriangles& inTriangles = inputTopo->getTriangles();
-    //const helper::vector<Rigid>& inVertices = *this->fromModel->getX();
+    //const type::vector<Rigid>& inVertices = *this->fromModel->getX();
     const InVecCoord& inVertices = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     // Compute nodes of the Bézier triangle for each input triangle
@@ -1027,7 +1027,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
 }
 
 template <class TIn, class TOut>
-const BaseMatrix* BezierTriangleMechanicalMapping<TIn, TOut>::getJ(const core::MechanicalParams * /*mparams*/)
+const defaulttype::BaseMatrix* BezierTriangleMechanicalMapping<TIn, TOut>::getJ(const core::MechanicalParams * /*mparams*/)
 {
     //std::cout << "---------------- getJ ----------------------------" << std::endl;
 
@@ -1217,7 +1217,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
 
             // Now the influence through other nodes
 
-            sofa::helper::fixed_array<Vec3,10> &bn = tinfo.bezierNodes;
+            sofa::type::fixed_array<Vec3,10> &bn = tinfo.bezierNodes;
 
             fn = in[pt] * (3*bc[0]*bc[0]*bc[1]);
             if (fn != Vec3(0,0,0))
@@ -1458,7 +1458,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw(const core::visual::Visual
         //for (unsigned int i=0; i<inputTopo->getTriangles().size(); i++)
         unsigned int i=3;
         {
-            sofa::helper::fixed_array<Vec3,10> &bn = triangleInfo[i].bezierNodes;
+            sofa::type::fixed_array<Vec3,10> &bn = triangleInfo[i].bezierNodes;
             for (int j=0; j<10; j++)
             {
                 //glColor4f(0.0, 0.5, 0.3, 1.0);

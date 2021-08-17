@@ -15,7 +15,7 @@ namespace core
 namespace objectmodel
 {
 
-using namespace sofa::defaulttype;
+using namespace sofa::type;
 
 // Sent by MeshInterpolator when the mesh changes
 class MeshChangedEvent : public sofa::core::objectmodel::Event

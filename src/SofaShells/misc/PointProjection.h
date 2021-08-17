@@ -8,9 +8,9 @@
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 
-#include <sofa/helper/vector.h>
+#include <sofa/type/vector.h>
 #include <sofa/defaulttype/Mat.h>
 
 
@@ -27,10 +27,10 @@ class PointProjection
 {
 
     public:
-        typedef sofa::defaulttype::Vec<2, Real> Vec2;
-        typedef sofa::defaulttype::Vec<3, Real> Vec3;
+        typedef sofa::type::Vec<2, Real> Vec2;
+        typedef sofa::type::Vec<3, Real> Vec3;
 
-        typedef sofa::defaulttype::Mat<3,3, Real> Mat33;
+        typedef sofa::type::Mat<3,3, Real> Mat33;
 
         typedef sofa::component::topology::TriangleSetTopologyContainer::Edge                   Edge;
         typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID             Index;
@@ -41,8 +41,8 @@ class PointProjection
         typedef sofa::component::topology::TriangleSetTopologyContainer::SeqEdges               SeqEdges;
         typedef sofa::component::topology::TriangleSetTopologyContainer::SeqTriangles           SeqTriangles;
 
-        typedef sofa::helper::vector<Vec3>      VecVec3;
-        typedef sofa::helper::vector<Index>     VecIndex;
+        typedef sofa::type::vector<Vec3>      VecVec3;
+        typedef sofa::type::vector<Index>     VecIndex;
 
         enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 

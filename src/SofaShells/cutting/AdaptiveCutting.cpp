@@ -33,22 +33,22 @@ namespace collision
 #ifndef SOFA_DOUBLE
 helper::Creator<
     InteractionPerformer::InteractionPerformerFactory,
-    AdaptiveCuttingPerformer<defaulttype::Vec3fTypes> >
+    AdaptiveCuttingPerformer<type::Vec3fTypes> >
         AdaptiveCuttingPerformerVec3fClass("AdaptiveCutting", true);
 #endif
 #ifndef SOFA_FLOAT
 helper::Creator<
     InteractionPerformer::InteractionPerformerFactory,
-    AdaptiveCuttingPerformer<defaulttype::Vec3dTypes> >
+    AdaptiveCuttingPerformer<type::Vec3dTypes> >
         AdaptiveCuttingPerformerVec3dClass("AdaptiveCutting", true);
 #endif
 
 #ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<defaulttype::Vec3fTypes>;
+template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<type::Vec3fTypes>;
 //template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<defaulttype::Rigid3fTypes>;
 #endif
 #ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<defaulttype::Vec3dTypes>;
+template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<type::Vec3dTypes>;
 //template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<defaulttype::Rigid3dTypes>;
 #endif
 

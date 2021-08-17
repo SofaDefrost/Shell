@@ -14,9 +14,9 @@
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 
-#include <sofa/helper/vector.h>
+#include <sofa/type/vector.h>
 
 namespace sofa
 {
@@ -34,11 +34,11 @@ class SurfaceParametrization
 {
     public:
 
-        typedef sofa::defaulttype::Vec<2, Real> Vec2;
-        typedef sofa::defaulttype::Vec<3, Real> Vec3;
+        typedef sofa::type::Vec<2, Real> Vec2;
+        typedef sofa::type::Vec<3, Real> Vec3;
 
-        typedef sofa::defaulttype::Mat<2,2, Real> Mat22;
-        typedef sofa::defaulttype::Mat<3,3, Real> Mat33;
+        typedef sofa::type::Mat<2,2, Real> Mat22;
+        typedef sofa::type::Mat<3,3, Real> Mat33;
 
         typedef sofa::component::topology::TriangleSetTopologyContainer::Edge                   Edge;
         typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID             Index;
@@ -49,10 +49,10 @@ class SurfaceParametrization
         typedef sofa::component::topology::TriangleSetTopologyContainer::SeqEdges               SeqEdges;
         typedef sofa::component::topology::TriangleSetTopologyContainer::SeqTriangles           SeqTriangles;
 
-        typedef sofa::helper::vector<Vec2>      VecVec2;
-        typedef sofa::helper::vector<Vec3>      VecVec3;
-        typedef sofa::helper::vector<Index>     VecIndex;
-        typedef sofa::helper::vector<Mat22>     VecMat22;
+        typedef sofa::type::vector<Vec2>      VecVec2;
+        typedef sofa::type::vector<Vec3>      VecVec3;
+        typedef sofa::type::vector<Index>     VecIndex;
+        typedef sofa::type::vector<Mat22>     VecMat22;
 
         enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 
@@ -75,8 +75,8 @@ class SurfaceParametrization
          * @{
          */
         void pointAdd(unsigned int pointIndex, const sofa::core::topology::Point &elem,
-            const sofa::helper::vector< unsigned int > &ancestors,
-            const sofa::helper::vector< double > &coeffs);
+            const sofa::type::vector< unsigned int > &ancestors,
+            const sofa::type::vector< double > &coeffs);
         void pointRemove(unsigned int pointIndex);
         void pointSwap(unsigned int i1, unsigned int i2);
 
@@ -251,7 +251,7 @@ class SurfaceParametrization
         VecMat22 m_metrics;
 
         // Data for initialization.
-        helper::vector<bool> ptDone, triDone, triBoundary;
+        type::vector<bool> ptDone, triDone, triBoundary;
 
         Index   m_storedId;
         Vec2    m_storedPos;

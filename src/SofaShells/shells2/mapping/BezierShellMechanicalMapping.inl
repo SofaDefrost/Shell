@@ -324,7 +324,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::MeasureError()
 }
 
 template <class TIn, class TOut>
-typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapping<TIn, TOut>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError)
+typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapping<TIn, TOut>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, type::vector<Real> &vectorError)
 {
     // Mesh 1
     MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
@@ -873,7 +873,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualPar
         //for (unsigned int i=0; i<inputTopo->getTriangles().size(); i++)
         unsigned int i=3;
         {
-            sofa::helper::fixed_array<Vec3,10> &bn = triangleInfo[i].bezierNodes;
+            sofa::type::fixed_array<Vec3,10> &bn = triangleInfo[i].bezierNodes;
             for (int j=0; j<10; j++)
             {
                 //glColor4f(0.0, 0.5, 0.3, 1.0);

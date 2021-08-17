@@ -42,8 +42,8 @@ namespace component
 namespace forcefield
 {
 
-using namespace sofa::defaulttype;
-using sofa::helper::vector;
+using namespace sofa::type;
+using sofa::type::vector;
 using namespace sofa::component::topology;
 using namespace sofa::core::behavior;
 
@@ -74,12 +74,12 @@ class CstFEMForceField : public core::behavior::ForceField<DataTypes>
         typedef Vec<3,Real> Vec3;
         typedef Vec<9,Real> Vec9;
 
-        typedef helper::Quater<Real> Quat;
+        typedef Quat<Real> Quat;
 
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
 
-        typedef Vec3Types::VecCoord VecCoordHigh;
+        typedef sofa::defaulttype::Vec3Types::VecCoord VecCoordHigh;
 
         typedef sofa::Index Index;
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
@@ -109,10 +109,10 @@ public:
                 Index a, b, c;
 
                 // Rest position in local (in-plane) coordinates
-                helper::fixed_array <Vec3, 3> restPositions;
+                type::fixed_array <Vec3, 3> restPositions;
 
                 // Deformed position in local (in-plane) coordinates
-                helper::fixed_array <Vec3, 3> deformedPositions;
+                type::fixed_array <Vec3, 3> deformedPositions;
 
                 // Frame rotation as matrix and quaternion
                 Transformation R, Rt;
@@ -124,7 +124,7 @@ public:
                 // - element area
                 Real area;
                 // - directional vectors: 1-2, 2-3, 3-1
-                helper::fixed_array <Vec2, 3> d;
+                type::fixed_array <Vec2, 3> d;
 
                 /// Output stream
                 inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ )
@@ -139,15 +139,15 @@ public:
                 }
         };
 
-        class TRQSTriangleHandler : public TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >
+        class TRQSTriangleHandler : public TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >
         {
             public:
-                TRQSTriangleHandler(CstFEMForceField<DataTypes>* _ff, TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >(_data), ff(_ff) {}
+                TRQSTriangleHandler(CstFEMForceField<DataTypes>* _ff, TriangleData<sofa::type::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >(_data), ff(_ff) {}
 
                 void applyCreateFunction(unsigned int triangleIndex, TriangleInformation& ,
                     const Triangle & t,
-                    const sofa::helper::vector< unsigned int > &,
-                    const sofa::helper::vector< double > &);
+                    const sofa::type::vector< unsigned int > &,
+                    const sofa::type::vector< double > &);
 
             protected:
                 CstFEMForceField<DataTypes>* ff;
@@ -172,7 +172,7 @@ public:
         Data<bool> f_corotated;
         Data<Real> f_stiffnessFactor;
         //Data<sofa::helper::OptionsGroup> f_measure;
-        //Data< helper::vector<Real> > f_measuredValues;
+        //Data< type::vector<Real> > f_measuredValues;
 
         TRQSTriangleHandler* triangleHandler;
 
@@ -180,7 +180,7 @@ protected :
 
         /// Material stiffness matrix
         MaterialStiffness materialMatrix, materialMatrixMembrane;
-        TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
+        TriangleData< sofa::type::vector<TriangleInformation> > triangleInfo;
 
         // What to measure
         //bool bMeasureStrain;
@@ -189,7 +189,7 @@ protected :
         void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
 
         //void computeRotation(Transformation& R, const VecCoord &x, const Index &a, const Index &b, const Index &c);
-        void computeRotation(Transformation& R, const helper::fixed_array<Vec3, 3> &x);
+        void computeRotation(Transformation& R, const type::fixed_array<Vec3, 3> &x);
         void computeMaterialStiffness();
         void computeStiffnessMatrix(StiffnessMatrix &K, TriangleInformation &tinfo);
 

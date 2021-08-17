@@ -222,7 +222,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecReal &metrics,
 
     // Compute gradients
     TrianglesAroundVertex N1 = m_topology->getTrianglesAroundVertex(v);
-    helper::vector<Vec3> grad(N1.size());
+    type::vector<Vec3> grad(N1.size());
     Real delta = m_precision/10.0;
     // NOTE: Constrained to 2D!
     for (int component=0; component<2; component++) {
@@ -374,7 +374,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMax(Index v, VecReal &metrics,
 }
 
 template <class DataTypes>
-bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, sofa::helper::vector<Vec3> /*normals*/)
+bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, sofa::type::vector<Vec3> /*normals*/)
 {
     return false;
 #if 0 // Needs fixing!
@@ -384,7 +384,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index /*v*/, VecVec3 &/*x*/
 
     // Compute gradients
     TrianglesAroundVertex N1 = m_topology->getTrianglesAroundVertex(v);
-    helper::vector<Vec3> grad(N1.size());
+    type::vector<Vec3> grad(N1.size());
     Real delta = 1e-5;
     // NOTE: Constrained to 2D!
     for (int component=0; component<2; component++) {
@@ -528,7 +528,7 @@ bool Optimize2DSurface<DataTypes>::smoothOptimizeMin(Index /*v*/, VecVec3 &/*x*/
 }
 
 template <class DataTypes>
-bool Optimize2DSurface<DataTypes>::smoothPain2D(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, sofa::helper::vector<Vec3> /*normals*/)
+bool Optimize2DSurface<DataTypes>::smoothPain2D(Index /*v*/, VecVec3 &/*x*/, VecReal &/*metrics*/, sofa::type::vector<Vec3> /*normals*/)
 {
     return false;
 #if 0 // Needs fixing!

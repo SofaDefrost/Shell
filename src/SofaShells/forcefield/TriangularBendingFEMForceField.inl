@@ -50,69 +50,22 @@
 #include <windows.h>
 #endif
 
-
 namespace sofa
 {
 	namespace component
 	{
 		namespace forcefield
 		{
-			using namespace sofa::defaulttype;
+			using namespace sofa::type;
 			using namespace	sofa::component::topology;
 
 
-inline Quat qDiff(Quat a, const Quat& b)
-{
-    // If the axes are not oriented in the same direction, flip the axis and angle of a to get the same convention than b
-    if (a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3]<0)
-    {
-        a[0] = -a[0];
-        a[1] = -a[1];
-        a[2] = -a[2];
-        a[3] = -a[3];
-    }
-    Quat q = b.inverse() * a;
-    return q;
-}
-
-
-
-inline Quat qDiffZ(const Quat& vertex, const Quat& Qframe)
-{
-    // dQ is the quaternion that embodies the rotation between the z axis of the vertex and the z axis of the local triangle's frame (in local space)
-    Quat dQ;
-
-    // u = z axis of the triangle's frame
-    Vec3d u(0,0,1);
-
-    // v = z axis of the vertex's frame is expressed into world space
-    Vec3d v = vertex.rotate(Vec3d(0.0, 0.0, 1.0));
-    // v0 = v expressed into local triangle's frame
-    Vec3d v0 = Qframe.rotate(v);
-
-    // Axis of rotation between the 2 vectors u and v lies into the plan of the 2 vectors
-    Vec3d axis = cross(u, v0);
-    // Shortest angle between the 2 vectors
-    double angle = acos(dot(u, v0));
-
-    // Quaternion associated to this axis and this angle
-    if (fabs(angle)>1e-6)
-    {
-        dQ.axisToQuat(axis,angle);
-    }
-    else
-    {
-        dQ = Quat(0,0,0,1);
-    }
-
-    return dQ;
-}
 
 // --------------------------------------------------------------------------------------
 // ---  Topology Creation/Destruction functions
 // --------------------------------------------------------------------------------------
 template<class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
+void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::type::vector<unsigned int> &, const sofa::type::vector<double> &)
 {
     if (ff)
     {
@@ -188,7 +141,6 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
     // Create specific handler for TriangleData
     triangleInfo.createTopologyHandler(_topology, triangleHandler);
-    triangleInfo.registerTopologicalData();
 
     reinit();
 
@@ -198,7 +150,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
         if (_topologyTarget)
         {
-            MechanicalState<Vec3Types>* mStateTarget = dynamic_cast<MechanicalState<Vec3Types>*> (_topologyTarget->getContext()->getMechanicalState());
+            MechanicalState<defaulttype::Vec3Types>* mStateTarget = dynamic_cast<MechanicalState<defaulttype::Vec3Types>*> (_topologyTarget->getContext()->getMechanicalState());
             if (mStateTarget)
             {
                 targetTriangles = _topologyTarget->getTriangles();
@@ -233,7 +185,7 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
     const SeqTriangles triangles = _topology->getTriangles();
 
     // Creates new mesh
-    sofa::helper::vector<Vec3> subVertices;
+    sofa::type::vector<Vec3> subVertices;
     SeqTriangles subTriangles;
 
     // Initialises list of subvertices and triangles
@@ -297,7 +249,7 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
 // Subdivides each triangle into 4 by taking the middle of each edge
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::helper::vector<Vec3> &subVertices, SeqTriangles &subTriangles)
+void TriangularBendingFEMForceField<DataTypes>::subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::type::vector<Vec3> &subVertices, SeqTriangles &subTriangles)
 {
     // Global coordinates
     Vec3 mAB, mAC, mBC;
@@ -329,7 +281,7 @@ void TriangularBendingFEMForceField<DataTypes>::subdivide(const Vec3& a, const V
 // Adds a vertex if it is not already in the list
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index)
+void TriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(sofa::type::vector<Vec3> &subVertices, const Vec3 &vertex, int &index)
 {
     bool alreadyHere = false;
 
@@ -352,7 +304,7 @@ void TriangularBendingFEMForceField<DataTypes>::addVertexAndFindIndex(sofa::help
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::movePoint(Vec3& pointToMove)
 {
-    sofa::helper::vector<Vec3> listClosestPoints;
+    sofa::type::vector<Vec3> listClosestPoints;
     FindClosestGravityPoints(pointToMove, listClosestPoints);
     pointToMove = (listClosestPoints[0]+listClosestPoints[1]+listClosestPoints[2])/3;
 }
@@ -362,7 +314,7 @@ void TriangularBendingFEMForceField<DataTypes>::movePoint(Vec3& pointToMove)
 // Finds the list of the 3 closest gravity points of targeted surface
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints)
+void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const Vec3& point, sofa::type::vector<Vec3>& listClosestPoints)
 {
     std::multimap<Real, Vec3> closestTrianglesData;
 
@@ -402,7 +354,7 @@ void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const V
 // --------------------------------------------------------------------------------------
 template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit()
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
     if (topologyMapper.get() != NULL) {
 
@@ -437,7 +389,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 
     for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
     {
-        triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
+        triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::type::vector< unsigned int > )0, (const sofa::type::vector< double >)0);
     }
 
     triangleInfo.endEdit();
@@ -502,7 +454,7 @@ template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int i, const Index&a, const Index&b, const Index&c)
 {
 
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
 
     // Store indices of each vertex
@@ -534,7 +486,7 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int i, co
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
 
     const Index a = tinfo->a;
@@ -612,7 +564,7 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeriv& dx, const Index elementIndex, const double kFactor)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     // Get the indices of the 3 vertices for the current triangle
@@ -696,7 +648,7 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, cons
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     Index a = tinfo->a;
@@ -730,7 +682,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeDisplacement(Displacement
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     Index a = tinfo->a;
@@ -811,7 +763,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementMatrix(
     J[5][1] = x21;
     J[5][2] = y12;
 
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     triangleInf[elementIndex].area = 0.5*determinant;
     triangleInfo.endEdit();
 
@@ -933,7 +885,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBending(St
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(const int i)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
     TriangleInformation *tinfo = &triangleInf[i];
 
@@ -974,7 +926,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(const i
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, const Displacement& D, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     // Compute strain-displacement matrix J
@@ -1002,7 +954,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, co
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::computeForceBending(DisplacementBending &F_bending, const DisplacementBending& D_bending, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     // Compute strain-displacement matrix J
@@ -1027,7 +979,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeForceBending(Displacement
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &x, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     // Get the indices of the 3 vertices for the current triangle
@@ -1241,7 +1193,7 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::Mechani
     Index node1, node2;
 
     sofa::core::behavior::MultiMatrixAccessor::MatrixRef r = matrix->getMatrix(this->mstate);
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
     double kFactor = mparams->kFactor();
 
@@ -1450,7 +1402,7 @@ void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualP
         int nbTriangles=_topology->getNbTriangles();
 
         for (sofa::Index i=0; i<nbTriangles; i++) {
-            const TriangleInformation &tinfo = triangleInfo[i];
+            const TriangleInformation &tinfo = triangleInfo.getValue()[i];
             if ((x[tinfo.a].getCenter() - x0[tinfo.a0].getCenter()).norm() > 1e-8) {
                 points.push_back(x[tinfo.a].getCenter());
                 points.push_back(x0[tinfo.a0].getCenter());
@@ -1466,7 +1418,7 @@ void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualP
         }
 
         if (points.size() > 0)
-            vparams->drawTool()->drawLines(points, 1.0f, Vec4f(1.0, 0.0, 1.0, 1.0));
+            vparams->drawTool()->drawLines(points, 1.0f, type::RGBAColor(1.0, 0.0, 1.0, 1.0));
     }
 }
 
@@ -1537,7 +1489,7 @@ void TriangularBendingFEMForceField<DataTypes>::writeCoeffs()
 
     TriangleInformation *tinfo = NULL;
     int nbTriangles=_topology->getNbTriangles();
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     for (int i=0; i<nbTriangles; i++)
     {
         tinfo = &triangleInf[i];

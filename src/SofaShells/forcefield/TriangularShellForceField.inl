@@ -53,14 +53,14 @@ namespace sofa
 	{
 		namespace forcefield
 		{
-			using namespace sofa::defaulttype;
+			using namespace sofa::type;
 			using namespace	sofa::component::topology;
 
 // --------------------------------------------------------------------------------------
 // ---  Topology Creation/Destruction functions
 // --------------------------------------------------------------------------------------
 template< class DataTypes>
-void TriangularShellForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
+void TriangularShellForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::type::vector<unsigned int> &, const sofa::type::vector<double> &)
 {
     if (ff)
     {
@@ -143,7 +143,6 @@ void TriangularShellForceField<DataTypes>::init()
 
     // Create specific handler for TriangleData
     triangleInfo.createTopologyHandler(_topology, triangleHandler);
-    triangleInfo.registerTopologicalData();
 
     reinit();
 }
@@ -154,7 +153,7 @@ void TriangularShellForceField<DataTypes>::init()
 // --------------------------------------------------------------------------------------
 template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
 {
-    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
 
     // Prepare material matrices
     computeMaterialStiffness();
@@ -223,7 +222,7 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     {
 
         triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
-            (const sofa::helper::vector< unsigned int >)0, (const sofa::helper::vector< double >)0);
+            (const sofa::type::vector< unsigned int >)0, (const sofa::type::vector< double >)0);
     }
 
     triangleInfo.endEdit();
@@ -302,7 +301,7 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
     Index node1, node2;
 
     sofa::core::behavior::MultiMatrixAccessor::MatrixRef r = matrix->getMatrix(this->mstate);
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
     double kFactor = mparams->kFactor();
 
@@ -379,7 +378,7 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index&a, const Index&b, const Index&c)
 {
-    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &ti[i];
 
     // Store indices of each vertex
@@ -500,7 +499,7 @@ void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, co
 }
 
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, const helper::fixed_array<Vec3, 3> &x)
+void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, const type::fixed_array<Vec3, 3> &x)
 {
     if (!f_corotated.getValue()) {
         // Return identity matrix
@@ -565,7 +564,7 @@ void TriangularShellForceField<DataTypes>::computeMaterialStiffness()
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm, Displacement &Db, const VecCoord &x, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &ti[elementIndex];
 
     Index a = tinfo->a;
@@ -660,7 +659,7 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &x, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     // Get the indices of the 3 vertices for the current triangle
@@ -691,7 +690,7 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
 
     // Compute the measure (stress/strain)
     if (bMeasureStrain) {
-        helper::vector<Real> &values = *f_measuredValues.beginEdit();
+        type::vector<Real> &values = *f_measuredValues.beginEdit();
         for (unsigned int i=0; i< tinfo->measure.size(); i++) {
             Vec3 strain = tinfo->measure[i].B * Dm + tinfo->measure[i].Bb * Db;
             // Norm from strain in x and y
@@ -701,7 +700,7 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
         }
         f_measuredValues.endEdit();
     } else if (bMeasureStress) {
-        helper::vector<Real> &values = *f_measuredValues.beginEdit();
+        type::vector<Real> &values = *f_measuredValues.beginEdit();
         for (unsigned int i=0; i< tinfo->measure.size(); i++) {
             Vec3 stress = materialMatrix * tinfo->measure[i].B * Dm
                 + materialMatrix * tinfo->measure[i].Bb * Db;
@@ -763,7 +762,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixBending(Stiffne
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeForce(Displacement &Fm, const Displacement& Dm, Displacement &Fb, const Displacement& Db,const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation &tinfo = triangleInf[elementIndex];
 
     // Compute forces
@@ -780,7 +779,7 @@ void TriangularShellForceField<DataTypes>::computeForce(Displacement &Fm, const 
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeriv& dx, const Index elementIndex, const double kFactor)
 {
-    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
     TriangleInformation &tinfo = ti[elementIndex];
 
     // Get the indices of the 3 vertices for the current triangle

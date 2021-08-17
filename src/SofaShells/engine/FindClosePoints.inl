@@ -13,7 +13,7 @@ namespace engine
 {
 
 //using namespace sofa::helper;
-using namespace sofa::defaulttype;
+using namespace sofa::type;
 using namespace core::objectmodel;
 
 template <class DataTypes>
@@ -52,7 +52,7 @@ void FindClosePoints<DataTypes>::doUpdate()
     Real threshold = f_input_threshold.getValue();
     const VecCoord& points = f_input_position.getValue();
 
-    helper::vector< type::fixed_array<Index,2> >& list = *f_output_closePoints.beginEdit();
+    type::vector< type::fixed_array<Index,2> >& list = *f_output_closePoints.beginEdit();
     list.clear();
 
     if (points.size() > 1) {

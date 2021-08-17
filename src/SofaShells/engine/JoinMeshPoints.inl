@@ -13,7 +13,7 @@ namespace engine
 {
 
 //using namespace sofa::helper;
-using namespace sofa::defaulttype;
+using namespace sofa::type;
 using namespace core::objectmodel;
 
 template <class DataTypes>
@@ -81,14 +81,14 @@ template <class DataTypes>
 void JoinMeshPoints<DataTypes>::doUpdate()
 {
 
-    const helper::vector< helper::fixed_array <Index,2> >& inJP = f_input_joinPoints.getValue();
+    const type::vector< type::fixed_array <Index,2> >& inJP = f_input_joinPoints.getValue();
 	const VecCoord& inPt = f_input_position.getValue();
-	const helper::vector<Vec3>& inNorm = f_input_normals.getValue();
+	const type::vector<Vec3>& inNorm = f_input_normals.getValue();
 
 	VecCoord& outPt = *f_output_position.beginEdit();
-	helper::vector<Vec3>& outNorm = *f_output_normals.beginEdit();
+	type::vector<Vec3>& outNorm = *f_output_normals.beginEdit();
 	VecCoord& outMPt = *f_output_mergedPosition.beginEdit();
-	helper::vector<Vec3>& outMNorm = *f_output_mergedNormals.beginEdit();
+	type::vector<Vec3>& outMNorm = *f_output_mergedNormals.beginEdit();
     outPt.clear();
     outNorm.clear();
     outMPt.resize(inPt.size());
@@ -190,7 +190,7 @@ void JoinMeshPoints<DataTypes>::doUpdate()
     }
 
     // Create output list
-    helper::vector<Index> mapInOut;
+    type::vector<Index> mapInOut;
     mapInOut.resize(inPt.size());
 
     for (Index i=0, newId=0; i<inPt.size(); i++) {
@@ -246,17 +246,17 @@ template <class DataTypes>
 template<unsigned int N>
 void JoinMeshPoints<DataTypes>::createElements(
         std::map<Index, Index> mapInIn,
-        helper::vector<Index> mapInOut,
-        const Data< helper::vector< helper::fixed_array<Index,N> > > &inElements,
-        Data< helper::vector< helper::fixed_array<Index,N> > > &outElements)
+        type::vector<Index> mapInOut,
+        const Data< type::vector< type::fixed_array<Index,N> > > &inElements,
+        Data< type::vector< type::fixed_array<Index,N> > > &outElements)
 {
-	const helper::vector< helper::fixed_array <Index, N> >& inEle = inElements.getValue();
+	const type::vector< type::fixed_array <Index, N> >& inEle = inElements.getValue();
 
-	helper::vector< helper::fixed_array <Index, N> >& outEle = *outElements.beginEdit();
+	type::vector< type::fixed_array <Index, N> >& outEle = *outElements.beginEdit();
     outEle.resize(inEle.size());
 
     for (Index i= 0; i<inEle.size(); i++) {
-        helper::fixed_array <Index, N>& out = outEle[i];
+        type::fixed_array <Index, N>& out = outEle[i];
         for (Index j=0; j<N; j++) {
             Index id = inEle[i][j];
             std::map<Index, Index>::const_iterator iter =

@@ -5,7 +5,7 @@
 #include <SofaShells/controller/Test2DAdapter.h>
 
 #include <sofa/helper/fixed_array.h>
-#include <sofa/helper/vector.h>
+#include <sofa/type/vector.h>
 
 
 namespace sofa
@@ -46,13 +46,13 @@ public:
     typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID     Index;
 
     // Graph colours (of independent sets)
-    helper::vector< sofa::gpu::cuda::CudaVector<Index> > colours;
+    type::vector< sofa::gpu::cuda::CudaVector<Index> > colours;
 
     struct TriangleData {
-        helper::fixed_array<Index,3> nodes;
+        type::fixed_array<Index,3> nodes;
         Coord normal;
         Real functional;
-        helper::fixed_array<Deriv,3> gradient;
+        type::fixed_array<Deriv,3> gradient;
     };
 
     struct PointData {

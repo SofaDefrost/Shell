@@ -108,7 +108,7 @@ void PointProjection<Real>::ProjectPoint(Vec3 &baryCoords, Index &triangleID,
 //    coef_a + coef_b + coef_c = 1
 template <class Real>
 //void ConstraintBaryCoords(Real &coef_a, Real &coef_b, Real &coef_c)
-void ConstraintBaryCoords(sofa::defaulttype::Vec<3, Real> &baryCoords)
+void ConstraintBaryCoords(sofa::type::Vec<3, Real> &baryCoords)
 
 {
     if (baryCoords[0] < 0.0) baryCoords[0] = 0.0;

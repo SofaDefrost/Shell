@@ -4,7 +4,7 @@
 #include <SofaUserInteraction/Controller.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 
 #include <SofaShells/config.h>
 
@@ -28,7 +28,7 @@ public:
     typedef typename DataTypes::Coord Coord;
     typedef typename DataTypes::Deriv Deriv;
     typedef typename Coord::value_type Real;
-    typedef sofa::defaulttype::Vec<3,Real> Vec3;
+    typedef sofa::type::Vec<3,Real> Vec3;
 
 protected:
 
@@ -56,12 +56,12 @@ public:
     Data<Real>              f_increment;
 
     Data<VecCoord>          f_startPosition;
-    Data<helper::vector<Vec3> > f_startNormals;
+    Data<sofa::type::vector<Vec3> > f_startNormals;
     Data<VecCoord>          f_endPosition;
-    Data<helper::vector<Vec3> > f_endNormals;
+    Data<sofa::type::vector<Vec3> > f_endNormals;
 
     Data<VecCoord>          f_position;
-    Data<helper::vector<Vec3> > f_normals;
+    Data<sofa::type::vector<Vec3> > f_normals;
 
     void onEndAnimationStep(const double dt) override;
 
@@ -79,16 +79,16 @@ private:
 #if defined(WIN32) && !defined(SOFA_COMPONENT_CONTROLLER_MESHINTERPOLATION_CPP)
 #pragma warning(disable : 4231)
 #ifndef SOFA_FLOAT
-//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec1dTypes>;
-//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec2dTypes>;
-//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec3dTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<type::Vec1dTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<type::Vec2dTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<type::Vec3dTypes>;
 //template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid2dTypes>;
 template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid3dTypes>;
 #endif //SOFA_FLOAT
 #ifndef SOFA_DOUBLE
-//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec1fTypes>;
-//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec2fTypes>;
-//template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Vec3fTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<type::Vec1fTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<type::Vec2fTypes>;
+//template class SOFA_SHELLS_API MeshInterpolator<type::Vec3fTypes>;
 //template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid2fTypes>;
 template class SOFA_SHELLS_API MeshInterpolator<defaulttype::Rigid3fTypes>;
 #endif //SOFA_DOUBLE

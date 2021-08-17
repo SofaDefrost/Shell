@@ -54,7 +54,7 @@ namespace sofa
 	{
 		namespace forcefield
 		{
-			using namespace sofa::defaulttype;
+			using namespace sofa::type;
 			using namespace	sofa::component::topology;
 
 
@@ -63,7 +63,7 @@ namespace sofa
 // ---  Topology Creation/Destruction functions
 // --------------------------------------------------------------------------------------
 template<class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
+void BezierTriangularBendingFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::type::vector<unsigned int> &, const sofa::type::vector<double> &)
 {
     if (ff) {
         ff->initTriangleOnce(triangleIndex, t[0], t[1], t[2]);
@@ -124,7 +124,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::init()
 
     // Create specific handler for TriangleData
     triangleInfo.createTopologyHandler(_topology, triangleHandler);
-    triangleInfo.registerTopologicalData();
 
     reinit();
 }
@@ -169,7 +168,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
         }
 
         // Check normal count
-        helper::vector<Vec3> norms = restShape.get()->f_normals.getValue();
+        type::vector<Vec3> norms = restShape.get()->f_normals.getValue();
         if (norms.size() == 0) {
             serr << "No normals defined in rest shape, assuming flat triangles!" << sendl;
         } else if (norms.size() !=
@@ -186,7 +185,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
         }
 
         // Check normal count
-        helper::vector<Vec3> norms = topologyMapper.get()->f_input_normals.getValue();
+        type::vector<Vec3> norms = topologyMapper.get()->f_input_normals.getValue();
         if (norms.size() == 0) {
             serr << "No normals defined in topologyMapper, assuming flat triangles!" << sendl;
         } else if (norms.size() !=
@@ -212,14 +211,14 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
     // Compute the material matrices
     computeMaterialMatrix();
 
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
     /// Prepare to store info in the triangle array
     triangleInf.resize(_topology->getNbTriangles());
 
     for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
     {
-        triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::helper::vector< unsigned int > )0, (const sofa::helper::vector< double >)0);
+        triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::type::vector< unsigned int > )0, (const sofa::type::vector< double >)0);
     }
 
     triangleInfo.endEdit();
@@ -231,7 +230,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int i, const Index&a, const Index&b, const Index&c)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
 
     // Store indices of each vertex
@@ -268,7 +267,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
         return;
     }
 
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
 
     Index a0 = tinfo->a0;
@@ -286,7 +285,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
             : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
           );
 
-    const helper::vector<Vec3>& norms = (restShape.get() != NULL)
+    const type::vector<Vec3>& norms = (restShape.get() != NULL)
         // if having changing rest shape take its normals
         ? restShape.get()->f_normals.getValue()
         : (mapTopology
@@ -378,8 +377,8 @@ template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeEdgeBezierPoints(
     const Index& a, const Index& b, const Index& c,
     const VecCoord& x,
-    const helper::vector<Vec3>& norms,
-    helper::fixed_array<Vec3,10> &bezierPoints)
+    const type::vector<Vec3>& norms,
+    type::fixed_array<Vec3,10> &bezierPoints)
 {
     if (norms.size() == 0) {
         // No normals, assume flat triangles
@@ -463,7 +462,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(
     const TriangleInformation *tinfo,
     const Index& a, const Index& b, const Index& c,
     const VecCoord& x,
-    sofa::helper::fixed_array<Vec3,10> &X_bezierPoints)
+    sofa::type::fixed_array<Vec3,10> &X_bezierPoints)
 {
     // 3 points corresponding to the node position
     X_bezierPoints[0] = x[a].getCenter();
@@ -494,7 +493,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computePosBezierPoint(
 
 
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier)
+void BezierTriangularBendingFEMForceField<DataTypes>::bezierFunctions(const Vec2& baryCoord, sofa::type::fixed_array<Real,10> &f_bezier)
 {
     Real a=1-baryCoord[0]-baryCoord[1];
     Real b=baryCoord[0];
@@ -510,7 +509,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::bezierFunctions(const Vec2
 }
 
 template <class DataTypes>
-void BezierTriangularBendingFEMForceField<DataTypes>::bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier)
+void BezierTriangularBendingFEMForceField<DataTypes>::bezierDerivateFunctions(const Vec2& baryCoord, sofa::type::fixed_array<Real,10> &df_dx_bezier, sofa::type::fixed_array<Real,10> &df_dy_bezier)
 {
     Real a=1-baryCoord[0]-baryCoord[1];
     Real b=baryCoord[0];
@@ -539,14 +538,14 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(
     const Vec2& /*baryCoord*/,
     const Index& a, const Index& b, const Index& c,
     const VecCoord& x,
-    sofa::helper::fixed_array<Vec3,10>& X_bezierPoints)
+    sofa::type::fixed_array<Vec3,10>& X_bezierPoints)
 {
     // get the position of the bezier Points
     this->computePosBezierPoint(tinfo, a, b, c, x, X_bezierPoints);
 
 #if 0 //Reference frame by rotation at the center of the bezier triangle
     // use the bezier functions to interpolate the positions
-    sofa::helper::fixed_array<Real,10> f_bezier;
+    sofa::type::fixed_array<Real,10> f_bezier;
     this->bezierFunctions(baryCoord, f_bezier);
     interpolatedFrame.getCenter().clear();
     for (unsigned int i=0;i<10;i++){
@@ -555,7 +554,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(
     }
 
     // compute the derivative of the interpolation for the rotation of the RefFrame
-    sofa::helper::fixed_array<Real,10> df_dx_bezier,df_dy_bezier;
+    sofa::type::fixed_array<Real,10> df_dx_bezier,df_dy_bezier;
     this->bezierDerivateFunctions(baryCoord, df_dx_bezier, df_dy_bezier);
     Vec3 X1(0.0,0.0,0.0),Y1(0.0,0.0,0.0);
     for (unsigned int i=0;i<10;i++){
@@ -594,7 +593,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(
     }
 
     // compute the corresponding rotation
-    defaulttype::Matrix3 R(X1,Y,Z);
+    type::Matrix3 R(X1,Y,Z);
     tinfo->frameOrientation = R;
     tinfo->frameOrientationInv.transpose(R);
 
@@ -610,7 +609,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeriv& dx, const Index elementIndex, const double kFactor)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     // Get the indices of the 3 vertices for the current triangle
@@ -683,10 +682,10 @@ template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
     const VecCoord &/*x*/, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
-    helper::fixed_array <Vec3, 10> &pts = tinfo->pts;
+    type::fixed_array <Vec3, 10> &pts = tinfo->pts;
 
     // The element is being rotated along the frame situated at the center of
     // the element
@@ -1256,7 +1255,7 @@ template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeForceMembrane(
     Displacement &F, const Displacement& D, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation &tinfo = triangleInf[elementIndex];
 
     // Compute forces
@@ -1272,7 +1271,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForceMembrane(
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::computeForceBending(DisplacementBending &F_bending, const DisplacementBending& D_bending, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation &tinfo = triangleInf[elementIndex];
 
     // Compute forces
@@ -1287,7 +1286,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeForceBending(Displa
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &x, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     // Get the indices of the 3 vertices for the current triangle
@@ -1503,7 +1502,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::M
     Index node1, node2;
 
     sofa::core::behavior::MultiMatrixAccessor::MatrixRef r = matrix->getMatrix(this->mstate);
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
     double kFactor = mparams->kFactor();
 
@@ -1637,7 +1636,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
         const VecCoord& x0 = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
 
 
-        helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+        type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
         // Render Bezier points
 

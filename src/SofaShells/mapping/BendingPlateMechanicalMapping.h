@@ -31,7 +31,7 @@
 
 
 #include <sofa/core/behavior/MechanicalState.h>
-#include <sofa/helper/vector.h>
+#include <sofa/type/vector.h>
 
 #include <sofa/gl/GLSLShader.h>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
@@ -51,7 +51,7 @@ namespace component
 namespace mapping
 {
 
-using namespace sofa::defaulttype;
+using namespace sofa::type;
 using namespace sofa::component::forcefield;
 using namespace sofa::component::topology;
 using namespace sofa::helper::system::thread;
@@ -141,10 +141,10 @@ protected:
         OutVecCoord verticesTarget;
         SeqTriangles trianglesTarget;
 
-        helper::vector<Vec3> colourMapping;
-        helper::vector<Vec3> coloursPerVertex;
-        helper::vector<Real> vectorErrorCoarse;
-        helper::vector<Real> vectorErrorTarget;
+        type::vector<Vec3> colourMapping;
+        type::vector<Vec3> coloursPerVertex;
+        type::vector<Real> vectorErrorCoarse;
+        type::vector<Real> vectorErrorTarget;
 
         // Pointer on the forcefield associated with the in topology
         TriangularBendingFEMForceField<In>* triangularBendingForcefield;
@@ -155,21 +155,21 @@ protected:
 
         void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
         void MeasureError();
-        Real DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError);
-        void ComputeNormals(helper::vector<Vec3> &normals);
-        void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals);
+        Real DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, type::vector<Real> &vectorError);
+        void ComputeNormals(type::vector<Vec3> &normals);
+        void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const type::vector<Vec3> &normals);
 
         // Computes the barycentric coordinates of a vertex within a triangle
         void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c);
 
-        Real FindClosestPoints(sofa::helper::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices);
-        Real FindClosestEdges(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges);
-        Real FindClosestTriangles(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
+        Real FindClosestPoints(sofa::type::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices);
+        Real FindClosestEdges(sofa::type::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges);
+        Real FindClosestTriangles(sofa::type::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
 
         // Contains the list of base triangles a vertex belongs to
-        sofa::helper::vector< sofa::helper::vector<int> > listBaseTriangles;
+        sofa::type::vector< sofa::type::vector<int> > listBaseTriangles;
         // Contains the barycentric coordinates of the same vertex within all base triangles
-        sofa::helper::vector< sofa::helper::vector<Vec3> > barycentricCoordinates;
+        sofa::type::vector< sofa::type::vector<Vec3> > barycentricCoordinates;
 };
 
 } // namespace mapping

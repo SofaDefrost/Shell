@@ -43,14 +43,14 @@ namespace sofa
 	{
 		namespace forcefield
 		{
-			using namespace sofa::defaulttype;
+			using namespace sofa::type;
 			using namespace	sofa::component::topology;
 
 // ----------------------------------------------------------------------------
 // ---  Topology Creation/Destruction functions
 // ----------------------------------------------------------------------------
 template< class DataTypes>
-void CstFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::helper::vector<unsigned int> &, const sofa::helper::vector<double> &)
+void CstFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::type::vector<unsigned int> &, const sofa::type::vector<double> &)
 {
     if (ff)
     {
@@ -113,7 +113,6 @@ void CstFEMForceField<DataTypes>::init()
 
     // Create specific handler for TriangleData
     triangleInfo.createTopologyHandler(_topology, triangleHandler);
-    triangleInfo.registerTopologicalData();
 
     reinit();
 }
@@ -124,7 +123,7 @@ void CstFEMForceField<DataTypes>::init()
 // ----------------------------------------------------------------------------
 template <class DataTypes> void CstFEMForceField<DataTypes>::reinit()
 {
-    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
 
     // Prepare material matrices
     computeMaterialStiffness();
@@ -154,7 +153,7 @@ template <class DataTypes> void CstFEMForceField<DataTypes>::reinit()
     {
 
         triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
-            (const sofa::helper::vector< unsigned int >)0, (const sofa::helper::vector< double >)0);
+            (const sofa::type::vector< unsigned int >)0, (const sofa::type::vector< double >)0);
     }
 
     triangleInfo.endEdit();    
@@ -208,7 +207,7 @@ void CstFEMForceField<DataTypes>::addDForce(const sofa::core::MechanicalParams* 
 template <class DataTypes>
 void CstFEMForceField<DataTypes>::initTriangle(const int i, const Index&a, const Index&b, const Index&c)
 {
-    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &ti[i];
 
     // Store indices of each vertex
@@ -253,7 +252,7 @@ void CstFEMForceField<DataTypes>::initTriangle(const int i, const Index&a, const
 
 
 template <class DataTypes>
-void CstFEMForceField<DataTypes>::computeRotation(Transformation& R, const helper::fixed_array<Vec3, 3> &x)
+void CstFEMForceField<DataTypes>::computeRotation(Transformation& R, const type::fixed_array<Vec3, 3> &x)
 {
     if (!f_corotated.getValue()) {
         // Return identity matrix
@@ -381,7 +380,7 @@ void CstFEMForceField<DataTypes>::computeStiffnessMatrix(StiffnessMatrix &K, Tri
 template <class DataTypes>
 void CstFEMForceField<DataTypes>::computeDisplacement(Displacement &D, const VecCoord &x, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &ti[elementIndex];
 
     Index a = tinfo->a;
@@ -424,7 +423,7 @@ void CstFEMForceField<DataTypes>::computeDisplacement(Displacement &D, const Vec
 template <class DataTypes>
 void CstFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &x, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[elementIndex];
 
     // Get the indices of the 3 vertices for the current triangle
@@ -442,7 +441,7 @@ void CstFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &x
 
     // Compute the measure (stress/strain)
     //if (bMeasureStrain) {
-    //    helper::vector<Real> &values = *f_measuredValues.beginEdit();
+    //    type::vector<Real> &values = *f_measuredValues.beginEdit();
     //    for (unsigned int i=0; i< tinfo->measure.size(); i++) {
     //        Vec3 strain = tinfo->measure[i].B * Dm + tinfo->measure[i].Bb * Db;
     //        // Norm from strain in x and y
@@ -452,7 +451,7 @@ void CstFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &x
     //    }
     //    f_measuredValues.endEdit();
     //} else if (bMeasureStress) {
-    //    helper::vector<Real> &values = *f_measuredValues.beginEdit();
+    //    type::vector<Real> &values = *f_measuredValues.beginEdit();
     //    for (unsigned int i=0; i< tinfo->measure.size(); i++) {
     //        Vec3 stress = materialMatrix * tinfo->measure[i].B * Dm
     //            + materialMatrix * tinfo->measure[i].Bb * Db;
@@ -479,7 +478,7 @@ void CstFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoord &x
 template <class DataTypes>
 void CstFEMForceField<DataTypes>::computeForce(Displacement &F, const Displacement& D, const Index elementIndex)
 {
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation &tinfo = triangleInf[elementIndex];
 
     // Compute forces
@@ -495,7 +494,7 @@ void CstFEMForceField<DataTypes>::computeForce(Displacement &F, const Displaceme
 template <class DataTypes>
 void CstFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, const VecDeriv& dx, const Index elementIndex, const double kFactor)
 {
-    helper::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
     TriangleInformation &tinfo = ti[elementIndex];
 
     // Computes displacement
@@ -539,7 +538,7 @@ void CstFEMForceField<DataTypes>::addKToMatrix(const core::MechanicalParams* mpa
     Index node1, node2;
 
     sofa::core::behavior::MultiMatrixAccessor::MatrixRef r = matrix->getMatrix(this->mstate);
-    helper::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
     Real kFactor = (Real)sofa::core::mechanicalparams::kFactor(mparams);
 

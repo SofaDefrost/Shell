@@ -1,10 +1,10 @@
 #ifndef SOFA_COMPONENT_ENGINE_JOINMESHPOINTS_H
 #define SOFA_COMPONENT_ENGINE_JOINMESHPOINTS_H
 
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 #include <sofa/core/DataEngine.h>
 #include <sofa/core/objectmodel/BaseObject.h>
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <SofaShells/config.h>
@@ -34,7 +34,7 @@ public:
     typedef typename DataTypes::Coord    Coord;
     typedef typename Coord::value_type   Real;
 
-    typedef defaulttype::Vec<3,Real> Vec3;
+    typedef type::Vec<3,Real> Vec3;
     typedef unsigned int Index;
 
 protected:
@@ -90,33 +90,33 @@ public:
 
     // Data
 
-    Data< helper::vector< helper::fixed_array<Index,2> > > f_input_joinPoints;
+    Data< type::vector< type::fixed_array<Index,2> > > f_input_joinPoints;
 
     Data<VecCoord> f_input_position;
-    Data< helper::vector<Vec3> > f_input_normals;
-    Data< helper::vector< helper::fixed_array<Index,2> > > f_input_edges;
-    Data< helper::vector< helper::fixed_array<Index,3> > > f_input_triangles;
-    Data< helper::vector< helper::fixed_array<Index,4> > > f_input_quads;
-    Data< helper::vector< helper::fixed_array<Index,4> > > f_input_tetrahedra;
-    Data< helper::vector< helper::fixed_array<Index,8> > > f_input_hexahedra;
+    Data< type::vector<Vec3> > f_input_normals;
+    Data< type::vector< type::fixed_array<Index,2> > > f_input_edges;
+    Data< type::vector< type::fixed_array<Index,3> > > f_input_triangles;
+    Data< type::vector< type::fixed_array<Index,4> > > f_input_quads;
+    Data< type::vector< type::fixed_array<Index,4> > > f_input_tetrahedra;
+    Data< type::vector< type::fixed_array<Index,8> > > f_input_hexahedra;
 
     Data<VecCoord> f_output_position;
-    Data< helper::vector<Vec3> > f_output_normals;
-    Data< helper::vector< helper::fixed_array<Index,2> > > f_output_edges;
-    Data< helper::vector< helper::fixed_array<Index,3> > > f_output_triangles;
-    Data< helper::vector< helper::fixed_array<Index,4> > > f_output_quads;
-    Data< helper::vector< helper::fixed_array<Index,4> > > f_output_tetrahedra;
-    Data< helper::vector< helper::fixed_array<Index,8> > > f_output_hexahedra;
+    Data< type::vector<Vec3> > f_output_normals;
+    Data< type::vector< type::fixed_array<Index,2> > > f_output_edges;
+    Data< type::vector< type::fixed_array<Index,3> > > f_output_triangles;
+    Data< type::vector< type::fixed_array<Index,4> > > f_output_quads;
+    Data< type::vector< type::fixed_array<Index,4> > > f_output_tetrahedra;
+    Data< type::vector< type::fixed_array<Index,8> > > f_output_hexahedra;
     Data<VecCoord> f_output_mergedPosition;
-    Data< helper::vector<Vec3> > f_output_mergedNormals;
+    Data< type::vector<Vec3> > f_output_mergedNormals;
 
 private:
 
     template<unsigned int N> void createElements(
         std::map<Index, Index> mapInIn,
-        helper::vector<Index> mapInOut,
-        const Data< helper::vector< helper::fixed_array<Index,N> > > &inElements,
-        Data< helper::vector< helper::fixed_array<Index,N> > > &outElements);
+        type::vector<Index> mapInOut,
+        const Data< type::vector< type::fixed_array<Index,N> > > &inElements,
+        Data< type::vector< type::fixed_array<Index,N> > > &outElements);
 
     // Inverse mappings: from output to input topology
     // ... node -> node (only for nodes that are not joined and thus have one to one mapping)
@@ -128,16 +128,16 @@ private:
 #if defined(WIN32) && !defined(SOFA_COMPONENT_ENGINE_JOINMESHPOINTS_CPP)
 #pragma warning(disable : 4231)
 #ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Vec1dTypes>;
-template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Vec2dTypes>;
-template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Vec3dTypes>;
+template class SOFA_SHELLS_API JoinMeshPoints<type::Vec1dTypes>;
+template class SOFA_SHELLS_API JoinMeshPoints<type::Vec2dTypes>;
+template class SOFA_SHELLS_API JoinMeshPoints<type::Vec3dTypes>;
 template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Rigid2dTypes>;
 template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Rigid3dTypes>;
 #endif //SOFA_FLOAT
 #ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Vec1fTypes>;
-template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Vec2fTypes>;
-template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Vec3fTypes>;
+template class SOFA_SHELLS_API JoinMeshPoints<type::Vec1fTypes>;
+template class SOFA_SHELLS_API JoinMeshPoints<type::Vec2fTypes>;
+template class SOFA_SHELLS_API JoinMeshPoints<type::Vec3fTypes>;
 template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Rigid2fTypes>;
 template class SOFA_SHELLS_API JoinMeshPoints<defaulttype::Rigid3fTypes>;
 #endif //SOFA_DOUBLE

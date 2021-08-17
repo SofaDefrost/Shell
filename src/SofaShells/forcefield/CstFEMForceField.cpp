@@ -26,7 +26,7 @@
 #include <SofaShells/config.h>
 #include <SofaShells/forcefield/CstFEMForceField.inl>
 #include <sofa/core/behavior/ForceField.inl>
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 //#include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
 

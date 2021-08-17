@@ -153,11 +153,11 @@ void MeshInterpolator<DataTypes>::interpolate()
     const VecCoord &startPt = f_startPosition.getValue();
     const VecCoord &endPt = f_endPosition.getValue();
 
-    const helper::vector<Vec3> &startNorm = f_startNormals.getValue();
-    const helper::vector<Vec3> &endNorm = f_endNormals.getValue();
+    const sofa::type::vector<Vec3> &startNorm = f_startNormals.getValue();
+    const sofa::type::vector<Vec3> &endNorm = f_endNormals.getValue();
 
     VecCoord &pt = *f_position.beginEdit();
-    helper::vector<Vec3> &norm = *f_normals.beginEdit();
+    sofa::type::vector<Vec3> &norm = *f_normals.beginEdit();
 
     for (unsigned int i=0; i<startPt.size(); i++) {
         pt[i] = startPt[i] * (1.0-alpha) + endPt[i] * alpha;
@@ -181,11 +181,11 @@ void MeshInterpolator<DataTypes>::interpolate()
     const VecCoord &startPt = f_startPosition.getValue();
     const VecCoord &endPt = f_endPosition.getValue();
 
-    const helper::vector<Vec3> &startNorm = f_startNormals.getValue();
-    const helper::vector<Vec3> &endNorm = f_endNormals.getValue();
+    const sofa::type::vector<Vec3> &startNorm = f_startNormals.getValue();
+    const sofa::type::vector<Vec3> &endNorm = f_endNormals.getValue();
 
     VecCoord &pt = *f_position.beginEdit();
-    helper::vector<Vec3> &norm = *f_normals.beginEdit();
+    sofa::type::vector<Vec3> &norm = *f_normals.beginEdit();
 
     for (unsigned int i=0; i<startPt.size(); i++) {
 

@@ -4,7 +4,7 @@
 #include <SofaUserInteraction/Controller.h>
 
 #include <sofa/defaulttype/VecTypes.h>
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
@@ -16,7 +16,7 @@
 #include <SofaBaseTopology/TopologyData.h>
 
 #include <sofa/helper/map.h>
-#include <sofa/helper/vector.h>
+#include <sofa/type/vector.h>
 
 #include <SofaShells/controller/Test2DAdapter.h>
 
@@ -50,12 +50,12 @@ public:
     //typedef typename DataTypes::VecDeriv VecDeriv;
     typedef typename Coord::value_type Real;
 
-    typedef sofa::defaulttype::Vec<2, Real> Vec2;
-    typedef sofa::defaulttype::Vec<3, Real> Vec3;
-    //typedef sofa::defaulttype::Mat<2,2,Real> Mat22;
-    //typedef sofa::defaulttype::Mat<3,3,Real> Mat33;
-    //typedef helper::vector<Vec2> VecVec2;
-    //typedef helper::vector<Vec3> VecVec3;
+    typedef sofa::type::Vec<2, Real> Vec2;
+    typedef sofa::type::Vec<3, Real> Vec3;
+    //typedef sofa::type::Mat<2,2,Real> Mat22;
+    //typedef sofa::type::Mat<3,3,Real> Mat33;
+    //typedef type::vector<Vec2> VecVec2;
+    //typedef type::vector<Vec3> VecVec3;
 
 
     typedef sofa::component::topology::EdgeSetTopologyContainer::Edge               Edge;
@@ -65,7 +65,7 @@ public:
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
     typedef sofa::component::topology::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
-    typedef sofa::helper::vector<Index> VecIndex;
+    typedef sofa::type::vector<Index> VecIndex;
 
     enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 

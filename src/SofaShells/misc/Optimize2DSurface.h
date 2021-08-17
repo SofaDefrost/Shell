@@ -9,9 +9,9 @@
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 
-#include <sofa/helper/vector.h>
+#include <sofa/type/vector.h>
 
 #include <SofaShells/misc/SurfaceParametrization.h>
 
@@ -43,11 +43,11 @@ class Optimize2DSurface
         typedef typename Coord::value_type Real;
 
 
-        typedef sofa::defaulttype::Vec<2, Real> Vec2;
-        typedef sofa::defaulttype::Vec<3, Real> Vec3;
+        typedef sofa::type::Vec<2, Real> Vec2;
+        typedef sofa::type::Vec<3, Real> Vec3;
 
-        typedef sofa::defaulttype::Mat<2,2, Real> Mat22;
-        typedef sofa::defaulttype::Mat<3,3, Real> Mat33;
+        typedef sofa::type::Mat<2,2, Real> Mat22;
+        typedef sofa::type::Mat<3,3, Real> Mat33;
 
         typedef sofa::component::topology::EdgeSetTopologyContainer::Edge                       Edge;
         typedef sofa::component::topology::EdgeSetTopologyContainer::EdgesAroundVertex          EdgesAroundVertex;
@@ -55,10 +55,10 @@ class Optimize2DSurface
         typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle               Triangle;
         typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
 
-        typedef sofa::helper::vector<Real>      VecReal;
-        typedef sofa::helper::vector<Vec2>      VecVec2;
-        typedef sofa::helper::vector<Vec3>      VecVec3;
-        //typedef sofa::helper::vector<Index>     VecIndex;
+        typedef sofa::type::vector<Real>      VecReal;
+        typedef sofa::type::vector<Vec2>      VecVec2;
+        typedef sofa::type::vector<Vec3>      VecVec3;
+        //typedef sofa::type::vector<Index>     VecIndex;
 
         enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 
@@ -173,7 +173,7 @@ class Optimize2DSurface
         SurfaceParametrization<Real> &m_surf;
 
         /// Orientation of each triangle.
-        helper::vector<bool> m_orientation;
+        type::vector<bool> m_orientation;
 
         /// Minimal increase in functional to accept the change
         Real m_sigma;
@@ -229,7 +229,7 @@ class Optimize2DSurface
          * @param metrics   Current metrice values for elements
          * @param normals   Original normals (to check for inversion)
          */
-        bool smoothOptimizeMin(Index v, VecVec3 &x, VecReal &metrics, sofa::helper::vector<Vec3> normals);
+        bool smoothOptimizeMin(Index v, VecVec3 &x, VecReal &metrics, sofa::type::vector<Vec3> normals);
 
         /**
          * @brief Smoothing based on method of Pain et al. [PUdOG01]
@@ -242,7 +242,7 @@ class Optimize2DSurface
          * @param metrics   Current metrice values for elements
          * @param normals   Original normals (to check for inversion)
          */
-        bool smoothPain2D(Index v, VecVec3 &x, VecReal &metrics, sofa::helper::vector<Vec3> normals);
+        bool smoothPain2D(Index v, VecVec3 &x, VecReal &metrics, sofa::type::vector<Vec3> normals);
 
         /**
          * @brief Detects triangle inversion

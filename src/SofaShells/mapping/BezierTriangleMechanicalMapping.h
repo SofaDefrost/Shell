@@ -29,7 +29,7 @@
 #include <sofa/core/Mapping.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
-#include <sofa/helper/vector.h>
+#include <sofa/type/vector.h>
 
 #include <sofa/gl/GLSLShader.h>
 
@@ -58,7 +58,7 @@ namespace component
 namespace mapping
 {
 
-using namespace sofa::defaulttype;
+using namespace sofa::type;
 using namespace sofa::component::topology;
 using namespace sofa::helper::system::thread;
 using namespace core::topology;
@@ -94,7 +94,7 @@ public:
     typedef Vec<3, Real> Vec3;
     typedef Mat<3, 3, Real> Mat33;
 
-    typedef helper::Quater<Real> Quat;
+    typedef Quat<Real> Quat;
 
 
     typedef sofa::Index Index;
@@ -105,7 +105,7 @@ public:
 
     enum { NIn = sofa::defaulttype::DataTypeInfo<InDeriv>::Size };
     enum { NOut = sofa::defaulttype::DataTypeInfo<OutDeriv>::Size };
-    typedef defaulttype::Mat<NOut, NIn, Real> MBloc;
+    typedef type::Mat<NOut, NIn, Real> MBloc;
     typedef sofa::component::linearsolver::CompressedRowSparseMatrix<MBloc> MatrixType;
 
     BezierTriangleMechanicalMapping(core::State<In>* from, core::State<Out>* to)
@@ -199,8 +199,8 @@ protected:
     typedef struct {
 
         // Nodes of the Bézier triangle
-        sofa::helper::fixed_array<Vec3, 10> bezierNodes;
-        sofa::helper::fixed_array<Vec3, 10> bezierNodesV;
+        sofa::type::fixed_array<Vec3, 10> bezierNodes;
+        sofa::type::fixed_array<Vec3, 10> bezierNodesV;
 
         // Segments in the reference frame
         Vec3 P0_P1;
@@ -211,7 +211,7 @@ protected:
         Vec3 P2_P1;
 
         // Contains the list of poinst connected to this triangle
-        sofa::helper::vector<int> attachedPoints;
+        sofa::type::vector<int> attachedPoints;
 
     } TriangleInformation;
 
@@ -223,7 +223,7 @@ protected:
     // Pointer to the forcefield associated with the input topology
     BezierFF* bezierForcefield;
 
-    Data< helper::vector<Vec3> > normals;
+    Data< type::vector<Vec3> > normals;
     Data<bool> measureError;
     SingleLink<BezierTriangleMechanicalMapping<TIn, TOut>,
     sofa::core::topology::BaseMeshTopology,
@@ -233,12 +233,12 @@ protected:
     const OutVecCoord verticesTarget;
     const SeqTriangles trianglesTarget;
 
-    helper::vector<Vec3> colourMapping;
-    helper::vector<Vec3> coloursPerVertex;
-    helper::vector<Real> vectorErrorCoarse;
-    helper::vector<Real> vectorErrorTarget;
+    type::vector<Vec3> colourMapping;
+    type::vector<Vec3> coloursPerVertex;
+    type::vector<Real> vectorErrorCoarse;
+    type::vector<Real> vectorErrorTarget;
 
-    helper::vector<TriangleInformation> triangleInfo;
+    type::vector<TriangleInformation> triangleInfo;
 
     std::auto_ptr<MatrixType> matrixJ;
     bool updateJ;
@@ -249,9 +249,9 @@ protected:
 
     void HSL2RGB(Vec3 &rgb, Real h, Real sl, Real l);
     void MeasureError();
-    Real DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError);
-    void ComputeNormals(helper::vector<Vec3> &normals);
-    void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const helper::vector<Vec3> &normals);
+    Real DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, type::vector<Real> &vectorError);
+    void ComputeNormals(type::vector<Vec3> &normals);
+    void FindTriangleInNormalDirection(const InVecCoord& highResVertices, const SeqTriangles highRestriangles, const type::vector<Vec3> &normals);
 
     // Computes the barycentric coordinates of a vertex within a triangle
     void computeBaryCoefs(Vec3 &baryCoefs, const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c, bool bConstraint = true);
@@ -262,7 +262,7 @@ protected:
     Real FindClosestTriangle(unsigned int& closestEdge, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles);
 
     // Contains the barycentric coordinates of the point within a triangle
-    sofa::helper::vector<Vec3> barycentricCoordinates;
+    sofa::type::vector<Vec3> barycentricCoordinates;
 };
 
 } // namespace mapping

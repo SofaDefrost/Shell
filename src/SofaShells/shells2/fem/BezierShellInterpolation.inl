@@ -48,7 +48,7 @@ namespace fem
 
 //template<class DataTypes>
 //void BezierShellInterpolation<DataTypes>::PointInfoHandler::applyCreateFunction(
-//    unsigned int pointIndex, PointInformation &/*pInfo*/, const topology::Point& /*elem*/, const sofa::helper::vector< unsigned int > &/*ancestors*/, const sofa::helper::vector< double > &/*coeffs*/)
+//    unsigned int pointIndex, PointInformation &/*pInfo*/, const topology::Point& /*elem*/, const sofa::type::vector< unsigned int > &/*ancestors*/, const sofa::type::vector< double > &/*coeffs*/)
 //{
 //    std::cout << __FUNCTION__ << " pt " << pointIndex << std::endl;
 //}
@@ -62,7 +62,7 @@ void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1
     const std::pair<topology::Mesh2PointTopologicalMapping::Element,int>& src1 = bsi->bezierM2P->getPointSource()[i1];
     const std::pair<topology::Mesh2PointTopologicalMapping::Element,int>& src2 = bsi->bezierM2P->getPointSource()[i2];
 
-    helper::vector<Index> tris;
+    type::vector<Index> tris;
 
     if (src1.second != (int)core::topology::BaseMeshTopology::InvalidID)
     {
@@ -70,14 +70,14 @@ void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1
         {
             case topology::Mesh2PointTopologicalMapping::POINT:
                 {
-                    const helper::vector<Index> lst = bsi->inputTopology->getTrianglesAroundVertex(src1.second);
+                    const type::vector<Index> lst = bsi->inputTopology->getTrianglesAroundVertex(src1.second);
                     tris.resize(tris.size() + lst.size());
                     copy_backward(lst.begin(), lst.end(), tris.end());
                     break;
                 }
             case topology::Mesh2PointTopologicalMapping::EDGE:
                 {
-                    const helper::vector<Index> lst = bsi->inputTopology->getTrianglesAroundEdge(src1.second);
+                    const type::vector<Index> lst = bsi->inputTopology->getTrianglesAroundEdge(src1.second);
                     tris.resize(tris.size() + lst.size());
                     copy_backward(lst.begin(), lst.end(), tris.end());
                     break;
@@ -96,14 +96,14 @@ void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1
         {
             case topology::Mesh2PointTopologicalMapping::POINT:
                 {
-                    const helper::vector<Index> lst = bsi->inputTopology->getTrianglesAroundVertex(src2.second);
+                    const type::vector<Index> lst = bsi->inputTopology->getTrianglesAroundVertex(src2.second);
                     tris.resize(tris.size() + lst.size());
                     copy_backward(lst.begin(), lst.end(), tris.end());
                     break;
                 }
             case topology::Mesh2PointTopologicalMapping::EDGE:
                 {
-                    const helper::vector<Index> lst = bsi->inputTopology->getTrianglesAroundEdge(src2.second);
+                    const type::vector<Index> lst = bsi->inputTopology->getTrianglesAroundEdge(src2.second);
                     tris.resize(tris.size() + lst.size());
                     copy_backward(lst.begin(), lst.end(), tris.end());
                     break;
@@ -117,7 +117,7 @@ void BezierShellInterpolation<DataTypes>::PointInfoHandler::swap(unsigned int i1
     }
 
 
-    helper::vector<TriangleInformation>& bezTris = *bsi->triInfo.beginEdit();
+    type::vector<TriangleInformation>& bezTris = *bsi->triInfo.beginEdit();
 
     for (Index i = 0; i < tris.size(); i++) {
         for (Index j = 0; j < 10; j++) {
@@ -139,8 +139,8 @@ template<class DataTypes>
 void BezierShellInterpolation<DataTypes>::TriangleInfoHandler::applyCreateFunction(
     unsigned int triIndex, TriangleInformation &tInfo,
     const core::topology::BaseMeshTopology::Triangle &/*elem*/,
-    const sofa::helper::vector< unsigned int > &/*ancestors*/,
-    const sofa::helper::vector< double > &/*coeffs*/)
+    const sofa::type::vector< unsigned int > &/*ancestors*/,
+    const sofa::type::vector< double > &/*coeffs*/)
 {
     bsi->initTriangle(triIndex, tInfo);
 }
@@ -205,24 +205,22 @@ void BezierShellInterpolation<DataTypes>::init()
     }
 
     pointInfo.createTopologyHandler(bezierM2P->getTo(), pointHandler);
-    pointInfo.registerTopologicalData();
     pointInfo.beginEdit()->resize(dynamic_cast<topology::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
     pointInfo.endEdit();
 
     triInfo.createTopologyHandler(inputTopology, triHandler);
-    triInfo.registerTopologicalData();
     triInfo.beginEdit()->resize(dynamic_cast<topology::TriangleSetTopologyContainer*>(inputTopology)->getNumberOfElements());
     triInfo.endEdit();
 
     // Verify that the inputs are coherents
-    const helper::vector< helper::vector<sofa::Index> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
+    const type::vector< type::vector<sofa::Index> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
     if( (int) mapEdge.size() != inputTopology->getNbEdges() )
     {
         serr<<"Problem in Mesh2PointTopologicalMapping:mapEdge.size() != inputTopology->getNbEdges()"<<sendl;
         return;
     }
 
-    helper::vector<TriangleInformation>& bezTris = *triInfo.beginEdit();
+    type::vector<TriangleInformation>& bezTris = *triInfo.beginEdit();
 
     for (int i=0; i<inputTopology->getNbTriangles(); i++)
     {
@@ -230,8 +228,8 @@ void BezierShellInterpolation<DataTypes>::init()
             i,
             bezTris[i],
             inputTopology->getTriangle(i),
-            (const sofa::helper::vector< unsigned int > )0,
-            (const sofa::helper::vector< double >)0);
+            (const sofa::type::vector< unsigned int > )0,
+            (const sofa::type::vector< double >)0);
     }
 
     triInfo.endEdit();
@@ -252,7 +250,7 @@ void BezierShellInterpolation<DataTypes>::initTriangle(Index triIndex,
     TriangleInformation &tInfo)
 {
     sofa::core::topology::Triangle tri = inputTopology->getTriangle(triIndex);
-    const helper::fixed_array<unsigned int,3>& edgesInTriangle = inputTopology->getEdgesInTriangle(triIndex);
+    const type::fixed_array<unsigned int,3>& edgesInTriangle = inputTopology->getEdgesInTriangle(triIndex);
 
     unsigned int j; // j= seg0  find segment between tri[0] and tri[1]
     unsigned int inverseSeg0=false;
@@ -297,9 +295,9 @@ void BezierShellInterpolation<DataTypes>::initTriangle(Index triIndex,
 
     BTri &btri = tInfo.btri;
 
-    const helper::vector< helper::vector<sofa::Index> >& mapPoint = bezierM2P->getPointsMappedFromPoint();
-    const helper::vector< helper::vector<sofa::Index> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
-    const helper::vector< helper::vector<sofa::Index> >& mapTri = bezierM2P->getPointsMappedFromTriangle();
+    const type::vector< type::vector<sofa::Index> >& mapPoint = bezierM2P->getPointsMappedFromPoint();
+    const type::vector< type::vector<sofa::Index> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
+    const type::vector< type::vector<sofa::Index> >& mapTri = bezierM2P->getPointsMappedFromTriangle();
 
     btri[0] = mapPoint[tri[0]][0];
     btri[1] = mapPoint[tri[1]][0];
@@ -320,7 +318,7 @@ void BezierShellInterpolation<DataTypes>::initTriangle(Index triIndex,
     VecVec3 normals = inputNormals.getValue();
 
     xRest.resize(bezierM2P->getTo()->getNbPoints());
-    helper::vector<PointInformation>& pInfo = *pointInfo.beginEdit();
+    type::vector<PointInformation>& pInfo = *pointInfo.beginEdit();
 
     // Compute the nodes
     xRest[ btri[0] ] = inPoints[ tri[0] ].getCenter();
@@ -689,9 +687,9 @@ void BezierShellInterpolation<DataTypes>::draw(const core::visual::VisualParams*
         return;
 
     const VecVec3d& bn = mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
-    vparams->drawTool()->drawPoints(bn, 2, sofa::defaulttype::Vec<4,float>(0.5, 1.0, 0.5, 1.0));
+    vparams->drawTool()->drawPoints(bn, 2.0, type::RGBAColor(0.5, 1.0, 0.5, 1.0));
 
-    typedef sofa::defaulttype::Vec<2,int> Vec2i;
+    typedef sofa::type::Vec<2,int> Vec2i;
     std::vector< Vec2i > lines;
 
     VecVec3d points;
@@ -739,12 +737,12 @@ void BezierShellInterpolation<DataTypes>::draw(const core::visual::VisualParams*
              }
          }
 
-         vparams->drawTool()->drawPoints(points,1, sofa::defaulttype::Vec<4,float>(0,0,1,1));
+         vparams->drawTool()->drawPoints(points,1, type::RGBAColor(0,0,1,1));
 
          // TODO: draw edges, normals?
     }
 
-    vparams->drawTool()->drawLines(bn, lines, 1, sofa::defaulttype::Vec<4,float>(0.5,1.0,0.5,1));
+    vparams->drawTool()->drawLines(bn, lines, 1, type::RGBAColor(0.5,1.0,0.5,1));
 }
 
 

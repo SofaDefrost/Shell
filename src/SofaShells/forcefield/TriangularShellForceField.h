@@ -54,8 +54,8 @@ namespace component
 namespace forcefield
 {
 
-using namespace sofa::defaulttype;
-using sofa::helper::vector;
+using namespace sofa::type;
+using sofa::type::vector;
 using namespace sofa::component::topology;
 using namespace sofa::core::behavior;
 
@@ -86,12 +86,12 @@ class TriangularShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Vec<3,Real> Vec3;
         typedef Vec<9,Real> Vec9;
 
-        typedef helper::Quater<Real> Quat;
+        typedef Quat<Real> Quat;
 
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
 
-        typedef Vec3Types::VecCoord VecCoordHigh;
+        typedef sofa::defaulttype::Vec3Types::VecCoord VecCoordHigh;
 
         typedef sofa::Index Index;
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
@@ -109,7 +109,7 @@ class TriangularShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Mat<18, 18, Real> StiffnessMatrixFull;          // stiffness matrix for shell (= bending plate + membrane)
 
         typedef void (TriangularShellForceField<DataTypes>::*compstiff)(StiffnessMatrix &K, TriangleInformation &tinfo);
-        typedef helper::fixed_array<Real, 10> AndesBeta;
+        typedef type::fixed_array<Real, 10> AndesBeta;
 
         sofa::core::topology::BaseMeshTopology* _topology;
 
@@ -123,15 +123,15 @@ public:
                 Index a, b, c;
 
                 // Rest position in local (in-plane) coordinates
-                helper::fixed_array <Vec3, 3> restPositions;
+                type::fixed_array <Vec3, 3> restPositions;
 #ifdef CRQUAT
-                helper::fixed_array <Quat, 3> restOrientationsInv;
+                type::fixed_array <Quat, 3> restOrientationsInv;
 #else
-                helper::fixed_array <Transformation, 3> restOrientationsInv;
+                type::fixed_array <Transformation, 3> restOrientationsInv;
 #endif
 
                 // Deformed position in local (in-plane) coordinates
-                helper::fixed_array <Vec3, 3> deformedPositions;
+                type::fixed_array <Vec3, 3> deformedPositions;
 
                 // Frame rotation as matrix and quaternion
                 Transformation R, Rt;
@@ -154,16 +154,16 @@ public:
                     StrainDisplacement Bb;  // Strain-displacement Matrix bending
                     Index id;               // Index into the result array
                 };
-                helper::vector<MeasurePoint> measure;
+                type::vector<MeasurePoint> measure;
 
 
                 // The following are in rest shape
                 // - element area
                 Real area;
                 // - directional vectors: 1-2, 2-3, 3-1
-                helper::fixed_array <Vec2, 3> d;
+                type::fixed_array <Vec2, 3> d;
                 // - squared lengths of 'd'
-                helper::fixed_array <Real, 3> l2;
+                type::fixed_array <Real, 3> l2;
 
                 /// Output stream
                 inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ )
@@ -178,15 +178,15 @@ public:
                 }
         };
 
-        class TRQSTriangleHandler : public TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >
+        class TRQSTriangleHandler : public TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >
         {
             public:
-                TRQSTriangleHandler(TriangularShellForceField<DataTypes>* _ff, TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >(_data), ff(_ff) {}
+                TRQSTriangleHandler(TriangularShellForceField<DataTypes>* _ff, TriangleData<sofa::type::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >(_data), ff(_ff) {}
 
                 void applyCreateFunction(unsigned int triangleIndex, TriangleInformation& ,
                     const Triangle & t,
-                    const sofa::helper::vector< unsigned int > &,
-                    const sofa::helper::vector< double > &);
+                    const sofa::type::vector< unsigned int > &,
+                    const sofa::type::vector< double > &);
 
             protected:
                 TriangularShellForceField<DataTypes>* ff;
@@ -212,7 +212,7 @@ public:
         Data <sofa::helper::OptionsGroup> f_bendingElement;
         Data<bool> f_corotated;
         Data<sofa::helper::OptionsGroup> f_measure;
-        Data<helper::vector<Real> > f_measuredValues;
+        Data<type::vector<Real> > f_measuredValues;
 
         TRQSTriangleHandler* triangleHandler;
 
@@ -224,7 +224,7 @@ protected :
 
         /// Material stiffness matrix
         MaterialStiffness materialMatrix, materialMatrixMembrane, materialMatrixBending;
-        TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
+        TriangleData< sofa::type::vector<TriangleInformation> > triangleInfo;
 
         // What to measure
         bool bMeasureStrain;
@@ -233,7 +233,7 @@ protected :
         void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
 
         void computeRotation(Transformation& R, const VecCoord &x, const Index &a, const Index &b, const Index &c);
-        void computeRotation(Transformation& R, const helper::fixed_array<Vec3, 3> &x);
+        void computeRotation(Transformation& R, const type::fixed_array<Vec3, 3> &x);
         void computeMaterialStiffness();
 
         void computeDisplacement(Displacement &Dm, Displacement &Db, const VecCoord &x, const Index elementIndex);

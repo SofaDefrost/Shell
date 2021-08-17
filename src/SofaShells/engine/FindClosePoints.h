@@ -1,7 +1,7 @@
 #ifndef SOFA_COMPONENT_ENGINE_FINDCLOSEPOINTS_H
 #define SOFA_COMPONENT_ENGINE_FINDCLOSEPOINTS_H
 
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 #include <sofa/core/DataEngine.h>
 #include <sofa/core/objectmodel/BaseObject.h>
 #include <sofa/defaulttype/VecTypes.h>

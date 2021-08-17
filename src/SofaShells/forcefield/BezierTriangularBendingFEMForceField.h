@@ -56,8 +56,8 @@ namespace component
 namespace forcefield
 {
 
-using namespace sofa::defaulttype;
-using sofa::helper::vector;
+using namespace sofa::type;
+using sofa::type::vector;
 using namespace sofa::component::topology;
 using namespace sofa::core::behavior;
 
@@ -89,12 +89,12 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
 
         typedef Mat<3,3,Real> Mat33;
 
-        typedef helper::Quater<Real> Quat;
+        typedef Quat<Real> Quat;
 
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
 
-        typedef Vec3Types::VecCoord VecCoordHigh;
+        typedef sofa::defaulttype::Vec3Types::VecCoord VecCoordHigh;
 
         typedef sofa::Index Index;
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
@@ -127,11 +127,11 @@ public:
         {
             public:
 
-                helper::fixed_array <Vec3, 3> restLocalPositions;
+                type::fixed_array <Vec3, 3> restLocalPositions;
 #ifdef CRQUAT
-                helper::fixed_array <Quat, 3> restLocalOrientationsInv;
+                type::fixed_array <Quat, 3> restLocalOrientationsInv;
 #else
-                helper::fixed_array <Transformation, 3> restLocalOrientationsInv;
+                type::fixed_array <Transformation, 3> restLocalOrientationsInv;
 #endif
 
                 // Indices of each vertex
@@ -161,10 +161,10 @@ public:
                 Vec3 P2_P1_inFrame2;
 
                 // Nodes of the Bezier triangle
-                helper::fixed_array<Vec3, 10> bezierNodes;  // ... in global frame
-                helper::fixed_array<Vec3, 10> pts;          // ... in local frame
+                type::fixed_array<Vec3, 10> bezierNodes;  // ... in global frame
+                type::fixed_array<Vec3, 10> pts;          // ... in local frame
                 // ... of the rest shape
-                helper::fixed_array<Vec3, 10> bezierNodes0; // ... in global frame
+                type::fixed_array<Vec3, 10> bezierNodes0; // ... in global frame
 
                 // the strain-displacement matrices at each Gauss point
                 StrainDisplacement strainDisplacementMatrix1;
@@ -202,15 +202,15 @@ public:
                 }
         };
 
-        class TRQSTriangleHandler : public topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::helper::vector<TriangleInformation> >
+        class TRQSTriangleHandler : public topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::type::vector<TriangleInformation> >
         {
             public:
-                TRQSTriangleHandler(BezierTriangularBendingFEMForceField<DataTypes>* _ff, TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >(_data), ff(_ff) {}
+                TRQSTriangleHandler(BezierTriangularBendingFEMForceField<DataTypes>* _ff, TriangleData<sofa::type::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >(_data), ff(_ff) {}
 
                 void applyCreateFunction(unsigned int triangleIndex, TriangleInformation& ,
                     const Triangle & t,
-                    const sofa::helper::vector< unsigned int > &,
-                    const sofa::helper::vector< double > &);
+                    const sofa::type::vector< unsigned int > &,
+                    const sofa::type::vector< double > &);
 
             protected:
                 BezierTriangularBendingFEMForceField<DataTypes>* ff;
@@ -236,7 +236,7 @@ public:
         Data<Real> f_poisson;
         Data<Real> f_young;
         Data <Real> f_thickness;
-        Data< helper::vector<Vec3> > normals;
+        Data< type::vector<Vec3> > normals;
 
         // Allow transition between rest shapes
         SingleLink<BezierTriangularBendingFEMForceField<DataTypes>,
@@ -251,8 +251,8 @@ public:
 
 
         static void computeEdgeBezierPoints(const Index& a, const Index& b, const Index& c,
-            const VecCoord& x, const helper::vector<Vec3>& norms,
-            helper::fixed_array<Vec3,10> &bezierPoints);
+            const VecCoord& x, const type::vector<Vec3>& norms,
+            type::fixed_array<Vec3,10> &bezierPoints);
 
         void handleEvent(sofa::core::objectmodel::Event *event) override;
 
@@ -262,7 +262,7 @@ public:
 
 protected :
 
-        TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
+        TriangleData< sofa::type::vector<TriangleInformation> > triangleInfo;
         TRQSTriangleHandler* triangleHandler;
 
         /// Material stiffness matrices for plane stress and bending
@@ -291,10 +291,10 @@ protected :
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
         virtual void computeMaterialMatrix();
 
-        void computePosBezierPoint(const TriangleInformation *tinfo, const Index& a, const Index& b, const Index& c, const VecCoord& x, sofa::helper::fixed_array<Vec3,10> &X_bezierPoints);
-        void bezierFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &f_bezier);
-        void bezierDerivateFunctions(const Vec2& baryCoord, sofa::helper::fixed_array<Real,10> &df_dx_bezier, sofa::helper::fixed_array<Real,10> &df_dy_bezier);
-        void interpolateRefFrame(TriangleInformation *tinfo, const Vec2& baryCoord, const Index& a, const Index& b, const Index& c, const VecCoord& x, sofa::helper::fixed_array<Vec3,10>& X_bezierPoints );
+        void computePosBezierPoint(const TriangleInformation *tinfo, const Index& a, const Index& b, const Index& c, const VecCoord& x, sofa::type::fixed_array<Vec3,10> &X_bezierPoints);
+        void bezierFunctions(const Vec2& baryCoord, sofa::type::fixed_array<Real,10> &f_bezier);
+        void bezierDerivateFunctions(const Vec2& baryCoord, sofa::type::fixed_array<Real,10> &df_dx_bezier, sofa::type::fixed_array<Real,10> &df_dy_bezier);
+        void interpolateRefFrame(TriangleInformation *tinfo, const Vec2& baryCoord, const Index& a, const Index& b, const Index& c, const VecCoord& x, sofa::type::fixed_array<Vec3,10>& X_bezierPoints );
 
 
         void accumulateForce(VecDeriv& f, const VecCoord & p, const Index elementIndex);

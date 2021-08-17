@@ -164,7 +164,7 @@ void AdaptiveCuttingController<DataTypes>::draw(
     const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::position())->getValue();
 
     if (m_cutList.size() > 0) {
-        helper::vector<defaulttype::Vector3> points;
+        type::vector<type::Vector3> points;
         for (VecIndex::const_iterator i=m_cutList.begin();
             i != m_cutList.end(); i++) {
             const Edge &e = m_container->getEdge(*i);
@@ -172,16 +172,16 @@ void AdaptiveCuttingController<DataTypes>::draw(
             points.push_back(x[ e[1] ]);
         }
         vparams->drawTool()->drawLines(points, 4,
-            sofa::defaulttype::Vec<4,float>(1.0, 0.0, 0.0, 1.0));
+            type::RGBAColor(1.0, 0.0, 0.0, 1.0));
     }
 
     if (m_cutEdge != InvalidID) {
         const Edge &e = m_container->getEdge(m_cutEdge);
-        helper::vector<defaulttype::Vector3> points;
+        type::vector<type::Vector3> points;
         points.push_back(x[ e[0] ]);
         points.push_back(x[ e[1] ]);
         vparams->drawTool()->drawLines(points, 4,
-            sofa::defaulttype::Vec<4,float>(1.0, 0.0, 0.0, 1.0));
+            type::RGBAColor(1.0, 0.0, 0.0, 1.0));
     }
 }
 

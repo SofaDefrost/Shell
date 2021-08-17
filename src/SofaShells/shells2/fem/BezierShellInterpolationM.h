@@ -22,8 +22,8 @@
 #include <SofaBaseTopology/TopologyData.h>
 #include <sofa/simulation/AnimateBeginEvent.h>
 
-#include <sofa/helper/vector.h>
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/vector.h>
+#include <sofa/type/Vec.h>
 
 #include <sofa/core/objectmodel/BaseObject.h>
 

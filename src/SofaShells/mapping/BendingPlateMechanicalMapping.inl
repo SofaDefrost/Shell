@@ -80,15 +80,15 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
         for (unsigned int i=0; i<outVertices.size(); i++)
         {
             // Iterates over 'in' vertices
-            sofa::helper::vector<unsigned int> listClosestVertices;
+            sofa::type::vector<unsigned int> listClosestVertices;
             minimumDistanceVertices = FindClosestPoints(listClosestVertices, outVertices[i], inVertices);
 
             // Iterates over 'in' edges
-            sofa::helper::vector<unsigned int> listClosestEdges;
+            sofa::type::vector<unsigned int> listClosestEdges;
             minimumDistanceEdges = FindClosestEdges(listClosestEdges, outVertices[i], inVertices, inEdges);
 
             // Iterates over 'in' triangles
-            sofa::helper::vector<unsigned int> listClosestTriangles;
+            sofa::type::vector<unsigned int> listClosestTriangles;
             minimumDistanceTriangles = FindClosestTriangles(listClosestTriangles, outVertices[i], inVertices, inTriangles);
 
             // Finds out which type of primitive is the closest
@@ -401,7 +401,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::MeasureError()
 }
 
 template <class TIn, class TOut>
-typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, helper::vector<Real> &vectorError)
+typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::DistanceHausdorff(BaseMeshTopology *topo1, BaseMeshTopology *topo2, type::vector<Real> &vectorError)
 {
     // Mesh 1
     MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
@@ -414,7 +414,7 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
     const SeqTriangles triangles2 = topo2->getTriangles();
 
     // Dummy list (lists of primitives are useless here)
-    sofa::helper::vector<unsigned int> listDummy;
+    sofa::type::vector<unsigned int> listDummy;
 
     // Iterates over 'mesh1' vertices
     Real minimumDistanceVertices, minimumDistanceEdges, minimumDistanceTriangles, minimumDistance;
@@ -450,7 +450,7 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
 // Finds the list of the closest points to a point
 // --------------------------------------------------------------------------------------
 template <class TIn, class TOut>
-typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::FindClosestPoints(sofa::helper::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices)
+typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::FindClosestPoints(sofa::type::vector<unsigned int>& listClosestVertices, const Vec3& point, const OutVecCoord &inVertices)
 {
     Real minimumDistance = 10e12;
     for (unsigned int v=0; v<inVertices.size(); v++)
@@ -482,7 +482,7 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
 // Finds the list of the closest edges to a point
 // --------------------------------------------------------------------------------------
 template <class TIn, class TOut>
-typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::FindClosestEdges(sofa::helper::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges)
+typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::FindClosestEdges(sofa::type::vector<unsigned int>& listClosestEdges, const Vec3& point, const OutVecCoord &inVertices, const SeqEdges &inEdges)
 {
     Real minimumDistance = 10e12;
     for (unsigned int e=0; e<inEdges.size(); e++)
@@ -536,7 +536,7 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
 // Finds the list of the closest triangles to a point
 // --------------------------------------------------------------------------------------
 template <class TIn, class TOut>
-typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::FindClosestTriangles(sofa::helper::vector<unsigned int>& listClosestTriangles, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles)
+typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMapping<TIn, TOut>::FindClosestTriangles(sofa::type::vector<unsigned int>& listClosestTriangles, const Vec3& point, const OutVecCoord &inVertices, const SeqTriangles &inTriangles)
 {
     Real minimumDistance = 10e12;
     for (unsigned int t=0; t<inTriangles.size(); t++)
@@ -569,7 +569,7 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
         A[0][1] = A[1][0] = AB*AC;
         b[0] = AP*AB;
         b[1] = AP*AC;
-        const double det = defaulttype::determinant(A);
+        const double det = type::determinant(A);
 
         double alpha = (b[0]*A[1][1] - b[1]*A[0][1])/det;
         double beta  = (b[1]*A[0][0] - b[0]*A[1][0])/det;
@@ -673,7 +673,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParam
     }
     else
     {
-        helper::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
+        type::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
         TriangleInformation *tinfo = NULL;
 
         // List of in triangles
@@ -762,7 +762,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPara
     }
     else
     {
-        helper::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
+        type::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
         TriangleInformation *tinfo = NULL;
 
          // List of 'in' positions
@@ -882,13 +882,13 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPar
     }
     else
     {
-        helper::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
+        type::vector<TriangleInformation>& triangleInf = *(triangularBendingForcefield->getTriangleInfo().beginEdit());
         TriangleInformation *tinfo = NULL;
 
         // List of in triangles
         const SeqTriangles& inTriangles = inputTopo->getTriangles();
 
-        sofa::helper::vector< Mat<9, 9, Real> > vecTransposedInvC;
+        sofa::type::vector< Mat<9, 9, Real> > vecTransposedInvC;
         for (unsigned int t=0; t<inTriangles.size();t++)
         {
             tinfo = &triangleInf[t];

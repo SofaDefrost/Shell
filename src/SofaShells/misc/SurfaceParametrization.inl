@@ -33,7 +33,7 @@ void SurfaceParametrization<Real>::init(
     ptDone.resize(x.size(), false);
     triDone.resize(m_topology->getNbTriangles(), false);
     triBoundary.resize(m_topology->getNbTriangles(), false);
-    helper::vector<Index> boundary;
+    type::vector<Index> boundary;
     Mat33 R;
     Triangle t;
 
@@ -290,8 +290,8 @@ void SurfaceParametrization<Real>::getAngle(const Vec2 &u, const Vec2 &v, Real &
 
 template <class Real>
 void SurfaceParametrization<Real>::pointAdd(unsigned int pointIndex, const sofa::core::topology::Point &/*elem*/,
-    const sofa::helper::vector< unsigned int > &ancestors,
-    const sofa::helper::vector< double > &coeffs)
+    const sofa::type::vector< unsigned int > &ancestors,
+    const sofa::type::vector< double > &coeffs)
 {
     //std::cout << "pointAdd(" << pointIndex << ", " << elem << ")\n";
     Vec2 newPt;
@@ -378,16 +378,16 @@ void SurfaceParametrization<Real>::draw(const core::visual::VisualParams* vparam
     vparams->drawTool()->saveLastState();
     vparams->drawTool()->disableLighting();
 
-    std::vector< sofa::defaulttype::Vector3 > points;
-    sofa::defaulttype::Vec4f color(1.0, 1.0, 1.0, 1.0);
+    std::vector< sofa::type::Vector3 > points;
+    sofa::type::Vec4f color(1.0, 1.0, 1.0, 1.0);
 
     for (int i=0; i<m_topology->getNbTriangles(); ++i)
     {
         const Triangle &t = m_topology->getTriangle(i);
         for (int j=0; j<3; j++)
         {
-            points.push_back(sofa::defaulttype::Vector3(m_points[t[j]][0], m_points[t[j]][1], 1.0f));
-            points.push_back(sofa::defaulttype::Vector3(m_points[t[(j+1)%3]][0], m_points[t[(j+1)%3]][1], 1.0f));
+            points.push_back(sofa::type::Vector3(m_points[t[j]][0], m_points[t[j]][1], 1.0f));
+            points.push_back(sofa::type::Vector3(m_points[t[(j+1)%3]][0], m_points[t[(j+1)%3]][1], 1.0f));
         }
     }
     vparams->drawTool()->drawLines(points, 1.0, color);

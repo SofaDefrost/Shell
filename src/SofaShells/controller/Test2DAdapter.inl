@@ -79,8 +79,8 @@ void Test2DAdapter<DataTypes>::PointInfoHandler:: applyCreateFunction(
     unsigned int pointIndex,
     PointInformation &/*pInfo*/,
     const sofa::core::topology::Point &point,
-    const sofa::helper::vector< unsigned int > &ancestors,
-    const sofa::helper::vector< double > &coeffs)
+    const sofa::type::vector< unsigned int > &ancestors,
+    const sofa::type::vector< double > &coeffs)
 {
     adapter->m_toUpdate[pointIndex] = true;
     adapter->m_surf.pointAdd(pointIndex, point, ancestors, coeffs);
@@ -129,8 +129,8 @@ template<class DataTypes>
 void Test2DAdapter<DataTypes>::TriangleInfoHandler::applyCreateFunction(
     unsigned int triangleIndex, TriangleInformation &tInfo,
     const sofa::core::topology::Triangle& elem,
-    const sofa::helper::vector< unsigned int > &/*ancestors*/,
-    const sofa::helper::vector< double > &/*coeffs*/)
+    const sofa::type::vector< unsigned int > &/*ancestors*/,
+    const sofa::type::vector< double > &/*coeffs*/)
 {
     //std::cout << "tri " << __FUNCTION__ << triangleIndex << " (" << elem << ") [" << adapter->m_container->getTriangle(triangleIndex) << "]" << std::endl;
 
@@ -175,15 +175,15 @@ void Test2DAdapter<DataTypes>::TriangleInfoHandler::swap(unsigned int i1,
 
 #if 0
 template<class DataTypes>
-void Test2DAdapter<DataTypes>::TriangleInfoHandler::addOnMovedPosition(const sofa::helper::vector<unsigned int> &indexList,
-    const sofa::helper::vector< topology::Triangle > & elems)
+void Test2DAdapter<DataTypes>::TriangleInfoHandler::addOnMovedPosition(const sofa::type::vector<unsigned int> &indexList,
+    const sofa::type::vector< topology::Triangle > & elems)
 {
     std::cout << "tri " << __FUNCTION__ << " " << indexList << std::endl;
     Inherited::addOnMovedPosition(indexList, elems);
 }
 
 template<class DataTypes>
-void Test2DAdapter<DataTypes>::TriangleInfoHandler::removeOnMovedPosition(const sofa::helper::vector<unsigned int> &indices)
+void Test2DAdapter<DataTypes>::TriangleInfoHandler::removeOnMovedPosition(const sofa::type::vector<unsigned int> &indices)
 {
     std::cout << "tri " << __FUNCTION__ << " " << indices << std::endl;
     Inherited::removeOnMovedPosition(indices);
@@ -286,7 +286,7 @@ void Test2DAdapter<DataTypes>::reinit()
     m_functionals.beginEdit()->resize(m_container->getNbTriangles(), Real(0.0));
     m_functionals.endEdit();
 
-    helper::vector<PointInformation>& pts = *pointInfo.beginEdit();
+    type::vector<PointInformation>& pts = *pointInfo.beginEdit();
     pts.resize(m_container->getNbPoints());
     //for (int i=0; i<m_container->getNbPoints(); i++)
     //{
@@ -294,13 +294,13 @@ void Test2DAdapter<DataTypes>::reinit()
     //        i,
     //        pts[i],
     //        m_container->getPoint(i),
-    //        (const sofa::helper::vector< unsigned int > )0,
-    //        (const sofa::helper::vector< double >)0);
+    //        (const sofa::type::vector< unsigned int > )0,
+    //        (const sofa::type::vector< double >)0);
     //}
     pointInfo.endEdit();
 
 
-    helper::vector<TriangleInformation>& tris = *triInfo.beginEdit();
+    type::vector<TriangleInformation>& tris = *triInfo.beginEdit();
     tris.resize(m_container->getNbTriangles());
     for (int i=0; i<m_container->getNbTriangles(); i++)
     {
@@ -308,8 +308,8 @@ void Test2DAdapter<DataTypes>::reinit()
             i,
             tris[i],
             m_container->getTriangle(i),
-            (const sofa::helper::vector< unsigned int > )0,
-            (const sofa::helper::vector< double >)0);
+            (const sofa::type::vector< unsigned int > )0,
+            (const sofa::type::vector< double >)0);
     }
     triInfo.endEdit();
 
@@ -356,7 +356,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     // Update projection of tracked point in rest shape
     if (m_pointId != InvalidID) {
         Triangle tri = m_container->getTriangle(m_pointTriId);
-        helper::vector< double > bary = m_algoGeom->compute3PointsBarycoefs(
+        type::vector< double > bary = m_algoGeom->compute3PointsBarycoefs(
             m_point, tri[0], tri[1], tri[2], false);
         m_pointRest =
             x0[ tri[0] ] * bary[0] +
@@ -370,7 +370,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
     //start = timer.getTime();
 
     //mytimer.start("Init");
-    sofa::helper::vector<Real> &functionals = *m_functionals.beginEdit();
+    sofa::type::vector<Real> &functionals = *m_functionals.beginEdit();
 
     functionals.resize(nTriangles);
     m_opt.initValues(functionals, m_container);
@@ -419,7 +419,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
             // Update projection of tracked point in rest shape
             if (m_pointId == i) {
                 Triangle tri = m_container->getTriangle(m_pointTriId);
-                helper::vector< double > bary = m_algoGeom->compute3PointsBarycoefs(
+                type::vector< double > bary = m_algoGeom->compute3PointsBarycoefs(
                     m_point, tri[0], tri[1], tri[2], false);
                 m_pointRest =
                     x0[ tri[0] ] * bary[0] +
@@ -616,12 +616,12 @@ void Test2DAdapter<DataTypes>::swapEdge(Index triID)
         //    std::cout << "WHOOPS! Inverting triangle!\n";
         //}
 
-        sofa::helper::vector< unsigned int > del;
+        sofa::type::vector< unsigned int > del;
         del.push_back(triID);
         del.push_back(swapTri);
         m_modifier->removeTriangles(del, true, false);
 
-        sofa::helper::vector<Triangle> add;
+        sofa::type::vector<Triangle> add;
         add.push_back(swapT1);
         add.push_back(swapT2);
         m_modifier->addTriangles(add);
@@ -657,7 +657,7 @@ void Test2DAdapter<DataTypes>::computeTriangleNormal(const Triangle &t, const Ve
 template<class DataTypes>
 void Test2DAdapter<DataTypes>::recheckBoundary()
 {
-    helper::vector<PointInformation>& pts = *pointInfo.beginEdit();
+    type::vector<PointInformation>& pts = *pointInfo.beginEdit();
     for (std::map<Index,bool>::const_iterator i=m_toUpdate.begin();
         i != m_toUpdate.end(); i++) {
         pts[i->first].type = detectNodeType(i->first, pts[i->first].boundary);
@@ -699,7 +699,7 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
             Index t;
             if (m_algoGeom->isPointInsideTriangle(N1[it], false, target, t, bInRest)) {
                 Triangle tri = m_container->getTriangle(N1[it]);
-                helper::vector<double> bary =
+                type::vector<double> bary =
                     m_algoGeom->compute3PointsBarycoefs(
                         target, tri[0], tri[1], tri[2], bInRest);
                 bool bGood = true;
@@ -737,9 +737,9 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
 
     Triangle tri = m_container->getTriangle(tId);
 
-    helper::vector <unsigned int> move_ids;
-    helper::vector< helper::vector< unsigned int > > move_ancestors;
-    helper::vector< helper::vector< double > > move_coefs;
+    type::vector <unsigned int> move_ids;
+    type::vector< type::vector< unsigned int > > move_ancestors;
+    type::vector< type::vector< double > > move_coefs;
 
     move_ids.push_back(pt);
 
@@ -828,15 +828,15 @@ void Test2DAdapter<DataTypes>::projectionInit()
     const VecCoord& xProj = m_projectedPoints.getValue();
     unsigned int nVertices = xProj.size();
 
-    sofa::helper::vector<sofa::helper::vector< unsigned int > > &indices =
+    sofa::type::vector<sofa::type::vector< unsigned int > > &indices =
         *m_interpolationIndices.beginEdit();
-    sofa::helper::vector<sofa::helper::vector< Real > > &values =
+    sofa::type::vector<sofa::type::vector< Real > > &values =
         *m_interpolationValues.beginEdit();
 
     indices.resize(nVertices);
     values.resize(nVertices);
 
-    helper::vector<TriangleInformation>& tris = *triInfo.beginEdit();
+    type::vector<TriangleInformation>& tris = *triInfo.beginEdit();
     // Clear list of previously attached points.
     for (Index i=0; i<m_container->getNumberOfTriangles(); i++) {
         tris[i].attachedPoints.clear();
@@ -889,25 +889,25 @@ void Test2DAdapter<DataTypes>::projectionUpdate(Index pt)
 
     const VecCoord& xProj = m_projectedPoints.getValue();
 
-    sofa::helper::vector<sofa::helper::vector< unsigned int > > &indices =
+    sofa::type::vector<sofa::type::vector< unsigned int > > &indices =
         *m_interpolationIndices.beginEdit();
-    sofa::helper::vector<sofa::helper::vector< Real > > &values =
+    sofa::type::vector<sofa::type::vector< Real > > &values =
         *m_interpolationValues.beginEdit();
 
-    helper::vector<TriangleInformation>& tris = *triInfo.beginEdit();
+    type::vector<TriangleInformation>& tris = *triInfo.beginEdit();
 
     TrianglesAroundVertex N1 = m_container->getTrianglesAroundVertex(pt);
 
     // List of newly attached points for each triangle
     // We keep it separated to avoid double work.
-    std::map<Index, helper::vector<Index> > newAttached;
+    std::map<Index, type::vector<Index> > newAttached;
 
     // Recompute all barycentric coordinates
     for (unsigned int it=0; it<N1.size(); it++) {
         Index t = N1[it];
         Triangle tri = m_container->getTriangle(t);
 
-        sofa::helper::vector<Index> oldAttached = tris[t].attachedPoints;
+        sofa::type::vector<Index> oldAttached = tris[t].attachedPoints;
         tris[t].attachedPoints.clear();
 
         for (unsigned int ip=0; ip<oldAttached.size(); ip++) {
@@ -961,7 +961,7 @@ void Test2DAdapter<DataTypes>::projectionUpdate(Index pt)
     }
 
     // Add newly attached points to the lists
-    for (std::map<Index, helper::vector<Index> >::const_iterator i =
+    for (std::map<Index, type::vector<Index> >::const_iterator i =
         newAttached.begin();
         i != newAttached.end(); i++) {
         for (unsigned int j=0; j < i->second.size(); j++) {
@@ -983,9 +983,9 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
     if (!m_state) return;
     const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::position())->getValue();
 
-    helper::vector<defaulttype::Vector3> boundary;
-    helper::vector<defaulttype::Vector3> fixed;
-    const helper::vector<PointInformation> &pts = pointInfo.getValue();
+    type::vector<type::Vector3> boundary;
+    type::vector<type::Vector3> fixed;
+    const type::vector<PointInformation> &pts = pointInfo.getValue();
     if (pts.size() != x.size()) return;
     for (Index i=0; i < x.size(); i++) {
         if (pts[i].isFixed()) {
@@ -995,34 +995,34 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
         }
     }
     vparams->drawTool()->drawPoints(boundary, 10,
-        sofa::defaulttype::Vec<4,float>(0.5, 0.5, 1.0, 1.0));
+        type::RGBAColor(0.5, 0.5, 1.0, 1.0));
     vparams->drawTool()->drawPoints(fixed, 10,
-        sofa::defaulttype::Vec<4,float>(0.8, 0.0, 0.8, 1.0));
+        type::RGBAColor(0.8, 0.0, 0.8, 1.0));
 
     if (m_pointId != InvalidID) {
         // Draw tracked position
-        helper::vector<defaulttype::Vector3> vv;
+        type::vector<type::Vector3> vv;
         vv.push_back(
-            defaulttype::Vector3(m_point[0], m_point[1], m_point[2]));
+            type::Vector3(m_point[0], m_point[1], m_point[2]));
         vparams->drawTool()->drawPoints(vv, 6,
-            sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
+            type::RGBAColor(1.0, 1.0, 1.0, 1.0));
         // Draw tracked position (projected in rest shape)
         //vv.clear();
         //vv.push_back(m_pointRest);
         //vparams->drawTool()->drawPoints(vv, 4,
-        //    sofa::defaulttype::Vec<4,float>(1.0, 1.0, 0.0, 1.0));
+        //    type::RGBAColor(1.0, 1.0, 0.0, 1.0));
         // Draw attached point
         vv.clear();
         vv.push_back(x[m_pointId]);
         vparams->drawTool()->drawPoints(vv, 6,
             /*cutting()
-            ? sofa::defaulttype::Vec<4,float>(1.0, 1.0, 0.0, 1.0)
-            :*/ sofa::defaulttype::Vec<4,float>(1.0, 1.0, 1.0, 1.0));
+            ? type::RGBAColor(1.0, 1.0, 0.0, 1.0)
+            :*/ type::RGBAColor(1.0, 1.0, 1.0, 1.0));
     }
 
 
     if (m_protectedEdges.size() > 0) {
-        helper::vector<defaulttype::Vector3> points;
+        type::vector<type::Vector3> points;
         for (VecIndex::const_iterator i=m_protectedEdges.begin();
             i != m_protectedEdges.end(); i++) {
             const Edge &e = m_container->getEdge(*i);
@@ -1030,7 +1030,7 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
             points.push_back(x[ e[1] ]);
         }
         vparams->drawTool()->drawLines(points, 4,
-            sofa::defaulttype::Vec<4,float>(0.0, 1.0, 0.0, 1.0));
+            type::RGBAColor(0.0, 1.0, 0.0, 1.0));
     }
 
     m_surf.draw(vparams);

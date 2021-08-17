@@ -4,7 +4,7 @@
 #include <SofaUserInteraction/Controller.h>
 
 #include <sofa/defaulttype/VecTypes.h>
-#include <sofa/defaulttype/Vec.h>
+#include <sofa/type/Vec.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
@@ -16,7 +16,7 @@
 #include <SofaBaseTopology/TopologyData.h>
 
 #include <sofa/helper/map.h>
-#include <sofa/helper/vector.h>
+#include <sofa/type/vector.h>
 
 #include <SofaShells/misc/Optimize2DSurface.h>
 #include <SofaShells/misc/SurfaceParametrization.h>
@@ -98,12 +98,12 @@ public:
     typedef typename DataTypes::Deriv Deriv;
     typedef typename Coord::value_type Real;
 
-    typedef sofa::defaulttype::Vec<2, Real> Vec2;
-    typedef sofa::defaulttype::Vec<3, Real> Vec3;
-    typedef sofa::defaulttype::Mat<2,2,Real> Mat22;
-    typedef sofa::defaulttype::Mat<3,3,Real> Mat33;
-    //typedef helper::vector<Vec2> VecVec2;
-    typedef helper::vector<Vec3> VecVec3;
+    typedef sofa::type::Vec<2, Real> Vec2;
+    typedef sofa::type::Vec<3, Real> Vec3;
+    typedef sofa::type::Mat<2,2,Real> Mat22;
+    typedef sofa::type::Mat<3,3,Real> Mat33;
+    //typedef type::vector<Vec2> VecVec2;
+    typedef type::vector<Vec3> VecVec3;
 
 
     typedef sofa::component::topology::EdgeSetTopologyContainer::Edge               Edge;
@@ -113,7 +113,7 @@ public:
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
     typedef sofa::component::topology::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
-    typedef sofa::helper::vector<Index> VecIndex;
+    typedef sofa::type::vector<Index> VecIndex;
 
     enum { InvalidID = sofa::core::topology::Topology::InvalidID };
 
@@ -159,25 +159,25 @@ public:
             inline friend std::istream& operator>> ( std::istream& in, PointInformation& /*pi*/ ) { return in; }
     };
 
-    class PointInfoHandler : public sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::helper::vector<PointInformation> >
+    class PointInfoHandler : public sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::type::vector<PointInformation> >
     {
         public:
-            typedef sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::helper::vector<PointInformation> > Inherited;
-            PointInfoHandler(Test2DAdapter<DataTypes>* _adapter, sofa::component::topology::PointData<sofa::helper::vector<PointInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
+            typedef sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::type::vector<PointInformation> > Inherited;
+            PointInfoHandler(Test2DAdapter<DataTypes>* _adapter, sofa::component::topology::PointData<sofa::type::vector<PointInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
 
             void applyCreateFunction(
                 unsigned int pointIndex,
                 PointInformation &pInfo,
-                const sofa::helper::vector< unsigned int > &ancestors,
-                const sofa::helper::vector< double > &coeffs)
+                const sofa::type::vector< unsigned int > &ancestors,
+                const sofa::type::vector< double > &coeffs)
             { applyCreateFunction(pointIndex, pInfo, sofa::core::topology::BaseMeshTopology::InvalidID, ancestors, coeffs); }
 
             void applyCreateFunction(
                 unsigned int pointIndex,
                 PointInformation &pInfo,
                 const sofa::core::topology::Point &elem,
-                const sofa::helper::vector< unsigned int > &ancestors,
-                const sofa::helper::vector< double > &coeffs);
+                const sofa::type::vector< unsigned int > &ancestors,
+                const sofa::type::vector< double > &coeffs);
 
             void applyDestroyFunction(unsigned int pointIndex, PointInformation &pInfo);
 
@@ -195,7 +195,7 @@ public:
             Vec3 normal;
 
             /// List of points projected onto this triangle.
-            sofa::helper::vector<Index> attachedPoints;
+            sofa::type::vector<Index> attachedPoints;
 
             /// Output stream
             inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ ) { return os; }
@@ -203,32 +203,32 @@ public:
             inline friend std::istream& operator>> ( std::istream& in, TriangleInformation& /*ti*/ ) { return in; }
     };
 
-    class TriangleInfoHandler : public sofa::component::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::helper::vector<TriangleInformation> >
+    class TriangleInfoHandler : public sofa::component::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::type::vector<TriangleInformation> >
     {
         public:
-            typedef sofa::component::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::helper::vector<TriangleInformation> > Inherited;
+            typedef sofa::component::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::type::vector<TriangleInformation> > Inherited;
 
             TriangleInfoHandler(
                 Test2DAdapter<DataTypes> *_adapter,
-                sofa::component::topology::TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
+                sofa::component::topology::TriangleData<sofa::type::vector<TriangleInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
 
             void applyCreateFunction(
                 unsigned int triangleIndex,
                 TriangleInformation &tInfo,
                 const sofa::core::topology::Triangle &elem,
-                const sofa::helper::vector< unsigned int > &ancestors,
-                const sofa::helper::vector< double > &coeffs);
+                const sofa::type::vector< unsigned int > &ancestors,
+                const sofa::type::vector< double > &coeffs);
 
             void applyDestroyFunction(unsigned int triangleIndex, TriangleInformation &tInfo);
 
             void swap( unsigned int i1, unsigned int i2 );
 
             ///// Add Element after a displacement of vertices, ie. add element based on previous position topology revision.
-            //void addOnMovedPosition(const sofa::helper::vector<unsigned int> &indexList,
-            //    const sofa::helper::vector< topology::Triangle > &elems);
+            //void addOnMovedPosition(const sofa::type::vector<unsigned int> &indexList,
+            //    const sofa::type::vector< topology::Triangle > &elems);
 
             ///// Remove Element after a displacement of vertices, ie. add element based on previous position topology revision.
-            //void removeOnMovedPosition(const sofa::helper::vector<unsigned int> &indices);
+            //void removeOnMovedPosition(const sofa::type::vector<unsigned int> &indices);
 
         protected:
             Test2DAdapter<DataTypes> *adapter;
@@ -238,16 +238,16 @@ public:
     /// Minimal increase in functional to accept the change
     Data<Real> m_sigma;
     /// Current value of the functional for each triangle.
-    Data< helper::vector<Real> > m_functionals;
+    Data< type::vector<Real> > m_functionals;
 
     /// Points to project onto the topology.
     //SingleLink<Test2DAdapter<DataTypes>, MechanicalState<DataTypes>,
     //    BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> m_mappedState;
-    Data< sofa::helper::vector<Vec3> > m_projectedPoints;
+    Data< sofa::type::vector<Vec3> > m_projectedPoints;
     /// Interpolation indices for projected points.
-    Data< sofa::helper::vector<sofa::helper::vector< unsigned int > > > m_interpolationIndices;
+    Data< sofa::type::vector<sofa::type::vector< unsigned int > > > m_interpolationIndices;
     /// Interpolation values for projected points.
-    Data< sofa::helper::vector<sofa::helper::vector< Real > > > m_interpolationValues;
+    Data< sofa::type::vector<sofa::type::vector< Real > > > m_interpolationValues;
 
     virtual void init();
     virtual void reinit();
@@ -446,10 +446,10 @@ private:
 
 protected:
 
-    topology::PointData< sofa::helper::vector<PointInformation> > pointInfo;
+    topology::PointData< sofa::type::vector<PointInformation> > pointInfo;
     PointInfoHandler* pointHandler;
 
-    topology::TriangleData< sofa::helper::vector<TriangleInformation> > triInfo;
+    topology::TriangleData< sofa::type::vector<TriangleInformation> > triInfo;
     TriangleInfoHandler* triHandler;
 
 };

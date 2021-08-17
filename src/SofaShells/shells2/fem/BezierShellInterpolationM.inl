@@ -35,8 +35,8 @@ using namespace sofa::core::behavior;
 // Returns the skew-symetric matrix for computing a cross-product with the 
 // vector @x
 template <typename Real>
-inline void crossMatrix(const sofa::defaulttype::Vec<3, Real>& x,
-    sofa::defaulttype::Mat<3,3, Real>& m)
+inline void crossMatrix(const sofa::type::Vec<3, Real>& x,
+    sofa::type::Mat<3,3, Real>& m)
 {
     m[0][0] = 0;
     m[0][1] = -x[2];

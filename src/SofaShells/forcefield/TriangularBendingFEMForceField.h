@@ -50,8 +50,8 @@ namespace component
 namespace forcefield
 {
 
-using namespace sofa::defaulttype;
-using sofa::helper::vector;
+using namespace sofa::type;
+using sofa::type::vector;
 using namespace sofa::component::topology;
 using namespace sofa::core::behavior;
 
@@ -80,11 +80,12 @@ class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTyp
 
         typedef Vec<3,Real> Vec3;
         typedef Vec<2,Real> Vec2;
+        typedef Quat<Real> Quat;
 
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
 
-        typedef Vec3Types::VecCoord VecCoordHigh;
+        typedef sofa::defaulttype::Vec3Types::VecCoord VecCoordHigh;
 
         typedef sofa::Index Index;
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
@@ -115,8 +116,8 @@ public:
             public:
 
                 // position of B, C vertices in local (in-plane) coordinates (A is naturaly [0,0])
-                helper::fixed_array <Vec3, 2> restLocalPositions;
-                helper::fixed_array <Quat, 3> restLocalOrientations;
+                type::fixed_array <Vec3, 2> restLocalPositions;
+                type::fixed_array <Quat, 3> restLocalOrientations;
 
                 /// material stiffness matrices of each tetrahedron
                 MaterialStiffness materialMatrix;
@@ -163,15 +164,15 @@ public:
                 }
         };
 
-        class TRQSTriangleHandler : public TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >
+        class TRQSTriangleHandler : public TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >
         {
             public:
-                TRQSTriangleHandler(TriangularBendingFEMForceField<DataTypes>* _ff, TriangleData<sofa::helper::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::helper::vector<TriangleInformation> >(_data), ff(_ff) {}
+                TRQSTriangleHandler(TriangularBendingFEMForceField<DataTypes>* _ff, TriangleData<sofa::type::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >(_data), ff(_ff) {}
 
                 void applyCreateFunction(unsigned int triangleIndex, TriangleInformation& ,
                     const Triangle & t,
-                    const sofa::helper::vector< unsigned int > &,
-                    const sofa::helper::vector< double > &);
+                    const sofa::type::vector< unsigned int > &,
+                    const sofa::type::vector< double > &);
 
             protected:
                 TriangularBendingFEMForceField<DataTypes>* ff;
@@ -194,7 +195,7 @@ public:
         void draw(const core::visual::VisualParams* vparams) override;
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
-        TriangleData< sofa::helper::vector<TriangleInformation> >& getTriangleInfo() {return triangleInfo;}
+        TriangleData< sofa::type::vector<TriangleInformation> >& getTriangleInfo() {return triangleInfo;}
 
         Data<Real> f_poisson;
         Data<Real> f_young;
@@ -234,7 +235,7 @@ protected :
 
         VecCoord x0fake;   // Virtual values of the rest positions in unmerged topology
 
-        TriangleData< sofa::helper::vector<TriangleInformation> > triangleInfo;
+        TriangleData< sofa::type::vector<TriangleInformation> > triangleInfo;
 
         void computeDisplacement(Displacement &Disp, const VecCoord &x, const Index elementIndex);
         void computeDisplacementBending(DisplacementBending &Disp, const VecCoord &x, const Index elementIndex);
@@ -246,7 +247,7 @@ protected :
         void computeForce(Displacement &F, const Displacement& D, const Index elementIndex);
         void computeForceBending(DisplacementBending &F, const DisplacementBending& D, const Index elementIndex);
 
-        static void TRQSTriangleCreationFunction (unsigned int , void* , TriangleInformation &, const Triangle& , const sofa::helper::vector< unsigned int > &, const sofa::helper::vector< double >&);
+        static void TRQSTriangleCreationFunction (unsigned int , void* , TriangleInformation &, const Triangle& , const sofa::type::vector< unsigned int > &, const sofa::type::vector< double >&);
 
         /// f += Kx where K is the stiffness matrix and x a displacement
         virtual void applyStiffness(VecDeriv& f, const VecDeriv& dx, const Index elementIndex, const double kFactor);
@@ -262,12 +263,60 @@ protected :
         void testAddDforce(void);
 
         void refineCoarseMeshToTarget(void);
-        void subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::helper::vector<Vec3> &subVertices, SeqTriangles &subTriangles);
-        void addVertexAndFindIndex(sofa::helper::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
+        void subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::type::vector<Vec3> &subVertices, SeqTriangles &subTriangles);
+        void addVertexAndFindIndex(sofa::type::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
         void movePoint(Vec3& pointToMove);
-        void FindClosestGravityPoints(const Vec3& point, sofa::helper::vector<Vec3>& listClosestPoints);
+        void FindClosestGravityPoints(const Vec3& point, sofa::type::vector<Vec3>& listClosestPoints);
 
         void handleEvent(sofa::core::objectmodel::Event *event) override;
+
+
+        Quat qDiff(Quat a, const Quat& b)
+        {
+            // If the axes are not oriented in the same direction, flip the axis and angle of a to get the same convention than b
+            if (a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3]<0)
+            {
+                a[0] = -a[0];
+                a[1] = -a[1];
+                a[2] = -a[2];
+                a[3] = -a[3];
+            }
+            Quat q = b.inverse() * a;
+            return q;
+        }
+
+
+
+        Quat qDiffZ(const Quat& vertex, const Quat& Qframe)
+        {
+            // dQ is the quaternion that embodies the rotation between the z axis of the vertex and the z axis of the local triangle's frame (in local space)
+            Quat dQ;
+
+            // u = z axis of the triangle's frame
+            Vec3d u(0,0,1);
+
+            // v = z axis of the vertex's frame is expressed into world space
+            Vec3d v = vertex.rotate(Vec3d(0.0, 0.0, 1.0));
+            // v0 = v expressed into local triangle's frame
+            Vec3d v0 = Qframe.rotate(v);
+
+            // Axis of rotation between the 2 vectors u and v lies into the plan of the 2 vectors
+            Vec3d axis = cross(u, v0);
+            // Shortest angle between the 2 vectors
+            double angle = acos(dot(u, v0));
+
+            // Quaternion associated to this axis and this angle
+            if (fabs(angle)>1e-6)
+            {
+                dQ.axisToQuat(axis,angle);
+            }
+            else
+            {
+                dQ = Quat(0,0,0,1);
+            }
+
+            return dQ;
+        }
 };
 
 
