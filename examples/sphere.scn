@@ -2,6 +2,7 @@
 <Node name="root" dt="0.02" gravity="0 0 0">
 
     <VisualStyle displayFlags="showVisual" />
+    <RequiredPlugin pluginName="SofaShells" />
 
     <CollisionPipeline verbose="0"/>
     <BruteForceDetection name="N2"/>
