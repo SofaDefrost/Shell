@@ -1,11 +1,12 @@
 #ifndef SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 
+#include <sofa/component/topology/container/dynamic/PointSetTopologyContainer.h>
 #include <SofaShells/shells2/fem/BezierShellInterpolation.h>
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseTopology/TopologyData.inl>
+#include <sofa/core/topology/TopologyData.inl>
 
 #include <sofa/helper/decompose.h>
 
@@ -183,7 +184,7 @@ void BezierShellInterpolation<DataTypes>::init()
 {
     this->getContext()->get(mState, sofa::core::objectmodel::BaseContext::SearchUp);
     if (!mState) {
-        serr << "No MechanicalState for the simulation found" << sendl;
+        msg_warning() << "No MechanicalState for the simulation found" ;
         return;
     }
 
@@ -191,7 +192,7 @@ void BezierShellInterpolation<DataTypes>::init()
     this->getContext()->get(bezierM2P);
     if(bezierM2P == NULL)
     {
-        serr<<"No Mesh2PointTopologicalMapping... cannot construct nodes of Bézier triangles" <<sendl;
+        msg_warning()<<"No Mesh2PointTopologicalMapping... cannot construct nodes of Bézier triangles" ;
         return;
     }
 
@@ -199,24 +200,24 @@ void BezierShellInterpolation<DataTypes>::init()
     inputTopology = bezierM2P->getFrom();
     if(inputTopology == NULL)
     {
-        serr<<"No input topology of the Mesh2PointTopologicalMapping found"
-            " (this provide the topological support of bezier functions)"<<sendl;
+        msg_warning()<<"No input topology of the Mesh2PointTopologicalMapping found"
+            " (this provide the topological support of bezier functions)";
         return;
     }
 
-    pointInfo.createTopologyHandler(bezierM2P->getTo(), pointHandler);
-    pointInfo.beginEdit()->resize(dynamic_cast<topology::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
+    pointInfo.createTopologyHandler(bezierM2P->getTo());
+    pointInfo.beginEdit()->resize(dynamic_cast<topology::container::dynamic::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
     pointInfo.endEdit();
 
-    triInfo.createTopologyHandler(inputTopology, triHandler);
-    triInfo.beginEdit()->resize(dynamic_cast<topology::TriangleSetTopologyContainer*>(inputTopology)->getNumberOfElements());
+    triInfo.createTopologyHandler(inputTopology);
+    triInfo.beginEdit()->resize(dynamic_cast<topology::container::dynamic::PointSetTopologyContainer*>(inputTopology)->getNumberOfElements());
     triInfo.endEdit();
 
     // Verify that the inputs are coherents
     const type::vector< type::vector<sofa::Index> >& mapEdge = bezierM2P->getPointsMappedFromEdge();
     if( (int) mapEdge.size() != inputTopology->getNbEdges() )
     {
-        serr<<"Problem in Mesh2PointTopologicalMapping:mapEdge.size() != inputTopology->getNbEdges()"<<sendl;
+        msg_warning()<<"Problem in Mesh2PointTopologicalMapping:mapEdge.size() != inputTopology->getNbEdges()";
         return;
     }
 
@@ -370,9 +371,9 @@ void BezierShellInterpolation<DataTypes>::computeBezierPointsUsingNormals(const 
     if ((int) normals.size() != inputTopology->getNbPoints())
     {
         if (normals.size() == 0)
-            serr << "No normals defined, assuming flat triangles!" << sendl;
+            msg_warning() << "No normals defined, assuming flat triangles!" ;
         else
-            serr << "Number of input normals does not match number of points of the input topology" << sendl;
+            msg_warning() << "Number of input normals does not match number of points of the input topology" ;
 
         // No normals, assume flat triangles
 
@@ -486,7 +487,7 @@ void BezierShellInterpolation<DataTypes>::updateBezierPoints(Index triIndex)
     Data<VecVec3d>* datax = mStateNodes->write(sofa::core::VecCoordId::position());
     VecVec3d& x = *datax->beginEdit();
 
-    x.resize(dynamic_cast<topology::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
+    x.resize(dynamic_cast<topology::container::dynamic::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
 
     sofa::core::topology::Triangle tri = inputTopology->getTriangle(triIndex);
     const Index a = tri[0];

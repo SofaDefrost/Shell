@@ -13,7 +13,7 @@
 #include <SofaBaseTopology/TriangleSetTopologyModifier.h>
 #include <SofaBaseTopology/TriangleSetTopologyAlgorithms.h>
 #include <SofaBaseTopology/TriangleSetGeometryAlgorithms.h>
-#include <SofaBaseTopology/TopologyData.h>
+#include <sofa/core/topology/TopologyData.h>
 
 #include <sofa/helper/map.h>
 #include <sofa/type/vector.h>
@@ -106,8 +106,8 @@ public:
     typedef type::vector<Vec3> VecVec3;
 
 
-    typedef sofa::component::topology::EdgeSetTopologyContainer::Edge               Edge;
-    typedef sofa::component::topology::EdgeSetTopologyContainer::EdgesAroundVertex  EdgesAroundVertex;
+    typedef sofa::core::topology::BaseMeshTopology::Edge               Edge;
+    typedef sofa::core::topology::BaseMeshTopology::EdgesAroundVertex  EdgesAroundVertex;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID     Index;
     typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle       Triangle;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
@@ -159,11 +159,11 @@ public:
             inline friend std::istream& operator>> ( std::istream& in, PointInformation& /*pi*/ ) { return in; }
     };
 
-    class PointInfoHandler : public sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::type::vector<PointInformation> >
+    class PointInfoHandler : public sofa::core::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::type::vector<PointInformation> >
     {
         public:
-            typedef sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::type::vector<PointInformation> > Inherited;
-            PointInfoHandler(Test2DAdapter<DataTypes>* _adapter, sofa::component::topology::PointData<sofa::type::vector<PointInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
+            typedef sofa::core::topology::TopologyDataHandler<sofa::core::topology::Point, sofa::type::vector<PointInformation> > Inherited;
+            PointInfoHandler(Test2DAdapter<DataTypes>* _adapter, sofa::core::topology::PointData<sofa::type::vector<PointInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
 
             void applyCreateFunction(
                 unsigned int pointIndex,
@@ -203,14 +203,14 @@ public:
             inline friend std::istream& operator>> ( std::istream& in, TriangleInformation& /*ti*/ ) { return in; }
     };
 
-    class TriangleInfoHandler : public sofa::component::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::type::vector<TriangleInformation> >
+    class TriangleInfoHandler : public sofa::core::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::type::vector<TriangleInformation> >
     {
         public:
-            typedef sofa::component::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::type::vector<TriangleInformation> > Inherited;
+            typedef sofa::core::topology::TopologyDataHandler<sofa::core::topology::Triangle, sofa::type::vector<TriangleInformation> > Inherited;
 
             TriangleInfoHandler(
                 Test2DAdapter<DataTypes> *_adapter,
-                sofa::component::topology::TriangleData<sofa::type::vector<TriangleInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
+                sofa::core::topology::TriangleData<sofa::type::vector<TriangleInformation> >* _data) : Inherited(_data), adapter(_adapter) {}
 
             void applyCreateFunction(
                 unsigned int triangleIndex,
@@ -340,10 +340,10 @@ public:
 private:
 
     unsigned int stepCounter;
-    sofa::component::topology::TriangleSetTopologyContainer*  m_container;
-    sofa::component::topology::TriangleSetTopologyModifier*  m_modifier;
-    sofa::component::topology::TriangleSetGeometryAlgorithms<DataTypes> *m_algoGeom;
-    sofa::component::topology::TriangleSetTopologyAlgorithms<DataTypes> *m_algoTopo;
+    sofa::core::topology::TriangleSetTopologyContainer*  m_container;
+    sofa::core::topology::TriangleSetTopologyModifier*  m_modifier;
+    sofa::core::topology::TriangleSetGeometryAlgorithms<DataTypes> *m_algoGeom;
+    sofa::core::topology::TriangleSetTopologyAlgorithms<DataTypes> *m_algoTopo;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
 
     /// List of nodes that have to be rechecked if they are on the boundry.

@@ -35,7 +35,7 @@
 #include <sofa/core/objectmodel/Data.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseTopology/TopologyData.h>
+#include <sofa/core/topology/TopologyData.h>
 
 #include <SofaShells/controller/MeshInterpolator.h>
 #include <SofaShells/engine/JoinMeshPoints.h>
@@ -52,7 +52,7 @@ namespace forcefield
 
 using namespace sofa::type;
 using sofa::type::vector;
-using namespace sofa::component::topology;
+using namespace sofa::core::topology;
 using namespace sofa::core::behavior;
 
 /// This class can be overridden if needed for additionnal storage within template specializations.
@@ -80,7 +80,7 @@ class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTyp
 
         typedef Vec<3,Real> Vec3;
         typedef Vec<2,Real> Vec2;
-        typedef Quat<Real> Quat;
+        typedef sofa::type::Quat<Real> Quat;
 
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
@@ -186,7 +186,7 @@ public:
         void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) override ;
         void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) override ;
         void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix) override;
-        void addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/) override;
+        void addBToMatrix(linearalgebra::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/) override;
         double getPotentialEnergy(const VecCoord& x) const;
         void handleTopologyChange() override;
 

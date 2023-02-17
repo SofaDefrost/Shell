@@ -41,16 +41,6 @@ public:
     void init() override;
     void reinit() override;
 
-    std::string getTemplateName() const override
-    {
-        return templateName(this);
-    }
-
-    static std::string templateName(const MeshInterpolator<DataTypes>* = NULL)
-    {
-        return DataTypes::Name();
-    }
-
     Data<Real>              f_startTime;
     Data<unsigned int>      f_nbSteps;
     Data<Real>              f_increment;

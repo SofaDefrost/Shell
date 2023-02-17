@@ -35,7 +35,7 @@
 #include <sofa/core/objectmodel/Data.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseTopology/TopologyData.h>
+#include <sofa/core/topology/TopologyData.h>
 
 #include <SofaShells/controller/MeshInterpolator.h>
 #include <SofaShells/engine/JoinMeshPoints.h>
@@ -58,7 +58,7 @@ namespace forcefield
 
 using namespace sofa::type;
 using sofa::type::vector;
-using namespace sofa::component::topology;
+using namespace sofa::core::topology;
 using namespace sofa::core::behavior;
 
 /// This class can be overridden if needed for additionnal storage within template specializations.
@@ -89,7 +89,7 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
 
         typedef Mat<3,3,Real> Mat33;
 
-        typedef Quat<Real> Quat;
+        typedef sofa::type::Quat<Real> Quat;
 
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
@@ -99,6 +99,8 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         typedef sofa::Index Index;
         typedef sofa::core::topology::BaseMeshTopology::Triangle Triangle;
         typedef sofa::core::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
+
+        class TriangleInformation;
 
     protected:
 
@@ -187,8 +189,6 @@ public:
                 // Surface Area * 2
                 Real area2;
 
-                TriangleInformation() { }
-
                 /// Output stream
                 inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ )
                 {
@@ -202,10 +202,14 @@ public:
                 }
         };
 
-        class TRQSTriangleHandler : public topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::type::vector<TriangleInformation> >
+        class TRQSTriangleHandler : public TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >
         {
             public:
-                TRQSTriangleHandler(BezierTriangularBendingFEMForceField<DataTypes>* _ff, TriangleData<sofa::type::vector<TriangleInformation> >* _data) : TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >(_data), ff(_ff) {}
+                TRQSTriangleHandler(BezierTriangularBendingFEMForceField<DataTypes>* _ff, TriangleData<sofa::type::vector<TriangleInformation> >* _data)
+                    : TopologyDataHandler<Triangle, sofa::type::vector<TriangleInformation> >(_data)
+                    , ff(_ff)
+                {
+                }
 
                 void applyCreateFunction(unsigned int triangleIndex, TriangleInformation& ,
                     const Triangle & t,
@@ -224,7 +228,7 @@ public:
         void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) override ;
         void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) override ;
         void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix) override;
-        void addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/) override;
+        void addBToMatrix(sofa::linearalgebra::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/) override;
         void handleTopologyChange() override;
 
         SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& /*x*/) const override { return 0; }

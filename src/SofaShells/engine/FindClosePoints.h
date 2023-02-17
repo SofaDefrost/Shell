@@ -40,16 +40,6 @@ protected:
 
 public:
 
-    virtual std::string getTemplateName() const override
-    {
-        return templateName(this);
-    }
-
-    static std::string templateName(const FindClosePoints<DataTypes>* = NULL)
-    {
-        return DataTypes::Name();
-    }
-
     void init() override;
     void reinit() override;
     void doUpdate() override;

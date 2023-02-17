@@ -36,7 +36,7 @@
 #include <sofa/helper/OptionsGroup.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseTopology/TopologyData.h>
+#include <sofa/core/topology/TopologyData.h>
 
 
 // Uncomment the following to use quaternions instead of matrices for
@@ -56,7 +56,7 @@ namespace forcefield
 
 using namespace sofa::type;
 using sofa::type::vector;
-using namespace sofa::component::topology;
+using namespace sofa::core::topology;
 using namespace sofa::core::behavior;
 
 /// This class can be overridden if needed for additionnal storage within template specializations.
@@ -86,7 +86,7 @@ class TriangularShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Vec<3,Real> Vec3;
         typedef Vec<9,Real> Vec9;
 
-        typedef Quat<Real> Quat;
+        typedef sofa::type::Quat<Real> Quat;
 
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;

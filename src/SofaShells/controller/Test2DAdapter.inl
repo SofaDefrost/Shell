@@ -47,7 +47,7 @@
 #include <sofa/core/visual/VisualParams.h>  
 #include <sofa/helper/rmath.h>
 #include <sofa/helper/SimpleTimer.h>
-#include <SofaBaseTopology/TopologyData.inl>
+#include <sofa/core/topology/TopologyData.h>
 
 #include <SofaMeshCollision/TriangleModel.h>
 
@@ -233,31 +233,31 @@ void Test2DAdapter<DataTypes>::init()
 {
     m_state = dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes>*> (this->getContext()->getMechanicalState());
     if (!m_state) {
-        serr << "Unable to find MechanicalState" << sendl;
+        msg_error() << "Unable to find MechanicalState" ;
         return;
     }
 
     this->getContext()->get(m_container);
     if (m_container == NULL) {
-        serr << "Unable to find triangular topology" << sendl;
+        msg_error() << "Unable to find triangular topology" ;
         return;
     }
 
     this->getContext()->get(m_modifier);
     if (m_modifier == NULL) {
-        serr << "Unable to find TriangleSetTopologyModifier" << sendl;
+        msg_error() << "Unable to find TriangleSetTopologyModifier" ;
         return;
     }
 
     this->getContext()->get(m_algoGeom);
     if (m_algoGeom == NULL) {
-        serr << "Unable to find TriangleSetGeometryAlgorithms" << sendl;
+        msg_error() << "Unable to find TriangleSetGeometryAlgorithms" ;
         return;
     }
 
     this->getContext()->get(m_algoTopo);
     if (m_algoTopo == NULL) {
-        serr << "Unable to find TriangleSetTopologyAlgorithms" << sendl;
+        msg_error() << "Unable to find TriangleSetTopologyAlgorithms" ;
         return;
     }
 
@@ -278,7 +278,7 @@ void Test2DAdapter<DataTypes>::reinit()
     this->f_listening.endEdit();
 
     if ((m_sigma.getValue() < (Real)0.0) || (m_sigma.getValue() > (Real)1.0)) {
-        serr << "The value of sigma must be between 0 and 1." << sendl;
+        msg_warning() << "The value of sigma must be between 0 and 1." ;
         *m_sigma.beginEdit() = 0.01;
         m_sigma.endEdit();
     }
@@ -640,9 +640,9 @@ void Test2DAdapter<DataTypes>::computeTriangleNormal(const Triangle &t, const Ve
 
     Real An = A.norm(), Bn = B.norm();
     if (An < 1e-20 || Bn < 1e-20) {
-        serr << "Found degenerated triangle: "
+        msg_warning() << "Found degenerated triangle: "
             << x[ t[0] ] << " / " << x[ t[1] ] << " / " << x[ t[2] ]
-            << " :: " << An << ", " << Bn << sendl;
+            << " :: " << An << ", " << Bn ;
 
         normal = Vec3(0,0,0);
         return;
@@ -720,8 +720,8 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
 
     if (tId == InvalidID) {
         // We screwed up something. Probably a triangle got inverted accidentaly.
-        serr << "Unexpected triangle Id -1! Cannot move point "
-            << pt << ", marking point as fixed." << sendl;
+        msg_warning() << "Unexpected triangle Id -1! Cannot move point "
+            << pt << ", marking point as fixed." ;
 
         (*pointInfo.beginEdit())[pt].forceFixed = true;
         pointInfo.endEdit();
@@ -851,7 +851,7 @@ void Test2DAdapter<DataTypes>::projectionInit()
 
         proj.ProjectPoint(vertexBaryCoord, triangleID, xProj[i], x0);
         if (triangleID == InvalidID) {
-            serr << "Failed to project point " << i << "!" << sendl;
+            msg_warning() << "Failed to project point " << i << "!" ;
             break;
         }
 
@@ -940,7 +940,7 @@ void Test2DAdapter<DataTypes>::projectionUpdate(Index pt)
             Index newTri;
             proj.ProjectPoint(newBary, newTri, xProj[ptAttached], x0, N1);
             if (newTri == InvalidID) {
-                serr << "Failed to project point " << ptAttached << "!" << sendl;
+                msg_warning() << "Failed to project point " << ptAttached << "!" ;
                 continue;
             }
 

@@ -36,7 +36,7 @@
 #include <vector>
 #include <sofa/defaulttype/VecTypes.h>
 
-#include <SofaBaseTopology/TopologyData.inl>
+#include <sofa/core/topology/TopologyData.inl>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
 
@@ -144,7 +144,7 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 // --------------------------------------------------------------------------------------
 template <class DataTypes> void BezierShellForceField<DataTypes>::handleTopologyChange()
 {
-    serr << "handleTopologyChange() not implemented" << sendl;
+    msg_warning() << "handleTopologyChange() not implemented" ;
 
 }
 
@@ -166,14 +166,14 @@ void BezierShellForceField<DataTypes>::init()
     this->Inherited::init();
 
     if (this->mstate == NULL) {
-        serr << "Mechanical state is required!" << sendl;
+        msg_warning() << "Mechanical state is required!" ;
         return;
     }
 
     _topology = this->getContext()->getMeshTopology();
 
     // Create specific handler for TriangleData
-    triangleInfo.createTopologyHandler(_topology, triangleHandler);
+    triangleInfo.createTopologyHandler(_topology);
 
     reinit();
 }
@@ -191,7 +191,7 @@ template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
     } else if (f_measure.getValue().getSelectedItem() == "Von Mises stress") {
         bMeasureStrain = false;  bMeasureStress = true;
     } else {
-        serr << "Invalid value for measure'" << f_measure.getValue().getSelectedItem() << "'" << sendl;
+        msg_warning() << "Invalid value for measure'" << f_measure.getValue().getSelectedItem() << "'" ;
         return;
     }
 
@@ -201,7 +201,7 @@ template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
 
     if (_topology->getNbTriangles()==0)
     {
-            serr << "BezierShellForceField: object must have a Triangular Set Topology."<<sendl;
+            msg_warning() << "BezierShellForceField: object must have a Triangular Set Topology.";
             return;
     }
 
@@ -210,7 +210,7 @@ template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
         sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
         if (jmp->f_output_triangles.getValue().size() == 0)
         {
-            serr << "Mapped topology must be triangular! No triangles found." << sendl;
+            msg_warning() << "Mapped topology must be triangular! No triangles found." ;
         } else {
             mapTopology = true;
         }
@@ -225,10 +225,10 @@ template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
         const VecCoord &rx = restShape.get()->f_position.getValue();
         if (!mapTopology) {
             if (rx.size() != this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
-                serr << "Different number of nodes in rest shape and mechanical state!" << sendl;
+                msg_warning() << "Different number of nodes in rest shape and mechanical state!" ;
             }
         } else if (rx.size() != topologyMapper.get()->f_input_position.getValue().size()) {
-            serr << "Different number of nodes in rest shape and (original) mapped topology!" << sendl;
+            msg_warning() << "Different number of nodes in rest shape and (original) mapped topology!" ;
         }
 
     } else if (mapTopology) {
@@ -295,7 +295,7 @@ template <class DataTypes>
 void BezierShellForceField<DataTypes>::initTriangle(const int i)
 {
     if (this->mstate == NULL) {
-        serr << "Missing mechanical state" << sendl;
+        msg_warning() << "Missing mechanical state" ;
         return;
     }
 
@@ -543,10 +543,10 @@ void BezierShellForceField<DataTypes>::interpolateRefFrame(TriangleInformation *
     }
     else
     {
-        serr<<" WARNING : can not compute the Ref FRame of the element: "
+        msg_warning()<<" WARNING : can not compute the Ref FRame of the element: "
             << X_bezierPoints[0] << ", " << X_bezierPoints[1] << ", "
             << X_bezierPoints[2] <<
-            " tangent: " << X1 << ", " << Y1 << sendl;
+            " tangent: " << X1 << ", " << Y1 ;
         X1=Vec3(1.0,0.0,0.0);
         Y =Vec3(0.0,1.0,0.0);
         Z =Vec3(0.0,0.0,1.0);
@@ -656,7 +656,7 @@ void BezierShellForceField<DataTypes>::computeLocalTriangle(
     // the element
 
     //// Rotate the already computed nodes
-    //sout << "QFrame: " << tinfo->frame.getOrientation() << sendl;
+    //msg_info() << "QFrame: " << tinfo->frame.getOrientation() ;
     for (int i = 0; i < (bFast ? 3 : 10); i++) {
 #ifdef CRQUAT
         pts[i] = tinfo->frameOrientationQ.rotate(bn[i] - tinfo->frameCenter);
@@ -713,7 +713,7 @@ void BezierShellForceField<DataTypes>::computeDisplacements( Displacement &Disp,
     Vec3 dQ1 = Q1.toEulerVector();
     Vec3 dQ2 = Q2.toEulerVector();
 
-    //std::cout << "Θ: " << dQ0 << " || " << dQ1 << " || " << dQ2 << std::endl;
+    //std::cout << "Θ: " << dQ0 << " || " << dQ1 << " || " << dQ2 ;
 
     //bending => rotation along X and Y
     BDisp[1] = dQ0[0];
@@ -757,7 +757,7 @@ void BezierShellForceField<DataTypes>::computeDisplacements( Displacement &Disp,
     //for (int i=0; i<9; i++) { std::cout << " " << round(Disp[i]*1e8)/1e8; }
     //std::cout << "\n  ";
     //for (int i=0; i<9; i++) { std::cout << " " << round(BDisp[i]*1e8)/1e8; }
-    //std::cout << std::endl;
+    //std::cout ;
 
 
     //////////////////// comparison  ///////////////////////////////
@@ -1103,15 +1103,15 @@ void BezierShellForceField<DataTypes>:: computeStrainDisplacementMatrixMembrane(
         matrixSDM(tinfo.measure[i].B, tinfo.measure[i].point, tinfo);
 
     if (this->f_printLog.getValue()) {
-        sout << "pts: " << tinfo.pts << std::endl;
-        sout << "x2b: " << tinfo.interpol << std::endl;
+        msg_info() << "pts: " << tinfo.pts ;
+        msg_info() << "x2b: " << tinfo.interpol ;
 
 #ifdef GAUSS4
-        sout << "Bm:";
+        msg_info() << "Bm:";
         for (int i=0; i<Gn; i++)
-            sout << "\t" << tinfo.strainDisplacementMatrix[i] << "\n";
+            msg_info() << "\t" << tinfo.strainDisplacementMatrix[i] << "\n";
 #else
-        sout << "Bm: " << tinfo.strainDisplacementMatrix1 <<
+        msg_info() << "Bm: " << tinfo.strainDisplacementMatrix1 <<
             "\n    " << tinfo.strainDisplacementMatrix2 <<
             "\n    " << tinfo.strainDisplacementMatrix3 <<
             "\n";
@@ -1119,10 +1119,10 @@ void BezierShellForceField<DataTypes>:: computeStrainDisplacementMatrixMembrane(
 
         Displacement u = Vec<9,Real>(1, -5, 0, 1, -5, 0, 1, -5, 0);
 
-        sout << "-- Disp test Bm (u=" << u << ")\n";
+        msg_info() << "-- Disp test Bm (u=" << u << ")\n";
 #ifdef GAUSS4
         for (int i=0; i<Gn; i++)
-            sout << i << ": " << tinfo.strainDisplacementMatrix[i] * u << "\n";
+            msg_info() << i << ": " << tinfo.strainDisplacementMatrix[i] * u << "\n";
 #else
             "1 : " << tinfo.strainDisplacementMatrix1 * u << "\n"
             "2 : " << tinfo.strainDisplacementMatrix2 * u << "\n"
@@ -1284,14 +1284,14 @@ void BezierShellForceField<DataTypes>::computeStrainDisplacementMatrixBending(Tr
 
     if (this->f_printLog.getValue()) {
 #ifndef GAUSS4
-        sout << "Bb: " << tinfo.strainDisplacementMatrixB1 <<
+        msg_info() << "Bb: " << tinfo.strainDisplacementMatrixB1 <<
             "\n    " << tinfo.strainDisplacementMatrixB2 <<
             "\n    " << tinfo.strainDisplacementMatrixB3 <<
             "\n";
 #else
-        sout << "Bb:";
+        msg_info() << "Bb:";
         for (int i=0; i<Gn; i++)
-            sout << "\t" << tinfo.strainDisplacementMatrixB[i] << "\n";
+            msg_info() << "\t" << tinfo.strainDisplacementMatrixB[i] << "\n";
 #endif
     }
 }
@@ -1301,7 +1301,7 @@ void BezierShellForceField<DataTypes>::stressAtPoints(const VecVec3 &points, con
 {
     if (points.size() != elements.size())
     {
-        serr << "Invalid arguments for stressAtPoints(), sizes do not match." << sendl;
+        msg_warning() << "Invalid arguments for stressAtPoints(), sizes do not match." ;
         return;
     }
 
@@ -1520,11 +1520,11 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixMembrane(
 
     if (this->f_printLog.getValue())
     {
-        sout << "2*Area = " << tinfo.area2 << std::endl;
-        sout << "Km = " << K << sendl;
+        msg_info() << "2*Area = " << tinfo.area2 ;
+        msg_info() << "Km = " << K ;
         Displacement u = Vec<9,Real>(1, -5, 0, 1, -5, 0, 1, -5, 0);
-        sout << "-- Disp test Km (u=" << u << ")" <<
-            " : " << K * u << " ... should be zero" << sendl;
+        msg_info() << "-- Disp test Km (u=" << u << ")" <<
+            " : " << K * u << " ... should be zero" ;
     }
 }
 
@@ -1564,7 +1564,7 @@ void BezierShellForceField<DataTypes>::computeStiffnessMatrixBending(StiffnessMa
 
     if (this->f_printLog.getValue())
     {
-        sout << "Kb = "  << K << sendl;
+        msg_info() << "Kb = "  << K ;
     }
 }
 
@@ -1722,7 +1722,7 @@ void BezierShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const VecCoo
         std::cout << "   xg [ " << a << "/" << b << "/" << c << " - "
             << x[a] << " || " << x[b] << " || " << x[c] << "\n";
         std::cout << "   xl [ " << tinfo->pts[0] << ", " << tinfo->pts[1] << ", " << tinfo->pts[2] << "\n";
-        std::cout << "   fg: " << Deriv(-fa1, -fa2) << " | " << Deriv(-fb1, -fb2) << " | " << Deriv(-fc1, -fc2) << std::endl;
+        std::cout << "   fg: " << Deriv(-fa1, -fa2) << " | " << Deriv(-fb1, -fb2) << " | " << Deriv(-fc1, -fc2) ;
     }
 
 
@@ -1763,7 +1763,7 @@ void BezierShellForceField<DataTypes>::addForce(const sofa::core::MechanicalPara
     dataF.endEdit();
 
 //    stop = timer.getTime();
-//    std::cout << "---------- time addForce = " << stop-start << std::endl;
+//    std::cout << "---------- time addForce = " << stop-start ;
 }
 
 // --------------------------------------------------------------------------------------
@@ -1787,7 +1787,7 @@ void BezierShellForceField<DataTypes>::addDForce(const sofa::core::MechanicalPar
         applyStiffness(df, dp, i, kFactor);
     }
 
-    //std::cout << df << std::endl;
+    //std::cout << df ;
     datadF.endEdit();
 }
 
@@ -1937,14 +1937,14 @@ void BezierShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams
 
 
     #ifdef PRINT
-    std::cout << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" << std::endl;
+    std::cout << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" ;
     for (unsigned int i=0; i<r.matrix->rowSize(); i++)
     {
         for (unsigned int j=0; j<r.matrix->colSize(); j++)
         {
             std::cout << r.matrix->element(i,j) << ",";
         }
-        std::cout << std::endl;
+        std::cout ;
     }
     #endif
 
@@ -1955,7 +1955,7 @@ void BezierShellForceField<DataTypes>::addKToMatrix(const core::MechanicalParams
 #else
 
 template<class DataTypes>
-void BezierShellForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset)
+void BezierShellForceField<DataTypes>::addKToMatrix(sofa::linearalgebra::BaseMatrix *mat, SReal /*k*/, unsigned int &offset)
 {
     VecCoord X = *this->mstate->getX();
     VecDeriv df, dx;
@@ -1986,14 +1986,14 @@ void BezierShellForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatri
     }
 
     #ifdef PRINT
-    std::cout << "Global matrix (" << mat->rowSize() << "x" << mat->colSize() << ")" << std::endl;
+    std::cout << "Global matrix (" << mat->rowSize() << "x" << mat->colSize() << ")" ;
     for (unsigned int i=0; i<mat->rowSize(); i++)
     {
         for (unsigned int j=0; j<mat->colSize(); j++)
         {
             std::cout << mat->element(i,j) << "," ;
         }
-        std::cout << std::endl;
+        std::cout ;
     }
     #endif
 }

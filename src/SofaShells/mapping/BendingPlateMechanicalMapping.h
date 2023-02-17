@@ -53,7 +53,7 @@ namespace mapping
 
 using namespace sofa::type;
 using namespace sofa::component::forcefield;
-using namespace sofa::component::topology;
+using namespace sofa::core::topology;
 using namespace sofa::helper::system::thread;
 using namespace core::topology;
 
@@ -137,7 +137,7 @@ protected:
             sofa::core::topology::BaseMeshTopology,
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
 
-        TriangleSetTopologyContainer* topologyTarget;
+        topology::TriangleSetTopologyContainer* topologyTarget;
         OutVecCoord verticesTarget;
         SeqTriangles trianglesTarget;
 

@@ -38,7 +38,7 @@
 #include <assert.h>
 #include <map>
 #include <utility>
-#include <SofaBaseTopology/TopologyData.inl>
+#include <sofa/core/topology/TopologyData.inl>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 
 #include <sofa/core/visual/VisualParams.h>
@@ -135,12 +135,12 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
     if (_topology->getNbTriangles()==0)
     {
-            serr << "TriangularBendingFEMForceField: object must have a Triangular Set Topology."<<sendl;
+            msg_warning() << "TriangularBendingFEMForceField: object must have a Triangular Set Topology.";
             return;
     }
 
     // Create specific handler for TriangleData
-    triangleInfo.createTopologyHandler(_topology, triangleHandler);
+    triangleInfo.createTopologyHandler(_topology);
 
     reinit();
 
@@ -158,7 +158,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
             }
             else
             {
-                serr << "No mechanical state for target high resolution topology" << sendl;
+                msg_warning() << "No mechanical state for target high resolution topology" ;
                 return;
             }
         }
@@ -361,7 +361,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
         sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
         if (jmp->f_output_triangles.getValue().size() == 0)
         {
-            serr << "Mapped topology must be triangular! No triangles found." << sendl;
+            msg_warning() << "Mapped topology must be triangular! No triangles found." ;
         } else {
             mapTopology = true;
         }
@@ -376,11 +376,11 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
         if (!mapTopology) {
             if (restShape.get()->f_position.getValue().size() != 
                 this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
-                serr << "Different number of nodes in rest shape and mechanical state!" << sendl;
+                msg_warning() << "Different number of nodes in rest shape and mechanical state!" ;
             }
         } else if (restShape.get()->f_position.getValue().size() != 
             topologyMapper.get()->f_input_position.getValue().size()) {
-            serr << "Different number of nodes in rest shape and (original) mapped topology!" << sendl;
+            msg_warning() << "Different number of nodes in rest shape and (original) mapped topology!" ;
         }
     }
 
@@ -404,7 +404,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 template <class DataTypes>
 double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
 {
-    serr<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!"<<sendl;
+    msg_warning()<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!";
     return 0;
 }
 
@@ -826,7 +826,7 @@ template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::tensorFlatPlate(Mat<3, 9, Real>& D, const Vec3 &P)
 {
 #ifdef DEBUG_TRIANGLEFEM
-    sout << "TriangleBendingFEMForceField::tensorFlatPlate"<<sendl;
+    msg_info() << "TriangleBendingFEMForceField::tensorFlatPlate";
 #endif
 
     // Flat-plat theory gives:
@@ -1248,7 +1248,7 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::Mechani
 #else
 
 template<class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatrix *mat, SReal /*k*/, unsigned int &offset)
+void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::linearalgebra::BaseMatrix *mat, SReal /*k*/, unsigned int &offset)
 {
     VecCoord X = *this->mstate->getX();
     VecDeriv df, dx;
@@ -1295,7 +1295,7 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::defaulttype::
 
 
 template<class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::defaulttype::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/)
+void TriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::linearalgebra::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/)
 {
 
 }
@@ -1477,7 +1477,7 @@ void TriangularBendingFEMForceField<DataTypes>::writeCoeffs()
     std::ofstream outfile(filename.c_str());
     if (!outfile.is_open())
     {
-        serr << "Error creating file " << filename << sendl;
+        msg_warning() << "Error creating file " << filename ;
         return;
     }
 
@@ -1514,10 +1514,10 @@ void TriangularBendingFEMForceField<DataTypes>::writeCoeffs()
     triangleInfo.endEdit();
 
     outfile.close();
-    sout << "Written " << filename << sendl;
+    msg_info() << "Written " << filename ;
 
     //stop = timer.getTime();
-    //sout << "---------- " << __PRETTY_FUNCTION__ << " time=" << stop-start << " cycles" << sendl;
+    //msg_info() << "---------- " << __PRETTY_FUNCTION__ << " time=" << stop-start << " cycles" ;
 }
 
 template <class DataTypes>
@@ -1546,7 +1546,7 @@ const std::string TriangularBendingFEMForceField<DataTypes>::getExpFilename()
             case 's' : oss << nbs; break;
             case '%' : oss << '%';
             default:
-                serr << "Invalid special character %" << c << " in filename" << sendl;
+                msg_warning() << "Invalid special character %" << c << " in filename" ;
             }
         }
     }

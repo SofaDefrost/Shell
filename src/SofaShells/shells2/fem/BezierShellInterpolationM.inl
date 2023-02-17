@@ -1,11 +1,12 @@
 #ifndef SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 
+#include <sofa/component/topology/container/dynamic/PointSetTopologyContainer.h>
 #include <SofaShells/shells2/fem/BezierShellInterpolationM.h>
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseTopology/TopologyData.inl>
+#include <sofa/core/topology/TopologyData.h>
 #include <sofa/helper/decompose.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
@@ -69,7 +70,7 @@ void BezierShellInterpolationM<TIn,TOut>::applyOnBTriangle(
 {
     if (projN.size() != projElements.size())
     {
-        serr << "projN.size() != projElements.size()" << sendl;
+        msg_warning() << "projN.size() != projElements.size()" ;
         return;
     }
 
@@ -89,14 +90,14 @@ void BezierShellInterpolationM<TIn,TOut>::applyJOnBTriangle(
 {
     if (projN.size() != projElements.size())
     {
-        serr << "projN.size() != projElements.size()" << sendl;
+        msg_warning() << "projN.size() != projElements.size()" ;
         return;
     }
 
     //const VecCoord& xSim = mState->read(sofa::core::ConstVecCoordId::position())->getValue();
     const VecVec3d& x = this->mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
     VecVec3d v; // NOTE: we use VecVec3d instead of VecVec3 because we supply velocities in place of interpolation points.
-    v.resize(dynamic_cast<topology::PointSetTopologyContainer*>(this->bezierM2P->getTo())->getNumberOfElements());
+    v.resize(dynamic_cast<topology::container::dynamic::PointSetTopologyContainer*>(this->bezierM2P->getTo())->getNumberOfElements());
 
     // Compute nodes of the Bézier triangle for each input triangle
     for (Index i=0; i<(Index)this->inputTopology->getNbTriangles(); i++)
@@ -178,7 +179,7 @@ void BezierShellInterpolationM<TIn,TOut>::applyJTOnBTriangle(
 {
     if (projN.size() != projElements.size())
     {
-        serr << "projN.size() != projElements.size()" << sendl;
+        msg_warning() << "projN.size() != projElements.size()" ;
         return;
     }
 

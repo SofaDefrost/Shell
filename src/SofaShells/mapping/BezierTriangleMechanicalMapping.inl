@@ -74,13 +74,13 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
 
     if (this->fromModel == NULL)
     {
-        serr << "Missing input Mechanical state!" << sendl;
+        msg_warning() << "Missing input Mechanical state!" ;
         return;
     }
 
     if (this->toModel == NULL)
     {
-        serr << "Missing output Mechanical state!" << sendl;
+        msg_warning() << "Missing output Mechanical state!" ;
         return;
     }
 
@@ -90,13 +90,13 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
 
     if (!inputTopo || (inputTopo->getNbTriangles() <= 0))
     {
-        serr << "BezierTriangleMechanicalMapping requires an input triangular topology" << sendl;
+        msg_warning() << "BezierTriangleMechanicalMapping requires an input triangular topology" ;
         return;
     }
 
     if (!outputTopo || (outputTopo->getNbTriangles() <= 0))
     {
-        serr << "BezierTriangleMechanicalMapping requires an output triangular topology" << sendl;
+        msg_warning() << "BezierTriangleMechanicalMapping requires an output triangular topology" ;
         return;
     }
 
@@ -104,20 +104,19 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
     this->getContext()->get(bezierForcefield);
     if (bezierForcefield)
     {
-        sout << "TriangularBendingForcefield was found" << sendl;
+        msg_info() << "TriangularBendingForcefield was found" ;
         if (normals.getValue().size() != 0) {
-            serr << "Ignoring normals, using configuration from force field" <<
-                sendl;
+            msg_warning() << "Ignoring normals, using configuration from force field";
         }
     }
     else
     {
-        sout << "TriangularBendingForcefield was NOT found" << sendl;
+        msg_info() << "TriangularBendingForcefield was NOT found" ;
 
         if (normals.getValue().size() == 0) {
-            serr << "No normals defined, assuming flat triangles" << sendl;
+            msg_warning() << "No normals defined, assuming flat triangles" ;
         } else if (normals.getValue().size() != this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
-            serr << "Normals count doesn't correspond with nodes count" << sendl;
+            msg_warning() << "Normals count doesn't correspond with nodes count" ;
             return;
         }
     }
@@ -208,7 +207,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
             BaseMeshTopology::TrianglesAroundVertex trianglesAroundVertex = inputTopo->getTrianglesAroundVertex(closestVertex);
             if (trianglesAroundVertex.size() <= 0)
             {
-                serr << "No triangles attached to vertex " << closestVertex << sendl;
+                msg_warning() << "No triangles attached to vertex " << closestVertex ;
                 which = (minEdge <= minTriangle) ? 1 : 2;
             }
             else
@@ -233,7 +232,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
             BaseMeshTopology::TrianglesAroundEdge trianglesAroundEdge = inputTopo->getTrianglesAroundEdge(closestEdge);
             if (trianglesAroundEdge.size() <= 0)
             {
-                serr << "No triangles attached to edge " << closestEdge << sendl;
+                msg_warning() << "No triangles attached to edge " << closestEdge ;
                 which = 3;
             }
             else
@@ -277,7 +276,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
     if (!triangleSubdivisionTopologicalMapping)
     {
         // This is not fatal
-        serr << "triangleSubdivisionTopologicalMapping was not found" << sendl;
+        msg_warning() << "triangleSubdivisionTopologicalMapping was not found" ;
     }
 #endif
 
@@ -303,7 +302,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
         }
 
         if (targetTopology.get() == NULL) {
-            serr << "Missing target topology" << sendl;
+            msg_warning() << "Missing target topology" ;
         } else {
             // Computes two-sided Hausdorff distance
             MeasureError();
@@ -334,7 +333,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::init()
 template <class TIn, class TOut>
 void BezierTriangleMechanicalMapping<TIn, TOut>::reinit()
 {
-    sout << "reinit()" << sendl;
+    msg_info() << "reinit()" ;
     init();
 }
 
@@ -412,30 +411,30 @@ template <class TIn, class TOut>
 void BezierTriangleMechanicalMapping<TIn, TOut>::MeasureError()
 {
     Real distance1;
-    sout << "Computing Hausdorff distance high res->coarse" << sendl;
+    msg_info() << "Computing Hausdorff distance high res->coarse" ;
     distance1 = DistanceHausdorff(targetTopology.get(), outputTopo, vectorErrorTarget);
-    sout << "Hausdorff distance between high res mesh and coarse mesh = " << distance1 << sendl;
+    msg_info() << "Hausdorff distance between high res mesh and coarse mesh = " << distance1 ;
 
     Real average = 0;
     for (unsigned int i=0; i<vectorErrorTarget.size(); i++)
     {
         average += vectorErrorTarget[i];
     }
-    sout << "Mean Hausdorff distance = " << average/vectorErrorTarget.size() << sendl;
+    msg_info() << "Mean Hausdorff distance = " << average/vectorErrorTarget.size() ;
 
 
 
     Real distance2;
-    sout << "Computing Hausdorff distance coarse->high res" << sendl;
+    msg_info() << "Computing Hausdorff distance coarse->high res" ;
     distance2 = DistanceHausdorff(outputTopo, targetTopology.get(), vectorErrorCoarse);
-    sout << "Hausdorff distance between coarse mesh and high res mesh = " << distance2 << sendl;
+    msg_info() << "Hausdorff distance between coarse mesh and high res mesh = " << distance2 ;
 
     average = 0;
     for (unsigned int i=0; i<vectorErrorCoarse.size(); i++)
     {
         average += vectorErrorCoarse[i];
     }
-    sout << "Mean Hausdorff distance = " << average/vectorErrorCoarse.size() << sendl;
+    msg_info() << "Mean Hausdorff distance = " << average/vectorErrorCoarse.size() ;
 
 }
 
@@ -687,12 +686,12 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::apply(const core::MechanicalPar
 
     if (!inputTopo || !outputTopo)
     {
-        serr << "apply() was called before init()" << sendl;
+        msg_warning() << "apply() was called before init()" ;
         return;
     }
     if (inputTopo->getNbTriangles() <= 0)
     {
-        serr << "apply() requires an input triangular topology" << sendl;
+        msg_warning() << "apply() requires an input triangular topology" ;
         return;
     }
 
@@ -838,12 +837,12 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
 
     if (!inputTopo || !outputTopo)
     {
-        serr << "applyJ() was called before init()" << sendl;
+        msg_warning() << "applyJ() was called before init()" ;
         return;
     }
     if (inputTopo->getNbTriangles() <= 0)
     {
-        serr << "applyJ() requires an input triangular topology" << sendl;
+        msg_warning() << "applyJ() requires an input triangular topology" ;
         return;
     }
 
@@ -920,7 +919,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
     // The following code compares the result with results obtained using
     // getJ() because checkJacobian sucks (at this point in time).
 #ifdef CHECK_J
-    const sofa::defaulttype::BaseMatrix* J = getJ(NULL);
+    const sofa::linearalgebra::BaseMatrix* J = getJ(NULL);
     if (J != NULL) {
         Real* in_alloc = NULL;
         Real* out_alloc = NULL;
@@ -1027,7 +1026,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPa
 }
 
 template <class TIn, class TOut>
-const defaulttype::BaseMatrix* BezierTriangleMechanicalMapping<TIn, TOut>::getJ(const core::MechanicalParams * /*mparams*/)
+const linearalgebra::BaseMatrix* BezierTriangleMechanicalMapping<TIn, TOut>::getJ(const core::MechanicalParams * /*mparams*/)
 {
     //std::cout << "---------------- getJ ----------------------------" << std::endl;
 
@@ -1035,12 +1034,12 @@ const defaulttype::BaseMatrix* BezierTriangleMechanicalMapping<TIn, TOut>::getJ(
     {
         if (!inputTopo || !outputTopo)
         {
-            serr << "getJ() was called before init()" << sendl;
+            msg_warning() << "getJ() was called before init()" ;
             return NULL;
         }
         if (inputTopo->getNbTriangles() <= 0)
         {
-            serr << "getJ() requires an input triangular topology" << sendl;
+            msg_warning() << "getJ() requires an input triangular topology" ;
             return NULL;
         }
 
@@ -1155,17 +1154,17 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
 
     if (!inputTopo || !outputTopo)
     {
-        serr << "applyJT() was called before init()" << sendl;
+        msg_warning() << "applyJT() was called before init()" ;
         return;
     }
     if (inputTopo->getNbTriangles() <= 0)
     {
-        serr << "applyJT() requires an input triangular topology" << sendl;
+        msg_warning() << "applyJT() requires an input triangular topology" ;
         return;
     }
 
 #ifdef CHECK_J
-    const sofa::defaulttype::BaseMatrix* J = getJ(NULL);
+    const sofa::linearalgebra::BaseMatrix* J = getJ(NULL);
     Real* in_alloc = NULL;
     Real* out_alloc = NULL;
     if (J != NULL) {
@@ -1328,7 +1327,7 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalP
 template <class TIn, class TOut>
 void BezierTriangleMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintParams * /*cparams*/, Data<InMatrixDeriv>& /*dOut*/, const Data<OutMatrixDeriv>& /*dIn*/)
 {
-    //serr << "applyJT(const core::ConstraintParams*, Data<InMatrixDeriv>&, const Data<OutMatrixDeriv>&) NOT implemented" << sendl;
+    //msg_warning() << "applyJT(const core::ConstraintParams*, Data<InMatrixDeriv>&, const Data<OutMatrixDeriv>&) NOT implemented" ;
 }
 
 
@@ -1337,17 +1336,17 @@ void BezierTriangleMechanicalMapping<TIn, TOut>::draw(const core::visual::Visual
 {
     if (!inputTopo || !outputTopo)
     {
-        serr << "draw() was called before init()" << sendl;
+        msg_warning() << "draw() was called before init()" ;
         return;
     }
     if (inputTopo->getNbTriangles() <= 0)
     {
-        serr << "draw() requires an input triangular topology" << sendl;
+        msg_warning() << "draw() requires an input triangular topology" ;
         return;
     }
     if (outputTopo->getNbTriangles() <= 0)
     {
-        serr << "draw() requires an output triangular topology" << sendl;
+        msg_warning() << "draw() requires an output triangular topology" ;
         return;
     }
 

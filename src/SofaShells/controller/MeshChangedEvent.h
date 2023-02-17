@@ -3,7 +3,7 @@
 
 #include <sofa/core/objectmodel/Event.h>
 #include <sofa/defaulttype/VecTypes.h>
-#include <sofa/defaulttype/Quat.h>
+#include <sofa/type/Quat.h>
 #include <SofaShells/config.h>
 
 namespace sofa

@@ -11,7 +11,7 @@
 #include <sofa/type/Vec.h>
 
 #include <sofa/type/vector.h>
-#include <sofa/defaulttype/Mat.h>
+#include <sofa/type/Mat.h>
 
 
 namespace sofa
