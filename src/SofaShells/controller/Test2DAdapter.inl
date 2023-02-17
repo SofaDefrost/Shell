@@ -47,7 +47,7 @@
 #include <sofa/core/visual/VisualParams.h>  
 #include <sofa/helper/rmath.h>
 #include <sofa/helper/SimpleTimer.h>
-#include <sofa/core/topology/TopologyData.h>
+#include <sofa/core/topology/TopologyData.inl>
 
 #include <SofaMeshCollision/TriangleModel.h>
 

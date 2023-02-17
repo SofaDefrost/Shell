@@ -1,7 +1,6 @@
 #ifndef SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 
-#include <sofa/component/topology/container/dynamic/PointSetTopologyContainer.h>
 #include <SofaShells/shells2/fem/BezierShellInterpolationM.h>
 
 #include <sofa/core/behavior/ForceField.inl>

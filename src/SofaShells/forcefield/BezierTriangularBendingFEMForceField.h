@@ -189,6 +189,8 @@ public:
                 // Surface Area * 2
                 Real area2;
 
+                TriangleInformation() { }
+
                 /// Output stream
                 inline friend std::ostream& operator<< ( std::ostream& os, const TriangleInformation& /*ti*/ )
                 {

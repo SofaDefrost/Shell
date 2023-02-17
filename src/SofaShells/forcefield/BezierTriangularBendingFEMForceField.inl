@@ -216,10 +216,10 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
     /// Prepare to store info in the triangle array
     triangleInf.resize(_topology->getNbTriangles());
 
-//    for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
-//    {
-//        triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::type::vector< unsigned int > )0, (const sofa::type::vector< double >)0);
-//    }
+    for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
+    {
+        triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::type::vector< unsigned int > )0, (const sofa::type::vector< double >)0);
+    }
 
     triangleInfo.endEdit();
 }
