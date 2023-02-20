@@ -13,7 +13,7 @@
 #include <SofaBaseTopology/TriangleSetTopologyModifier.h>
 #include <SofaBaseTopology/TriangleSetTopologyAlgorithms.h>
 #include <SofaBaseTopology/TriangleSetGeometryAlgorithms.h>
-#include <SofaBaseTopology/TopologyData.h>
+#include <sofa/core/topology/TopologyData.h>
 
 #include <sofa/helper/map.h>
 #include <sofa/type/vector.h>
@@ -58,8 +58,8 @@ public:
     //typedef type::vector<Vec3> VecVec3;
 
 
-    typedef sofa::component::topology::EdgeSetTopologyContainer::Edge               Edge;
-    typedef sofa::component::topology::EdgeSetTopologyContainer::EdgesAroundVertex  EdgesAroundVertex;
+    typedef sofa::core::topology::BaseMeshTopology::Edge               Edge;
+    typedef sofa::core::topology::BaseMeshTopology::EdgesAroundVertex  EdgesAroundVertex;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID     Index;
     typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle       Triangle;
     typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;

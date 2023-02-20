@@ -48,16 +48,6 @@ public:
     void init() override;
     void reinit() override;
 
-    std::string getTemplateName() const override
-    {
-        return templateName(this);
-    }
-
-    static std::string templateName(const TriangleSwitchExample<DataTypes>* = NULL)
-    {
-        return DataTypes::Name();
-    }
-
     Data<unsigned int>      f_interval;
 
     void onEndAnimationStep(const double dt) override;

@@ -202,7 +202,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
 
 
                 default :
-                    serr << "BendingPlateMechanicalMapping init(): No closest primitive has been found for vertex " << i << sendl;
+                    msg_warning() << "BendingPlateMechanicalMapping init(): No closest primitive has been found for vertex " << i ;
                     return;
             }
         }
@@ -210,7 +210,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
     }
     else
     {
-        serr << "BendingPlateMechanicalMapping requires an input triangular topology" << sendl;
+        msg_warning() << "BendingPlateMechanicalMapping requires an input triangular topology" ;
         return;
     }
 
@@ -220,7 +220,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
     this->getContext()->get(triangularBendingForcefield);
     if (!triangularBendingForcefield)
     {
-        serr << "WARNING(BendingPlateMechanicalMapping): triangularBendingForcefield was not found" << sendl;
+        msg_warning() << "WARNING(BendingPlateMechanicalMapping): triangularBendingForcefield was not found" ;
         return;
     }
 
@@ -231,7 +231,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
     this->getContext()->get(triangleSubdivisionTopologicalMapping);
     if (!triangleSubdivisionTopologicalMapping)
     {
-        serr << "WARNING(BendingPlateMechanicalMapping): triangleSubdivisionTopologicalMapping was not found" << sendl;
+        msg_warning() << "WARNING(BendingPlateMechanicalMapping): triangleSubdivisionTopologicalMapping was not found" ;
         return;
     }
 #endif
@@ -260,7 +260,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
 
         // Retrieves high resolution mesh topology
         if (targetTopology.get() == NULL) {
-            serr << "Missing target topology" << sendl;
+            msg_warning() << "Missing target topology" ;
         } else {
             // Computes two-sided Hausdorff distance
             MeasureError();
@@ -656,18 +656,18 @@ void BendingPlateMechanicalMapping<TIn, TOut>::apply(const core::MechanicalParam
 
     if (!inputTopo || !outputTopo)
     {
-        serr << "BendingPlateMechanicalMapping apply() was called before init()" << sendl;
+        msg_warning() << "BendingPlateMechanicalMapping apply() was called before init()" ;
         return;
     }
     if (inputTopo->getNbTriangles() <= 0)
     {
-        serr << "BendingPlateMechanicalMapping apply() requires an input triangular topology" << sendl;
+        msg_warning() << "BendingPlateMechanicalMapping apply() requires an input triangular topology" ;
         return;
     }
 
     if (!triangularBendingForcefield)
     {
-        serr << "No TriangularBendingForcefield has been found" << sendl;
+        msg_warning() << "No TriangularBendingForcefield has been found" ;
         this->getContext()->get(triangularBendingForcefield);
         return;
     }
@@ -745,18 +745,18 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPara
 
     if (!inputTopo || !outputTopo)
     {
-        serr << "BendingPlateMechanicalMapping applyJ() was called before init()" << sendl;
+        msg_warning() << "BendingPlateMechanicalMapping applyJ() was called before init()" ;
         return;
     }
     if (inputTopo->getNbTriangles() <= 0)
     {
-        serr << "BendingPlateMechanicalMapping applyJ() requires an input triangular topology" << sendl;
+        msg_warning() << "BendingPlateMechanicalMapping applyJ() requires an input triangular topology" ;
         return;
     }
 
     if (!triangularBendingForcefield)
     {
-        serr << "No TriangularBendingForcefield has been found" << sendl;
+        msg_warning() << "No TriangularBendingForcefield has been found" ;
         this->getContext()->get(triangularBendingForcefield);
         return;
     }
@@ -865,18 +865,18 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPar
 
     if (!inputTopo || !outputTopo)
     {
-        serr << "BendingPlateMechanicalMapping applyJT() was called before init()" << sendl;
+        msg_warning() << "BendingPlateMechanicalMapping applyJT() was called before init()" ;
         return;
     }
     if (inputTopo->getNbTriangles() <= 0)
     {
-        serr << "BendingPlateMechanicalMapping applyJT() requires an input triangular topology" << sendl;
+        msg_warning() << "BendingPlateMechanicalMapping applyJT() requires an input triangular topology" ;
         return;
     }
 
     if (!triangularBendingForcefield)
     {
-        serr << "No TriangularBendingForcefield has been found" << sendl;
+        msg_warning() << "No TriangularBendingForcefield has been found" ;
         this->getContext()->get(triangularBendingForcefield);
         return;
     }
@@ -979,18 +979,18 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintPar
 
     if (!inputTopo || !outputTopo)
     {
-        serr << "BendingPlateMechanicalMapping applyJT() was called before init()" << sendl;
+        msg_warning() << "BendingPlateMechanicalMapping applyJT() was called before init()" ;
         return;
     }
     if (inputTopo->getNbTriangles() <= 0)
     {
-        serr << "BendingPlateMechanicalMapping applyJT() requires an input triangular topology" << sendl;
+        msg_warning() << "BendingPlateMechanicalMapping applyJT() requires an input triangular topology" ;
         return;
     }
 
     if (!triangularBendingForcefield)
     {
-        serr << "No TriangularBendingForcefield has been found" << sendl;
+        msg_warning() << "No TriangularBendingForcefield has been found" ;
         this->getContext()->get(triangularBendingForcefield);
         return;
     }

@@ -27,7 +27,7 @@
 
 #include <SofaShells/forcefield/TriangularShellForceField.h>
 #include <sofa/core/behavior/ForceField.inl>
-#include <SofaBaseTopology/TopologyData.inl>
+#include <sofa/core/topology/TopologyData.inl>
 #include <sofa/gl/template.h>
 #include <sofa/helper/rmath.h>
 #include <sofa/gl/gl.h>
@@ -54,7 +54,7 @@ namespace sofa
 		namespace forcefield
 		{
 			using namespace sofa::type;
-			using namespace	sofa::component::topology;
+            using namespace	sofa::core::topology;
 
 // --------------------------------------------------------------------------------------
 // ---  Topology Creation/Destruction functions
@@ -137,12 +137,12 @@ void TriangularShellForceField<DataTypes>::init()
 
     if (_topology->getNbTriangles()==0)
     {
-            serr << "TriangularShellForceField: object must have a Triangular Set Topology."<<sendl;
+            msg_warning() << "TriangularShellForceField: object must have a Triangular Set Topology.";
             return;
     }
 
     // Create specific handler for TriangleData
-    triangleInfo.createTopologyHandler(_topology, triangleHandler);
+    triangleInfo.createTopologyHandler(_topology);
 
     reinit();
 }
@@ -179,7 +179,7 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     } else if (f_membraneElement.getValue().getSelectedItem() == "ANDES-OPT") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixAndesOpt;
     } else {
-        serr << "Invalid membrane element '" << f_membraneElement.getValue().getSelectedItem() << "'" << sendl;
+        msg_warning() << "Invalid membrane element '" << f_membraneElement.getValue().getSelectedItem() << "'" ;
         return;
     }
 
@@ -193,7 +193,7 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     } else if (f_bendingElement.getValue().getSelectedItem() == "DKT") {
         csBending = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT;
     } else {
-        serr << "Invalid bending plate element '" << f_bendingElement.getValue().getSelectedItem() << "'" << sendl;
+        msg_warning() << "Invalid bending plate element '" << f_bendingElement.getValue().getSelectedItem() << "'" ;
         return;
     }
 
@@ -205,7 +205,7 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     } else if (f_measure.getValue().getSelectedItem() == "Von Mises stress") {
         bMeasureStrain = false;  bMeasureStress = true;
     } else {
-        serr << "Invalid value for measure'" << f_measure.getValue().getSelectedItem() << "'" << sendl;
+        msg_warning() << "Invalid value for measure'" << f_measure.getValue().getSelectedItem() << "'" ;
         return;
     }
 
@@ -237,7 +237,7 @@ void TriangularShellForceField<DataTypes>::addForce(const sofa::core::Mechanical
     VecDeriv& f        = *(dataF.beginEdit());
     const VecCoord& p  =   dataX.getValue()  ;
 
-    //std::cout << "--addForce" << std::endl;
+    //dmsg_info() << "--addForce" ;
 //    sofa::helper::system::thread::ctime_t start, stop;
 //    sofa::helper::system::thread::CTime timer;
 //
@@ -254,7 +254,7 @@ void TriangularShellForceField<DataTypes>::addForce(const sofa::core::Mechanical
     dataF.endEdit();
 
 //    stop = timer.getTime();
-//    std::cout << "---------- time addForce = " << stop-start << std::endl;
+//    dmsg_info() << "---------- time addForce = " << stop-start ;
 }
 
 // --------------------------------------------------------------------------------------
@@ -268,7 +268,7 @@ void TriangularShellForceField<DataTypes>::addDForce(const sofa::core::Mechanica
 
     double kFactor = mparams->kFactor();
 
-    //std::cout << "--addDForce" << std::endl;
+    //dmsg_info() << "--addDForce" ;
 
 //    sofa::helper::system::thread::ctime_t start, stop;
 //    sofa::helper::system::thread::CTime timer;
@@ -286,7 +286,7 @@ void TriangularShellForceField<DataTypes>::addDForce(const sofa::core::Mechanica
     datadF.endEdit();
 
 //    stop = timer.getTime();
-//    std::cout << "time addDForce = " << stop-start << std::endl;
+//    dmsg_info() << "time addDForce = " << stop-start ;
 }
 
 //#define PRINT
@@ -307,16 +307,16 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
 
     #ifdef PRINT
     r.matrix->clear();
-    std::cout << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" <<
-        " kFactor=" << kFactor << std::endl;
+    dmsg_info() << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" <<
+        " kFactor=" << kFactor ;
     for (unsigned int i=0; i<r.matrix->rowSize(); i++)
     {
         for (unsigned int j=0; j<r.matrix->colSize(); j++)
         {
-            std::cout << r.matrix->element(i,j) << ",";
-            //std::cout << -r.matrix->element(i,j) / kFactor << ",";
+            dmsg_info() << r.matrix->element(i,j) << ",";
+            //dmsg_info() << -r.matrix->element(i,j) / kFactor << ",";
         }
-        std::cout << std::endl;
+        dmsg_info() ;
     }
     #endif
     // XXX: Matrix not necessarily empty!
@@ -355,16 +355,16 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
     }
 
     #ifdef PRINT
-    std::cout << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" <<
-        " kFactor=" << kFactor << std::endl;
+    dmsg_info() << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" <<
+        " kFactor=" << kFactor ;
     for (unsigned int i=0; i<r.matrix->rowSize(); i++)
     {
         for (unsigned int j=0; j<r.matrix->colSize(); j++)
         {
-            std::cout << r.matrix->element(i,j) << ",";
-            //std::cout << -r.matrix->element(i,j) / kFactor << ",";
+            dmsg_info() << r.matrix->element(i,j) << ",";
+            //dmsg_info() << -r.matrix->element(i,j) / kFactor << ",";
         }
-        std::cout << std::endl;
+        dmsg_info() ;
     }
     #endif
 
@@ -454,11 +454,11 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
 
     // Compute stiffness matrix for membrane element
     computeStiffnessMatrixMembrane(tinfo->stiffnessMatrixMembrane, *tinfo);
-    //std::cout << "Km^e=" << tinfo->stiffnessMatrixMembrane << std::endl;
+    //dmsg_info() << "Km^e=" << tinfo->stiffnessMatrixMembrane ;
 
     // Compute stiffness matrix for bending plate elemnt
     computeStiffnessMatrixBending(tinfo->stiffnessMatrixBending, *tinfo);
-    //std::cout << "Kb^e=" << tinfo->stiffnessMatrixBending << std::endl;
+    //dmsg_info() << "Kb^e=" << tinfo->stiffnessMatrixBending ;
 
 
     triangleInfo.endEdit();
@@ -621,7 +621,7 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     Vec3 rA = qA.toEulerVector();
     Vec3 rB = qB.toEulerVector();
     Vec3 rC = qC.toEulerVector();
-    //std::cout << "Θ: " << rA << " | " << rB << " | " << rC << std::endl;
+    //dmsg_info() << "Θ: " << rA << " | " << rB << " | " << rC ;
 
     // Membrane
     Dm[0] = uA[0];
@@ -676,15 +676,15 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
     computeForce(Fm, Dm, Fb, Db, elementIndex);
 
     if (this->f_printLog.getValue()) {
-        std::cout << "E: " << elementIndex << "\tu: " << Dm << "\tf: " << Fm << "\n";
-        std::cout << "E: " << elementIndex << "\tuB: " << Db << "\tfB: " << Fb << "\n";
-        std::cout << "   xg [ " << a << "/" << b << "/" << c << " - "
+        dmsg_info() << "E: " << elementIndex << "\tu: " << Dm << "\tf: " << Fm << "\n";
+        dmsg_info() << "E: " << elementIndex << "\tuB: " << Db << "\tfB: " << Fb << "\n";
+        dmsg_info() << "   xg [ " << a << "/" << b << "/" << c << " - "
             << x[a] << ", " << x[b] << ", " << x[c] << "\n";
-        std::cout << "   xl [ " << tinfo->deformedPositions[0] << ", " << tinfo->deformedPositions[1] << ", " << tinfo->deformedPositions[2] << "\n";
-        std::cout << "   fg: " <<
+        dmsg_info() << "   xl [ " << tinfo->deformedPositions[0] << ", " << tinfo->deformedPositions[1] << ", " << tinfo->deformedPositions[2] << "\n";
+        dmsg_info() << "   fg: " <<
             tinfo->Rt * Vec3(Fm[0], Fm[1], Fb[0]) << " " << tinfo->R * Vec3(Fb[1], Fb[2], Fm[2]) << " | " <<
             tinfo->Rt * Vec3(Fm[3], Fm[4], Fb[3]) << " " << tinfo->R * Vec3(Fb[4], Fb[5], Fm[5]) << " | " <<
-            tinfo->Rt * Vec3(Fm[6], Fm[7], Fb[6]) << " " << tinfo->R * Vec3(Fb[7], Fb[8], Fm[8]) << std::endl;
+            tinfo->Rt * Vec3(Fm[6], Fm[7], Fb[6]) << " " << tinfo->R * Vec3(Fb[7], Fb[8], Fm[8]) ;
 
     }
 
@@ -737,7 +737,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixMembrane(Stiffn
     (this->*csMembrane)(K, tinfo);
 
     if (this->f_printLog.getValue())
-        sout << "Km = " << K << sendl;
+        dmsg_info() << "Km = " << K ;
 }
 
 
@@ -753,7 +753,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixBending(Stiffne
     (this->*csBending)(K, tinfo);
 
     if (this->f_printLog.getValue())
-        sout << "Kb = " << K << sendl;
+        dmsg_info() << "Kb = " << K ;
 }
 
 // --------------------------------------------------------------------------------------
@@ -831,12 +831,12 @@ void TriangularShellForceField<DataTypes>::applyStiffness(VecDeriv& v, const Vec
     dFb = tinfo.stiffnessMatrixBending * Db;
 
     if (this->f_printLog.getValue()) {
-        std::cout << "E: " << elementIndex << "\tdu: " << Dm << "\tdf: " << dFm << "\n";
-        std::cout << "E: " << elementIndex << "\tduB: " << Db << "\tdfB: " << dFb << "\n";
-        std::cout << "   dfg: " <<
+        dmsg_info() << "E: " << elementIndex << "\tdu: " << Dm << "\tdf: " << dFm << "\n";
+        dmsg_info() << "E: " << elementIndex << "\tduB: " << Db << "\tdfB: " << dFb << "\n";
+        dmsg_info() << "   dfg: " <<
              tinfo.Rt * Vec3(dFm[0], dFm[1], dFb[0]) * kFactor << " " << tinfo.Rt * Vec3(dFb[1], dFb[2], dFm[2]) * kFactor << " | " <<
              tinfo.Rt * Vec3(dFm[3], dFm[4], dFb[3]) * kFactor << " " << tinfo.Rt * Vec3(dFb[4], dFb[5], dFm[5]) * kFactor << " | " <<
-             tinfo.Rt * Vec3(dFm[6], dFm[7], dFb[6]) * kFactor << " " << tinfo.Rt * Vec3(dFb[7], dFb[8], dFm[8]) * kFactor << std::endl;
+             tinfo.Rt * Vec3(dFm[6], dFm[7], dFb[6]) * kFactor << " " << tinfo.Rt * Vec3(dFb[7], dFb[8], dFm[8]) * kFactor ;
     }
 
     // Transform into global frame
@@ -930,8 +930,8 @@ void TriangularShellForceField<DataTypes>::convertStiffnessMatrixToGlobalSpace(S
 
     // Then we put the stifness matrix into the global frame
     K_gs = Rt18x18 * K_18x18 * R18x18;
-    //std::cout << "R=" << R18x18 << " -- " << Rt18x18 << std::endl;
-    //std::cout << "K_gs=" << K_gs << std::endl;
+    //dmsg_info() << "R=" << R18x18 << " -- " << Rt18x18 ;
+    //dmsg_info() << "K_gs=" << K_gs ;
 }
 
 
@@ -1162,12 +1162,12 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT(StiffnessMa
 
     // Integrage over triangle area
     K.clear();
-    //std::cout << "B=\n";
+    //dmsg_info() << "B=\n";
     for (int i=0; i<6; i++) {
         StrainDisplacement B;
         Mat<9,3, Real> Bt;
         dktSD(B, tinfo, gx[i], gy[i]);  // Compute strain-displacement matrix
-        //std::cout << "  " << B << std::endl;
+        //dmsg_info() << "  " << B ;
         Bt.transpose(B);
         K += gw[i] * Bt * materialMatrixBending * B;
     }
@@ -1178,7 +1178,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT(StiffnessMa
             tinfo.measure[i].point[1]);
     }
 
-    //std::cout << std::endl;
+    //dmsg_info() ;
     K *= 2*tinfo.area;
 }
 

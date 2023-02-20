@@ -11,18 +11,17 @@
 #include <SofaShells/config.h>
 #include <sofa/core/behavior/MechanicalState.h>
 #include <SofaBaseMechanics/MechanicalObject.h>
-#include <SofaTopologyMapping/Mesh2PointTopologicalMapping.h>
+#include <sofa/component/mapping/linear/Mesh2PointTopologicalMapping.h>
 
 #include <sofa/defaulttype/SolidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseTopology/TopologyData.h>
+#include <sofa/core/topology/TopologyData.h>
 #include <sofa/simulation/AnimateBeginEvent.h>
 
 #include <sofa/type/vector.h>
 #include <sofa/type/Vec.h>
-//#include <sofa/defaulttype/Mat.h>
 
 #include <sofa/core/objectmodel/BaseObject.h>
 
@@ -86,12 +85,12 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
                 inline friend std::istream& operator>> ( std::istream& in, PointInformation& /*pi*/ ) { return in; }
         };
 
-        class PointInfoHandler : public topology::TopologyDataHandler<core::topology::BaseMeshTopology::Point, sofa::type::vector<PointInformation> >
+        class PointInfoHandler : public core::topology::TopologyDataHandler<core::topology::BaseMeshTopology::Point, sofa::type::vector<PointInformation> >
         {
-            typedef topology::TopologyDataHandler<core::topology::BaseMeshTopology::Point, sofa::type::vector<PointInformation> > Inherited;
+            typedef core::topology::TopologyDataHandler<core::topology::BaseMeshTopology::Point, sofa::type::vector<PointInformation> > Inherited;
 
             public:
-                PointInfoHandler(BezierShellInterpolation<DataTypes> *_bsi, topology::PointData<sofa::type::vector<PointInformation> >* _data) : Inherited(_data), bsi(_bsi) {}
+                PointInfoHandler(BezierShellInterpolation<DataTypes> *_bsi, core::topology::PointData<sofa::type::vector<PointInformation> >* _data) : Inherited(_data), bsi(_bsi) {}
 
                 //void applyCreateFunction(
                 //    unsigned int pointIndex,
@@ -126,12 +125,12 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
                 inline friend std::istream& operator>> ( std::istream& in, TriangleInformation& /*ti*/ ) { return in; }
         };
 
-        class TriangleInfoHandler : public topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::type::vector<TriangleInformation> >
+        class TriangleInfoHandler : public core::topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::type::vector<TriangleInformation> >
         {
-            typedef topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::type::vector<TriangleInformation> > Inherited;
+            typedef core::topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::type::vector<TriangleInformation> > Inherited;
 
             public:
-                TriangleInfoHandler(BezierShellInterpolation<DataTypes> *_bsi, topology::TriangleData<sofa::type::vector<TriangleInformation> >* _data) : Inherited(_data), bsi(_bsi) {}
+                TriangleInfoHandler(BezierShellInterpolation<DataTypes> *_bsi, core::topology::TriangleData<sofa::type::vector<TriangleInformation> >* _data) : Inherited(_data), bsi(_bsi) {}
 
                 void applyCreateFunction(
                     unsigned int triIndex,
@@ -164,28 +163,6 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
             if(pointHandler) delete pointHandler;
             if(triHandler) delete triHandler;
         }
-
-        virtual std::string getTemplateName() const override
-        {
-            return templateName(this);
-        }
-
-        static std::string templateName(const BezierShellInterpolation<DataTypes>* = NULL)
-        {
-            return DataTypes::Name();
-        }
-
-        //// Pre-construction check method called by ObjectFactory.
-        //// Check that DataTypes matches the MechanicalState.
-        //template<class T>
-        //static bool canCreate(T* obj, sofa::core::objectmodel::BaseContext* context, sofa::core::objectmodel::BaseObjectDescription* arg)
-        //{
-        //    if (dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes>*>(context->getMechanicalState()) == NULL)
-        //    {
-        //        return false;
-        //    }
-        //    return BaseObject::canCreate(obj, context, arg);
-        //}
 
         /**
          * @brief SceneGraph callback initialization method.
@@ -293,7 +270,7 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         sofa::core::behavior::MechanicalState<DataTypes> *mState;
         // pointer to the topology
         sofa::core::topology::BaseMeshTopology* inputTopology;
-        sofa::component::topology::Mesh2PointTopologicalMapping *bezierM2P;
+        sofa::component::mapping::linear::Mesh2PointTopologicalMapping *bezierM2P;
 
         // Mapping that creates bezier points and MO to store positions of the points
         //sofa::component::topology::Mesh2PointTopologicalMapping::SPtr bezierM2P;
@@ -302,10 +279,10 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
 
         Data< VecVec3 > inputNormals;
 
-        topology::PointData< sofa::type::vector<PointInformation> > pointInfo;
+        core::topology::PointData< sofa::type::vector<PointInformation> > pointInfo;
         PointInfoHandler* pointHandler;
 
-        topology::TriangleData< sofa::type::vector<TriangleInformation> > triInfo;
+        core::topology::TriangleData< sofa::type::vector<TriangleInformation> > triInfo;
         TriangleInfoHandler* triHandler;
 
         // init process=> computes the position of the bezier point given the positions and the normals

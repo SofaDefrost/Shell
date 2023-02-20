@@ -13,13 +13,12 @@
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <SofaBaseMechanics/MechanicalObject.h>
-//#include <SofaTopologyMapping/Mesh2PointTopologicalMapping.h>
 
 #include <sofa/defaulttype/SolidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseTopology/TopologyData.h>
+#include <sofa/core/topology/TopologyData.h>
 #include <sofa/simulation/AnimateBeginEvent.h>
 
 #include <sofa/type/vector.h>
@@ -79,16 +78,6 @@ class BezierShellInterpolationM : public BezierShellInterpolation<TIn>
 
         BezierShellInterpolationM() {}
         virtual ~BezierShellInterpolationM() {}
-
-        virtual std::string getTemplateName() const override
-        {
-            return templateName(this);
-        }
-
-        static std::string templateName(const BezierShellInterpolationM<TIn, TOut>* = NULL)
-        {
-            return TIn::Name() + std::string(",") + TOut::Name();
-        }
 
         void applyOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, helper::WriteAccessor< Data<VecVec3> > &out);
         void applyJOnBTriangle(VecShapeFunctions projShapeFunctions, VecIndex projElements, const InVecDeriv& in, helper::WriteAccessor< Data<OutVecDeriv> > &out);

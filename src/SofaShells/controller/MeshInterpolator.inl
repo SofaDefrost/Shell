@@ -51,7 +51,7 @@ void MeshInterpolator<DataTypes>::reinit()
 
     // Check that the number of nodes is the same
     if (lenStart != lenEnd) {
-        serr << "Number of start and end nodes has to be the same" << sendl;
+        msg_warning() << "Number of start and end nodes has to be the same.";
         if (lenStart > lenEnd) {
             VecCoord &pts = *f_startPosition.beginEdit();
             pts.resize(lenEnd);
@@ -70,7 +70,7 @@ void MeshInterpolator<DataTypes>::reinit()
     // Check that the number of nodes is the same
     if (((lenStartN != 0) || (lenEndN != 0)) &&
         ((lenStartN != lenEndN) || (lenStart != lenStartN))) {
-        serr << "Number of start normals, end normals and positions has to be the same!" << sendl;
+        msg_warning() << "Number of start normals, end normals and positions has to be the same.";
         f_startNormals.beginEdit()->clear();
         f_startNormals.endEdit();
         f_endNormals.beginEdit()->clear();
@@ -79,21 +79,21 @@ void MeshInterpolator<DataTypes>::reinit()
 
     // Check startTime
     if (f_startTime.getValue() < 0.0) {
-        serr << "startTime has to be greater then or equal to 0" << sendl;
+         msg_warning() << "startTime has to be greater then or equal to 0.";
         *f_startTime.beginEdit() = 0.0;
         f_startTime.endEdit();
     }
 
     // Check nbSteps
     if (f_nbSteps.getValue() == 0) {
-        serr << "nbSteps has to be nonzero" << sendl;
+         msg_warning() << "nbSteps has to be nonzero.";
         *f_nbSteps.beginEdit() = 1;
         f_nbSteps.endEdit();
     }
 
     if ((f_increment.getValue() <= 0.0) || (f_increment.getValue() > 1.0)) {
-        serr << "Increment has to be geater than 0 and "
-            "smaller than or equall to 1" << sendl;
+         msg_warning() << "Increment has to be geater than 0 and "
+            "smaller than or equall to 1.";
         *f_increment.beginEdit() = 0.05;
         f_increment.endEdit();
     }

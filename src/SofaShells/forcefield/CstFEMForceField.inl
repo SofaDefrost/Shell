@@ -26,7 +26,7 @@
 #define SOFA_COMPONENT_FORCEFIELD_CST_FEM_FORCEFIELD_INL
 
 #include <SofaShells/forcefield/CstFEMForceField.h>
-#include <SofaBaseTopology/TopologyData.inl>
+#include <sofa/core/topology/TopologyData.inl>
 #include <sofa/helper/rmath.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/simulation/AnimateBeginEvent.h>
@@ -44,7 +44,7 @@ namespace sofa
 		namespace forcefield
 		{
 			using namespace sofa::type;
-			using namespace	sofa::component::topology;
+            using namespace	sofa::core::topology;
 
 // ----------------------------------------------------------------------------
 // ---  Topology Creation/Destruction functions
@@ -107,12 +107,12 @@ void CstFEMForceField<DataTypes>::init()
 
     if (_topology->getNbTriangles()==0)
     {
-            serr << "CstFEMForceField: object must have a Triangular Set Topology."<<sendl;
+            msg_error() << "CstFEMForceField: object must have a Triangular Set Topology.";
             return;
     }
 
     // Create specific handler for TriangleData
-    triangleInfo.createTopologyHandler(_topology, triangleHandler);
+    triangleInfo.createTopologyHandler(_topology);
 
     reinit();
 }
@@ -136,7 +136,6 @@ template <class DataTypes> void CstFEMForceField<DataTypes>::reinit()
     //} else if (f_measure.getValue().getSelectedItem() == "Von Mises stress") {
     //    bMeasureStrain = false;  bMeasureStress = true;
     //} else {
-    //    serr << "Invalid value for measure'" << f_measure.getValue().getSelectedItem() << "'" << sendl;
     //    return;
     //}
 
@@ -358,15 +357,15 @@ void CstFEMForceField<DataTypes>::computeStiffnessMatrix(StiffnessMatrix &K, Tri
         Displacement u = Vec<6,Real>(1, -5, 1, -5, 1, -5);
         Vec<6,Real> f = K*u;
         if (helper::rabs(f.sum()) > 1e-12) {
-            sout << "Area = " << tinfo.area << sendl;
-            sout << "a / b / c = " <<
+            dmsg_info() << "Area = " << tinfo.area;
+            dmsg_info() << "a / b / c = " <<
                 tinfo.restPositions[0] << " / " <<
                 tinfo.restPositions[1] << " / " <<
-                tinfo.restPositions[2] << sendl;
-            sout << "d = " << tinfo.d << sendl;
-            sout << "Km = " << K << sendl;
-            sout << "-- Disp test Km (u=" << u << ")" <<
-                " : " << f << " ... should be zero" << sendl;
+                tinfo.restPositions[2];
+            dmsg_info() << "d = " << tinfo.d;
+            dmsg_info() << "Km = " << K;
+            dmsg_info() << "-- Disp test Km (u=" << u << ")" <<
+                " : " << f << " ... should be zero";
         }
     }
 }
@@ -653,11 +652,6 @@ void CstFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSpace(StiffnessM
 
     // Transform stifness matrix into the global frame
     Kg = Rt * K1 * R;
-    //std::cout << "Rorig=" << tinfo.R << " -- " << tinfo.Rt << std::endl;
-    //std::cout << "K=" << K << std::endl;
-    //std::cout << "K1=" << K1 << std::endl;
-    //std::cout << "R=" << R << " -- " << Rt << std::endl;
-    //std::cout << "Kg=" << Kg << std::endl;
 }
 
 } // namespace forcefield

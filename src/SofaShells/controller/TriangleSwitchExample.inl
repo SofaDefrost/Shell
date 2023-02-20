@@ -29,15 +29,15 @@ void TriangleSwitchExample<DataTypes>::init()
 {
     m_state = dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes>*> (this->getContext()->getMechanicalState());
     if (!m_state)
-        serr << "Unable to find MechanicalState" << sendl;
+        msg_error() << "Unable to find MechanicalState.";
 
     this->getContext()->get(m_container);
     if (m_container == NULL)
-        serr << "Unable to find triangular topology" << sendl;
+        msg_error() << "Unable to find triangular topology.";
 
     this->getContext()->get(m_modifier);
     if (m_modifier == NULL)
-        serr << "Unable to find TriangleSetTopologyModifier" << sendl;
+        msg_error() << "Unable to find TriangleSetTopologyModifier.";
 
     reinit();
 }
@@ -50,7 +50,7 @@ void TriangleSwitchExample<DataTypes>::reinit()
 
     // Check interval
     if (f_interval.getValue() == 0) {
-        serr << "interval has to be nonzero" << sendl;
+        msg_warning() << "interval has to be nonzero.";
         *f_interval.beginEdit() = 1;
         f_interval.endEdit();
     }
@@ -113,7 +113,7 @@ void TriangleSwitchExample<DataTypes>::onEndAnimationStep(const double /*dt*/)
         }
 
         if ((common.size() != 2) || (other.size() != 2)) {
-            serr << "Invalid triangle pair " << i << ", " << i+1 << sendl;
+            msg_error() << "Invalid triangle pair " << i << ", " << i+1;
             continue;
         }
 
@@ -172,9 +172,9 @@ void TriangleSwitchExample<DataTypes>::computeTriangleNormal(const Triangle &t, 
 
     Real An = A.norm(), Bn = B.norm();
     if (An < 1e-20 || Bn < 1e-20) {
-        serr << "Found degenerated triangle " << t <<
+        msg_error() << "Found degenerated triangle " << t <<
             " -- "  << x[t[0]].getCenter() << " / " << x[t[1]].getCenter() <<
-            " / " << x[t[2]].getCenter() << " :: " << An << ", " << Bn << sendl;
+            " / " << x[t[2]].getCenter() << " :: " << An << ", " << Bn;
 
         normal = Vec3(0,0,0);
         return;

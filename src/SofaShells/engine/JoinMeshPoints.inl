@@ -98,7 +98,7 @@ void JoinMeshPoints<DataTypes>::doUpdate()
     if (inPt.size() == inNorm.size()) {
         bHasNormals = true;
     } else if (inNorm.size() != 0) {
-        serr << "Normal count does not match node count! Ignoring normals." << sendl;
+        msg_warning() << "Normal count does not match node count! Ignoring normals.";
     }
 
     // Map analogy to the value of f_input_joinPoints. It maps index of a node
@@ -274,8 +274,8 @@ void JoinMeshPoints<DataTypes>::createElements(
                 out[j] = mapInOut[id];
             } else {
                 // Invalid node ID, what now?
-                serr << "Invalid node ID in elements! " <<
-                    id << " is not a valid node ID!" << sendl; 
+                msg_warning() << "Invalid node ID in elements! " <<
+                    id << " is not a valid node ID!" ;
                 out[j] = 0;
             }
 

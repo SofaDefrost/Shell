@@ -33,7 +33,7 @@
 
 #include <sofa/gl/GLSLShader.h>
 
-#include <SofaBaseLinearSolver/CompressedRowSparseMatrix.h>
+#include <sofa/linearalgebra/CompressedRowSparseMatrix.h>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <sofa/simulation/AnimateBeginEvent.h>
 
@@ -52,7 +52,7 @@ namespace mapping
 {
 
 using namespace sofa::type;
-using namespace sofa::component::topology;
+using namespace sofa::core::topology;
 using namespace core::topology;
 using namespace sofa::core::behavior;
 
@@ -84,7 +84,7 @@ public:
     typedef Vec<3, Real> Vec3;
     typedef Mat<3, 3, Real> Mat33;
 
-    typedef Quat<Real> Quat;
+    typedef sofa::type::Quat<Real> Quat;
 
     typedef typename sofa::component::fem::BezierShellInterpolationM<TIn,TOut>::ShapeFunctions ShapeFunctions;
     typedef typename sofa::component::fem::BezierShellInterpolationM<TIn,TOut>::VecShapeFunctions VecShapeFunctions;
@@ -97,7 +97,7 @@ public:
     enum { NIn = sofa::defaulttype::DataTypeInfo<InDeriv>::Size };
     enum { NOut = sofa::defaulttype::DataTypeInfo<OutDeriv>::Size };
     typedef type::Mat<NOut, NIn, Real> MBloc;
-    typedef sofa::component::linearsolver::CompressedRowSparseMatrix<MBloc> MatrixType;
+    typedef sofa::linearalgebra::CompressedRowSparseMatrix<MBloc> MatrixType;
 
     BezierShellMechanicalMapping(core::State<In>* from, core::State<Out>* to)
     : Inherit(from, to)
@@ -129,7 +129,7 @@ public:
 
 #if 0
     /// For checkJacobian and to hide some deprecation warnings
-    const sofa::defaulttype::BaseMatrix* getJ() { return getJ(NULL); }
+    const sofa::linearalgebra::BaseMatrix* getJ() { return getJ(NULL); }
     void applyJ(Data<OutVecDeriv>& out, const Data<InVecDeriv>& in)
     { applyJ(NULL, out, in); }
     void applyJ( OutVecDeriv& out, const InVecDeriv& in)
@@ -207,7 +207,7 @@ protected:
             sofa::core::topology::BaseMeshTopology,
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
 
-        TriangleSetTopologyContainer* topologyTarget;
+        topology::TriangleSetTopologyContainer* topologyTarget;
 
         type::vector<Vec3> colourMapping;
         type::vector<Vec3> coloursPerVertex;
@@ -219,7 +219,7 @@ protected:
         VecShapeFunctions projN;                // Precomputed shape functions
         type::vector<Index> projElements;
 
-        std::auto_ptr<MatrixType> matrixJ;
+        std::unique_ptr<MatrixType> matrixJ;
         bool updateJ;
 
         // Pointer on the topological mapping to retrieve the list of edges

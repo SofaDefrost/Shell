@@ -30,7 +30,7 @@
 #include <sofa/core/objectmodel/Data.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseTopology/TopologyData.h>
+#include <sofa/core/topology/TopologyData.h>
 
 #include <sofa/helper/OptionsGroup.h>
 
@@ -55,7 +55,7 @@ namespace forcefield
 
 using namespace sofa::type;
 using sofa::type::vector;
-using namespace sofa::component::topology;
+using namespace sofa::core::topology;
 using namespace sofa::core::behavior;
 
 /// This class can be overridden if needed for additionnal storage within template specializations.
@@ -87,7 +87,7 @@ class BezierShellForceField : public core::behavior::ForceField<DataTypes>
         typedef Mat<2,2,Real> Mat22;
         typedef Mat<3,3,Real> Mat33;
 
-        typedef Quat<Real> Quat;
+        typedef sofa::type::Quat<Real> Quat;
 
         typedef Data<VecCoord>                              DataVecCoord;
         typedef Data<VecDeriv>                              DataVecDeriv;
@@ -215,7 +215,7 @@ public:
                 }
         };
 
-        class TriangleHandler : public topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::type::vector<TriangleInformation> >
+        class TriangleHandler : public core::topology::TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::type::vector<TriangleInformation> >
         {
             typedef TopologyDataHandler<core::topology::BaseMeshTopology::Triangle, sofa::type::vector<TriangleInformation> > Inherited;
             public:

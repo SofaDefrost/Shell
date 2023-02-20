@@ -44,16 +44,6 @@ protected:
 
 public:
 
-    std::string getTemplateName() const override
-    {
-        return templateName(this);
-    }
-
-    static std::string templateName(const JoinMeshPoints<DataTypes>* = NULL)
-    {
-        return DataTypes::Name();
-    }
-
     void init() override;
     void reinit() override;
     void doUpdate() override;
@@ -83,7 +73,7 @@ public:
             }
         }
         // Invalid indices
-        serr << "Requested invalid triangle " << triangleId << " and node " << nodeId << sendl;
+        msg_error() << "Requested invalid triangle " << triangleId << " and node " << nodeId;
         return 0;
     }
 
