@@ -35,7 +35,6 @@
 #include <iostream> //for debugging
 #include <vector>
 #include <sofa/defaulttype/VecTypes.h>
-//#include <assert.h>
 #include <sofa/core/topology/TopologyData.inl>
 #include <SofaBaseTopology/TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
@@ -113,12 +112,14 @@ BezierTriangularBendingFEMForceField<DataTypes>::~BezierTriangularBendingFEMForc
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::init()
 {
+    d_componentState.setValue(core::objectmodel::ComponentState::Invalid);
     this->Inherited::init();
 
-    if (this->mstate == NULL) {
-        msg_warning() << "Mechanical state is required!" ;
+    if (this->mstate == nullptr) {
+        msg_warning() << "Mechanical state is required but not found." ;
         return;
     }
+    d_componentState.setValue(core::objectmodel::ComponentState::Valid);
 
     _topology = this->getContext()->getMeshTopology();
 
@@ -137,22 +138,23 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
 
     if (_topology->getNbTriangles()==0)
     {
-            msg_warning() << "BezierTriangularBendingFEMForceField: object must have a Triangular Set Topology.";
+            msg_error() << "BezierTriangularBendingFEMForceField: object must have a Triangular Set Topology.";
+            d_componentState.setValue(core::objectmodel::ComponentState::Invalid);
             return;
     }
 
-    if (topologyMapper.get() != NULL) {
-
+    if (topologyMapper.get() != nullptr)
+    {
         sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
         if (jmp->f_output_triangles.getValue().size() == 0)
         {
-            msg_warning() << "Mapped topology must be triangular! No triangles found." ;
+            msg_warning() << "Mapped topology must be triangular. No triangles found." ;
         } else {
             mapTopology = true;
         }
     }
 
-    if (restShape.get() != NULL) {
+    if (restShape.get() != nullptr) {
         // Listen for MeshChangedEvent
         *this->f_listening.beginEdit() = true;
         this->f_listening.endEdit();
@@ -161,19 +163,19 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
         const VecCoord &rx = restShape.get()->f_position.getValue();
         if (!mapTopology) {
             if (rx.size() != this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
-                msg_warning() << "Different number of nodes in rest shape and mechanical state!" ;
+                msg_warning() << "Different number of nodes in rest shape and mechanical state." ;
             }
         } else if (rx.size() != topologyMapper.get()->f_input_position.getValue().size()) {
-            msg_warning() << "Different number of nodes in rest shape and (original) mapped topology!" ;
+            msg_warning() << "Different number of nodes in rest shape and (original) mapped topology." ;
         }
 
         // Check normal count
         type::vector<Vec3> norms = restShape.get()->f_normals.getValue();
         if (norms.size() == 0) {
-            msg_warning() << "No normals defined in rest shape, assuming flat triangles!" ;
+            msg_warning() << "No normals defined in rest shape, assuming flat triangles." ;
         } else if (norms.size() !=
             topologyMapper.get()->f_input_position.getValue().size()) {
-            msg_warning() << "Normals count doesn't correspond with nodes count in topologyMapper!" ;
+            msg_warning() << "Normals count doesn't correspond with nodes count in topologyMapper." ;
             return;
         }
 
@@ -187,23 +189,23 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
         // Check normal count
         type::vector<Vec3> norms = topologyMapper.get()->f_input_normals.getValue();
         if (norms.size() == 0) {
-            msg_warning() << "No normals defined in topologyMapper, assuming flat triangles!" ;
+            msg_warning() << "No normals defined in topologyMapper, assuming flat triangles." ;
         } else if (norms.size() !=
             topologyMapper.get()->f_input_position.getValue().size()) {
-            msg_warning() << "Normals count doesn't correspond with nodes count in topologyMapper!" ;
+            msg_warning() << "Normals count doesn't correspond with nodes count in topologyMapper." ;
             return;
         }
 
     }
 
-    if (!mapTopology && restShape.get() == NULL) {
+    if (!mapTopology && restShape.get() == nullptr) {
         // No topology mapper, no changing rest shape -> normal behaviour
 
         // Check normal count
     if (normals.getValue().size() == 0) {
-        msg_warning() << "No normals defined, assuming flat triangles" ;
+        msg_warning() << "No normals defined, assuming flat triangles." ;
     } else if (normals.getValue().size() != this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
-        msg_warning() << "Normals count doesn't correspond with nodes count" ;
+        msg_warning() << "Normals count doesn't correspond with nodes count." ;
         return;
     }
 }
@@ -262,10 +264,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
 {
-    if (this->mstate == NULL) {
-        msg_warning() << "Missing mechanical state" ;
+    if (d_componentState.getValue() == core::objectmodel::ComponentState::Invalid)
         return;
-    }
 
     type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &triangleInf[i];
@@ -275,7 +275,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
     Index c0 = tinfo->c0;
 
     // Gets vertices of rest positions
-    const VecCoord& x0 = (restShape.get() != NULL)
+    const VecCoord& x0 = (restShape.get() != nullptr)
         // if having changing rest shape take it
         ? restShape.get()->f_position.getValue()
         : (mapTopology
@@ -285,7 +285,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
             : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
           );
 
-    const type::vector<Vec3>& norms = (restShape.get() != NULL)
+    const type::vector<Vec3>& norms = (restShape.get() != nullptr)
         // if having changing rest shape take its normals
         ? restShape.get()->f_normals.getValue()
         : (mapTopology
@@ -575,15 +575,13 @@ void BezierTriangularBendingFEMForceField<DataTypes>::interpolateRefFrame(
     if (X1n > 1e-20 && Y1n > 1e-20 && fabs(1-dot(X1,Y1)/(X1n*Y1n)) >1e-20 )
     {
         X1.normalize();
-        //Y1.normalize();
         Z=cross(X1,Y1);
         Z.normalize();
         Y=cross(Z,X1);
-        //Y.normalize();
     }
     else
     {
-        msg_warning()<<" WARNING : can not compute the Ref FRame of the element: "
+        msg_warning()<<" Can not compute the Ref FRame of the element: "
             << X_bezierPoints[0] << ", " << X_bezierPoints[1] << ", "
             << X_bezierPoints[2] <<
             " tangent: " << X1 << ", " << Y1 ;
@@ -691,7 +689,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeLocalTriangle(
     // the element
 
     //// Rotate the already computed nodes
-    //msg_info() << "QFrame: " << tinfo->frame.getOrientation() ;
     for (int i = 0; i < 10; i++) {
         pts[i] = tinfo->frameOrientation * (tinfo->bezierNodes[i] - tinfo->frameCenter);
     }
@@ -743,8 +740,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacements( Disp
     Vec3 dQ1 = Q1.toEulerVector();
     Vec3 dQ2 = Q2.toEulerVector();
 
-    //std::cout << "Θ: " << dQ0 << " || " << dQ1 << " || " << dQ2 ;
-
     //bending => rotation along X and Y
     BDisp[1] = dQ0[0];
     BDisp[2] = dQ0[1];
@@ -782,13 +777,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeDisplacements( Disp
     BDisp[0] = dX0[2];
     BDisp[3] = dX1[2];
     BDisp[6] = dX2[2];
-
-    //std::cout << "u:";
-    //for (int i=0; i<9; i++) { std::cout << " " << round(Disp[i]*1e8)/1e8; }
-    //std::cout << "\n  ";
-    //for (int i=0; i<9; i++) { std::cout << " " << round(BDisp[i]*1e8)/1e8; }
-    //std::cout ;
-
 }
 
 // ----------------------------------------------------------------------------
@@ -813,30 +801,27 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementM
     matrixSDM(tinfo.strainDisplacementMatrix4, Vec3(0.788675134, 0.166666667, 0), tinfo);
 #endif
 
-    if (this->f_printLog.getValue()) {
-        msg_info() << "pts: " << tinfo.pts ;
-        msg_info() << "x2b: " << tinfo.interpol ;
+    msg_info() << "pts: " << tinfo.pts ;
+    msg_info() << "x2b: " << tinfo.interpol ;
 
-        msg_info() << "Bm: " << tinfo.strainDisplacementMatrix1 <<
-            "\n    " << tinfo.strainDisplacementMatrix2 <<
-            "\n    " << tinfo.strainDisplacementMatrix3 <<
+    msg_info() << "Bm: " << tinfo.strainDisplacementMatrix1 <<
+        "\n    " << tinfo.strainDisplacementMatrix2 <<
+        "\n    " << tinfo.strainDisplacementMatrix3 <<
 #ifdef GAUSS4
-            "\n    " << tinfo.strainDisplacementMatrix4 <<
+        "\n    " << tinfo.strainDisplacementMatrix4 <<
 #endif
-            "\n";
+        "\n";
 
-        Displacement u = Vec<9,Real>(1, -5, 0, 1, -5, 0, 1, -5, 0);
+    Displacement u = Vec<9,Real>(1, -5, 0, 1, -5, 0, 1, -5, 0);
 
-        msg_info() << "-- Disp test Bm (u=" << u << ")\n" <<
-            "1 : " << tinfo.strainDisplacementMatrix1 * u << "\n"
-            "2 : " << tinfo.strainDisplacementMatrix2 * u << "\n"
-            "3 : " << tinfo.strainDisplacementMatrix3 * u << "\n"
+    msg_info() << "-- Disp test Bm (u=" << u << ")\n" <<
+        "1 : " << tinfo.strainDisplacementMatrix1 * u << "\n"
+        "2 : " << tinfo.strainDisplacementMatrix2 * u << "\n"
+        "3 : " << tinfo.strainDisplacementMatrix3 * u << "\n"
 #ifdef GAUSS4
-            "4 : " << tinfo.strainDisplacementMatrix4 * u << "\n"
+        "4 : " << tinfo.strainDisplacementMatrix4 * u << "\n"
 #endif
-            ;
-    }
-
+        ;
 }
 
 // ----------------------------------------------------------------------------
@@ -983,15 +968,13 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStrainDisplacementM
     matrixSDB(tinfo.strainDisplacementMatrixB4, Vec3(0.788675134, 0.166666667, 0), tinfo);
 #endif
 
-    if (this->f_printLog.getValue()) {
-        msg_info() << "Bb: " << tinfo.strainDisplacementMatrixB1 <<
-            "\n    " << tinfo.strainDisplacementMatrixB2 <<
-            "\n    " << tinfo.strainDisplacementMatrixB3 <<
+    msg_info() << "Bb: " << tinfo.strainDisplacementMatrixB1 <<
+                "\n    " << tinfo.strainDisplacementMatrixB2 <<
+                "\n    " << tinfo.strainDisplacementMatrixB3 <<
 #ifdef GAUSS4
-            "\n    " << tinfo.strainDisplacementMatrixB4 <<
+                "\n    " << tinfo.strainDisplacementMatrixB4 <<
 #endif
-            "\n";
-    }
+                "\n";
 }
 
 // ----------------------------------------------------------------------------
@@ -1170,15 +1153,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixMemb
     K *= tinfo.area2;
 #endif
 
-
-    if (this->f_printLog.getValue())
-    {
-        msg_info() << "2*Area = " << tinfo.area2 ;
-        msg_info() << "Km = " << K ;
-        Displacement u = Vec<9,Real>(1, -5, 0, 1, -5, 0, 1, -5, 0);
-        msg_info() << "-- Disp test Km (u=" << u << ")" <<
-            " : " << K * u << " ... should be zero" ;
-    }
+    msg_info() << "2*Area = " << tinfo.area2 ;
+    msg_info() << "Km = " << K ;
+    Displacement u = Vec<9,Real>(1, -5, 0, 1, -5, 0, 1, -5, 0);
+    msg_info() << "-- Disp test Km (u=" << u << ")" <<
+        " : " << K * u << " ... should be zero" ;
 }
 
 
@@ -1210,10 +1189,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::computeStiffnessMatrixBend
     K *= tinfo.area2;
 #endif
 
-    if (this->f_printLog.getValue())
-    {
-        msg_info() << "Kb = "  << K ;
-    }
+    msg_info() << "Kb = "  << K ;
 }
 
 // -----------------------------------------------------------------------------
@@ -1327,16 +1303,11 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
     Vec3 fc1 = tinfo->frameOrientationInv * Vec3(F[6], F[7], F_bending[6]);
     Vec3 fc2 = tinfo->frameOrientationInv * Vec3(F_bending[7], F_bending[8], F[8]);
 
-    if (this->f_printLog.getValue()) {
-        std::cout << "E: " << elementIndex << "\tu: " << D << "\n\tf: " << F << "\n";
-        std::cout << "E: " << elementIndex << "\tuB: " << D_bending
-            << "\n\tfB: " << F_bending << "\n";
-        std::cout << "   xg [ " << a << "/" << b << "/" << c << " - "
-            << x[a] << " || " << x[b] << " || " << x[c] << "\n";
-        std::cout << "   xl [ " << tinfo->pts[0] << ", " << tinfo->pts[1] << ", " << tinfo->pts[2] << "\n";
-        std::cout << "   fg: " << Deriv(-fa1, -fa2) << " | " << Deriv(-fb1, -fb2) << " | " << Deriv(-fc1, -fc2) ;
-    }
-
+    msg_info() << "E: " << elementIndex << "\tu: " << D << "\n\tf: " << F ;
+    msg_info() << "E: " << elementIndex << "\tuB: " << D_bending << "\n\tfB: " << F_bending ;
+    msg_info() << "   xg [ " << a << "/" << b << "/" << c << " - " << x[a] << " || " << x[b] << " || " << x[c] ;
+    msg_info() << "   xl [ " << tinfo->pts[0] << ", " << tinfo->pts[1] << ", " << tinfo->pts[2] ;
+    msg_info() << "   fg: " << Deriv(-fa1, -fa2) << " | " << Deriv(-fb1, -fb2) << " | " << Deriv(-fc1, -fc2) ;
 
     f[a] += Deriv(-fa1, -fa2);
     f[b] += Deriv(-fb1, -fb2);
@@ -1352,15 +1323,8 @@ void BezierTriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ )
 {
-//    std::cout << "addForce\n";
-
     VecDeriv& f        = *(dataF.beginEdit());
     const VecCoord& p  =   dataX.getValue()  ;
-
-//    sofa::helper::system::thread::ctime_t start, stop;
-//    sofa::helper::system::thread::CTime timer;
-//
-//    start = timer.getTime();
 
     int nbTriangles=_topology->getNbTriangles();
     f.resize(p.size());
@@ -1371,9 +1335,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core:
     }
 
     dataF.endEdit();
-
-//    stop = timer.getTime();
-//    std::cout << "---------- time addForce = " << stop-start ;
 }
 
 // --------------------------------------------------------------------------------------
@@ -1382,8 +1343,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core:
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core::MechanicalParams* mparams, DataVecDeriv& datadF, const DataVecDeriv& datadX )
 {
-//    std::cout << "addDForce\n";
-
     VecDeriv& df        = *(datadF.beginEdit());
     const VecDeriv& dp  =   datadX.getValue()  ;
 
@@ -1397,7 +1356,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core
         applyStiffness(df, dp, i, kFactor);
     }
 
-    //std::cout << df ;
     datadF.endEdit();
 }
 
@@ -1488,7 +1446,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGl
 }
 
 #define ASSEMBLED_K
-#define PRINT_
 
 #ifdef ASSEMBLED_K
 
@@ -1538,18 +1495,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::M
             }
     }
 
-    #ifdef PRINT
-    std::cout << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" ;
-    for (unsigned int i=0; i<r.matrix->rowSize(); i++)
-    {
-        for (unsigned int j=0; j<r.matrix->colSize(); j++)
-        {
-            std::cout << r.matrix->element(i,j) << ",";
-        }
-        std::cout ;
-    }
-    #endif
-
     triangleInfo.endEdit();
 }
 
@@ -1586,18 +1531,6 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::lineara
 
         }
     }
-
-    #ifdef PRINT
-    std::cout << "Global matrix (" << mat->rowSize() << "x" << mat->colSize() << ")" ;
-    for (unsigned int i=0; i<mat->rowSize(); i++)
-    {
-        for (unsigned int j=0; j<mat->colSize(); j++)
-        {
-            std::cout << mat->element(i,j) << "," ;
-        }
-        std::cout ;
-    }
-    #endif
 }
 
 #endif
