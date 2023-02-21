@@ -78,7 +78,6 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         typedef core::behavior::ForceField<DataTypes>       Inherited;
         typedef typename DataTypes::VecCoord                VecCoord;
         typedef typename DataTypes::VecDeriv                VecDeriv;
-        //typedef typename DataTypes::VecReal                 VecReal;
 
         typedef typename DataTypes::Coord                   Coord;
         typedef typename DataTypes::Deriv                   Deriv;
@@ -121,7 +120,13 @@ class BezierTriangularBendingFEMForceField : public core::behavior::ForceField<D
         sofa::core::topology::BaseMeshTopology* _topology;
         sofa::core::topology::BaseMeshTopology* _topologyTarget;
 
-        // Nodes of the Bezier triangles
+        ////////////////////////// Inherited attributes ////////////////////////////
+        /// https://gcc.gnu.org/onlinedocs/gcc/Name-lookup.html
+        /// Bring inherited attributes and function in the current lookup context.
+        /// otherwise any access to the base::attribute would require
+        /// the "this->" approach.
+        using  ForceField<DataTypes>::d_componentState ;
+        ////////////////////////////////////////////////////////////////////////////
 
 public:
 
