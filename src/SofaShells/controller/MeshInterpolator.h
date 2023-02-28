@@ -1,7 +1,7 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_MESHINTERPOLATION_H
 #define SOFA_COMPONENT_CONTROLLER_MESHINTERPOLATION_H
 
-#include <SofaUserInteraction/Controller.h>
+#include <sofa/component/controller/Controller.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/type/Vec.h>

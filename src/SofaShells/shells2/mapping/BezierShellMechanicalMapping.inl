@@ -29,11 +29,11 @@
 #include <SofaShells/shells2/forcefield/BezierShellForceField.h>
 #include <SofaShells/misc/PointProjection.h>
 
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
-#include <SofaBaseCollision/MinProximityIntersection.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
+#include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/core/ConstraintParams.h>
 
-#include <SofaBoundaryCondition/ConstantForceField.h>
+#include <sofa/component/mechanicalload/ConstantForceField.h>
 
 // We have own code to check the getJ() because checkJacobian sucks (at this
 // point in time).
@@ -115,7 +115,7 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
         tinfo.attachedPoints.clear();
     }
 
-    PointProjection<Real> proj(*dynamic_cast<topology::TriangleSetTopologyContainer*>(inputTopo));
+    PointProjection<Real> proj(*dynamic_cast<topology::container::dynamic::TriangleSetTopologyContainer*>(inputTopo));
 
     // Iterates over 'out' vertices
     for (unsigned int i=0; i<outVertices.size(); i++)
@@ -339,7 +339,7 @@ typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapp
     // The primitive is useless here
     unsigned int dummy;
 
-    PointProjection<Real> proj(*dynamic_cast<topology::TriangleSetTopologyContainer*>(inputTopo));
+    PointProjection<Real> proj(*dynamic_cast<topology::container::dynamic::TriangleSetTopologyContainer*>(inputTopo));
 
     // Iterates over 'in' vertices
     Real minVertex, minEdge, minTriangle, minDistance;

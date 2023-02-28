@@ -25,7 +25,7 @@
 #include <SofaShells/shells2/forcefield/BezierShellForceField.inl>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/RigidTypes.h>
-#include <SofaBaseMechanics/MechanicalObject.h>
+#include <sofa/component/statecontainer/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
 #include <SofaShells/config.h>
 

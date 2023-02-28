@@ -34,7 +34,7 @@
 #include <sofa/gl/GLSLShader.h>
 
 #include <sofa/linearalgebra/CompressedRowSparseMatrix.h>
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/simulation/AnimateBeginEvent.h>
 
 #include <sofa/defaulttype/VecTypes.h>
@@ -229,7 +229,7 @@ protected:
     sofa::core::topology::BaseMeshTopology,
     BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
 
-    topology::TriangleSetTopologyContainer* topologyTarget;
+    topology::container::dynamic::TriangleSetTopologyContainer* topologyTarget;
     const OutVecCoord verticesTarget;
     const SeqTriangles trianglesTarget;
 

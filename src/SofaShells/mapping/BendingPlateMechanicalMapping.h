@@ -34,7 +34,7 @@
 #include <sofa/type/vector.h>
 
 #include <sofa/gl/GLSLShader.h>
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 
 #include <SofaShells/forcefield/TriangularBendingFEMForceField.h>
 
@@ -137,7 +137,7 @@ protected:
             sofa::core::topology::BaseMeshTopology,
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
 
-        topology::TriangleSetTopologyContainer* topologyTarget;
+        topology::container::dynamic::TriangleSetTopologyContainer* topologyTarget;
         OutVecCoord verticesTarget;
         SeqTriangles trianglesTarget;
 

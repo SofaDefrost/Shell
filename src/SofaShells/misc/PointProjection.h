@@ -5,7 +5,7 @@
 #ifndef POINTPROJECTION_H
 #define POINTPROJECTION_H
 
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/type/Vec.h>
@@ -32,14 +32,14 @@ class PointProjection
 
         typedef sofa::type::Mat<3,3, Real> Mat33;
 
-        typedef sofa::component::topology::TriangleSetTopologyContainer::Edge                   Edge;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID             Index;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle               Triangle;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::SeqEdges               SeqEdges;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::SeqTriangles           SeqTriangles;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::Edge                   Edge;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TriangleID             Index;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::Triangle               Triangle;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::SeqEdges               SeqEdges;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::SeqTriangles           SeqTriangles;
 
         typedef sofa::type::vector<Vec3>      VecVec3;
         typedef sofa::type::vector<Index>     VecIndex;
@@ -51,7 +51,7 @@ class PointProjection
          *
          * @param _topology Associated triangular topology.
          */
-        PointProjection(sofa::component::topology::TriangleSetTopologyContainer &_topology) :
+        PointProjection(sofa::component::topology::container::dynamic::TriangleSetTopologyContainer &_topology) :
             topology(_topology) {}
 
 
@@ -119,7 +119,7 @@ class PointProjection
 
     private:
 
-        sofa::component::topology::TriangleSetTopologyContainer &topology;
+        sofa::component::topology::container::dynamic::TriangleSetTopologyContainer &topology;
 
     public:
 

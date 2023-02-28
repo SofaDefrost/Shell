@@ -26,11 +26,11 @@
 #define SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
 
 #include <SofaShells/mapping/BendingPlateMechanicalMapping.h>
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
-#include <SofaBaseCollision/MinProximityIntersection.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
+#include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
 
-#include <SofaBoundaryCondition/ConstantForceField.h>
+#include <sofa/component/mechanicalload/ConstantForceField.h>
 
 namespace sofa
 {
