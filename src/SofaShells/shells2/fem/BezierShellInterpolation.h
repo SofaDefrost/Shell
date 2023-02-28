@@ -10,7 +10,7 @@
 
 #include <SofaShells/config.h>
 #include <sofa/core/behavior/MechanicalState.h>
-#include <SofaBaseMechanics/MechanicalObject.h>
+#include <sofa/component/statecontainer/MechanicalObject.h>
 #include <sofa/component/mapping/linear/Mesh2PointTopologicalMapping.h>
 
 #include <sofa/defaulttype/SolidTypes.h>
@@ -275,7 +275,7 @@ class BezierShellInterpolation : public virtual sofa::core::objectmodel::BaseObj
         // Mapping that creates bezier points and MO to store positions of the points
         //sofa::component::topology::Mesh2PointTopologicalMapping::SPtr bezierM2P;
         // Mechanical state holding the Bézier points and their velocities
-        sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3dTypes>::SPtr mStateNodes;
+        sofa::component::statecontainer::MechanicalObject<sofa::defaulttype::Vec3dTypes>::SPtr mStateNodes;
 
         Data< VecVec3 > inputNormals;
 

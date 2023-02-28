@@ -12,7 +12,7 @@
 #include <SofaShells/shells2/fem/BezierShellInterpolation.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
-#include <SofaBaseMechanics/MechanicalObject.h>
+#include <sofa/component/statecontainer/MechanicalObject.h>
 
 #include <sofa/defaulttype/SolidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>

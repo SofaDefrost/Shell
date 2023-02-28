@@ -36,7 +36,7 @@
 #include <vector>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/core/topology/TopologyData.inl>
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
 #include <SofaShells/controller/MeshChangedEvent.h>
 
@@ -112,14 +112,14 @@ BezierTriangularBendingFEMForceField<DataTypes>::~BezierTriangularBendingFEMForc
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::init()
 {
-    d_componentState.setValue(core::objectmodel::ComponentState::Invalid);
+    d_componentState.setValue(core::objectmodel::ComponentState::Valid);
     this->Inherited::init();
 
     if (this->mstate == nullptr) {
         msg_warning() << "Mechanical state is required but not found." ;
+        d_componentState.setValue(core::objectmodel::ComponentState::Invalid);
         return;
     }
-    d_componentState.setValue(core::objectmodel::ComponentState::Valid);
 
     _topology = this->getContext()->getMeshTopology();
 

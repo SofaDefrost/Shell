@@ -39,7 +39,7 @@
 #include <map>
 #include <utility>
 #include <sofa/core/topology/TopologyData.inl>
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/simulation/AnimateEndEvent.h>
@@ -81,26 +81,26 @@ void TriangularBendingFEMForceField<DataTypes>::TRQSTriangleHandler::applyCreate
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
-: f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson ratio in Hooke's law"))
-, f_young(initData(&f_young,(Real)3000.,"youngModulus","Young modulus in Hooke's law"))
-, f_bending(initData(&f_bending,false,"bending","Adds bending"))
-, f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
-, f_membraneRatio(initData(&f_membraneRatio,(Real)1.0,"membraneRatio","In plane forces ratio"))
-, f_bendingRatio(initData(&f_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
-, refineMesh(initData(&refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
-, iterations(initData(&iterations,(int)0,"iterations","Iterations for refinement"))
-, targetTopology(initLink("targetTopology","Targeted high resolution topology"))
-, restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
-, mapTopology(false)
-, topologyMapper(initLink("topologyMapper","Component supplying different topology for the rest shape"))
-, exportFilename(initData(&exportFilename, "exportFilename", "file name to export coefficients into"))
-, exportEveryNbSteps(initData(&exportEveryNbSteps, (unsigned int)0, "exportEveryNumberOfSteps", "export file only at specified number of steps (0=disable)"))
-, exportAtBegin(initData(&exportAtBegin, false, "exportAtBegin", "export file at the initialization"))
-, exportAtEnd(initData(&exportAtEnd, false, "exportAtEnd", "export file when the simulation is finished"))
-, stepCounter(0)
+: d_poisson(initData(&d_poisson,(Real)0.45,"poissonRatio","Poisson ratio in Hooke's law"))
+, d_young(initData(&d_young,(Real)3000.,"youngModulus","Young modulus in Hooke's law"))
+, d_bending(initData(&d_bending,false,"bending","Adds bending"))
+, d_thickness(initData(&d_thickness,(Real)0.1,"thickness","Thickness of the plates"))
+, d_membraneRatio(initData(&d_membraneRatio,(Real)1.0,"membraneRatio","In plane forces ratio"))
+, d_bendingRatio(initData(&d_bendingRatio,(Real)1.0,"bendingRatio","Bending forces ratio"))
+, d_refineMesh(initData(&d_refineMesh, false, "refineMesh","Hierarchical refinement of the mesh"))
+, d_iterations(initData(&d_iterations,(int)0,"iterations","Iterations for refinement"))
+, l_targetTopology(initLink("targetTopology","Targeted high resolution topology"))
+, l_restShape(initLink("restShape","MeshInterpolator component for variable rest shape"))
+, m_mapTopology(false)
+, l_topologyMapper(initLink("topologyMapper","Component supplying different topology for the rest shape"))
+, m_exportFilename(initData(&m_exportFilename, "exportFilename", "file name to export coefficients into"))
+, d_exportEveryNbSteps(initData(&d_exportEveryNbSteps, (unsigned int)0, "exportEveryNumberOfSteps", "export file only at specified number of steps (0=disable)"))
+, d_exportAtBegin(initData(&d_exportAtBegin, false, "exportAtBegin", "export file at the initialization"))
+, d_exportAtEnd(initData(&d_exportAtEnd, false, "exportAtEnd", "export file when the simulation is finished"))
+, m_stepCounter(0)
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
-    triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
+    m_triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
 }
 
 // --------------------------------------------------------------------------------------
@@ -108,10 +108,6 @@ TriangularBendingFEMForceField<DataTypes>::TriangularBendingFEMForceField()
 // --------------------------------------------------------------------------------------
 template <class DataTypes> void TriangularBendingFEMForceField<DataTypes>::handleTopologyChange()
 {
-//    std::list<const TopologyChange *>::const_iterator itBegin=_topology->firstChange();
-//    std::list<const TopologyChange *>::const_iterator itEnd=_topology->lastChange();
-//
-//    triangleInfo.handleTopologyEvents(itBegin,itEnd);
 }
 
 // --------------------------------------------------------------------------------------
@@ -120,7 +116,7 @@ template <class DataTypes> void TriangularBendingFEMForceField<DataTypes>::handl
 template <class DataTypes>
 TriangularBendingFEMForceField<DataTypes>::~TriangularBendingFEMForceField()
 {
-    if(triangleHandler) delete triangleHandler;
+    if(m_triangleHandler) delete m_triangleHandler;
 }
 
 // --------------------------------------------------------------------------------------
@@ -129,14 +125,16 @@ TriangularBendingFEMForceField<DataTypes>::~TriangularBendingFEMForceField()
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::init()
 {
+    this->d_componentState.setValue(core::objectmodel::ComponentState::Valid);
     this->Inherited::init();
 
     _topology = this->getContext()->getMeshTopology();
 
     if (_topology->getNbTriangles()==0)
     {
-            msg_warning() << "TriangularBendingFEMForceField: object must have a Triangular Set Topology.";
-            return;
+        msg_error() << "TriangularBendingFEMForceField: object must have a Triangular Set Topology.";
+        this->d_componentState.setValue(core::objectmodel::ComponentState::Invalid);
+        return;
     }
 
     // Create specific handler for TriangleData
@@ -144,17 +142,17 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 
     reinit();
 
-    if (refineMesh.getValue())
+    if (d_refineMesh.getValue())
     {
-        sofa::core::topology::BaseMeshTopology* _topologyTarget = targetTopology.get();
+        sofa::core::topology::BaseMeshTopology* _topologyTarget = l_targetTopology.get();
 
         if (_topologyTarget)
         {
             MechanicalState<defaulttype::Vec3Types>* mStateTarget = dynamic_cast<MechanicalState<defaulttype::Vec3Types>*> (_topologyTarget->getContext()->getMechanicalState());
             if (mStateTarget)
             {
-                targetTriangles = _topologyTarget->getTriangles();
-                targetVertices = mStateTarget->read(sofa::core::ConstVecCoordId::position())->getValue();
+                m_targetTriangles = _topologyTarget->getTriangles();
+                m_targetVertices = mStateTarget->read(sofa::core::ConstVecCoordId::position())->getValue();
             }
             else
             {
@@ -164,7 +162,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
         }
         else
         {
-            std::cout << "WARNING(TriangularBendingFEMForceField): no target high resolution mesh found" << std::endl;
+            msg_warning() << "No target high resolution mesh found";
             return;
         }
 
@@ -177,7 +175,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
 {
-    std::cout << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << targetTriangles.size() << " triangles" << std::endl;
+    msg_info() << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << m_targetTriangles.size() << " triangles.";
 
     // List of vertices
     const VecCoord& x = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
@@ -206,7 +204,7 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
 
 
     // Refines mesh
-    for (int n=0; n<iterations.getValue(); n++)
+    for (int n=0; n<d_iterations.getValue(); n++)
     {
         // Subdivides each triangle into 4 smaller ones
         subTriangles.clear();
@@ -227,8 +225,8 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
     }
 
 
-    std::cout << "Number of vertices of the resulting mesh = " << subVertices.size() << std::endl;
-    std::cout << "Number of shells of the resulting mesh   = " << subTriangles.size() << std::endl;
+    msg_info() << "Number of vertices of the resulting mesh = " << subVertices.size();
+    msg_info() << "Number of shells of the resulting mesh   = " << subTriangles.size();
 
     // Writes in Gmsh format
     std::ofstream myfile;
@@ -242,7 +240,7 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
         myfile << "f " << subTriangles[element][0]+1 << " " << subTriangles[element][1]+1 << " " << subTriangles[element][2]+1 << "\n";
     }
     myfile.close();
-    std::cout << "Mesh written in mesh_refined.obj" << std::endl;
+    msg_info() << "Mesh written in mesh_refined.obj";
 }
 
 // --------------------------------------------------------------------------------------
@@ -305,7 +303,7 @@ template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::movePoint(Vec3& pointToMove)
 {
     sofa::type::vector<Vec3> listClosestPoints;
-    FindClosestGravityPoints(pointToMove, listClosestPoints);
+    findClosestGravityPoints(pointToMove, listClosestPoints);
     pointToMove = (listClosestPoints[0]+listClosestPoints[1]+listClosestPoints[2])/3;
 }
 
@@ -314,15 +312,15 @@ void TriangularBendingFEMForceField<DataTypes>::movePoint(Vec3& pointToMove)
 // Finds the list of the 3 closest gravity points of targeted surface
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::FindClosestGravityPoints(const Vec3& point, sofa::type::vector<Vec3>& listClosestPoints)
+void TriangularBendingFEMForceField<DataTypes>::findClosestGravityPoints(const Vec3& point, sofa::type::vector<Vec3>& listClosestPoints)
 {
     std::multimap<Real, Vec3> closestTrianglesData;
 
-    for (unsigned int t=0; t<targetTriangles.size(); t++)
+    for (unsigned int t=0; t<m_targetTriangles.size(); t++)
     {
-        Vec3 pointTriangle1 = targetVertices[ targetTriangles[t][0] ];
-        Vec3 pointTriangle2 = targetVertices[ targetTriangles[t][1] ];
-        Vec3 pointTriangle3 = targetVertices[ targetTriangles[t][2] ];
+        Vec3 pointTriangle1 = m_targetVertices[ m_targetTriangles[t][0] ];
+        Vec3 pointTriangle2 = m_targetVertices[ m_targetTriangles[t][1] ];
+        Vec3 pointTriangle3 = m_targetVertices[ m_targetTriangles[t][2] ];
 
         Vec3 G = (pointTriangle1+pointTriangle2+pointTriangle3)/3;
 
@@ -356,31 +354,31 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 {
     type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
 
-    if (topologyMapper.get() != NULL) {
+    if (l_topologyMapper.get() != nullptr) {
 
-        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
+        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = l_topologyMapper.get();
         if (jmp->f_output_triangles.getValue().size() == 0)
         {
-            msg_warning() << "Mapped topology must be triangular! No triangles found." ;
+            msg_warning() << "Mapped topology must be triangular. No triangles found." ;
         } else {
-            mapTopology = true;
+            m_mapTopology = true;
         }
     }
 
-    if (restShape.get() != NULL) {
+    if (l_restShape.get() != nullptr) {
         // Listen for MeshChangedEvent
         *this->f_listening.beginEdit() = true;
         this->f_listening.endEdit();
 
         // Check if there is same number of nodes
-        if (!mapTopology) {
-            if (restShape.get()->f_position.getValue().size() != 
+        if (!m_mapTopology) {
+            if (l_restShape.get()->f_position.getValue().size() !=
                 this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
-                msg_warning() << "Different number of nodes in rest shape and mechanical state!" ;
+                msg_warning() << "Different number of nodes in rest shape and mechanical state." ;
             }
-        } else if (restShape.get()->f_position.getValue().size() != 
-            topologyMapper.get()->f_input_position.getValue().size()) {
-            msg_warning() << "Different number of nodes in rest shape and (original) mapped topology!" ;
+        } else if (l_restShape.get()->f_position.getValue().size() !=
+            l_topologyMapper.get()->f_input_position.getValue().size()) {
+            msg_warning() << "Different number of nodes in rest shape and (original) mapped topology." ;
         }
     }
 
@@ -389,12 +387,10 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 
     for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
     {
-        triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::type::vector< unsigned int > )0, (const sofa::type::vector< double >)0);
+        m_triangleHandler->applyCreateFunction(i, triangleInf[i],  _topology->getTriangle(i),  (const sofa::type::vector< unsigned int > )0, (const sofa::type::vector< double >)0);
     }
 
     triangleInfo.endEdit();
-
-//    testAddDforce();
 }
 
 
@@ -404,7 +400,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
 template <class DataTypes>
 double TriangularBendingFEMForceField<DataTypes>::getPotentialEnergy(const VecCoord& /*x*/) const
 {
-    msg_warning()<<"TriangularBendingFEMForceField::getPotentialEnergy is not implemented !!!";
+    msg_warning() << "TriangularBendingFEMForceField::getPotentialEnergy is not implemented.";
     return 0;
 }
 
@@ -463,8 +459,8 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int i, co
     tinfo->c = c;
 
     Index a0=a, b0=b, c0=c;
-    if (mapTopology) {
-        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
+    if (m_mapTopology) {
+        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = l_topologyMapper.get();
 
         // Get indices in original topology
         a0 = jmp->getSrcNodeFromTri(i, a0);
@@ -498,12 +494,12 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
     const Index c0 = tinfo->c0;
 
     // Gets vertices of rest and initial positions respectively
-    const VecCoord& x0 = (restShape.get() != NULL)
+    const VecCoord& x0 = (l_restShape.get() != nullptr)
         // if having changing rest shape take it
-        ? restShape.get()->f_position.getValue()
-        : (mapTopology
+        ? l_restShape.get()->f_position.getValue()
+        : (m_mapTopology
             // if rest shape is fixed but we have mapped topology use it
-            ? topologyMapper.get()->f_input_position.getValue()
+            ? l_topologyMapper.get()->f_input_position.getValue()
             // otherwise just take rest shape in mechanical state
             : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
           );
@@ -519,7 +515,7 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
     tinfo->restLocalPositions[0] = Qframe0.rotate(x0[b0].getCenter() - x0[a0].getCenter());
     tinfo->restLocalPositions[1] = Qframe0.rotate(x0[c0].getCenter() - x0[a0].getCenter());
 
-    if (f_bending.getValue())
+    if (d_bending.getValue())
     {
         // Computes inverse of C for initial position (in case of the latter is different than the rest_position)
         tinfo->localB = Qframe.rotate(x[b].getCenter()-x[a].getCenter());
@@ -549,11 +545,6 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
         computeDisplacementBending(Disp_bending, x, i);
 
     }
-
-    //std::cout << "e" << i << " area=" << tinfo->area << " " << a0 << "/" << a << " " << b0 << "/" << b << " " << c0 << "/" << c << " " 
-    //    "x0: " << x0[a0] << "   " << x0[b0] << "   " << x0[c0] << " || " <<
-    //    "x: " << x[a] << "   " << x[b] << "   " << x[c] << 
-    //    "\n";
 
     triangleInfo.endEdit();
 }
@@ -597,7 +588,7 @@ void TriangularBendingFEMForceField<DataTypes>::applyStiffness(VecDeriv& v, cons
     getVCenter(v[c]) += tinfo->Qframe.inverseRotate(Vec3(-dF[4], -dF[5], 0)) * kFactor;
 
     // If bending is requested
-    if (f_bending.getValue())
+    if (d_bending.getValue())
     {
         // Bending displacements
         DisplacementBending Disp_bending;
@@ -890,31 +881,16 @@ void TriangularBendingFEMForceField<DataTypes>::computeMaterialStiffness(const i
     TriangleInformation *tinfo = &triangleInf[i];
 
     tinfo->materialMatrix[0][0] = 1;
-    tinfo->materialMatrix[0][1] = f_poisson.getValue();
+    tinfo->materialMatrix[0][1] = d_poisson.getValue();
     tinfo->materialMatrix[0][2] = 0;
-    tinfo->materialMatrix[1][0] = f_poisson.getValue();
+    tinfo->materialMatrix[1][0] = d_poisson.getValue();
     tinfo->materialMatrix[1][1] = 1;
     tinfo->materialMatrix[1][2] = 0;
     tinfo->materialMatrix[2][0] = 0;
     tinfo->materialMatrix[2][1] = 0;
-    tinfo->materialMatrix[2][2] = 0.5f * (1 - f_poisson.getValue());
+    tinfo->materialMatrix[2][2] = 0.5f * (1 - d_poisson.getValue());
 
-    tinfo->materialMatrix *= (f_young.getValue() / (12 *  (1 - f_poisson.getValue() * f_poisson.getValue())));
-
-    //tinfo->materialMatrix[0][0] = 1;
-    //tinfo->materialMatrix[0][1] = f_poisson.getValue();
-    //tinfo->materialMatrix[0][2] = 0;
-    //tinfo->materialMatrix[1][0] = f_poisson.getValue();
-    //tinfo->materialMatrix[1][1] = 1;
-    //tinfo->materialMatrix[1][2] = 0;
-    //tinfo->materialMatrix[2][0] = 0;
-    //tinfo->materialMatrix[2][1] = 0;
-    //tinfo->materialMatrix[2][2] = 0.5 * (1 - f_poisson.getValue());
-
-    //tinfo->materialMatrix *= ( f_young.getValue() / (1 - f_poisson.getValue() * f_poisson.getValue()) );
-
-    //Real t = f_thickness.getValue();
-    //tinfo->materialMatrix *= t ;
+    tinfo->materialMatrix *= (d_young.getValue() / (12 *  (1 - d_poisson.getValue() * d_poisson.getValue())));
 
     triangleInfo.endEdit();
 }
@@ -937,12 +913,10 @@ void TriangularBendingFEMForceField<DataTypes>::computeForce(Displacement &F, co
     // Compute stiffness matrix K = J*material*Jt
     StiffnessMatrix K;
     computeStiffnessMatrix(K, J, tinfo->materialMatrix);
-//    K *= triangleInf[elementIndex].area;
     tinfo->stiffnessMatrix = K;
 
     // Compute forces
     F = K * D;
-
 
     triangleInfo.endEdit();
 }
@@ -963,7 +937,7 @@ void TriangularBendingFEMForceField<DataTypes>::computeForceBending(Displacement
     // Compute stiffness matrix K = Jt * material * J
     StiffnessMatrixBending K_bending;
     computeStiffnessMatrixBending(K_bending, tinfo);
-    Real t = f_thickness.getValue();
+    Real t = d_thickness.getValue();
     K_bending *= t*t*t*(triangleInf[elementIndex].area)/3;
     tinfo->stiffnessMatrixBending = K_bending;
 
@@ -1005,7 +979,7 @@ void TriangularBendingFEMForceField<DataTypes>::accumulateForce(VecDeriv &f, con
     getVCenter(f[b]) -= tinfo->Qframe.inverseRotate(Vec3(F[2], F[3], 0));
     getVCenter(f[c]) -= tinfo->Qframe.inverseRotate(Vec3(F[4], F[5], 0));
 
-    if (f_bending.getValue())
+    if (d_bending.getValue())
     {
         // Compute bending displacement for bending into the triangle's frame
         DisplacementBending D_bending;
@@ -1043,11 +1017,6 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::Mecha
     VecDeriv& f        = *(dataF.beginEdit());
     const VecCoord& p  =   dataX.getValue()  ;
 
-//    sofa::helper::system::thread::ctime_t start, stop;
-//    sofa::helper::system::thread::CTime timer;
-//
-//    start = timer.getTime();
-
     int nbTriangles=_topology->getNbTriangles();
     f.resize(p.size());
 
@@ -1057,9 +1026,6 @@ void TriangularBendingFEMForceField<DataTypes>::addForce(const sofa::core::Mecha
     }
 
     dataF.endEdit();
-
-//    stop = timer.getTime();
-//    std::cout << "---------- time addForce = " << stop-start << std::endl;
 }
 
 // --------------------------------------------------------------------------------------
@@ -1073,11 +1039,6 @@ void TriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core::Mech
 
     double kFactor = mparams->kFactor();
 
-//    sofa::helper::system::thread::ctime_t start, stop;
-//    sofa::helper::system::thread::CTime timer;
-//
-//    start = timer.getTime();
-
     int nbTriangles=_topology->getNbTriangles();
     df.resize(dp.size());
 
@@ -1087,9 +1048,6 @@ void TriangularBendingFEMForceField<DataTypes>::addDForce(const sofa::core::Mech
     }
 
     datadF.endEdit();
-
-//    stop = timer.getTime();
-//    std::cout << "time addDForce = " << stop-start << std::endl;
 }
 
 
@@ -1127,7 +1085,7 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
     }
 
 
-    if (f_bending.getValue())
+    if (d_bending.getValue())
     {
         // Stiffness matrix in bending of current triangle
         const StiffnessMatrixBending &K_bending = tinfo->stiffnessMatrixBending;
@@ -1179,7 +1137,6 @@ void TriangularBendingFEMForceField<DataTypes>::convertStiffnessMatrixToGlobalSp
 }
 
 #define ASSEMBLED_K
-#define PRINT_
 
 #ifdef ASSEMBLED_K
 
@@ -1229,18 +1186,6 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(const core::Mechani
             }
     }
 
-    #ifdef PRINT
-    std::cout << "Global matrix (" << mat->rowSize() << "x" << mat->colSize() << ")" << std::endl;
-    for (unsigned int i=0; i<mat->rowSize(); i++)
-    {
-        for (unsigned int j=0; j<mat->colSize(); j++)
-        {
-            std::cout << mat->element(i,j) << ",";
-        }
-        std::cout << std::endl;
-    }
-    #endif
-
     triangleInfo.endEdit();
 }
 
@@ -1277,18 +1222,6 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::linearalgebra
 
         }
     }
-
-    #ifdef PRINT
-    std::cout << "Global matrix (" << mat->rowSize() << "x" << mat->colSize() << ")" << std::endl;
-    for (unsigned int i=0; i<mat->rowSize(); i++)
-    {
-        for (unsigned int j=0; j<mat->colSize(); j++)
-        {
-            std::cout << mat->element(i,j) << "," ;
-        }
-        std::cout << std::endl;
-    }
-    #endif
 }
 
 #endif
@@ -1297,103 +1230,49 @@ void TriangularBendingFEMForceField<DataTypes>::addKToMatrix(sofa::linearalgebra
 template<class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::linearalgebra::BaseMatrix * /*mat*/, double /*bFact*/, unsigned int &/*offset*/)
 {
-
 }
 
-template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::testAddDforce()
-{
-//    VecDeriv f1, f2, df, v, dx2;
-//    VecCoord x1, x2, dx1;
-//
-//    x1 = *this->mstate->getX();
-//    x2.resize(x1.size());
-//    f1.resize(x1.size());
-//    f2.resize(x1.size());
-//    df.resize(x1.size());
-//    dx1.resize(x1.size());
-//    dx2.resize(x1.size());
-//    v.resize(x1.size());
-//
-//    dx1[x1.size()-1] = Coord(Vec3(0.0, 0.0, 0.0), Quat(0.00499998, 0, 0, 0.999988));
-//
-//    for (unsigned int i=0; i<x1.size(); i++)
-//    x2[i] = x1[i] + dx1[i];
-//
-//    addForce(f1, x1, v);
-//    addForce(f2, x2, v);
-//
-//    for (unsigned int i=0; i<f1.size(); i++)
-//    df[i] = f2[i] - f1[i];
-//    std::cout << "df = f2-f1 = " << df << std::endl;
-//
-//    df.clear();
-//    dx2[x1.size()-1] = Deriv(Vec3(0.0, 0, 0.0), Vec3(0.01, 0, 0));
-//    addDForce(df, dx2);
-//
-//    std::cout << "df from addDforce = " << df << std::endl;
-//    std::cout << " " << std::endl;
-}
-
-#if 0
-// Computes principal curvatures for the shell at the given point
-template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::computeCurvature(Vec3 pt, Vec<9, Real> const &coefficients, Vec2 &curvature)
-{
-    // The shell is a Monge patch: X = (x, y, h(x,y)) where h = Uz is the
-    // deflection function.
-    //
-    // Partial derivatives:
-    //  h_x   = c_2 + 2 c_4 x + c_5 y + 3 c_7 x^2 + c_8 y^2
-    //  h_y   = c_3 + c_5 x + 2 c_6 y + 2 c_8 xy + 3 c_9 y^2
-    //  h_xx  = 2 c_4 + 6 c_7 x
-    //  h_yy  = 2 c_6 + 2 c_8 x + 6 c_9 y
-    //  h_xy  = c_5 + 2 c_8 y
-
-    // Compute the derivatives of the deflection function
-    Mat<5, 9, Real> H;
-
-    H(0,1) = 1; H(0,3) = 2*pt[0]; H(0,4) = pt[1]; H(0,6) = 3*pt[0]*pt[0]; H(0,7) = pt[1]*pt[1];
-    H(1,2) = 1; H(1,4) = pt[0]; H(1,5) = 2*pt[1]; H(1,7) = 2*pt[0]*pt[1]; H(1,8) = 3*pt[1]*pt[1];
-    H(2,3) = 2; H(2,6) = 6*pt[0];
-    H(3,5) = 2; H(3,7) = 2*pt[0]; H(3,8) = 6*pt[1];
-    H(4,4) = 1; H(4,7) = 2*pt[1];
-
-    Vec<5,Real> dH = H * coefficients;
-
-    // Compute the shape operator
-    Real div = (dH[1]*dH[1] + dH[0]*dH[0] + 1);
-    div = sofa::helper::rsqrt(div*div*div);
-
-    Real a =  (dH[2]*dH[1]*dH[1] - dH[0]*dH[4]*dH[1] + dH[2])/div;
-    Real b = -(dH[0]*dH[1]*dH[3] - dH[4]*dH[1]*dH[1] - dH[4])/div;
-    Real c = -(dH[0]*dH[2]*dH[1] - dH[0]*dH[0]*dH[4] - dH[4])/div;
-    Real d =  (dH[0]*dH[0]*dH[3] - dH[0]*dH[4]*dH[1] + dH[3])/div;
-    // The shape operator is the square matrix  [ a c ]
-    //                                          [ b d ]
-
-    // Compute the eigenvalues of the shape operator to get the principal curvatures
-    Real Dr = sofa::helper::rsqrt(a*a - 2*a*d + 4*b*c + d*d);
-    curvature[0] = (a+d-Dr)/2;
-    curvature[1] = (a+d+Dr)/2;
-}
-#endif
 
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
-    if (mapTopology && vparams->displayFlags().getShowForceFields()) {
+    if (!vparams->displayFlags().getShowForceFields())
+        return;
 
+    const auto stateLifeCycle = vparams->drawTool()->makeStateLifeCycle();
+    vparams->drawTool()->disableLighting();
+
+    if (vparams->displayFlags().getShowWireFrame())
+        vparams->drawTool()->setPolygonMode(0, true);
+
+    std::vector<sofa::type::RGBAColor> colorVector;
+    std::vector<sofa::type::Vec3> vertices;
+
+    const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
+
+    const SeqTriangles triangles = _topology->getTriangles();
+    for (const Triangle& tri: triangles)
+    {
+        colorVector.push_back(sofa::type::RGBAColor::green());
+        vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(x[tri[0]])));
+        colorVector.push_back(sofa::type::RGBAColor(0, 0.5, 0.5, 1));
+        vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(x[tri[1]])));
+        colorVector.push_back(sofa::type::RGBAColor(0, 0, 1, 1));
+        vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(x[tri[2]])));
+    }
+    vparams->drawTool()->drawTriangles(vertices, colorVector);
+
+    if (m_mapTopology){
         // Draw lines to visualize the mapping between nodes
         std::vector<Vec<3,double> > points;
 
         // Gets vertices of rest and initial positions respectively
-        const VecCoord& x0 = (restShape.get() != NULL)
+        const VecCoord& x0 = (l_restShape.get() != nullptr)
             // if having changing rest shape take it
-            ? restShape.get()->f_position.getValue()
-            : (mapTopology
+            ? l_restShape.get()->f_position.getValue()
+            : (m_mapTopology
                 // if rest shape is fixed but we have mapped topology use it
-                ? topologyMapper.get()->f_input_position.getValue()
+                ? l_topologyMapper.get()->f_input_position.getValue()
                 // otherwise just take rest shape in mechanical state
                 : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
               );
@@ -1425,7 +1304,7 @@ void TriangularBendingFEMForceField<DataTypes>::draw(const core::visual::VisualP
 template <class DataTypes>
 void TriangularBendingFEMForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
-    if ( /*sofa::core::objectmodel::MeshChangedEvent* ev =*/ dynamic_cast<sofa::core::objectmodel::MeshChangedEvent*>(event))
+    if (dynamic_cast<sofa::core::objectmodel::MeshChangedEvent*>(event))
     {
         // Update of the rest shape
         // NOTE: the number of triangles should be the same in all topologies
@@ -1434,127 +1313,7 @@ void TriangularBendingFEMForceField<DataTypes>::handleEvent(sofa::core::objectmo
             initTriangle(i);
         }
     }
-#if 0
-    if ( /*simulation::AnimateEndEvent* ev =*/  dynamic_cast<simulation::AnimateEndEvent*>(event))
-    {
-        unsigned int maxStep = exportEveryNbSteps.getValue();
-        if (maxStep == 0) return;
-
-        stepCounter++;
-        if(stepCounter >= maxStep)
-        {
-            stepCounter = 0;
-            writeCoeffs();
-        }
-    }
-#endif
 }
-
-#if 0
-template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::cleanup()
-{
-    if (exportAtEnd.getValue())
-        writeCoeffs();
-}
-
-template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::bwdInit()
-{
-    if (exportAtBegin.getValue())
-        writeCoeffs();
-}
-
-template <class DataTypes>
-void TriangularBendingFEMForceField<DataTypes>::writeCoeffs()
-{
-    //sofa::helper::system::thread::ctime_t start, stop;
-    //sofa::helper::system::thread::CTime timer;
-    //start = timer.getTime();
-
-    std::string filename = getExpFilename();
-
-    std::ofstream outfile(filename.c_str());
-    if (!outfile.is_open())
-    {
-        msg_warning() << "Error creating file " << filename ;
-        return;
-    }
-
-    // Write a message
-    outfile
-        << "# Data file with the coefficients of the deflection function (f),\n"
-        << "# the principal curvatures (c) at the three corners and in the barycenter,\n"
-        << "# and local coordinates (v) of the two corners (the third si at [0,0,0]).\n";
-
-    TriangleInformation *tinfo = NULL;
-    int nbTriangles=_topology->getNbTriangles();
-    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-    for (int i=0; i<nbTriangles; i++)
-    {
-        tinfo = &triangleInf[i];
-        tinfo->coefficients = tinfo->invC * (tinfo->u + tinfo->u_rest);
-
-        outfile << "f " << tinfo->coefficients << "\n";
-        Vec2 pc;
-        outfile << "c ";
-        computeCurvature(Vec3(0,0,0), tinfo->coefficients, pc);
-        outfile << pc << " ";
-        computeCurvature(tinfo->localB, tinfo->coefficients, pc);
-        outfile << pc << " ";
-        computeCurvature(tinfo->localC, tinfo->coefficients, pc);
-        outfile << pc << " ";
-        Vec3 bary = (tinfo->localB + tinfo->localC)/3;
-        computeCurvature(bary, tinfo->coefficients, pc);
-        outfile << pc << "\n";
-
-        outfile << "v " << tinfo->localB[0] << " " << tinfo->localB[1] << " "
-            << tinfo->localC[0] << " " << tinfo->localC[1] << "\n";
-    }
-    triangleInfo.endEdit();
-
-    outfile.close();
-    msg_info() << "Written " << filename ;
-
-    //stop = timer.getTime();
-    //msg_info() << "---------- " << __PRETTY_FUNCTION__ << " time=" << stop-start << " cycles" ;
-}
-
-template <class DataTypes>
-const std::string TriangularBendingFEMForceField<DataTypes>::getExpFilename()
-{
-    // TODO: steps are reported strangely, in 'animate' the step is one less
-    // (-1) which is OK, but for end (cleanup) the step is one more than
-    // expected (+1)
-    unsigned int nbs = sofa::simulation::getSimulation()->nbSteps.getValue()+1;
-
-    std::ostringstream oss;
-    std::string filename = exportFilename.getFullPath();
-    std::size_t pos = 0;
-    while (pos != std::string::npos)
-    {
-        std::size_t newpos = filename.find('%',pos);
-        oss << filename.substr(pos, (newpos == std::string::npos) ? std::string::npos : newpos-pos);
-        pos = newpos;
-        if(pos != std::string::npos)
-        {
-            ++pos;
-            char c = filename[pos];
-            ++pos;
-            switch (c)
-            {
-            case 's' : oss << nbs; break;
-            case '%' : oss << '%';
-            default:
-                msg_warning() << "Invalid special character %" << c << " in filename" ;
-            }
-        }
-    }
-
-    oss << ".shell";
-    return oss.str();
-}
-#endif
 
 } // namespace forcefield
 

@@ -8,11 +8,11 @@
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaUserInteraction/MouseInteractor.h>
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
-#include <SofaBaseTopology/TriangleSetTopologyModifier.h>
-#include <SofaBaseTopology/TriangleSetTopologyAlgorithms.h>
-#include <SofaBaseTopology/TriangleSetGeometryAlgorithms.h>
+#include <sofa/gui/component/performer/MouseInteractor.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyModifier.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyAlgorithms.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetGeometryAlgorithms.h>
 #include <sofa/core/topology/TopologyData.h>
 
 #include <sofa/helper/map.h>

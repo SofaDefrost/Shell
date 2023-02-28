@@ -1,14 +1,14 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_H
 #define SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_H
 
-#include <SofaUserInteraction/Controller.h>
+#include <sofa/component/controller/Controller.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/type/Vec.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
-#include <SofaBaseTopology/TriangleSetTopologyModifier.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyModifier.h>
 
 namespace sofa
 {
@@ -32,9 +32,9 @@ public:
     typedef typename Coord::value_type Real;
     typedef sofa::type::Vec<3,Real> Vec3;
 
-    typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID     Index;
-    typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle       Triangle;
-    typedef sofa::component::topology::TriangleSetTopologyContainer::SeqTriangles   SeqTriangles;
+    typedef topology::container::dynamic::TriangleSetTopologyContainer::TriangleID     Index;
+    typedef topology::container::dynamic::TriangleSetTopologyContainer::Triangle       Triangle;
+    typedef topology::container::dynamic::TriangleSetTopologyContainer::SeqTriangles   SeqTriangles;
     typedef sofa::type::vector<Index> VecIndex;
 
 protected:
@@ -57,8 +57,8 @@ public:
 private:
 
     unsigned int stepCounter;
-    sofa::component::topology::TriangleSetTopologyContainer*  m_container;
-    sofa::component::topology::TriangleSetTopologyModifier*  m_modifier;
+    topology::container::dynamic::TriangleSetTopologyContainer*  m_container;
+    topology::container::dynamic::TriangleSetTopologyModifier*  m_modifier;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
 };
 

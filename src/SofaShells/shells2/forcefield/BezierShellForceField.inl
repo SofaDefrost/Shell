@@ -37,7 +37,7 @@
 #include <sofa/defaulttype/VecTypes.h>
 
 #include <sofa/core/topology/TopologyData.inl>
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
 
 #include <sofa/defaulttype/SolidTypes.h>

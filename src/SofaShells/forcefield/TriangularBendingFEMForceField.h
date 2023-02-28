@@ -104,10 +104,6 @@ class TriangularBendingFEMForceField : public core::behavior::ForceField<DataTyp
         typedef Mat<18, 18, Real> StiffnessMatrixGlobalSpace;
 
         sofa::core::topology::BaseMeshTopology* _topology;
-        //sofa::component::topology::TriangleSetTopologyContainer* _topologyOriginal;
-
-//        TriangularBendingFEMForceFieldInternalData<DataTypes> data;
-//        friend class TriangularBendingFEMForceFieldInternalData<DataTypes>;
 
 public:
 
@@ -197,43 +193,41 @@ public:
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
         TriangleData< sofa::type::vector<TriangleInformation> >& getTriangleInfo() {return triangleInfo;}
 
-        Data<Real> f_poisson;
-        Data<Real> f_young;
-        Data<bool> f_bending;
-        Data <Real> f_thickness;
-        Data <Real> f_membraneRatio;
-        Data <Real> f_bendingRatio;
-        Data<bool> refineMesh;
-        Data<int> iterations;
+        Data<Real> d_poisson;
+        Data<Real> d_young;
+        Data<bool> d_bending;
+        Data <Real> d_thickness;
+        Data <Real> d_membraneRatio;
+        Data <Real> d_bendingRatio;
+        Data<bool> d_refineMesh;
+        Data<int> d_iterations;
         SingleLink<TriangularBendingFEMForceField<DataTypes>,
             sofa::core::topology::BaseMeshTopology,
-            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> targetTopology;
-        VecCoordHigh targetVertices;
-        SeqTriangles targetTriangles;
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> l_targetTopology;
+        VecCoordHigh m_targetVertices;
+        SeqTriangles m_targetTriangles;
 
         // Allow transition between rest shapes
         SingleLink<TriangularBendingFEMForceField<DataTypes>,
             sofa::component::controller::MeshInterpolator<DataTypes>,
-            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> restShape;
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> l_restShape;
 
         // Indirect rest shape indexing (e.g. for "joining" two meshes)
-        bool mapTopology;
+        bool m_mapTopology;
         SingleLink<TriangularBendingFEMForceField<DataTypes>,
             sofa::component::engine::JoinMeshPoints<DataTypes>,
-            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> topologyMapper;
+            BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> l_topologyMapper;
 
 
-        sofa::core::objectmodel::DataFileName exportFilename;
-        Data<unsigned int> exportEveryNbSteps;
-        Data<bool> exportAtBegin;
-        Data<bool> exportAtEnd;
-        unsigned int stepCounter;
+        sofa::core::objectmodel::DataFileName m_exportFilename;
+        Data<unsigned int> d_exportEveryNbSteps;
+        Data<bool> d_exportAtBegin;
+        Data<bool> d_exportAtEnd;
+        unsigned int m_stepCounter;
 
-        TRQSTriangleHandler* triangleHandler;
+        TRQSTriangleHandler* m_triangleHandler;
 
 protected :
-
-        VecCoord x0fake;   // Virtual values of the rest positions in unmerged topology
 
         TriangleData< sofa::type::vector<TriangleInformation> > triangleInfo;
 
@@ -260,13 +254,11 @@ protected :
 
         void convertStiffnessMatrixToGlobalSpace(StiffnessMatrixGlobalSpace &K_gs, TriangleInformation *tinfo);
 
-        void testAddDforce(void);
-
         void refineCoarseMeshToTarget(void);
         void subdivide(const Vec3& a, const Vec3& b, const Vec3& c, sofa::type::vector<Vec3> &subVertices, SeqTriangles &subTriangles);
         void addVertexAndFindIndex(sofa::type::vector<Vec3> &subVertices, const Vec3 &vertex, int &index);
         void movePoint(Vec3& pointToMove);
-        void FindClosestGravityPoints(const Vec3& point, sofa::type::vector<Vec3>& listClosestPoints);
+        void findClosestGravityPoints(const Vec3& point, sofa::type::vector<Vec3>& listClosestPoints);
 
         void handleEvent(sofa::core::objectmodel::Event *event) override;
 
@@ -284,8 +276,6 @@ protected :
             Quat q = b.inverse() * a;
             return q;
         }
-
-
 
         Quat qDiffZ(const Quat& vertex, const Quat& Qframe)
         {
