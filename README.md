@@ -13,4 +13,4 @@ This plugin for [SOFA](https://github.com/sofa-framework/sofa) implements mechan
 
 
 ## LICENCE 
- - GPL
+ - LGPL
