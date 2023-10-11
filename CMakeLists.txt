@@ -7,6 +7,7 @@ sofa_find_package(Sofa.Component.Constraint.Lagrangian.Model REQUIRED)
 sofa_find_package(Sofa.Component.StateContainer REQUIRED)
 sofa_find_package(Sofa.Component.Mapping.NonLinear REQUIRED)
 sofa_find_package(Sofa.GL REQUIRED)
+sofa_find_package(Sofa.Geometry REQUIRED)
 sofa_find_package(Sofa.Component.Topology.Container.Dynamic REQUIRED)
 
 set(README_FILE "SofaShells.txt" )
@@ -122,7 +123,7 @@ endif()
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
 
 # Link the plugin library to its dependency
-target_link_libraries(${PROJECT_NAME} SofaCore SofaHelper SofaBaseCollision SofaBaseTopology SofaBaseLinearSolver SofaBaseMechanics SofaUserInteraction SofaMeshCollision SofaGraphComponent SofaBoundaryCondition Sofa.GL)
+target_link_libraries(${PROJECT_NAME} SofaCore SofaHelper Sofa.Geometry SofaBaseTopology SofaBaseLinearSolver SofaBaseMechanics SofaUserInteraction SofaGraphComponent SofaBoundaryCondition Sofa.GL)
 
 
 if(SofaGui_FOUND AND SofaOpenglVisual_FOUND)
