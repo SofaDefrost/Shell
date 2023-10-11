@@ -1,16 +1,13 @@
 cmake_minimum_required(VERSION 3.12)
 project(SofaShells VERSION 1.0 LANGUAGES CXX)
 
-find_package(SofaFramework REQUIRED)
-find_package(SofaBase REQUIRED)
-find_package(SofaGeneral REQUIRED)
-find_package(SofaBoundaryCondition REQUIRED)
-find_package(SofaUserInteraction REQUIRED)
-find_package(SofaMeshCollision REQUIRED)
-find_package(SofaGraphComponent REQUIRED)
 
-find_package(SofaGui QUIET)
-find_package(SofaOpenglVisual QUIET)
+find_package(Sofa.Config REQUIRED)
+sofa_find_package(Sofa.Component.Constraint.Lagrangian.Model REQUIRED)
+sofa_find_package(Sofa.Component.StateContainer REQUIRED)
+sofa_find_package(Sofa.Component.Mapping.NonLinear REQUIRED)
+sofa_find_package(Sofa.GL REQUIRED)
+sofa_find_package(Sofa.Component.Topology.Container.Dynamic REQUIRED)
 
 set(README_FILE "SofaShells.txt" )
 set(SOFASHELLS_SRC_DIR src/SofaShells)
