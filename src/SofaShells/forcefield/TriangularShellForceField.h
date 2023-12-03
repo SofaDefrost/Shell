@@ -205,14 +205,15 @@ public:
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
 
-        Data<Real> f_poisson;
-        Data<Real> f_young;
-        Data <Real> f_thickness;
-        Data <sofa::helper::OptionsGroup> f_membraneElement;
-        Data <sofa::helper::OptionsGroup> f_bendingElement;
+        Data<Real> d_poisson;
+        Data<Real> d_young;
+        Data <Real> d_thickness;
+        Data <sofa::helper::OptionsGroup> d_membraneElement;
+        Data <sofa::helper::OptionsGroup> d_bendingElement;
         Data<bool> f_corotated;
-        Data<sofa::helper::OptionsGroup> f_measure;
-        Data<type::vector<Real> > f_measuredValues;
+        Data<sofa::helper::OptionsGroup> d_measure;
+        Data<type::vector<Real> > d_measuredValues;
+        Data<bool> d_isShellveryThin;
 
         TRQSTriangleHandler* triangleHandler;
 

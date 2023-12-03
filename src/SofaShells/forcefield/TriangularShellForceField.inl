@@ -74,17 +74,20 @@ void TriangularShellForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunct
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 TriangularShellForceField<DataTypes>::TriangularShellForceField()
-: f_poisson(initData(&f_poisson,(Real)0.45,"poissonRatio","Poisson ratio in Hooke's law"))
-, f_young(initData(&f_young,(Real)3000.,"youngModulus","Young modulus in Hooke's law"))
-, f_thickness(initData(&f_thickness,(Real)0.1,"thickness","Thickness of the plates"))
-, f_membraneElement(initData(&f_membraneElement, "membraneElement", "The membrane element to use"))
-, f_bendingElement(initData(&f_bendingElement, "bendingElement", "The bending plate element to use"))
+    : d_poisson(initData(&d_poisson,(Real)0.45,"poissonRatio","Poisson ratio in Hooke's law"))
+    , d_young(initData(&d_young,(Real)3000.,"youngModulus","Young modulus in Hooke's law"))
+    , d_thickness(initData(&d_thickness,(Real)0.1,"thickness","Thickness of the plates"))
+    , d_membraneElement(initData(&d_membraneElement, "membraneElement", "The membrane element to use"))
+    , d_bendingElement(initData(&d_bendingElement, "bendingElement", "The bending plate element to use"))
 , f_corotated(initData(&f_corotated, true, "corotated", "Compute forces in corotational frame"))
-, f_measure(initData(&f_measure, "measure", "Compute the strain or stress"))
-, f_measuredValues(initData(&f_measuredValues, "measuredValues", "Measured values for stress or strain"))
+    , d_measure(initData(&d_measure, "measure", "Compute the strain or stress"))
+    , d_measuredValues(initData(&d_measuredValues, "measuredValues", "Measured values for stress or strain"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
+    ,d_isShellveryThin(initData(&d_isShellveryThin, false, "isShellveryThin", "This bool is to adapt "
+                                                                               "computation in case we are using verry tiny(thickness) shell element"))
+
 {
-    f_membraneElement.beginEdit()->setNames(7,
+    d_membraneElement.beginEdit()->setNames(7,
         "None",     // No membrane element
         "CST",      // Constant strain triangle
         // ANDES templates
@@ -94,23 +97,23 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
         "LST-Ret",  // Retrofitted LST with α_b=1⁄4
         "ANDES-OPT" // Optimal ANDES element
         );
-    f_membraneElement.beginEdit()->setSelectedItem("ANDES-OPT");
-    f_membraneElement.endEdit();
+    d_membraneElement.beginEdit()->setSelectedItem("ANDES-OPT");
+    d_membraneElement.endEdit();
 
-    f_bendingElement.beginEdit()->setNames(2,
+    d_bendingElement.beginEdit()->setNames(2,
         "None",     // No bending element
         "DKT"       // Discrete Kirchhoff Triangle
         );
-    f_bendingElement.beginEdit()->setSelectedItem("DKT");
-    f_bendingElement.endEdit();
+    d_bendingElement.beginEdit()->setSelectedItem("DKT");
+    d_bendingElement.endEdit();
 
-    f_measure.beginEdit()->setNames(3,
+    d_measure.beginEdit()->setNames(3,
         "None",                 // Draw nothing
         "Strain (norm)",        // L_2 norm of strain in x and y directions
         "Von Mises stress"      // Von Mises stress criterion
         );
-    f_measure.beginEdit()->setSelectedItem("None");
-    f_measure.endEdit();
+    d_measure.beginEdit()->setSelectedItem("None");
+    d_measure.endEdit();
 
     triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
 }
@@ -159,60 +162,60 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     computeMaterialStiffness();
 
     // Decode the selected elements to use
-    if (f_membraneElement.getValue().getSelectedItem() == "None") {
+    if (d_membraneElement.getValue().getSelectedItem() == "None") {
         csMembrane = NULL;
         for (unsigned int t=0; t<ti.size(); ++t) {
             for (unsigned int i=0; i<ti[t].measure.size(); ++i) {
                 ti[t].measure[i].B.clear();
             }
         }
-    } else if (f_membraneElement.getValue().getSelectedItem() == "CST") {
+    } else if (d_membraneElement.getValue().getSelectedItem() == "CST") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixCST;
-    } else if (f_membraneElement.getValue().getSelectedItem() == "ALL-3I") {
+    } else if (d_membraneElement.getValue().getSelectedItem() == "ALL-3I") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixAll3I;
-    } else if (f_membraneElement.getValue().getSelectedItem() == "ALL-3M") {
+    } else if (d_membraneElement.getValue().getSelectedItem() == "ALL-3M") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixAll3M;
-    } else if (f_membraneElement.getValue().getSelectedItem() == "ALL-LS") {
+    } else if (d_membraneElement.getValue().getSelectedItem() == "ALL-LS") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixAllLS;
-    } else if (f_membraneElement.getValue().getSelectedItem() == "LST-Ret") {
+    } else if (d_membraneElement.getValue().getSelectedItem() == "LST-Ret") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixLSTRet;
-    } else if (f_membraneElement.getValue().getSelectedItem() == "ANDES-OPT") {
+    } else if (d_membraneElement.getValue().getSelectedItem() == "ANDES-OPT") {
         csMembrane = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixAndesOpt;
     } else {
-        msg_warning() << "Invalid membrane element '" << f_membraneElement.getValue().getSelectedItem() << "'" ;
+        msg_warning() << "Invalid membrane element '" << d_membraneElement.getValue().getSelectedItem() << "'" ;
         return;
     }
 
-    if (f_bendingElement.getValue().getSelectedItem() == "None") {
+    if (d_bendingElement.getValue().getSelectedItem() == "None") {
         csBending = NULL;
         for (unsigned int t=0; t<ti.size(); ++t) {
             for (unsigned int i=0; i<ti[t].measure.size(); ++i) {
                 ti[t].measure[i].Bb.clear();
             }
         }
-    } else if (f_bendingElement.getValue().getSelectedItem() == "DKT") {
+    } else if (d_bendingElement.getValue().getSelectedItem() == "DKT") {
         csBending = &TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT;
     } else {
-        msg_warning() << "Invalid bending plate element '" << f_bendingElement.getValue().getSelectedItem() << "'" ;
+        msg_warning() << "Invalid bending plate element '" << d_bendingElement.getValue().getSelectedItem() << "'" ;
         return;
     }
 
     // What to compute?
-    if (f_measure.getValue().getSelectedItem() == "None") {
+    if (d_measure.getValue().getSelectedItem() == "None") {
         bMeasureStrain = false;  bMeasureStress = false;
-    } else if (f_measure.getValue().getSelectedItem() == "Strain (norm)") {
+    } else if (d_measure.getValue().getSelectedItem() == "Strain (norm)") {
         bMeasureStrain = true;  bMeasureStress = false;
-    } else if (f_measure.getValue().getSelectedItem() == "Von Mises stress") {
+    } else if (d_measure.getValue().getSelectedItem() == "Von Mises stress") {
         bMeasureStrain = false;  bMeasureStress = true;
     } else {
-        msg_warning() << "Invalid value for measure'" << f_measure.getValue().getSelectedItem() << "'" ;
+        msg_warning() << "Invalid value for measure'" << d_measure.getValue().getSelectedItem() << "'" ;
         return;
     }
 
     if (bMeasureStrain || bMeasureStress)
     {
-        f_measuredValues.beginEdit()->resize(_topology->getNbPoints());
-        f_measuredValues.endEdit();
+        d_measuredValues.beginEdit()->resize(_topology->getNbPoints());
+        d_measuredValues.endEdit();
     }
 
     /// Prepare to store info in the triangle array
@@ -533,9 +536,9 @@ void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, co
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeMaterialStiffness()
 {
-    Real E = f_young.getValue(),
-         nu = f_poisson.getValue(),
-         t = f_thickness.getValue();
+    Real E = d_young.getValue(),
+        nu = d_poisson.getValue(),
+        t = d_thickness.getValue();
 
     materialMatrix[0][0] = 1.0;
     materialMatrix[0][1] = nu;
@@ -554,7 +557,10 @@ void TriangularShellForceField<DataTypes>::computeMaterialStiffness()
 
     // Integrate through the shell thickness
     materialMatrixMembrane *= t;
-    materialMatrixBending *= t*t*t / 12;
+    if (d_isShellveryThin.getValue())
+        materialMatrixBending *= t*t/1.;
+    else
+        materialMatrixBending *= t*t*t / 12;
 }
 
 
@@ -690,7 +696,7 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
 
     // Compute the measure (stress/strain)
     if (bMeasureStrain) {
-        type::vector<Real> &values = *f_measuredValues.beginEdit();
+        type::vector<Real> &values = *d_measuredValues.beginEdit();
         for (unsigned int i=0; i< tinfo->measure.size(); i++) {
             Vec3 strain = tinfo->measure[i].B * Dm + tinfo->measure[i].Bb * Db;
             // Norm from strain in x and y
@@ -698,9 +704,9 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
             values[ tinfo->measure[i].id ] = helper::rsqrt(
                 strain[0] * strain[0] + strain[1] * strain[1]);
         }
-        f_measuredValues.endEdit();
+        d_measuredValues.endEdit();
     } else if (bMeasureStress) {
-        type::vector<Real> &values = *f_measuredValues.beginEdit();
+        type::vector<Real> &values = *d_measuredValues.beginEdit();
         for (unsigned int i=0; i< tinfo->measure.size(); i++) {
             Vec3 stress = materialMatrix * tinfo->measure[i].B * Dm
                 + materialMatrix * tinfo->measure[i].Bb * Db;
@@ -709,7 +715,7 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
                   stress[0] * stress[0] - stress[0] * stress[1]
                 + stress[1] * stress[1] + 3 * stress[2] * stress[2]);
         }
-        f_measuredValues.endEdit();
+        d_measuredValues.endEdit();
     }
 
     // Transform forces back into global frame
@@ -992,7 +998,7 @@ template <class DataTypes>
 void TriangularShellForceField<DataTypes>::andesTemplate(StiffnessMatrix &K, const TriangleInformation &tinfo,
     const Real alpha, const AndesBeta &beta)
 {
-    Real h = f_thickness.getValue();
+    Real h = d_thickness.getValue();
     Real A4 = 4*tinfo.area;
 
     // Force-lumping matrix
@@ -1144,7 +1150,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixLSTRet(Stiffnes
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAndesOpt(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
-    Real beta0 = helper::rmax(0.5 - 2.0*f_poisson.getValue()*f_poisson.getValue(), 0.01);
+    Real beta0 = helper::rmax(0.5 - 2.0*d_poisson.getValue()*d_poisson.getValue(), 0.01);
     return andesTemplate(K, tinfo, 3.0/2.0, AndesBeta(beta0, 1.0, 2.0, 1.0, 0.0, 1.0, -1.0, -1.0, -1.0, -2.0));
 }
 
