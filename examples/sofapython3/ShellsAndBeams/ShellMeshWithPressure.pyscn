@@ -1,0 +1,146 @@
+import Sofa
+import SofaPython
+from math import sin,cos, sqrt
+
+
+import os
+path = os.path.dirname(os.path.abspath(__file__))+'/'
+
+class pressureControl(Sofa.PythonScriptController):
+    
+    def initGraph(self, node):
+            self.node = node
+
+    def onKeyPressed(self,c):
+            inputvalue = self.node.getObject('pressureConstraint').findData('value')
+            
+            if (c == "+"):
+               displacement = inputvalue.value[0][0] + 0.000001
+               inputvalue.value = str(displacement)
+               
+            elif (c == "-"):
+               displacement = inputvalue.value[0][0] -  0.000001
+               if(displacement < 0):
+		  displacement = 0
+               inputvalue.value = str(displacement)
+ 
+
+
+
+print "**************************** README **********************************"
+print "This scene makes a membrane cylinder with a part that is rigidified"
+print "**********************************************************************"
+
+
+def transformTableInString(Table):
+	sizeT =  len(Table);
+	strOut= ' ';
+	for p in range(sizeT):
+		strOut = strOut+ str(Table[p])+' '
+
+	return strOut
+
+
+#Takes a n dimensional vector of vector and transform it into a simple vector 
+def transformDoubleTableInSimpleTable(Table):
+    size0 =  len(Table);
+
+    # count the size
+    size=0;
+    for i in range(size0):
+        size = size+len(Table[i]);
+
+    TableOut=[0]*size;
+    s=0;
+    for i in range(size0):
+        for j in range(len(Table[i])):
+            TableOut[s] = Table[i][j];
+            s=s+1;
+
+    return TableOut
+
+
+
+def createScene(rootNode):
+    rootNode.createObject('RequiredPlugin', name='SoftRobots')
+    rootNode.createObject('RequiredPlugin', name='BeamAdapter')
+    rootNode.createObject('RequiredPlugin', name='SofaPython')
+    rootNode.createObject('RequiredPlugin', name='ModelOrderReduction', pluginName='ModelOrderReduction')
+    rootNode.createObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels showForceFields showInteractionForceFields hideWireframe')
+    rootNode.findData('gravity').value= '0. -9.8 0';
+    rootNode.findData('dt').value= '0.1';
+
+    #rootNode.createObject('FreeMotionAnimationLoop')
+    #rootNode.createObject('GenericConstraintSolver', maxIterations='1000', tolerance='1e-15')
+    rootNode.createObject('CollisionPipeline', verbose='0')
+    rootNode.createObject('CollisionResponse', response='FrictionContact', responseParams='mu=0.0')
+    rootNode.createObject('BruteForceDetection', name='N2')
+    
+    alarmDistance=0.003
+    rootNode.createObject('LocalMinDistance', name="Proximity", alarmDistance=alarmDistance, contactDistance="0.001", angleCone='0.1')
+
+    rootNode.createObject('BackgroundSetting', color='0 0.168627 0.211765')
+    rootNode.createObject('OglSceneFrame', style="Arrows", alignment="TopRight")
+    
+    
+    
+    #########################################
+    # Mapped Pseudo Beam 
+    #########################################
+    radius=0.02
+    length=1
+    PI= 3.14159265359
+    
+    nx=3 
+    ny=3 
+    nz=10
+    
+    epsilon='1e-6'
+    
+
+    youngModulusTri=1e3   
+    
+    
+    cylinder = rootNode.createChild('cylinderMechanics')
+    cylinder.createObject('EulerImplicitSolver', firstOrder="0", rayleighStiffness="5e-1", rayleighMass='1e-2')
+    cylinder.createObject('CGLinearSolver' ,  iterations='1000', tolerance='1.0e-10', threshold='1e-9') 
+    #cylinder.createObject('PCGLinearSolver', name='linearSolver', iterations='10', tolerance='1.0e-18', preconditioners="preconditioner")
+    #cylinder.createObject('SparseLDLSolver', name='preconditioner', template='CompressedRowSparseMatrix3d') 
+    #cylinder.createObject('GenericConstraintCorrection', solverName="preconditioner")
+    
+    
+    pseudoBeam=cylinder.createChild('pseudoBeam')
+    
+    
+    
+    pseudoBeam.createObject('RegularGrid', n='2 1 1', min='0 0 0', max=str(length)+' 0 0', name='rg')
+    pseudoBeam.createObject('MechanicalObject', template='Rigid')
+    pseudoBeam.createObject('BeamInterpolation', name='tubeInterpolation', radius=radius, straight='1', defaultYoungModulus='0')
+    ##########################
+    # just for visualization #
+    #pseudoBeam.createObject('AdaptiveBeamForceFieldAndMass', massDensity=epsilon)
+    pseudoBeam.createObject('UniformMass', totalMass='0.001')
+    ###########################
+    fix = pseudoBeam.createObject('RestShapeSpringsForceField', points='0', stiffness='1e9', angularStiffness='1e9', drawSpring='1')
+    
+    
+    trisurface=pseudoBeam.createChild('TriSurface')
+    #engine=trisurface.createObject('GenerateCylinder',name='engine' ,origin='0 0 0', radius=radius, height=1, template='Vec3d', resHeight=nz, resCircumferential=(nx+ny)*2, openSurface='0')
+    #engine2=trisurface.createObject('TransformEngine', name='Tengine', translation='0 0 0', quaternion=[0, sin(PI/4), 0, cos(PI/4)] , input_position='@engine.output_TetrahedraPosition')
+    
+    trisurface.createObject('MeshObjLoader', filename='mesh/cylinder.obj', name='loader', rotation='0 0 -90', scale='0.1', triangulate='1')
+    #trisurface.createObject('Mesh', src='@loader')
+    triContainer=trisurface.createObject('TriangleSetTopologyContainer', name='triContainer',src='@loader')
+    trisurface.createObject('MechanicalObject', name='slaveMembraneNodes')
+    trisurface.createObject('Triangle')
+    trisurface.createObject('TriangleFEMForceField', youngModulus=youngModulusTri)
+    #trisurface.createObject('AdaptiveBeamMapping', useCurvAbs='1', interpolation='@../tubeInterpolation') 
+    trisurface.createObject('SkinningMapping') 
+    
+    
+    #trisurface.createObject('OglModel')
+
+   
+    
+    return rootNode 
+    

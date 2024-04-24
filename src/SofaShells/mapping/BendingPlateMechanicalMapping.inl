@@ -545,11 +545,11 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
         Vec3 pointTriangle2 = inVertices[ inTriangles[t][1] ];
         Vec3 pointTriangle3 = inVertices[ inTriangles[t][2] ];
 
-        const Vector3 AB = pointTriangle2-pointTriangle1;
-        const Vector3 AC = pointTriangle3-pointTriangle1;
-        const Vector3 AP = point-pointTriangle1;
+        const Vec3 AB = pointTriangle2-pointTriangle1;
+        const Vec3 AC = pointTriangle3-pointTriangle1;
+        const Vec3 AP = point-pointTriangle1;
         Matrix2 A;
-        Vector2 b;
+        Vec2 b;
 
         // We want to find alpha,beta so that:
         // AQ = AB*alpha+AC*beta
@@ -578,7 +578,7 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
         Real threshold = 1e-12;
         if (alpha >= 0 && beta >= 0 && alpha + beta <= 1 )
         {
-            const Vector3 PQ = AB * alpha + AC * beta - AP;
+            const Vec3 PQ = AB * alpha + AC * beta - AP;
 
             Real distance = PQ.norm2();
             if (distance < minimumDistance)

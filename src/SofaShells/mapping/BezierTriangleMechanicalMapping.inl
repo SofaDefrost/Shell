@@ -569,8 +569,8 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
         Vec3 pointTriangle2 = inVertices[ inTriangles[t][1] ];
         Vec3 pointTriangle3 = inVertices[ inTriangles[t][2] ];
 
-        const Vector3 AB = pointTriangle2-pointTriangle1;
-        const Vector3 AC = pointTriangle3-pointTriangle1;
+        const Vec3 AB = pointTriangle2-pointTriangle1;
+        const Vec3 AC = pointTriangle3-pointTriangle1;
 
         Vec3 bary;
         computeBaryCoefs(bary, point,
@@ -583,7 +583,7 @@ typename BezierTriangleMechanicalMapping<TIn, TOut>::Real BezierTriangleMechanic
             continue;
         }
 
-        Vector3 N = cross(AB, AC);
+        Vec3 N = cross(AB, AC);
         //Real distance = N*point - N*pointTriangle1;
         Real distance = N*(point - pointTriangle1);
         distance = distance*distance / N.norm2();

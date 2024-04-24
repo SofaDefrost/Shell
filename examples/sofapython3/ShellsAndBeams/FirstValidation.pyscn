@@ -1,0 +1,339 @@
+import Sofa
+import SofaPython
+from math import sin,cos, sqrt
+
+
+import os
+path = os.path.dirname(os.path.abspath(__file__))+'/'
+
+radius=9.5
+PI= 3.14159265359
+dt=0.001
+gravity = 9810
+
+
+
+class measurementControl(Sofa.PythonScriptController):
+    
+    def initGraph(self, node):
+        self.node = node
+        self.time=0;  # time will go between 0 and time_nextStep 
+        
+        
+        self.loadingTable = [0,1,2,3,4,5,6,7,8,9,10,10] # loading 
+        self.step=0;
+        
+        self.pressure =  6894.0* 0;
+        self.forceZ = 0;
+        
+    def onEndAnimationStep(self, dt):
+        self.time= self.time+dt;
+        time_loading = 0.1;
+        time_nextStep = 0.4;
+        
+        time_loadingPressure=0.1;
+        
+        
+        
+        
+        if (self.step == 0):
+            # progressive loading of the pressure
+            loading_factor = self.time/ time_loadingPressure
+            
+            pressure = loading_factor* self.pressure
+            
+            pressurevalue = self.node.getObject('pressureForceField').findData('pressure')    
+            forceValue1 = self.node.getObject('pressure_load1').findData('totalForce')
+            forceValue2 = self.node.getObject('pressure_load2').findData('totalForce')
+            
+            pressurevalue.value = str(pressure)
+            Force = radius*radius*PI*pressure; 
+            forceValue2.value = str(Force)+' 0 0 0 0 0'
+            forceValue1.value = str(-Force)+' 0 0 0 0 0' 
+            
+            if (self.time >= time_loadingPressure):
+                self.time = 0; 
+                self.step=1; 
+            
+            return;
+            
+            
+            
+        
+        
+        if (self.time< time_loading):
+            # progressive loading + then stabilisation 
+            loading_factor = self.time/ time_loading # between 0 and 1 
+            weight  =  self.loadingTable[self.step-1]*(1-loading_factor) + self.loadingTable[self.step]*loading_factor;       
+            self.forceZ = -weight * gravity;
+            
+            forceValue1 = self.node.getObject('load').findData('totalForce')
+            forceValue1.value = '0 0 '+str(self.forceZ)+'  0 0 0'
+            
+            
+        elif (self.time >= time_nextStep):
+            # store the measurement 
+            
+            print '************ measure step '+str(self.step)+ '**************'
+            self.step = self.step+1
+         
+            
+            if (self.step > len(self.loadingTable)-1) : 
+                self.step = self.step-1;
+                  
+            self.time = 0.0
+            
+            
+            
+            position = self.node.getObject('MechanicalObject').findData('position').value
+            rest_position= self.node.getObject('MechanicalObject').findData('rest_position').value
+            indices = self.node.getObject('roi4').findData('indices').value;
+            
+            #print position
+            #print indices
+            
+            #print position[2][2]
+            i1 = indices[0][0];
+            i2 = indices[1][0]
+            deflection=0.5*(position[i1][2] - rest_position[i1][2]) + 0.5*(position[i2][2] - rest_position[i2][2]) 
+            
+            print 'force = '+str(self.forceZ)
+            print 'dx = '+str(deflection)
+
+            
+
+        
+        
+        
+
+class pressureControl(Sofa.PythonScriptController):
+    
+    def initGraph(self, node):
+            self.node = node
+            #self.shellNode = self.node.getParents()[0]
+            
+        
+
+    def onKeyPressed(self,c):
+            pressurevalue = self.node.getObject('pressureForceField').findData('pressure')
+
+            
+            
+            
+            forceValue1 = self.node.getObject('pressure_load1').findData('totalForce')
+            forceValue2 = self.node.getObject('pressure_load2').findData('totalForce')
+            
+            
+
+            if (c == "+"):
+               pressure = pressurevalue.value + 6894
+               pressurevalue.value = str(pressure)
+               Force = radius*radius*PI*pressure; 
+               forceValue2.value = str(Force)+' 0 0 0 0 0'
+               forceValue1.value = str(-Force)+' 0 0 0 0 0'
+
+               
+            elif (c == "-"):
+               pressure = pressurevalue.value -  6894
+               if(pressure < 0):
+                   pressure = 0
+               
+               pressurevalue.value = str(pressure)
+               
+               Force = radius*radius*PI*pressure; 
+               forceValue2.value = str(Force)+' 0 0 0 0 0' 
+               forceValue1.value = str(-Force)+' 0 0 0 0 0'
+
+
+print "**************************** README **********************************"
+print "This scene makes a shell model (with rigid dofs) "
+print "It assumes that the input mesh is a cylinder alligned with the axis x"
+print "the mesh is symetric and can be loaded on nodes positioned at x=0"
+print "**********************************************************************"
+
+
+def transformTableInString(Table):
+	sizeT =  len(Table);
+	strOut= ' ';
+	for p in range(sizeT):
+		strOut = strOut+ str(Table[p])+' '
+
+	return strOut
+
+
+#Takes a n dimensional vector of vector and transform it into a simple vector 
+def transformDoubleTableInSimpleTable(Table):
+    size0 =  len(Table);
+
+    # count the size
+    size=0;
+    for i in range(size0):
+        size = size+len(Table[i]);
+
+    TableOut=[0]*size;
+    s=0;
+    for i in range(size0):
+        for j in range(len(Table[i])):
+            TableOut[s] = Table[i][j];
+            s=s+1;
+
+    return TableOut
+
+
+
+def createScene(rootNode):
+    rootNode.createObject('RequiredPlugin', name='SoftRobots')
+    rootNode.createObject('RequiredPlugin', name='BeamAdapter')
+    rootNode.createObject('RequiredPlugin', name='SofaPython')
+    rootNode.createObject('RequiredPlugin', name='SofaShells')
+    rootNode.createObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels showForceFields showInteractionForceFields hideWireframe')
+    rootNode.findData('gravity').value= '0. 0 0';
+    
+    
+    
+    rootNode.findData('dt').value= dt;
+
+    rootNode.createObject('FreeMotionAnimationLoop')
+    rootNode.createObject('GenericConstraintSolver', maxIterations='1000', tolerance='1e-15')
+    rootNode.createObject('CollisionPipeline', verbose='0')
+    rootNode.createObject('CollisionResponse', response='FrictionContact', responseParams='mu=0.5')
+    rootNode.createObject('BruteForceDetection', name='N2')
+    
+    alarmDistance=0.2
+    rootNode.createObject('LocalMinDistance', name="Proximity", alarmDistance=alarmDistance, contactDistance="0.1", angleCone='0.1')
+
+    rootNode.createObject('BackgroundSetting', color='0 0.168627 0.211765' , image =path+'grille.jpeg' )
+    rootNode.createObject('OglSceneFrame', style="Arrows", alignment="TopRight")
+    
+    
+    ############## JE SUIS LA !!!!
+
+    
+    #########################################
+    # Mapped Pseudo Beam 
+    #########################################
+    # distance in mm
+    # poid en gramme
+    # conversion PSI en unite de la scene 
+    # 1 PSI = 6894.76 Pa  =   6894.76 kg/m.s^2  = 6894.76 g/mm.s^2
+    
+    # 4v = 1 PSI
+    # 7v = 2 PSI
+    # 10v = 3 PSI
+    
+    # https://www.makeitfrom.com/material-properties/Low-Density-Polyethylene-LDPE
+    # Young Modulus = 0.3 GPa
+    # Shear Modulus = 0.21 GPa
+    
+    # density = 0.92 g/cm^3   => 0.00092g/mm^3
+    
+    YoungModulus=2e8
+    density = 0.00092 ;
+    Thickness= 0.07;
+    length=500
+
+    volume = 2*PI*radius*length* Thickness
+    
+    # measured mass= 2.88
+    mass = volume*density
+    
+    #mass='10'
+
+    
+    PSI = 1;
+
+    # in grams
+    weight = 1;
+    
+    
+    
+    
+
+    
+    
+    initPressure= 0* 6894.0* PSI;
+    
+    Force_end = radius*radius*PI*initPressure;
+
+    
+    cylinder = rootNode.createChild('cylinderMechanics')
+    cylinder.createObject('EulerImplicitSolver', firstOrder="0", rayleighStiffness=0.02, rayleighMass='10')
+    #cylinder.createObject('CGLinearSolver' ,  iterations='1000', tolerance='1.0e-10', threshold='1e-9') 
+    #cylinder.createObject('PCGLinearSolver', name='linearSolver', iterations='10', tolerance='1.0e-18', preconditioners="preconditioner")
+    cylinder.createObject('SparseLDLSolver', name='preconditioner', template='CompressedRowSparseMatrix3d') 
+    cylinder.createObject('GenericConstraintCorrection', solverName="preconditioner")
+    
+    
+    shellCylinder=cylinder.createChild('shellCylinder')
+    loader=shellCylinder.createObject('GIDMeshLoader', name='loader', filename=path+'winstonTube2Dim_mm.msh', scale='1', rotation='90 0 0');
+    shellCylinder.createObject('Mesh', src='@loader')
+    shellCylinder.createObject('Vertex2Frame', position='@loader.position', normals='@loader.normals', name='engine', invertNormals='1', template='Rigid3d') 
+    shellCylinder.createObject('MechanicalObject', template='Rigid', position='@engine.frames', showObject='1', showObjectScale='1')
+    
+    shellCylinder.createObject('UniformMass', totalMass= mass)
+    shellCylinder.createObject('TriangularShellForceField', measure='Von Mises Stress', thickness=Thickness,  youngModulus=YoungModulus)
+    
+    
+    # fixation 
+    shellCylinder.createObject('BoxROI', name='roi1', box= '-0.1 -10 -10 0.1 10 10  ', drawBoxes='true')
+    
+    #enfore symmetry
+    shellCylinder.createObject('BoxROI', name='roi2', box= '0.1 -0.1 -30  501 0.1 30  ', drawBoxes='true')
+    
+    #forces at extremity 
+    shellCylinder.createObject('BoxROI', name='roi3', box= '499 -10 -10 501 10 10   ', drawBoxes='true')
+    
+    #tip points (to measure the deflection)
+    shellCylinder.createObject('BoxROI', name='roi4', box= '499 -0.1 -30  501 0.1 30 ', drawBoxes='true')
+    
+    
+    
+    
+    gravity = -9810;
+    
+    
+    # progressive change in the loads*****************************
+    shellCylinder.createObject('PythonScriptController', classname="measurementControl")   
+    shellCylinder.createObject('ConstantForceField', name='load', totalForce='0 0 0 0 0 0', arrowSizeCoef='0.01', indices='@roi3.indices')
+    
+    
+    # symetric pressure load:
+    pressure_Force= [Force_end,0,0,0,0,0];
+    
+    shellCylinder.createObject('ConstantForceField', name='pressure_load2', totalForce=pressure_Force, arrowSizeCoef='0.0002', indices='@roi3.indices')
+    pressure_Force= [-Force_end,0,0,0,0,0];
+    
+    shellCylinder.createObject('ConstantForceField', name='pressure_load1', totalForce=pressure_Force, arrowSizeCoef='0.0002', indices='@roi1.indices')
+    
+    
+    
+    # pressure FF*****************************
+    shellCylinder.createObject('PythonScriptController', classname="pressureControl")    
+    shellCylinder.createObject('SurfacePressureForceField', template='Rigid3d', name='pressureForceField', pressure=initPressure, useTangentStiffness='0')    
+    # ****************************************
+    
+    shellCylinder.createObject('FixedConstraint', indices='@roi1.indices')
+    shellCylinder.createObject('PartialFixedConstraint', indices='@roi2.indices', fixedDirections='0 1 0 1 0 1')
+    #shellCylinder.createObject('PartialFixedConstraint', indices='@roi3.indices', fixedDirections='0 1 1 1 0 0')
+    #shellCylinder.createObject('PartialFixedConstraint', indices='@roi2.indices', fixedDirections='1 0 0 0 0 0')
+    
+    
+    
+    
+    
+    triSurf = shellCylinder.createChild('TriSurface')
+    triSurf.createObject('MechanicalObject', name='slaveNodes', src='@../loader')
+
+    
+    triSurf.createObject('Triangle', bothSide='0', selfCollision='1')
+    triSurf.createObject('Line', bothSide='0', selfCollision='1')
+    triSurf.createObject('Point', bothSide='0', selfCollision='1')
+    
+    triSurf.createObject('IdentityMapping' )
+    
+    
+    
+    
+    return rootNode     
+    
+   
