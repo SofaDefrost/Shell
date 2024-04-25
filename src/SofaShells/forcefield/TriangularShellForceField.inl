@@ -49,23 +49,21 @@
 
 namespace sofa
 {
-	namespace component
-	{
-		namespace forcefield
-		{
-			using namespace sofa::type;
-            using namespace	sofa::core::topology;
+namespace component
+{
+namespace forcefield
+{
+using namespace sofa::type;
+using namespace	sofa::core::topology;
 
 // --------------------------------------------------------------------------------------
 // ---  Topology Creation/Destruction functions
 // --------------------------------------------------------------------------------------
 template< class DataTypes>
-void TriangularShellForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::type::vector<unsigned int> &, const sofa::type::vector<double> &)
+void TriangularShellForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunction(unsigned int triangleIndex, TriangleInformation &, const Triangle &t, const sofa::type::vector<unsigned int> &, const sofa::type::vector<double> &, const VecCoord& x0)
 {
     if (ff)
-    {
-        ff->initTriangle(triangleIndex, t[0], t[1], t[2]);
-    }
+        ff->initTriangle(triangleIndex, t[0], t[1], t[2], x0);
 }
 
 
@@ -79,39 +77,40 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
     , d_thickness(initData(&d_thickness,(Real)0.1,"thickness","Thickness of the plates"))
     , d_membraneElement(initData(&d_membraneElement, "membraneElement", "The membrane element to use"))
     , d_bendingElement(initData(&d_bendingElement, "bendingElement", "The bending plate element to use"))
-, f_corotated(initData(&f_corotated, true, "corotated", "Compute forces in corotational frame"))
+    , f_corotated(initData(&f_corotated, true, "corotated", "Compute forces in corotational frame"))
     , d_measure(initData(&d_measure, "measure", "Compute the strain or stress"))
     , d_measuredValues(initData(&d_measuredValues, "measuredValues", "Measured values for stress or strain"))
-, triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
     ,d_isShellveryThin(initData(&d_isShellveryThin, false, "isShellveryThin", "This bool is to adapt "
                                                                                "computation in case we are using verry tiny(thickness) shell element"))
+    , d_use_rest_position(initData(&d_use_rest_position, true, "use_rest_position", "Use the rest position inteat of using postion to update the restposition"))
+    , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 
 {
     d_membraneElement.beginEdit()->setNames(7,
-        "None",     // No membrane element
-        "CST",      // Constant strain triangle
-        // ANDES templates
-        "ALL-3I",   // Allman 88 element integrated by 3-point interior rule
-        "ALL-3M",   // Allman 88 element integrated by 3-midpoint rule
-        "ALL-LS",   // Allman 88 element, least-square strain fit
-        "LST-Ret",  // Retrofitted LST with α_b=1⁄4
-        "ANDES-OPT" // Optimal ANDES element
-        );
+                                            "None",     // No membrane element
+                                            "CST",      // Constant strain triangle
+                                            // ANDES templates
+                                            "ALL-3I",   // Allman 88 element integrated by 3-point interior rule
+                                            "ALL-3M",   // Allman 88 element integrated by 3-midpoint rule
+                                            "ALL-LS",   // Allman 88 element, least-square strain fit
+                                            "LST-Ret",  // Retrofitted LST with α_b=1⁄4
+                                            "ANDES-OPT" // Optimal ANDES element
+                                            );
     d_membraneElement.beginEdit()->setSelectedItem("ANDES-OPT");
     d_membraneElement.endEdit();
 
     d_bendingElement.beginEdit()->setNames(2,
-        "None",     // No bending element
-        "DKT"       // Discrete Kirchhoff Triangle
-        );
+                                           "None",     // No bending element
+                                           "DKT"       // Discrete Kirchhoff Triangle
+                                           );
     d_bendingElement.beginEdit()->setSelectedItem("DKT");
     d_bendingElement.endEdit();
 
     d_measure.beginEdit()->setNames(3,
-        "None",                 // Draw nothing
-        "Strain (norm)",        // L_2 norm of strain in x and y directions
-        "Von Mises stress"      // Von Mises stress criterion
-        );
+                                    "None",                 // Draw nothing
+                                    "Strain (norm)",        // L_2 norm of strain in x and y directions
+                                    "Von Mises stress"      // Von Mises stress criterion
+                                    );
     d_measure.beginEdit()->setSelectedItem("None");
     d_measure.endEdit();
 
@@ -140,8 +139,8 @@ void TriangularShellForceField<DataTypes>::init()
 
     if (_topology->getNbTriangles()==0)
     {
-            msg_warning() << "TriangularShellForceField: object must have a Triangular Set Topology.";
-            return;
+        msg_warning() << "TriangularShellForceField: object must have a Triangular Set Topology.";
+        return;
     }
 
     // Create specific handler for TriangleData
@@ -221,13 +220,22 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     /// Prepare to store info in the triangle array
     ti.resize(_topology->getNbTriangles());
 
-    for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
+    const auto use_rest_position = d_use_rest_position.getValue();
+
+    if (use_rest_position)
     {
-
-        triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
-            (const sofa::type::vector< unsigned int >)0, (const sofa::type::vector< double >)0);
+        const VecCoord& x0 =this->mstate->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
+        for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
+            triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
+                                                 (const sofa::type::vector< unsigned int >)0, (const sofa::type::vector< double >)0, x0);
     }
-
+    else
+    {
+        const VecCoord& x0 =this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+        for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
+            triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
+                                                 (const sofa::type::vector< unsigned int >)0, (const sofa::type::vector< double >)0, x0);
+    }
     triangleInfo.endEdit();
 }
 
@@ -241,10 +249,10 @@ void TriangularShellForceField<DataTypes>::addForce(const sofa::core::Mechanical
     const VecCoord& p  =   dataX.getValue()  ;
 
     //dmsg_info() << "--addForce" ;
-//    sofa::helper::system::thread::ctime_t start, stop;
-//    sofa::helper::system::thread::CTime timer;
-//
-//    start = timer.getTime();
+    //    sofa::helper::system::thread::ctime_t start, stop;
+    //    sofa::helper::system::thread::CTime timer;
+    //
+    //    start = timer.getTime();
 
     int nbTriangles=_topology->getNbTriangles();
     f.resize(p.size());
@@ -256,8 +264,8 @@ void TriangularShellForceField<DataTypes>::addForce(const sofa::core::Mechanical
 
     dataF.endEdit();
 
-//    stop = timer.getTime();
-//    dmsg_info() << "---------- time addForce = " << stop-start ;
+    //    stop = timer.getTime();
+    //    dmsg_info() << "---------- time addForce = " << stop-start ;
 }
 
 // --------------------------------------------------------------------------------------
@@ -273,10 +281,10 @@ void TriangularShellForceField<DataTypes>::addDForce(const sofa::core::Mechanica
 
     //dmsg_info() << "--addDForce" ;
 
-//    sofa::helper::system::thread::ctime_t start, stop;
-//    sofa::helper::system::thread::CTime timer;
-//
-//    start = timer.getTime();
+    //    sofa::helper::system::thread::ctime_t start, stop;
+    //    sofa::helper::system::thread::CTime timer;
+    //
+    //    start = timer.getTime();
 
     int nbTriangles=_topology->getNbTriangles();
     df.resize(dp.size());
@@ -288,8 +296,8 @@ void TriangularShellForceField<DataTypes>::addDForce(const sofa::core::Mechanica
 
     datadF.endEdit();
 
-//    stop = timer.getTime();
-//    dmsg_info() << "time addDForce = " << stop-start ;
+    //    stop = timer.getTime();
+    //    dmsg_info() << "time addDForce = " << stop-start ;
 }
 
 //#define PRINT
@@ -308,7 +316,7 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
 
     double kFactor = mparams->kFactor();
 
-    #ifdef PRINT
+#ifdef PRINT
     r.matrix->clear();
     dmsg_info() << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" <<
         " kFactor=" << kFactor ;
@@ -321,43 +329,43 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
         }
         dmsg_info() ;
     }
-    #endif
+#endif
     // XXX: Matrix not necessarily empty!
 
     for(sofa::Index t=0 ; t != _topology->getNbTriangles() ; ++t)
     {
-            const TriangleInformation &tinfo = triangleInf[t];
-            const Triangle triangle = _topology->getTriangle(t);
+        const TriangleInformation &tinfo = triangleInf[t];
+        const Triangle triangle = _topology->getTriangle(t);
 
-            convertStiffnessMatrixToGlobalSpace(K_gs, tinfo);
+        convertStiffnessMatrixToGlobalSpace(K_gs, tinfo);
 
-            // find index of node 1
-            for (n1=0; n1<3; n1++)
+        // find index of node 1
+        for (n1=0; n1<3; n1++)
+        {
+            node1 = triangle[n1];
+
+            for(i=0; i<6; i++)
             {
-                    node1 = triangle[n1];
+                ROW = r.offset+6*node1+i;
+                row = 6*n1+i;
+                // find index of node 2
+                for (n2=0; n2<3; n2++)
+                {
+                    node2 = triangle[n2];
 
-                    for(i=0; i<6; i++)
+                    for (j=0; j<6; j++)
                     {
-                            ROW = r.offset+6*node1+i;
-                            row = 6*n1+i;
-                            // find index of node 2
-                            for (n2=0; n2<3; n2++)
-                            {
-                                    node2 = triangle[n2];
-
-                                    for (j=0; j<6; j++)
-                                    {
-                                            COLUMN = r.offset+6*node2+j;
-                                            column = 6*n2+j;
-                                            r.matrix->add(ROW, COLUMN, - K_gs[row][column] * kFactor);
-                                            //r.matrix->add(ROW, COLUMN, K_gs[row][column]);
-                                    }
-                            }
+                        COLUMN = r.offset+6*node2+j;
+                        column = 6*n2+j;
+                        r.matrix->add(ROW, COLUMN, - K_gs[row][column] * kFactor);
+                        //r.matrix->add(ROW, COLUMN, K_gs[row][column]);
                     }
+                }
             }
+        }
     }
 
-    #ifdef PRINT
+#ifdef PRINT
     dmsg_info() << "Global matrix (" << r.matrix->rowSize() << "x" << r.matrix->colSize() << ")" <<
         " kFactor=" << kFactor ;
     for (unsigned int i=0; i<r.matrix->rowSize(); i++)
@@ -369,7 +377,7 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
         }
         dmsg_info() ;
     }
-    #endif
+#endif
 
     triangleInfo.endEdit();
 }
@@ -379,7 +387,7 @@ void TriangularShellForceField<DataTypes>::addKToMatrix(const core::MechanicalPa
 // --- Store the initial position of the nodes
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index&a, const Index&b, const Index&c)
+void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index&a, const Index&b, const Index&c, const VecCoord& x0)
 {
     type::vector<TriangleInformation>& ti = *(triangleInfo.beginEdit());
     TriangleInformation *tinfo = &ti[i];
@@ -394,9 +402,6 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     tinfo->measure[1].id = b; tinfo->measure[1].point = Vec3(1,0,0);
     tinfo->measure[2].id = c; tinfo->measure[2].point = Vec3(0,1,0);
 
-    // Gets vertices of rest positions
-    const VecCoord& x0 = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
-
     // Rotation from global to local frame
     Transformation R0;
 
@@ -408,7 +413,7 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     if (f_corotated.getValue()) {
         // Center the element
         Vec3 center = (tinfo->restPositions[0] + tinfo->restPositions[1] +
-            tinfo->restPositions[2])/3;
+                       tinfo->restPositions[2])/3;
 
         tinfo->restPositions[0] -= center;
         tinfo->restPositions[1] -= center;
@@ -426,7 +431,7 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     tinfo->restPositions[1] = R0 * tinfo->restPositions[1];
     tinfo->restPositions[2] = R0 * tinfo->restPositions[2];
 
-    // Rest orientations -- inverted (!)
+// Rest orientations -- inverted (!)
 #ifdef CRQUAT
     tinfo->restOrientationsInv[0] = (tinfo->Q * x0[a].getOrientation()).inverse();
     tinfo->restOrientationsInv[1] = (tinfo->Q * x0[b].getOrientation()).inverse();
@@ -584,7 +589,7 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
 
     if (f_corotated.getValue()) {
         Vec3 center = (tinfo->deformedPositions[0] + tinfo->deformedPositions[1] +
-            tinfo->deformedPositions[2])/3;
+                       tinfo->deformedPositions[2])/3;
 
         tinfo->deformedPositions[0] -= center;
         tinfo->deformedPositions[1] -= center;
@@ -608,7 +613,7 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     Vec3 uB = tinfo->deformedPositions[1] - tinfo->restPositions[1];
     Vec3 uC = tinfo->deformedPositions[2] - tinfo->restPositions[2];
 
-    // Rotations
+// Rotations
 #ifdef CRQUAT
     Quat qA = (tinfo->Q * x[a].getOrientation()) * tinfo->restOrientationsInv[0];
     Quat qB = (tinfo->Q * x[b].getOrientation()) * tinfo->restOrientationsInv[1];
@@ -685,7 +690,7 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
         dmsg_info() << "E: " << elementIndex << "\tu: " << Dm << "\tf: " << Fm << "\n";
         dmsg_info() << "E: " << elementIndex << "\tuB: " << Db << "\tfB: " << Fb << "\n";
         dmsg_info() << "   xg [ " << a << "/" << b << "/" << c << " - "
-            << x[a] << ", " << x[b] << ", " << x[c] << "\n";
+                    << x[a] << ", " << x[b] << ", " << x[c] << "\n";
         dmsg_info() << "   xl [ " << tinfo->deformedPositions[0] << ", " << tinfo->deformedPositions[1] << ", " << tinfo->deformedPositions[2] << "\n";
         dmsg_info() << "   fg: " <<
             tinfo->Rt * Vec3(Fm[0], Fm[1], Fb[0]) << " " << tinfo->R * Vec3(Fb[1], Fb[2], Fm[2]) << " | " <<
@@ -709,10 +714,10 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
         type::vector<Real> &values = *d_measuredValues.beginEdit();
         for (unsigned int i=0; i< tinfo->measure.size(); i++) {
             Vec3 stress = materialMatrix * tinfo->measure[i].B * Dm
-                + materialMatrix * tinfo->measure[i].Bb * Db;
+                          + materialMatrix * tinfo->measure[i].Bb * Db;
             // Von Mises stress criterion (plane stress)
             values[ tinfo->measure[i].id ] = helper::rsqrt(
-                  stress[0] * stress[0] - stress[0] * stress[1]
+                stress[0] * stress[0] - stress[0] * stress[1]
                 + stress[1] * stress[1] + 3 * stress[2] * stress[2]);
         }
         d_measuredValues.endEdit();
@@ -840,9 +845,9 @@ void TriangularShellForceField<DataTypes>::applyStiffness(VecDeriv& v, const Vec
         dmsg_info() << "E: " << elementIndex << "\tdu: " << Dm << "\tdf: " << dFm << "\n";
         dmsg_info() << "E: " << elementIndex << "\tduB: " << Db << "\tdfB: " << dFb << "\n";
         dmsg_info() << "   dfg: " <<
-             tinfo.Rt * Vec3(dFm[0], dFm[1], dFb[0]) * kFactor << " " << tinfo.Rt * Vec3(dFb[1], dFb[2], dFm[2]) * kFactor << " | " <<
-             tinfo.Rt * Vec3(dFm[3], dFm[4], dFb[3]) * kFactor << " " << tinfo.Rt * Vec3(dFb[4], dFb[5], dFm[5]) * kFactor << " | " <<
-             tinfo.Rt * Vec3(dFm[6], dFm[7], dFb[6]) * kFactor << " " << tinfo.Rt * Vec3(dFb[7], dFb[8], dFm[8]) * kFactor ;
+            tinfo.Rt * Vec3(dFm[0], dFm[1], dFb[0]) * kFactor << " " << tinfo.Rt * Vec3(dFb[1], dFb[2], dFm[2]) * kFactor << " | " <<
+            tinfo.Rt * Vec3(dFm[3], dFm[4], dFb[3]) * kFactor << " " << tinfo.Rt * Vec3(dFb[4], dFb[5], dFm[5]) * kFactor << " | " <<
+            tinfo.Rt * Vec3(dFm[6], dFm[7], dFb[6]) * kFactor << " " << tinfo.Rt * Vec3(dFb[7], dFb[8], dFm[8]) * kFactor ;
     }
 
     // Transform into global frame
@@ -996,7 +1001,7 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixCST(StiffnessMa
 // See for example: C. A. Felippa, A study of optimal membrane triangles with drilling freedoms, 2003
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::andesTemplate(StiffnessMatrix &K, const TriangleInformation &tinfo,
-    const Real alpha, const AndesBeta &beta)
+                                                         const Real alpha, const AndesBeta &beta)
 {
     Real h = d_thickness.getValue();
     Real A4 = 4*tinfo.area;
@@ -1020,8 +1025,8 @@ void TriangularShellForceField<DataTypes>::andesTemplate(StiffnessMatrix &K, con
     L[2][1] = alpha/6.0*(-tinfo.d[1][0])*(tinfo.d[2][0] - tinfo.d[0][0]);
     L[2][2] = alpha/3.0*(tinfo.d[0][0]*tinfo.d[0][1] - tinfo.d[2][0]*tinfo.d[2][1]),
 
-    // y31,    0,      x13,
-    L[3][0] = tinfo.d[2][1];
+        // y31,    0,      x13,
+        L[3][0] = tinfo.d[2][1];
     L[3][1] = 0;
     L[3][2] = -tinfo.d[2][0];
 
@@ -1062,10 +1067,10 @@ void TriangularShellForceField<DataTypes>::andesTemplate(StiffnessMatrix &K, con
 
     // Transformation matrix from DOFs to hierarchical drilling freedoms
     Mat<3,9, Real> T(
-            Vec9(tinfo.d[1][0], tinfo.d[1][1], -A4, tinfo.d[2][0], tinfo.d[2][1],   0, tinfo.d[0][0], tinfo.d[0][1],   0),
-            Vec9(tinfo.d[1][0], tinfo.d[1][1],   0, tinfo.d[2][0], tinfo.d[2][1], -A4, tinfo.d[0][0], tinfo.d[0][1],   0),
-            Vec9(tinfo.d[1][0], tinfo.d[1][1],   0, tinfo.d[2][0], tinfo.d[2][1],   0, tinfo.d[0][0], tinfo.d[0][1], -A4)
-            );
+        Vec9(tinfo.d[1][0], tinfo.d[1][1], -A4, tinfo.d[2][0], tinfo.d[2][1],   0, tinfo.d[0][0], tinfo.d[0][1],   0),
+        Vec9(tinfo.d[1][0], tinfo.d[1][1],   0, tinfo.d[2][0], tinfo.d[2][1], -A4, tinfo.d[0][0], tinfo.d[0][1],   0),
+        Vec9(tinfo.d[1][0], tinfo.d[1][1],   0, tinfo.d[2][0], tinfo.d[2][1],   0, tinfo.d[0][0], tinfo.d[0][1], -A4)
+        );
     T /= -A4;
 
     Mat<9,3, Real> Tt;
@@ -1116,9 +1121,9 @@ void TriangularShellForceField<DataTypes>::andesTemplate(StiffnessMatrix &K, con
 
     // Add higher order stiffness matrix
     K += beta[0] * Real(3.0/4.0) * h * tinfo.area * Tt *
-        // Higher order stiffness in terms of hierarchical rotations
-        (Q4t * Enat * Q4 + Q5t * Enat * Q5 + Q6t * Enat * Q6)
-        * T;
+         // Higher order stiffness in terms of hierarchical rotations
+         (Q4t * Enat * Q4 + Q5t * Enat * Q5 + Q6t * Enat * Q6)
+         * T;
 }
 
 template <class DataTypes>
@@ -1180,8 +1185,8 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixDKT(StiffnessMa
     // Compute strain-displacement matrix
     for (unsigned int i=0; i< tinfo.measure.size(); i++) {
         dktSD(tinfo.measure[i].Bb, tinfo,
-            tinfo.measure[i].point[0],
-            tinfo.measure[i].point[1]);
+              tinfo.measure[i].point[0],
+              tinfo.measure[i].point[1]);
     }
 
     //dmsg_info() ;

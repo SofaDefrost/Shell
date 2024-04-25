@@ -186,7 +186,7 @@ public:
                 void applyCreateFunction(unsigned int triangleIndex, TriangleInformation& ,
                     const Triangle & t,
                     const sofa::type::vector< unsigned int > &,
-                    const sofa::type::vector< double > &);
+                    const sofa::type::vector< double > &, const VecCoord& x0);
 
             protected:
                 TriangularShellForceField<DataTypes>* ff;
@@ -214,6 +214,7 @@ public:
         Data<sofa::helper::OptionsGroup> d_measure;
         Data<type::vector<Real> > d_measuredValues;
         Data<bool> d_isShellveryThin;
+        Data<bool> d_use_rest_position;
 
         TRQSTriangleHandler* triangleHandler;
 
@@ -231,7 +232,7 @@ protected :
         bool bMeasureStrain;
         bool bMeasureStress;
 
-        void initTriangle(const int i, const Index&a, const Index&b, const Index&c);
+        void initTriangle(const int i, const Index&a, const Index&b, const Index&c, const VecCoord& x0);
 
         void computeRotation(Transformation& R, const VecCoord &x, const Index &a, const Index &b, const Index &c);
         void computeRotation(Transformation& R, const type::fixed_array<Vec3, 3> &x);
