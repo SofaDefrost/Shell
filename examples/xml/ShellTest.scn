@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<Node name="Root" gravity="0 -98.1 0" time="0" animate="0">
+
+    <Node name="plugins">
+        <RequiredPlugin name="Shell"/>
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint] -->
+        <RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->
+        <RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshOBJLoader] -->
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [SparseLDLSolver] -->
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Constant"/> <!-- Needed to use components [MeshTopology] -->
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->
+        <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] -->
+        <RequiredPlugin name="Sofa.GUI.Component"/> <!-- Needed to use components [AttachBodyButtonSetting] -->
+    </Node>
+
+    <AttachBodyButtonSetting stiffness="0.1"/>
+    <DefaultAnimationLoop/>
+    <VisualStyle displayFlags="hideVisualModels hideBehaviorModels showMappings showForceFields"/>
+
+    <Node name="Square">
+
+        <EulerImplicitSolver/>
+        <SparseLDLSolver template="CompressedRowSparseMatrixMat3x3d"/>
+        <MeshOBJLoader name="loader" filename="mesh/square1.obj"/>
+        <MeshTopology name="topology" src="@loader"/>
+        <MechanicalObject template="Rigid3"/>
+        <UniformMass totalMass="0.005"/>
+        <BoxROI name="box" box="0 0.9 -0.1 1 1 0.1" drawBoxes="1"/>
+        <FixedConstraint indices="@box.indices"/>
+        <TriangularBendingFEMForceField youngModulus="1.7e3" poissonRatio="0.3" thickness="0.01"/>
+
+        <Node name="Visu">
+
+            <OglModel src="@../topology"/>
+            <IdentityMapping/>
+
+        </Node>
+
+    </Node>
+
+</Node>
