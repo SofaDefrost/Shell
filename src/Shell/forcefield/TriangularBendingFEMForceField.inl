@@ -22,8 +22,6 @@
 #pragma once
 
 #include <sofa/core/behavior/ForceField.inl>
-#include <sofa/gl/template.h>
-#include <sofa/gl/gl.h>
 #include <sofa/helper/system/thread/debug.h>
 #include <fstream> // for reading the file
 #include <iostream> //for debugging
@@ -34,7 +32,6 @@
 #include <map>
 #include <utility>
 #include <sofa/core/topology/TopologyData.inl>
-#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/simulation/AnimateEndEvent.h>
@@ -49,7 +46,7 @@
 namespace shell::forcefield
 {
     using namespace sofa::type;
-    using namespace	sofa::component::topology;
+    // using namespace	sofa::component::topology;
 
 
 
