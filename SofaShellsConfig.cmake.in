@@ -13,6 +13,9 @@ find_package(SofaBoundaryCondition REQUIRED)
 find_package(SofaUserInteraction REQUIRED)
 find_package(SofaMeshCollision REQUIRED)
 find_package(SofaGraphComponent REQUIRED)
+find_package(Sofa.Component.Controller REQUIRED)
+find_package(Sofa.Component.StateContainer REQUIRED)
+
 
 if(SOFASHELLS_HAVE_SOFAGUI AND SOFASHELLS_HAVE_SOFAOPENGLVISUAL)
     find_package(SofaGui REQUIRED)

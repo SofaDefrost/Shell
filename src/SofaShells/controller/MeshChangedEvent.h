@@ -1,24 +1,17 @@
-#ifndef SOFA_CORE_OBJECTMODEL_MESHCHANGEDEVENT_H
-#define SOFA_CORE_OBJECTMODEL_MESHCHANGEDEVENT_H
+#pragma once
 
 #include <sofa/core/objectmodel/Event.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/type/Quat.h>
 #include <SofaShells/config.h>
 
-namespace sofa
-{
-
-namespace core
-{
-
-namespace objectmodel
+namespace sofa::core::objectmodel
 {
 
 using namespace sofa::type;
 
 // Sent by MeshInterpolator when the mesh changes
-class MeshChangedEvent : public sofa::core::objectmodel::Event
+class SOFA_SHELLS_API MeshChangedEvent : public sofa::core::objectmodel::Event
 {
 public:
 
@@ -35,11 +28,4 @@ private:
 
     double alpha; // interpolation parameter
 };
-
-} // namespace objectmodel
-
-} // namespace core
-
-} // namespace sofa
-
-#endif
+} // namespace

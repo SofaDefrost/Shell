@@ -3,12 +3,21 @@ project(SofaShells VERSION 1.0 LANGUAGES CXX)
 
 
 find_package(Sofa.Config REQUIRED)
-sofa_find_package(Sofa.Component.Constraint.Lagrangian.Model REQUIRED)
+sofa_find_package(Sofa.GL REQUIRED)
+sofa_find_package(Sofa.Type REQUIRED)
+sofa_find_package(Sofa.Geometry REQUIRED)
+sofa_find_package(Sofa.Simulation.Core REQUIRED)
+sofa_find_package(Sofa.Component.Controller REQUIRED)
 sofa_find_package(Sofa.Component.StateContainer REQUIRED)
 sofa_find_package(Sofa.Component.Mapping.NonLinear REQUIRED)
-sofa_find_package(Sofa.GL REQUIRED)
-sofa_find_package(Sofa.Geometry REQUIRED)
+sofa_find_package(Sofa.Component.Constraint REQUIRED)
+sofa_find_package(Sofa.Component.Constraint.Lagrangian REQUIRED)
+sofa_find_package(Sofa.Component.Constraint.Lagrangian.Model REQUIRED)
+sofa_find_package(Sofa.Component.Constraint.Lagrangian.Solver REQUIRED)
 sofa_find_package(Sofa.Component.Topology.Container.Dynamic REQUIRED)
+sofa_find_package(Sofa.Component.Collision.Detection.Intersection REQUIRED)
+
+
 
 set(README_FILE "SofaShells.txt" )
 set(SOFASHELLS_SRC_DIR src/SofaShells)
@@ -123,7 +132,12 @@ endif()
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
 
 # Link the plugin library to its dependency
-target_link_libraries(${PROJECT_NAME} SofaCore SofaHelper Sofa.Geometry SofaBaseTopology SofaBaseLinearSolver SofaBaseMechanics SofaUserInteraction SofaGraphComponent SofaBoundaryCondition Sofa.GL)
+target_link_libraries(${PROJECT_NAME} Sofa.Component.Controller Sofa.Helper Sofa.Type Sofa.Component.Topology.Container.Dynamic Sofa.Component.StateContainer
+		Sofa.Core Sofa.Geometry Sofa.GL Sofa.Component.Collision.Detection.Intersection Sofa.Component.Mapping.NonLinear Sofa.Component.Constraint.Lagrangian.Model
+		Sofa.Component.Constraint.Lagrangian.Solver Sofa.Component.Constraint.Lagrangian Sofa.Component.Constraint
+		Sofa.Simulation.Core Sofa.Component.Constraint.Projective Sofa.Component.Mass Sofa.Component.SolidMechanics.Spring Sofa.Component.MechanicalLoad
+		Sofa.Component.LinearSolver.Iterative Sofa.Component.ODESolver.Backward Sofa.Component.Engine.Select Sofa.Component.Mapping.Linear
+)
 
 
 if(SofaGui_FOUND AND SofaOpenglVisual_FOUND)

@@ -22,23 +22,18 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#ifndef SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
-#define SOFA_COMPONENT_MAPPING_MESH2POINTMAPPING_INL
-
+#pragma once
 #include <SofaShells/mapping/BendingPlateMechanicalMapping.h>
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
 
+#include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
+#include <sofa/component/collision/detection/intersection/MeshMinProximityIntersection.h>
+
 #include <sofa/component/mechanicalload/ConstantForceField.h>
 
-namespace sofa
-{
-
-namespace component
-{
-
-namespace mapping
+namespace sofa::component::mapping
 {
 
 using namespace sofa::component::collision;
@@ -1132,12 +1127,4 @@ void BendingPlateMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualPa
 
     }
 }
-
-
-} // namespace mapping
-
-} // namespace component
-
-} // namespace sofa
-
-#endif
+} // namespace

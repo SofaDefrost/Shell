@@ -22,9 +22,7 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#ifndef SOFA_COMPONENT_MAPPING_BENDINGPLATEMAPPING_INL
-#define SOFA_COMPONENT_MAPPING_BENDINGPLATEMAPPING_INL
-
+#pragma once
 
 #include <sofa/core/Mapping.h>
 
@@ -42,13 +40,7 @@
 #include <sofa/helper/system/thread/CTime.h>
 
 
-namespace sofa
-{
-
-namespace component
-{
-
-namespace mapping
+namespace sofa::component::mapping
 {
 
 using namespace sofa::type;
@@ -171,11 +163,4 @@ protected:
         // Contains the barycentric coordinates of the same vertex within all base triangles
         sofa::type::vector< sofa::type::vector<Vec3> > barycentricCoordinates;
 };
-
-} // namespace mapping
-
-} // namespace component
-
-} // namespace sofa
-
-#endif
+} // namespace

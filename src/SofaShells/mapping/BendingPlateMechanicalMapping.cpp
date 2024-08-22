@@ -30,13 +30,7 @@
 #include <SofaShells/config.h>
 
 
-namespace sofa
-{
-
-namespace component
-{
-
-namespace mapping
+namespace sofa::component::mapping
 {
 
 using namespace sofa::defaulttype;
@@ -50,8 +44,4 @@ int BendingPlateMechanicalMappingClass = core::RegisterObject("Mechanical mappin
 template class SOFA_SHELLS_API BendingPlateMechanicalMapping< Rigid3Types, Vec3Types >;
 
 
-} // namespace mapping
-
-} // namespace component
-
-} // namespace sofa
+} // namespace

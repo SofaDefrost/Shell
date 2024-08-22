@@ -1,5 +1,4 @@
-#ifndef SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_H
-#define SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_H
+#pragma once
 
 #include <sofa/component/controller/Controller.h>
 #include <sofa/defaulttype/RigidTypes.h>
@@ -10,13 +9,7 @@
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyModifier.h>
 
-namespace sofa
-{
-
-namespace component
-{
-
-namespace controller
+namespace sofa::component::controller
 {
 
 template<class DataTypes>
@@ -61,12 +54,5 @@ private:
     topology::container::dynamic::TriangleSetTopologyModifier*  m_modifier;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
 };
+} // namespace
 
-
-} // namespace controller
-
-} // namespace component
-
-} // namespace sofa
-
-#endif //SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_H
