@@ -1281,6 +1281,8 @@ void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams
    // Draw arrows from using shell triangle info (tinfo.R) in the center of the triangle
 
    int nbTriangles=_topology->getNbTriangles();
+   auto triangles = _topology->getTriangles();
+   const VecCoord& positions =this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
    const Real radius = d_arrow_radius.getValue();
    for (unsigned int i=0; i< nbTriangles; i++)
@@ -1290,9 +1292,14 @@ void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams
      Vec3 vy = tinfo.R * Vec3(0, 1, 0);
      Vec3 vz = tinfo.R * Vec3(0, 0, 1);
 
+     auto triangle = _topology->getTriangle(i);
+     // get triangle i indices
+     auto a = triangle[0];
+     auto b = triangle[1];
+     auto c = triangle[2];
+
      // compute the center of the triangle
-     Vec3 center = (tinfo.deformedPositions[0] + tinfo.deformedPositions[1] +
-                    tinfo.deformedPositions[2])/3;
+     Vec3 center = (positions[a].getCenter() + positions[b].getCenter() + positions[c].getCenter())/3;
      vparams->drawTool()->drawArrow(center, center + vx, radius, type::RGBAColor(1.0, 0.0, 0.0, 1.0));
      vparams->drawTool()->drawArrow(center, center + vy, radius, type::RGBAColor(0.0, 1.0, 0.0, 1.0));
      vparams->drawTool()->drawArrow(center, center + vz, radius, type::RGBAColor(0.0, 0.0, 1.0, 1.0));
