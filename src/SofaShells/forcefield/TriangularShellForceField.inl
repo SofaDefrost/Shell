@@ -38,6 +38,7 @@
 #include <vector>
 #include <algorithm>
 #include <sofa/defaulttype/VecTypes.h>
+#include <sofa/core/visual/VisualParams.h>
 #include <assert.h>
 #include <map>
 #include <utility>
@@ -77,13 +78,14 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
     , d_thickness(initData(&d_thickness,(Real)0.1,"thickness","Thickness of the plates"))
     , d_membraneElement(initData(&d_membraneElement, "membraneElement", "The membrane element to use"))
     , d_bendingElement(initData(&d_bendingElement, "bendingElement", "The bending plate element to use"))
-    , f_corotated(initData(&f_corotated, true, "corotated", "Compute forces in corotational frame"))
+    , d_corotated(initData(&d_corotated, true, "corotated", "Compute forces in corotational frame"))
     , d_measure(initData(&d_measure, "measure", "Compute the strain or stress"))
     , d_measuredValues(initData(&d_measuredValues, "measuredValues", "Measured values for stress or strain"))
-    ,d_isShellveryThin(initData(&d_isShellveryThin, false, "isShellveryThin", "This bool is to adapt "
+    , d_isShellveryThin(initData(&d_isShellveryThin, false, "isShellveryThin", "This bool is to adapt "
                                                                                "computation in case we are using verry tiny(thickness) shell element"))
     , d_use_rest_position(initData(&d_use_rest_position, true, "use_rest_position", "Use the rest position inteat of using postion to update the restposition"))
     , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
+    , d_arrow_radius(initData(&d_arrow_radius, (Real)0.1, "arrow_radius", "the arrow radius"))
 
 {
     d_membraneElement.beginEdit()->setNames(7,
@@ -410,7 +412,7 @@ void TriangularShellForceField<DataTypes>::initTriangle(const int i, const Index
     tinfo->restPositions[1] = x0[b].getCenter();
     tinfo->restPositions[2] = x0[c].getCenter();
 
-    if (f_corotated.getValue()) {
+    if (d_corotated.getValue()) {
         // Center the element
         Vec3 center = (tinfo->restPositions[0] + tinfo->restPositions[1] +
                        tinfo->restPositions[2])/3;
@@ -480,7 +482,7 @@ template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, const VecCoord &x, const Index &a, const Index &b, const Index &c)
 {
 
-    if (!f_corotated.getValue()) {
+    if (!d_corotated.getValue()) {
         // Return identity matrix
         R = Transformation(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,1));
         return;
@@ -509,7 +511,7 @@ void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, co
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, const type::fixed_array<Vec3, 3> &x)
 {
-    if (!f_corotated.getValue()) {
+    if (!d_corotated.getValue()) {
         // Return identity matrix
         R = Transformation(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,1));
         return;
@@ -519,19 +521,19 @@ void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, co
     // Second vector in the plane of the two first edges
     // Third vector orthogonal to first and second
 
-    Vec3 edgex = x[1] - x[0];
-    Vec3 edgey = x[2] - x[0];
+    Vec3 edge_x = x[1] - x[0];
+    Vec3 edge_y = x[2] - x[0];
 
-    Vec3 edgez = cross(edgex, edgey);
+    Vec3 edge_z = cross(edge_x, edge_y);
 
-    edgey = cross(edgez, edgex);
+    edge_y = cross(edge_z, edge_x);
 
-    edgex.normalize();
-    edgey.normalize();
-    edgez.normalize();
+    edge_x.normalize();
+    edge_y.normalize();
+    edge_z.normalize();
 
-    R = Transformation(edgex, edgey, edgez);
-    //Qframe.fromMatrix(Transformation(edgex, edgey, edgez));
+    R = Transformation(edge_x, edge_y, edge_z);
+    //Qframe.fromMatrix(Transformation(edge_x, edge_y, edge_z));
 }
 
 
@@ -563,14 +565,14 @@ void TriangularShellForceField<DataTypes>::computeMaterialStiffness()
     // Integrate through the shell thickness
     materialMatrixMembrane *= t;
     if (d_isShellveryThin.getValue())
-        materialMatrixBending *= t*t/1.;
+        materialMatrixBending *= t*t;
     else
         materialMatrixBending *= t*t*t / 12;
 }
 
 
 // -------------------------------------------------------------------------------------------------------------
-// --- Compute displacement vector D as the difference between current current position and initial position
+// --- Compute displacement vector D as the difference between current position and initial position
 // -------------------------------------------------------------------------------------------------------------
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm, Displacement &Db, const VecCoord &x, const Index elementIndex)
@@ -582,12 +584,12 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     Index b = tinfo->b;
     Index c = tinfo->c;
 
-    // Compute local (in-plane) postions
+    // Compute local (in-plane) positions
     tinfo->deformedPositions[0] = x[a].getCenter();
     tinfo->deformedPositions[1] = x[b].getCenter();
     tinfo->deformedPositions[2] = x[c].getCenter();
 
-    if (f_corotated.getValue()) {
+    if (d_corotated.getValue()) {
         Vec3 center = (tinfo->deformedPositions[0] + tinfo->deformedPositions[1] +
                        tinfo->deformedPositions[2])/3;
 
@@ -603,7 +605,7 @@ void TriangularShellForceField<DataTypes>::computeDisplacement(Displacement &Dm,
     tinfo->Q.fromMatrix(tinfo->R);
 #endif
 
-    // Compute local (in-plane) postions
+    // Compute local (in-plane) positions
     tinfo->deformedPositions[0] = tinfo->R * tinfo->deformedPositions[0];
     tinfo->deformedPositions[1] = tinfo->R * tinfo->deformedPositions[1];
     tinfo->deformedPositions[2] = tinfo->R * tinfo->deformedPositions[2];
@@ -1273,6 +1275,31 @@ void TriangularShellForceField<DataTypes>::dktSD(StrainDisplacement &B, const Tr
 
     B /= 2*tinfo.area;
 }
+
+template <class DataTypes>
+void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams* vparams){
+   // Draw arrows from using shell triangle info (tinfo.R) in the center of the triangle
+
+   int nbTriangles=_topology->getNbTriangles();
+   type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
+   const Real radius = d_arrow_radius.getValue();
+   for (unsigned int i=0; i< nbTriangles; i++)
+   {
+     const TriangleInformation &tinfo = triangleInf[i];
+     Vec3 vx = tinfo.R * Vec3(1, 0, 0);
+     Vec3 vy = tinfo.R * Vec3(0, 1, 0);
+     Vec3 vz = tinfo.R * Vec3(0, 0, 1);
+
+     // compute the center of the triangle
+     Vec3 center = (tinfo.deformedPositions[0] + tinfo.deformedPositions[1] +
+                    tinfo.deformedPositions[2])/3;
+     vparams->drawTool()->drawArrow(center, center + vx, radius, type::RGBAColor(1.0, 0.0, 0.0, 1.0));
+     vparams->drawTool()->drawArrow(center, center + vy, radius, type::RGBAColor(0.0, 1.0, 0.0, 1.0));
+     vparams->drawTool()->drawArrow(center, center + vz, radius, type::RGBAColor(0.0, 0.0, 1.0, 1.0));
+   }
+   triangleInfo.endEdit();
+  }
+
 
 } // namespace forcefield
 

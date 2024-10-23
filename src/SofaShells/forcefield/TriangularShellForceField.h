@@ -59,7 +59,7 @@ using sofa::type::vector;
 using namespace sofa::core::topology;
 using namespace sofa::core::behavior;
 
-/// This class can be overridden if needed for additionnal storage within template specializations.
+/// This class can be overridden if needed for additional storage within template specializations.
 template<class DataTypes>
 class TriangularShellForceFieldInternalData
 {
@@ -200,6 +200,7 @@ public:
         void addForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& dataF, const DataVecCoord& dataX, const DataVecDeriv& /*dataV*/ ) override ;
         void addDForce(const sofa::core::MechanicalParams* /*mparams*/, DataVecDeriv& datadF, const DataVecDeriv& datadX ) override ;
         void addKToMatrix(const core::MechanicalParams* mparams, const sofa::core::behavior::MultiMatrixAccessor* matrix) override;
+        void draw(const core::visual::VisualParams* vparams) override;
 
         SReal getPotentialEnergy(const sofa::core::MechanicalParams* /*mparams*/, const DataVecCoord& /*x*/) const override { return 0; }
 
@@ -210,11 +211,12 @@ public:
         Data <Real> d_thickness;
         Data <sofa::helper::OptionsGroup> d_membraneElement;
         Data <sofa::helper::OptionsGroup> d_bendingElement;
-        Data<bool> f_corotated;
+        Data<bool> d_corotated;
         Data<sofa::helper::OptionsGroup> d_measure;
         Data<type::vector<Real> > d_measuredValues;
         Data<bool> d_isShellveryThin;
         Data<bool> d_use_rest_position;
+        Data<Real> d_arrow_radius;
 
         TRQSTriangleHandler* triangleHandler;
 
