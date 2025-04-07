@@ -1,14 +1,13 @@
 def createScene(rootNode):
 
+    rootNode.addObject('RequiredPlugin', name="Shell")
     rootNode.gravity = [0, -98.1, 0]
     rootNode.addObject('AttachBodyButtonSetting', stiffness=0.1)
-    rootNode.addObject('FreeMotionAnimationLoop')
-    rootNode.addObject('GenericConstraintSolver', maxIterations=1e3, tolerance=1e-3)
+    rootNode.addObject('DefaultAnimationLoop')
 
     square = rootNode.addChild('Square')
     square.addObject('EulerImplicitSolver')
     square.addObject('SparseLDLSolver')
-    square.addObject('GenericConstraintCorrection')
     square.addObject('MeshOBJLoader', filename='mesh/square1.obj')
     square.addObject('MeshTopology', src=square.MeshOBJLoader.getLinkPath())
     square.addObject('MechanicalObject', template='Rigid3')
