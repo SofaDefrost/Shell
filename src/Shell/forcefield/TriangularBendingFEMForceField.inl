@@ -141,7 +141,7 @@ void TriangularBendingFEMForceField<DataTypes>::init()
             if (mStateTarget)
             {
                 m_targetTriangles = _topologyTarget->getTriangles();
-                m_targetVertices = mStateTarget->read(sofa::core::ConstVecCoordId::position())->getValue();
+                m_targetVertices = mStateTarget->read(sofa::core::vec_id::read_access::position)->getValue();
             }
             else
             {
@@ -167,7 +167,7 @@ void TriangularBendingFEMForceField<DataTypes>::refineCoarseMeshToTarget(void)
     msg_info() << "Refining a mesh of " << _topology->getNbTriangles() << " triangles towards a target surface of " << m_targetTriangles.size() << " triangles.";
 
     // List of vertices
-    const VecCoord& x = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecCoord& x = this->mstate->read(sofa::core::vec_id::read_access::position)->getValue();
     // List of triangles
     const SeqTriangles triangles = _topology->getTriangles();
 
@@ -362,7 +362,7 @@ template <class DataTypes>void TriangularBendingFEMForceField<DataTypes>::reinit
         // Check if there is same number of nodes
         if (!m_mapTopology) {
             if (l_restShape.get()->f_position.getValue().size() !=
-                this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
+                this->mstate->read(sofa::core::vec_id::read_access::position)->getValue().size()) {
                 msg_warning() << "Different number of nodes in rest shape and mechanical state." ;
             }
         } else if (l_restShape.get()->f_position.getValue().size() !=
@@ -490,9 +490,9 @@ void TriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
             // if rest shape is fixed but we have mapped topology use it
             ? l_topologyMapper.get()->f_input_position.getValue()
             // otherwise just take rest shape in mechanical state
-            : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
+            : this->mstate->read(sofa::core::vec_id::read_access::position)->getValue()
           );
-    const VecCoord& x = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecCoord& x = this->mstate->read(sofa::core::vec_id::read_access::position)->getValue();
 
     // Rotation from triangle to world at rest and initial positions (respectively)
     Quat Qframe0, Qframe;
@@ -1192,7 +1192,7 @@ void TriangularBendingFEMForceField<DataTypes>::draw(const sofa::core::visual::V
     std::vector<sofa::type::RGBAColor> colorVector;
     std::vector<sofa::type::Vec3> vertices;
 
-    const VecCoord& x = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecCoord& x = this->mstate->read(sofa::core::vec_id::read_access::position)->getValue();
 
     const SeqTriangles triangles = _topology->getTriangles();
     for (const Triangle& tri: triangles)
@@ -1218,9 +1218,9 @@ void TriangularBendingFEMForceField<DataTypes>::draw(const sofa::core::visual::V
                 // if rest shape is fixed but we have mapped topology use it
                 ? l_topologyMapper.get()->f_input_position.getValue()
                 // otherwise just take rest shape in mechanical state
-                : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
+                : this->mstate->read(sofa::core::vec_id::read_access::position)->getValue()
               );
-        const VecCoord& x = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const VecCoord& x = this->mstate->read(sofa::core::vec_id::read_access::position)->getValue();
 
         int nbTriangles=_topology->getNbTriangles();
 
