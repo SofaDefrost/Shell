@@ -25,7 +25,7 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_BEZIERSHELLFORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_BEZIERSHELLFORCEFIELD_INL
 
-#include <SofaShells/shells2/forcefield/BezierShellForceField.h>
+#include <Shell/shells2/forcefield/BezierShellForceField.h>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/gl/template.h>
 #include <sofa/helper/rmath.h>
@@ -44,7 +44,7 @@
 
 #include <sofa/helper/decompose.h>
 
-#include <SofaShells/controller/MeshChangedEvent.h>
+#include <Shell/controller/MeshChangedEvent.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -128,11 +128,11 @@ BezierShellForceField<DataTypes>::BezierShellForceField()
 , bsInterpolation(initLink("bsInterpolation","Attached BezierShellInterpolation object"))
 , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
 {
-    f_measure.beginEdit()->setNames(3,
+    f_measure.beginEdit()->setNames( {
         "None",                 // Draw nothing
         "Strain (norm)",        // L_2 norm of strain in x and y directions
         "Von Mises stress"      // Von Mises stress criterion
-        );
+    });
     f_measure.beginEdit()->setSelectedItem("None");
     f_measure.endEdit();
 
@@ -207,7 +207,7 @@ template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
 
     if (topologyMapper.get() != NULL) {
 
-        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
+        shell::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
         if (jmp->f_output_triangles.getValue().size() == 0)
         {
             msg_warning() << "Mapped topology must be triangular! No triangles found." ;
@@ -224,7 +224,7 @@ template <class DataTypes>void BezierShellForceField<DataTypes>::reinit()
         // Check if there is same number of nodes
         const VecCoord &rx = restShape.get()->f_position.getValue();
         if (!mapTopology) {
-            if (rx.size() != this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
+            if (rx.size() != this->mstate->read(sofa::core::vec_id::read_access::position)->getValue().size()) {
                 msg_warning() << "Different number of nodes in rest shape and mechanical state!" ;
             }
         } else if (rx.size() != topologyMapper.get()->f_input_position.getValue().size()) {
@@ -314,7 +314,7 @@ void BezierShellForceField<DataTypes>::initTriangle(const int i)
             // if rest shape is fixed but we have mapped topology use it
             ? topologyMapper.get()->f_input_position.getValue()
             // otherwise just take rest shape in mechanical state
-            : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
+            : this->mstate->read(sofa::core::vec_id::read_access::position)->getValue()
           );
 
     // Compute the initial position and rotation of the reference frame
@@ -2004,7 +2004,7 @@ void BezierShellForceField<DataTypes>::addKToMatrix(sofa::linearalgebra::BaseMat
 template <class DataTypes>
 void BezierShellForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
-    if ( /*sofa::core::objectmodel::MeshChangedEvent* ev =*/ dynamic_cast<sofa::core::objectmodel::MeshChangedEvent*>(event))
+    if ( /*sofa::core::objectmodel::MeshChangedEvent* ev =*/ dynamic_cast<shell::objectmodel::MeshChangedEvent*>(event))
     {
         // Update of the rest shape
         // NOTE: the number of triangles should be the same in all topologies

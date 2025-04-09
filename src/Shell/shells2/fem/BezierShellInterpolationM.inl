@@ -2,7 +2,7 @@
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 
 #include <sofa/component/topology/container/dynamic/PointSetTopologyContainer.h>
-#include <SofaShells/shells2/fem/BezierShellInterpolationM.h>
+#include <Shell/shells2/fem/BezierShellInterpolationM.h>
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
@@ -73,7 +73,7 @@ void BezierShellInterpolationM<TIn,TOut>::applyOnBTriangle(
         return;
     }
 
-    const VecVec3d& nodes = this->mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecVec3d& nodes = this->mStateNodes->read(sofa::core::vec_id::read_access::position)->getValue();
 
     out.resize(projElements.size());
     for (Index i=0; i<projElements.size(); i++)
@@ -93,8 +93,8 @@ void BezierShellInterpolationM<TIn,TOut>::applyJOnBTriangle(
         return;
     }
 
-    //const VecCoord& xSim = mState->read(sofa::core::ConstVecCoordId::position())->getValue();
-    const VecVec3d& x = this->mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
+    //const VecCoord& xSim = mState->read(sofa::core::vec_id::read_access::position)->getValue();
+    const VecVec3d& x = this->mStateNodes->read(sofa::core::vec_id::read_access::position)->getValue();
     VecVec3d v; // NOTE: we use VecVec3d instead of VecVec3 because we supply velocities in place of interpolation points.
     v.resize(dynamic_cast<topology::container::dynamic::PointSetTopologyContainer*>(this->bezierM2P->getTo())->getNumberOfElements());
 
@@ -182,8 +182,8 @@ void BezierShellInterpolationM<TIn,TOut>::applyJTOnBTriangle(
         return;
     }
 
-    const InVecCoord& xSim = this->mState->read(sofa::core::ConstVecCoordId::position())->getValue();
-    const VecVec3d& x = this->mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const InVecCoord& xSim = this->mState->read(sofa::core::vec_id::read_access::position)->getValue();
+    const VecVec3d& x = this->mStateNodes->read(sofa::core::vec_id::read_access::position)->getValue();
 
     // Compute nodes of the Bézier triangle for each input triangle
     out.resize(projElements.size());
@@ -212,8 +212,8 @@ void BezierShellInterpolationM<TIn,TOut>::applyJTOnBTriangle(
     VecShapeFunctions projN, VecIndex projElements,
     const OutMatrixDeriv& in, InMatrixDeriv &out)
 {
-    const InVecCoord& xSim = this->mState->read(sofa::core::ConstVecCoordId::position())->getValue();
-    const VecVec3d& x = this->mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const InVecCoord& xSim = this->mState->read(sofa::core::vec_id::read_access::position)->getValue();
+    const VecVec3d& x = this->mStateNodes->read(sofa::core::vec_id::read_access::position)->getValue();
     typename Out::MatrixDeriv::RowConstIterator rowItEnd = in.end();
 
     for (typename OutMatrixDeriv::RowConstIterator rowIt = in.begin();

@@ -41,7 +41,7 @@
 
 #include <sofa/helper/system/thread/CTime.h>
 
-#include <SofaShells/forcefield/BezierTriangularBendingFEMForceField.h>
+#include <Shell/forcefield/BezierTriangularBendingFEMForceField.h>
 
 // Use quaternions for rotations
 //#define ROTQ

@@ -1,7 +1,7 @@
 #define SOFA_COMPONENT_ENGINE_FINDCLOSEPOINTS_CPP
-#include <SofaShells/engine/FindClosePoints.inl>
+#include <Shell/engine/FindClosePoints.inl>
 #include <sofa/core/ObjectFactory.h>
-#include <SofaShells/config.h>
+#include <Shell/config.h>
 
 namespace sofa
 {
@@ -22,11 +22,11 @@ int FindClosePointsClass = core::RegisterObject(
 .add< FindClosePoints<defaulttype::Rigid3Types> >()
 ;
 
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec1Types>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec2Types>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Vec3Types>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid2Types>;
-template class SOFA_SHELLS_API FindClosePoints<defaulttype::Rigid3Types>;
+template class SOFA_SHELL_API FindClosePoints<defaulttype::Vec1Types>;
+template class SOFA_SHELL_API FindClosePoints<defaulttype::Vec2Types>;
+template class SOFA_SHELL_API FindClosePoints<defaulttype::Vec3Types>;
+template class SOFA_SHELL_API FindClosePoints<defaulttype::Rigid2Types>;
+template class SOFA_SHELL_API FindClosePoints<defaulttype::Rigid3Types>;
 
 
 } // namespace constraint

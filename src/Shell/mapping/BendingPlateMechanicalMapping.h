@@ -34,7 +34,7 @@
 #include <sofa/gl/GLSLShader.h>
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 
-#include <SofaShells/forcefield/TriangularBendingFEMForceField.h>
+#include <Shell/forcefield/TriangularBendingFEMForceField.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/helper/system/thread/CTime.h>
@@ -44,7 +44,7 @@ namespace sofa::component::mapping
 {
 
 using namespace sofa::type;
-using namespace sofa::component::forcefield;
+using namespace shell::forcefield;
 using namespace sofa::core::topology;
 using namespace sofa::helper::system::thread;
 using namespace core::topology;

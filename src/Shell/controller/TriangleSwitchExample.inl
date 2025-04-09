@@ -1,7 +1,7 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_INL
 #define SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_INL
 
-#include <SofaShells/controller/TriangleSwitchExample.h>
+#include <Shell/controller/TriangleSwitchExample.h>
 
 namespace sofa
 {
@@ -162,7 +162,7 @@ void TriangleSwitchExample<DataTypes>::onEndAnimationStep(const double /*dt*/)
 template<class DataTypes>
 void TriangleSwitchExample<DataTypes>::computeTriangleNormal(const Triangle &t, Vec3 &normal)
 {
-    const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
+    const VecCoord& x = m_state->read(sofa::core::vec_id::read_access::restPosition)->getValue();
 
         //std::cout << "tri: " << t << " n=" << x.size() << std::endl;
 

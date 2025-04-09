@@ -25,7 +25,7 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 
-#include <SofaShells/forcefield/TriangularShellForceField.h>
+#include <Shell/forcefield/TriangularShellForceField.h>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/TopologyData.inl>
 #include <sofa/gl/template.h>
@@ -88,31 +88,31 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
     , d_arrow_radius(initData(&d_arrow_radius, (Real)0.1, "arrow_radius", "the arrow radius"))
 
 {
-    d_membraneElement.beginEdit()->setNames(7,
-                                            "None",     // No membrane element
-                                            "CST",      // Constant strain triangle
-                                            // ANDES templates
-                                            "ALL-3I",   // Allman 88 element integrated by 3-point interior rule
-                                            "ALL-3M",   // Allman 88 element integrated by 3-midpoint rule
-                                            "ALL-LS",   // Allman 88 element, least-square strain fit
-                                            "LST-Ret",  // Retrofitted LST with α_b=1⁄4
-                                            "ANDES-OPT" // Optimal ANDES element
-                                            );
+    d_membraneElement.beginEdit()->setNames( {
+        "None",     // No membrane element
+        "CST",      // Constant strain triangle
+        // ANDES templates
+        "ALL-3I",   // Allman 88 element integrated by 3-point interior rule
+        "ALL-3M",   // Allman 88 element integrated by 3-midpoint rule
+        "ALL-LS",   // Allman 88 element, least-square strain fit
+        "LST-Ret",  // Retrofitted LST with α_b=1⁄4
+        "ANDES-OPT" // Optimal ANDES element
+    });
     d_membraneElement.beginEdit()->setSelectedItem("ANDES-OPT");
     d_membraneElement.endEdit();
 
-    d_bendingElement.beginEdit()->setNames(2,
-                                           "None",     // No bending element
-                                           "DKT"       // Discrete Kirchhoff Triangle
-                                           );
+    d_bendingElement.beginEdit()->setNames( {
+        "None",     // No bending element
+        "DKT"       // Discrete Kirchhoff Triangle
+    });
     d_bendingElement.beginEdit()->setSelectedItem("DKT");
     d_bendingElement.endEdit();
 
-    d_measure.beginEdit()->setNames(3,
-                                    "None",                 // Draw nothing
-                                    "Strain (norm)",        // L_2 norm of strain in x and y directions
-                                    "Von Mises stress"      // Von Mises stress criterion
-                                    );
+    d_measure.beginEdit()->setNames( {
+        "None",                 // Draw nothing
+        "Strain (norm)",        // L_2 norm of strain in x and y directions
+        "Von Mises stress"      // Von Mises stress criterion
+    });
     d_measure.beginEdit()->setSelectedItem("None");
     d_measure.endEdit();
 
@@ -226,14 +226,14 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
 
     if (use_rest_position)
     {
-        const VecCoord& x0 =this->mstate->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
+        const VecCoord& x0 =this->mstate->read(sofa::core::vec_id::read_access::restPosition)->getValue();
         for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
             triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
                                                  (const sofa::type::vector< unsigned int >)0, (const sofa::type::vector< double >)0, x0);
     }
     else
     {
-        const VecCoord& x0 =this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const VecCoord& x0 =this->mstate->read(sofa::core::vec_id::read_access::position)->getValue();
         for (sofa::Index i=0; i<_topology->getNbTriangles(); ++i)
             triangleHandler->applyCreateFunction(i, ti[i], _topology->getTriangle(i),
                                                  (const sofa::type::vector< unsigned int >)0, (const sofa::type::vector< double >)0, x0);
@@ -1282,7 +1282,7 @@ void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams
 
    int nbTriangles=_topology->getNbTriangles();
    auto triangles = _topology->getTriangles();
-   const VecCoord& positions =this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+   const VecCoord& positions =this->mstate->read(sofa::core::vec_id::read_access::position)->getValue();
    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
    const Real radius = d_arrow_radius.getValue();
    for (unsigned int i=0; i< nbTriangles; i++)

@@ -23,12 +23,12 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #define SOFA_COMPONENT_FORCEFIELD_BEZIER_TRIANGULAR_BENDING_FEM_FORCEFIELD_CPP
-#include <SofaShells/forcefield/BezierTriangularBendingFEMForceField.inl>
+#include <Shell/forcefield/BezierTriangularBendingFEMForceField.inl>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/component/statecontainer/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
-#include <SofaShells/config.h>
+#include <Shell/config.h>
 
 
 namespace sofa
@@ -47,7 +47,7 @@ int BezierTriangularBendingFEMForceFieldClass = core::RegisterObject("Triangular
 .add< BezierTriangularBendingFEMForceField<Rigid3Types> >()
 ;
 
-template class SOFA_SHELLS_API BezierTriangularBendingFEMForceField<Rigid3Types>;
+template class SOFA_SHELL_API BezierTriangularBendingFEMForceField<Rigid3Types>;
 
 } // namespace forcefield
 

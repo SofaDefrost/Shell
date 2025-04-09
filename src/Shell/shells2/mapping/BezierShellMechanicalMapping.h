@@ -39,7 +39,7 @@
 
 #include <sofa/defaulttype/VecTypes.h>
 
-#include <SofaShells/shells2/fem/BezierShellInterpolationM.h>
+#include <Shell/shells2/fem/BezierShellInterpolationM.h>
 
 
 namespace sofa

@@ -34,9 +34,9 @@
 
 #include <sofa/helper/OptionsGroup.h>
 
-#include <SofaShells/controller/MeshInterpolator.h>
-#include <SofaShells/engine/JoinMeshPoints.h>
-#include <SofaShells/shells2/fem/BezierShellInterpolation.h>
+#include <Shell/controller/MeshInterpolator.h>
+#include <Shell/engine/JoinMeshPoints.h>
+#include <Shell/shells2/fem/BezierShellInterpolation.h>
 
 
 // Uncomment the following to use quaternions instead of matrices for
@@ -261,13 +261,13 @@ public:
 
         // Allow transition between rest shapes
         SingleLink<BezierShellForceField<DataTypes>,
-        sofa::component::controller::MeshInterpolator<DataTypes>,
+        shell::controller::MeshInterpolator<DataTypes>,
         BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> restShape;
 
         // Indirect rest shape indexing (e.g. for "joining" two meshes)
         bool mapTopology;
         SingleLink<BezierShellForceField<DataTypes>,
-        sofa::component::engine::JoinMeshPoints<DataTypes>,
+        shell::engine::JoinMeshPoints<DataTypes>,
         BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> topologyMapper;
 
         // Bezier shell interpolation

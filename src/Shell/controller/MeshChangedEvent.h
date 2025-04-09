@@ -32,7 +32,7 @@ namespace shell::objectmodel
 using namespace sofa::type;
 
 // Sent by MeshInterpolator when the mesh changes
-class SOFA_SHELLS_API MeshChangedEvent : public sofa::core::objectmodel::Event
+class SOFA_SHELL_API MeshChangedEvent : public sofa::core::objectmodel::Event
 {
 public:
 

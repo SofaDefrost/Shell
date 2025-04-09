@@ -25,9 +25,9 @@
 #ifndef SOFA_COMPONENT_MAPPING_BEZIERSHELLMECHANICALMAPPING_INL
 #define SOFA_COMPONENT_MAPPING_BEZIERSHELLMECHANICALMAPPING_INL
 
-#include <SofaShells/shells2/mapping/BezierShellMechanicalMapping.h>
-#include <SofaShells/shells2/forcefield/BezierShellForceField.h>
-#include <SofaShells/misc/PointProjection.h>
+#include <Shell/shells2/mapping/BezierShellMechanicalMapping.h>
+#include <Shell/shells2/forcefield/BezierShellForceField.h>
+#include <Shell/misc/PointProjection.h>
 
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
@@ -88,13 +88,13 @@ void BezierShellMechanicalMapping<TIn, TOut>::init()
         return;
     }
 
-    const OutVecCoord &outVertices = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const OutVecCoord &outVertices = this->toModel->read(sofa::core::vec_id::read_access::position)->getValue();
 
     barycentricCoordinates.clear();
     barycentricCoordinates.resize(outVertices.size());
 
     // Retrieves 'in' vertices and triangles
-    const InVecCoord &inVerticesRigid = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const InVecCoord &inVerticesRigid = this->fromModel->read(sofa::core::vec_id::read_access::position)->getValue();
 
     // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
     OutVecCoord inVertices;
@@ -328,11 +328,11 @@ typename BezierShellMechanicalMapping<TIn, TOut>::Real BezierShellMechanicalMapp
 {
     // Mesh 1
     MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
-    const OutVecCoord &vertices1 = mState1->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const OutVecCoord &vertices1 = mState1->read(sofa::core::vec_id::read_access::position)->getValue();
 
     // Mesh 2
     MechanicalState<Out>* mState2 = dynamic_cast<MechanicalState<Out>*> (topo2->getContext()->getMechanicalState());
-    const OutVecCoord &vertices2 = mState2->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const OutVecCoord &vertices2 = mState2->read(sofa::core::vec_id::read_access::position)->getValue();
     const SeqEdges edges2 = topo2->getEdges();
     const SeqTriangles triangles2 = topo2->getTriangles();
 

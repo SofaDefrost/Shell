@@ -23,8 +23,8 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 
-#include <SofaShells/config.h>
-#include <SofaShells/forcefield/CstFEMForceField.inl>
+#include <Shell/config.h>
+#include <Shell/forcefield/CstFEMForceField.inl>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/type/Vec.h>
 #include <sofa/core/ObjectFactory.h>
@@ -46,7 +46,7 @@ int CstFEMForceFieldClass = core::RegisterObject("Constant Strain Triangular mem
 .add< CstFEMForceField<Vec3Types> >(true)
 ;
 
-template class SOFA_SHELLS_API CstFEMForceField<Vec3Types>;
+template class SOFA_SHELL_API CstFEMForceField<Vec3Types>;
 
 
 } // namespace forcefield

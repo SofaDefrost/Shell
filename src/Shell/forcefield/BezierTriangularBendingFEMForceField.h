@@ -37,8 +37,8 @@
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/core/topology/TopologyData.h>
 
-#include <SofaShells/controller/MeshInterpolator.h>
-#include <SofaShells/engine/JoinMeshPoints.h>
+#include <Shell/controller/MeshInterpolator.h>
+#include <Shell/engine/JoinMeshPoints.h>
 
 
 // Uncomment the following to use quaternions instead of matrices for
@@ -251,13 +251,13 @@ public:
 
         // Allow transition between rest shapes
         SingleLink<BezierTriangularBendingFEMForceField<DataTypes>,
-            sofa::component::controller::MeshInterpolator<DataTypes>,
+            shell::controller::MeshInterpolator<DataTypes>,
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> restShape;
 
         // Indirect rest shape indexing (e.g. for "joining" two meshes)
         bool mapTopology;
         SingleLink<BezierTriangularBendingFEMForceField<DataTypes>,
-            sofa::component::engine::JoinMeshPoints<DataTypes>,
+            shell::engine::JoinMeshPoints<DataTypes>,
             BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK> topologyMapper;
 
 

@@ -8,8 +8,8 @@
 #ifndef SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATIONM_H
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATIONM_H
 
-#include <SofaShells/config.h>
-#include <SofaShells/shells2/fem/BezierShellInterpolation.h>
+#include <Shell/config.h>
+#include <Shell/shells2/fem/BezierShellInterpolation.h>
 
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/component/statecontainer/MechanicalObject.h>

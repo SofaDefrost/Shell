@@ -2,7 +2,7 @@
 #define SOFA_COMPONENT_FEM_BEZIERSHELLINTERPOLATION_INL
 
 #include <sofa/component/topology/container/dynamic/PointSetTopologyContainer.h>
-#include <SofaShells/shells2/fem/BezierShellInterpolation.h>
+#include <Shell/shells2/fem/BezierShellInterpolation.h>
 
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
@@ -311,10 +311,10 @@ void BezierShellInterpolation<DataTypes>::initTriangle(Index triIndex,
     btri[9] = mapTri[triIndex][0];
 
     // Compute the initial position of Bézier points
-    Data<VecVec3d>* dataxRest = mStateNodes->write(sofa::core::VecCoordId::position());
+    Data<VecVec3d>* dataxRest = mStateNodes->write(sofa::core::vec_id::write_access::position);
     VecVec3d& xRest = *dataxRest->beginEdit();
 
-    const VecCoord& inPoints = mState->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
+    const VecCoord& inPoints = mState->read(sofa::core::vec_id::read_access::restPosition)->getValue();
     VecVec3 normals = inputNormals.getValue();
 
     xRest.resize(bezierM2P->getTo()->getNbPoints());
@@ -481,9 +481,9 @@ void BezierShellInterpolation<DataTypes>::updateBezierPoints(Index triIndex)
 {
 
     // Nodes of the simulation
-    const VecCoord& xSim = mState->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecCoord& xSim = mState->read(sofa::core::vec_id::read_access::position)->getValue();
 
-    Data<VecVec3d>* datax = mStateNodes->write(sofa::core::VecCoordId::position());
+    Data<VecVec3d>* datax = mStateNodes->write(sofa::core::vec_id::write_access::position);
     VecVec3d& x = *datax->beginEdit();
 
     x.resize(dynamic_cast<topology::container::dynamic::PointSetTopologyContainer*>(bezierM2P->getTo())->getNumberOfElements());
@@ -686,7 +686,7 @@ void BezierShellInterpolation<DataTypes>::draw(const core::visual::VisualParams*
     if ((!vparams->displayFlags().getShowBehaviorModels()))
         return;
 
-    const VecVec3d& bn = mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecVec3d& bn = mStateNodes->read(sofa::core::vec_id::read_access::position)->getValue();
     vparams->drawTool()->drawPoints(bn, 2.0, type::RGBAColor(0.5, 1.0, 0.5, 1.0));
 
     typedef sofa::type::Vec<2,int> Vec2i;

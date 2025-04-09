@@ -23,11 +23,11 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 
-#include <SofaShells/mapping/BendingPlateMechanicalMapping.inl>
+#include <Shell/mapping/BendingPlateMechanicalMapping.inl>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/ObjectFactory.h>
-#include <SofaShells/config.h>
+#include <Shell/config.h>
 
 
 namespace sofa::component::mapping
@@ -41,7 +41,7 @@ int BendingPlateMechanicalMappingClass = core::RegisterObject("Mechanical mappin
 .add< BendingPlateMechanicalMapping< Rigid3Types, Vec3Types > >()
 ;
 
-template class SOFA_SHELLS_API BendingPlateMechanicalMapping< Rigid3Types, Vec3Types >;
+template class SOFA_SHELL_API BendingPlateMechanicalMapping< Rigid3Types, Vec3Types >;
 
 
 } // namespace

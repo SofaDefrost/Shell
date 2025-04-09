@@ -25,7 +25,7 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_CST_FEM_FORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_CST_FEM_FORCEFIELD_INL
 
-#include <SofaShells/forcefield/CstFEMForceField.h>
+#include <Shell/forcefield/CstFEMForceField.h>
 #include <sofa/core/topology/TopologyData.inl>
 #include <sofa/helper/rmath.h>
 #include <sofa/defaulttype/VecTypes.h>
@@ -215,7 +215,7 @@ void CstFEMForceField<DataTypes>::initTriangle(const int i, const Index&a, const
     tinfo->c = c;
 
     // Gets vertices of rest positions
-    const VecCoord& x0 = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecCoord& x0 = this->mstate->read(sofa::core::vec_id::read_access::position)->getValue();
 
     // Rotation from global to local frame
     Transformation R0;

@@ -23,11 +23,11 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 
-#include <SofaShells/mapping/BezierTriangleMechanicalMapping.inl>
+#include <Shell/mapping/BezierTriangleMechanicalMapping.inl>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/ObjectFactory.h>
-#include <SofaShells/config.h>
+#include <Shell/config.h>
 
 namespace sofa
 {
@@ -46,7 +46,7 @@ int BezierTriangleMechanicalMappingClass = core::RegisterObject("Mechanical mapp
 .add< BezierTriangleMechanicalMapping< Rigid3Types, Vec3Types > >()
 ;
 
-template class SOFA_SHELLS_API BezierTriangleMechanicalMapping< Rigid3Types, Vec3Types >;
+template class SOFA_SHELL_API BezierTriangleMechanicalMapping< Rigid3Types, Vec3Types >;
 
 } // namespace mapping
 

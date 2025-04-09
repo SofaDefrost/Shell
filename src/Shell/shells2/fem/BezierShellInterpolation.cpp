@@ -1,5 +1,5 @@
-#include <SofaShells/config.h>
-#include <SofaShells/shells2/fem/BezierShellInterpolation.inl>
+#include <Shell/config.h>
+#include <Shell/shells2/fem/BezierShellInterpolation.inl>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/core/ObjectFactory.h>
@@ -22,7 +22,7 @@ int BezierShellInterpolationClass = core::RegisterObject("Bezier Shell Interpola
 .add< BezierShellInterpolation<Rigid3Types> >()
 ;
 
-template class SOFA_SHELLS_API BezierShellInterpolation<Rigid3Types>;
+template class SOFA_SHELL_API BezierShellInterpolation<Rigid3Types>;
 
 } // namespace fem
 

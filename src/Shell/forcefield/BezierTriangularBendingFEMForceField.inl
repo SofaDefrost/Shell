@@ -25,7 +25,7 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_BEZIER_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_BEZIER_TRIANGULAR_BENDING_FEM_FORCEFIELD_INL
 
-#include <SofaShells/forcefield/BezierTriangularBendingFEMForceField.h>
+#include <Shell/forcefield/BezierTriangularBendingFEMForceField.h>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/gl/template.h>
 #include <sofa/helper/rmath.h>
@@ -38,7 +38,7 @@
 #include <sofa/core/topology/TopologyData.inl>
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/core/visual/VisualParams.h>
-#include <SofaShells/controller/MeshChangedEvent.h>
+#include <Shell/controller/MeshChangedEvent.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -145,7 +145,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
 
     if (topologyMapper.get() != nullptr)
     {
-        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
+        shell::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
         if (jmp->f_output_triangles.getValue().size() == 0)
         {
             msg_warning() << "Mapped topology must be triangular. No triangles found." ;
@@ -162,7 +162,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
         // Check if there is same number of nodes
         const VecCoord &rx = restShape.get()->f_position.getValue();
         if (!mapTopology) {
-            if (rx.size() != this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
+            if (rx.size() != this->mstate->read(sofa::core::vec_id::read_access::position)->getValue().size()) {
                 msg_warning() << "Different number of nodes in rest shape and mechanical state." ;
             }
         } else if (rx.size() != topologyMapper.get()->f_input_position.getValue().size()) {
@@ -204,7 +204,7 @@ template <class DataTypes>void BezierTriangularBendingFEMForceField<DataTypes>::
         // Check normal count
     if (normals.getValue().size() == 0) {
         msg_warning() << "No normals defined, assuming flat triangles." ;
-    } else if (normals.getValue().size() != this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue().size()) {
+    } else if (normals.getValue().size() != this->mstate->read(sofa::core::vec_id::read_access::position)->getValue().size()) {
         msg_warning() << "Normals count doesn't correspond with nodes count." ;
         return;
     }
@@ -243,7 +243,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangleOnce(const int
     // Store indices of each vertex in rest shape
     Index a0=a, b0=b, c0=c;
     if (mapTopology) {
-        sofa::component::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
+        shell::engine::JoinMeshPoints<DataTypes>* jmp = topologyMapper.get();
 
         // Get indices in original topology
         a0 = jmp->getSrcNodeFromTri(i, a0);
@@ -282,7 +282,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::initTriangle(const int i)
             // if rest shape is fixed but we have mapped topology use it
             ? topologyMapper.get()->f_input_position.getValue()
             // otherwise just take rest shape in mechanical state
-            : this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue()
+            : this->mstate->read(sofa::core::vec_id::read_access::position)->getValue()
           );
 
     const type::vector<Vec3>& norms = (restShape.get() != nullptr)
@@ -1545,7 +1545,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::addBToMatrix(sofa::lineara
 template <class DataTypes>
 void BezierTriangularBendingFEMForceField<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
-    if ( /*sofa::core::objectmodel::MeshChangedEvent* ev =*/ dynamic_cast<sofa::core::objectmodel::MeshChangedEvent*>(event))
+    if ( /*sofa::core::objectmodel::MeshChangedEvent* ev =*/ dynamic_cast<shell::objectmodel::MeshChangedEvent*>(event))
     {
         // Update of the rest shape
         // NOTE: the number of triangles should be the same in all topologies
@@ -1566,7 +1566,7 @@ void BezierTriangularBendingFEMForceField<DataTypes>::draw(const core::visual::V
     {
 
         // Gets vertices of rest and initial positions respectively
-        const VecCoord& x0 = this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const VecCoord& x0 = this->mstate->read(sofa::core::vec_id::read_access::position)->getValue();
 
 
         type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());

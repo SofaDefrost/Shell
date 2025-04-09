@@ -1,7 +1,7 @@
 #define SOFA_COMPONENT_CONTROLLER_TRIANGLESWITCHEXAMPLE_CPP
 
-#include <SofaShells/config.h>
-#include <SofaShells/controller/TriangleSwitchExample.inl>
+#include <Shell/config.h>
+#include <Shell/controller/TriangleSwitchExample.inl>
 #include <sofa/core/ObjectFactory.h>
 
 
@@ -22,7 +22,7 @@ int TriangleSwitchExampleClass = core::RegisterObject("Repeatedly switches topol
 .add< TriangleSwitchExample<defaulttype::Rigid3Types> >(true) // default template
 ;
 
-template class SOFA_SHELLS_API TriangleSwitchExample<defaulttype::Rigid3Types>;
+template class SOFA_SHELL_API TriangleSwitchExample<defaulttype::Rigid3Types>;
 
 } // namespace controller
 

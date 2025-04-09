@@ -22,12 +22,12 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#include <SofaShells/shells2/forcefield/BezierShellForceField.inl>
+#include <Shell/shells2/forcefield/BezierShellForceField.inl>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/defaulttype/RigidTypes.h>
 #include <sofa/component/statecontainer/MechanicalObject.h>
 #include <sofa/core/ObjectFactory.h>
-#include <SofaShells/config.h>
+#include <Shell/config.h>
 
 
 namespace sofa
@@ -46,7 +46,7 @@ int BezierShellForceFieldClass = core::RegisterObject("Triangular finite element
 .add< BezierShellForceField<Rigid3Types> >()
 ;
 
-template class SOFA_SHELLS_API BezierShellForceField<Rigid3Types>;
+template class SOFA_SHELL_API BezierShellForceField<Rigid3Types>;
 
 } // namespace forcefield
 

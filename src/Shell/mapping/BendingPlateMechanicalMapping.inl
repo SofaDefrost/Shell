@@ -23,7 +23,7 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #pragma once
-#include <SofaShells/mapping/BendingPlateMechanicalMapping.h>
+#include <Shell/mapping/BendingPlateMechanicalMapping.h>
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
@@ -50,7 +50,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
 
     if (inputTopo && outputTopo && inputTopo->getNbTriangles() > 0)
     {
-        const OutVecCoord &outVertices = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const OutVecCoord &outVertices = this->toModel->read(sofa::core::vec_id::read_access::position)->getValue();
 
         listBaseTriangles.clear();
         barycentricCoordinates.clear();
@@ -58,7 +58,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
         barycentricCoordinates.resize(outVertices.size());
 
         // Retrieves 'in' vertices and triangles
-        const InVecCoord &inVerticesRigid = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const InVecCoord &inVerticesRigid = this->fromModel->read(sofa::core::vec_id::read_access::position)->getValue();
         // Conversion to Vec3Types to be able to call same methods used by Hausdorff distance
         OutVecCoord inVertices;
         for (unsigned int i=0; i<inVerticesRigid.size(); i++)
@@ -235,7 +235,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::init()
     this->Inherit::init();
 
     // Set each colour of each vertex to default
-    const OutVecCoord &outVertices = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const OutVecCoord &outVertices = this->toModel->read(sofa::core::vec_id::read_access::position)->getValue();
     for (unsigned int i=0; i<outVertices.size(); i++)
     {
         coloursPerVertex.push_back(Vec3(0.56, 0.14, 0.6));    // purple
@@ -400,11 +400,11 @@ typename BendingPlateMechanicalMapping<TIn, TOut>::Real BendingPlateMechanicalMa
 {
     // Mesh 1
     MechanicalState<Out>* mState1 = dynamic_cast<MechanicalState<Out>*> (topo1->getContext()->getMechanicalState());
-    const OutVecCoord &vertices1 = mState1->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const OutVecCoord &vertices1 = mState1->read(sofa::core::vec_id::read_access::position)->getValue();
 
     // Mesh 2
     MechanicalState<Out>* mState2 = dynamic_cast<MechanicalState<Out>*> (topo2->getContext()->getMechanicalState());
-    const OutVecCoord &vertices2 = mState2->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const OutVecCoord &vertices2 = mState2->read(sofa::core::vec_id::read_access::position)->getValue();
     const SeqEdges edges2 = topo2->getEdges();
     const SeqTriangles triangles2 = topo2->getTriangles();
 
@@ -761,10 +761,10 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJ(const core::MechanicalPara
         TriangleInformation *tinfo = NULL;
 
          // List of 'in' positions
-        const InVecCoord &inVertices = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const InVecCoord &inVertices = this->fromModel->read(sofa::core::vec_id::read_access::position)->getValue();
 
         // List of 'out' positions
-        const OutVecCoord &outVertices = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const OutVecCoord &outVertices = this->toModel->read(sofa::core::vec_id::read_access::position)->getValue();
 
         // List of in triangles
         const SeqTriangles& inTriangles = inputTopo->getTriangles();
@@ -891,10 +891,10 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::MechanicalPar
         }
 
         // List of 'in' positions
-        const OutVecCoord &inVertices = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const OutVecCoord &inVertices = this->toModel->read(sofa::core::vec_id::read_access::position)->getValue();
 
         // List of 'out' positions (mechanical points)
-        const InVecCoord &outVertices = this->fromModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const InVecCoord &outVertices = this->fromModel->read(sofa::core::vec_id::read_access::position)->getValue();
 
         // Iterates over in vertices
         Triangle triangle;
@@ -1000,8 +1000,8 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintPar
 
 
     const OutMatrixDeriv& in, InMatrixDeriv &out
-    const InVecCoord& xSim = this->mState->read(sofa::core::ConstVecCoordId::position())->getValue();
-    const VecVec3d& x = this->mStateNodes->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const InVecCoord& xSim = this->mState->read(sofa::core::vec_id::read_access::position)->getValue();
+    const VecVec3d& x = this->mStateNodes->read(sofa::core::vec_id::read_access::position)->getValue();
     typename Out::MatrixDeriv::RowConstIterator rowItEnd = in.end();
 
     for (typename OutMatrixDeriv::RowConstIterator rowIt = in.begin();
@@ -1039,7 +1039,7 @@ void BendingPlateMechanicalMapping<TIn, TOut>::applyJT(const core::ConstraintPar
 template <class TIn, class TOut>
 void BendingPlateMechanicalMapping<TIn, TOut>::draw(const core::visual::VisualParams* vparams)
 {
-    const OutVecCoord &outVertices = this->toModel->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const OutVecCoord &outVertices = this->toModel->read(sofa::core::vec_id::read_access::position)->getValue();
 
     if(vparams->displayFlags().getShowVisualModels())
     {
