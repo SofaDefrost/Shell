@@ -1297,7 +1297,7 @@ void TriangularShellForceField<DataTypes>::dktSD(StrainDisplacement &B, const Tr
 
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams* vparams){
-    helper::ScopedAdvancedTimer advancedTimer( "draw_TriangularShellForceField" );
+    SCOPED_TIMER("draw_TriangularShellForceField");
 
     if (!vparams->displayFlags().getShowForceFields()) {
         return;
