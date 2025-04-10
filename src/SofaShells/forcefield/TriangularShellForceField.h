@@ -38,6 +38,7 @@
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/core/topology/TopologyData.h>
 
+#include <sofa/helper/ColorMap.h>
 
 // Uncomment the following to use quaternions instead of matrices for
 // rotations. Quaternions are slightly faster but numericaly quite unstable
@@ -98,6 +99,12 @@ class TriangularShellForceField : public core::behavior::ForceField<DataTypes>
         typedef sofa::core::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
 
         class TriangleInformation;
+
+        // Flags for the visualization
+        Data<bool> d_showArrow;
+        Data<Real> d_arrowRadius;
+        Data<bool> d_showTriangle;
+        Data<bool> d_showMeasuredValue;
 
     protected:
 
@@ -216,9 +223,13 @@ public:
         Data<type::vector<Real> > d_measuredValues;
         Data<bool> d_isShellveryThin;
         Data<bool> d_use_rest_position;
-        Data<Real> d_arrow_radius;
 
         TRQSTriangleHandler* triangleHandler;
+
+private:
+        sofa::helper::ColorMap d_drawColorMap; ///< colormap to display the gradiant of stress if @sa showStressValue is set to true
+        Real m_minStress = 0; ///< min stress computed for @sa showStressValue
+        Real m_maxStress = 0; ///< max stress computed for @sa showStressValue
 
 protected :
 

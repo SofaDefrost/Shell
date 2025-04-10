@@ -27,6 +27,10 @@
 
 #include <SofaShells/forcefield/TriangularShellForceField.h>
 #include <sofa/core/behavior/ForceField.inl>
+#include <sofa/core/visual/VisualParams.h>
+#include <sofa/helper/ColorMap.h>
+#include <sofa/type/RGBAColor.h>
+
 #include <sofa/core/topology/TopologyData.inl>
 #include <sofa/gl/template.h>
 #include <sofa/helper/rmath.h>
@@ -38,10 +42,11 @@
 #include <vector>
 #include <algorithm>
 #include <sofa/defaulttype/VecTypes.h>
-#include <sofa/core/visual/VisualParams.h>
 #include <assert.h>
 #include <map>
 #include <utility>
+
+#include <sofa/helper/ScopedAdvancedTimer.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -85,8 +90,10 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
                                                                                "computation in case we are using verry tiny(thickness) shell element"))
     , d_use_rest_position(initData(&d_use_rest_position, true, "use_rest_position", "Use the rest position inteat of using postion to update the restposition"))
     , triangleInfo(initData(&triangleInfo, "triangleInfo", "Internal triangle data"))
-    , d_arrow_radius(initData(&d_arrow_radius, (Real)0.1, "arrow_radius", "the arrow radius"))
-
+    , d_showArrow(initData(&d_showArrow, false, "showArrow", "Show the orientation of the triangle as arrow"))
+    , d_arrowRadius(initData(&d_arrowRadius, (Real)0.1, "arrow_radius", "the arrow radius"))
+    , d_showTriangle(initData(&d_showTriangle, false, "showTriangle", "Show the triangle"))
+    , d_showMeasuredValue(initData(&d_showMeasuredValue, false, "showMeasuredValue", "Show the measured value"))
 {
     d_membraneElement.beginEdit()->setNames(7,
                                             "None",     // No membrane element
@@ -117,6 +124,8 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
     d_measure.endEdit();
 
     triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
+
+    d_drawColorMap = helper::ColorMap(256, "Blue to Red");
 }
 
 
@@ -701,6 +710,8 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
 
     }
 
+    m_minStress = std::numeric_limits<Real>::max();
+    m_maxStress = std::numeric_limits<Real>::lowest();
     // Compute the measure (stress/strain)
     if (bMeasureStrain) {
         type::vector<Real> &values = *d_measuredValues.beginEdit();
@@ -710,6 +721,10 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
             // NOTE: Shear strain is not included
             values[ tinfo->measure[i].id ] = helper::rsqrt(
                 strain[0] * strain[0] + strain[1] * strain[1]);
+            if (values[ tinfo->measure[i].id ] < m_minStress)
+                m_minStress = values[ tinfo->measure[i].id ];
+            if (values[ tinfo->measure[i].id ] > m_maxStress)
+                m_maxStress = values[ tinfo->measure[i].id ];
         }
         d_measuredValues.endEdit();
     } else if (bMeasureStress) {
@@ -721,6 +736,10 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
             values[ tinfo->measure[i].id ] = helper::rsqrt(
                 stress[0] * stress[0] - stress[0] * stress[1]
                 + stress[1] * stress[1] + 3 * stress[2] * stress[2]);
+            if (values[ tinfo->measure[i].id ] < m_minStress)
+                m_minStress = values[ tinfo->measure[i].id ];
+            if (values[ tinfo->measure[i].id ] > m_maxStress)
+                m_maxStress = values[ tinfo->measure[i].id ];
         }
         d_measuredValues.endEdit();
     }
@@ -1278,33 +1297,131 @@ void TriangularShellForceField<DataTypes>::dktSD(StrainDisplacement &B, const Tr
 
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams* vparams){
+    SCOPED_TIMER("draw_TriangularShellForceField");
+
+    if (!vparams->displayFlags().getShowForceFields()) {
+        return;
+    }
+
+    // a flag indicating if there are infomation to draw
+    bool p_computeDrawInfo;
+    p_computeDrawInfo = d_showArrow.getValue() ||
+                        d_showTriangle.getValue() ||
+                        d_showMeasuredValue.getValue();
+
+    if (!p_computeDrawInfo) {
+        return;
+    }
+    
+
+    const auto stateLifeCycle = vparams->drawTool()->makeStateLifeCycle();
+
+    if (vparams->displayFlags().getShowWireFrame())
+        vparams->drawTool()->setPolygonMode(0, true);
+
+    vparams->drawTool()->disableLighting();
+
+    const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
+    const type::vector<TriangleInformation>& triangleInf = triangleInfo.getValue();
+    const auto& triangles = _topology->getTriangles();
+    const Size nbTriangles = triangles.size();
+
    // Draw arrows from using shell triangle info (tinfo.R) in the center of the triangle
+    if (d_showArrow.getValue())
+    {
+        const VecCoord& positions =this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
+        const Real radius = d_arrowRadius.getValue();
+        for (unsigned int i=0; i< nbTriangles; i++)
+        {
+          const TriangleInformation &tinfo = triangleInf[i];
+          Vec3 vx = tinfo.R * Vec3(1, 0, 0);
+          Vec3 vy = tinfo.R * Vec3(0, 1, 0);
+          Vec3 vz = tinfo.R * Vec3(0, 0, 1);
+     
+          auto triangle = _topology->getTriangle(i);
+          // get triangle i indices
+          auto a = triangle[0];
+          auto b = triangle[1];
+          auto c = triangle[2];
+     
+          // compute the center of the triangle
+          Vec3 center = (positions[a].getCenter() + positions[b].getCenter() + positions[c].getCenter())/3;
+          vparams->drawTool()->drawArrow(center, center + vx, radius, type::RGBAColor(1.0, 0.0, 0.0, 1.0));
+          vparams->drawTool()->drawArrow(center, center + vy, radius, type::RGBAColor(0.0, 1.0, 0.0, 1.0));
+          vparams->drawTool()->drawArrow(center, center + vz, radius, type::RGBAColor(0.0, 0.0, 1.0, 1.0));
+        }
+        triangleInfo.endEdit();
+    }
 
-   int nbTriangles=_topology->getNbTriangles();
-   auto triangles = _topology->getTriangles();
-   const VecCoord& positions =this->mstate->read(sofa::core::ConstVecCoordId::position())->getValue();
-   type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
-   const Real radius = d_arrow_radius.getValue();
-   for (unsigned int i=0; i< nbTriangles; i++)
-   {
-     const TriangleInformation &tinfo = triangleInf[i];
-     Vec3 vx = tinfo.R * Vec3(1, 0, 0);
-     Vec3 vy = tinfo.R * Vec3(0, 1, 0);
-     Vec3 vz = tinfo.R * Vec3(0, 0, 1);
+    // Draw triangles using shell triangle info
+    if (d_showTriangle.getValue())
+    {
+        std::vector<sofa::type::Vec3> vertices;
+        for (Size i = 0; i < nbTriangles; ++i)
+        {
+            const Triangle& tri = triangles[i];
+            Index a = tri[0];
+            Index b = tri[1];
+            Index c = tri[2];
 
-     auto triangle = _topology->getTriangle(i);
-     // get triangle i indices
-     auto a = triangle[0];
-     auto b = triangle[1];
-     auto c = triangle[2];
+            auto vertex_vector = x[a];
+            auto vertex_position = sofa::type::Vec3(vertex_vector[0], vertex_vector[1], vertex_vector[2]);
+            vertices.push_back(sofa::type::Vec3(vertex_position));
+            vertex_vector = x[b];
+            vertex_position = sofa::type::Vec3(vertex_vector[0], vertex_vector[1], vertex_vector[2]);
+            vertices.push_back(sofa::type::Vec3(vertex_position));
+            vertex_vector = x[c];
+            vertex_position = sofa::type::Vec3(vertex_vector[0], vertex_vector[1], vertex_vector[2]);
+            vertices.push_back(sofa::type::Vec3(vertex_position));        
+            }
+        vparams->drawTool()->drawTriangles(vertices, sofa::type::RGBAColor(1, 0, 0, 0.9));
+        vertices.clear();
+    }
 
-     // compute the center of the triangle
-     Vec3 center = (positions[a].getCenter() + positions[b].getCenter() + positions[c].getCenter())/3;
-     vparams->drawTool()->drawArrow(center, center + vx, radius, type::RGBAColor(1.0, 0.0, 0.0, 1.0));
-     vparams->drawTool()->drawArrow(center, center + vy, radius, type::RGBAColor(0.0, 1.0, 0.0, 1.0));
-     vparams->drawTool()->drawArrow(center, center + vz, radius, type::RGBAColor(0.0, 0.0, 1.0, 1.0));
-   }
-   triangleInfo.endEdit();
+    // Visualize the stress on the shell
+    if (d_showMeasuredValue.getValue())
+    {        
+        std::vector<sofa::type::Vec3> vertices;
+        std::vector<sofa::type::RGBAColor> colorVector;
+
+        auto evalColor = d_drawColorMap.getEvaluator(m_minStress, m_maxStress);
+        const auto& measuredValues = sofa::helper::getReadAccessor(d_measuredValues);
+
+        if(measuredValues.size()){
+            for (Size i = 0; i < nbTriangles; ++i)
+            {
+                const Triangle& tri = triangles[i];
+                Index a = tri[0];
+                Index b = tri[1];
+                Index c = tri[2];
+
+                auto vertex_vector = x[a];
+                auto vertex_position = sofa::type::Vec3(vertex_vector[0], vertex_vector[1], vertex_vector[2]);
+                auto measured_value = measuredValues[ triangleInf[i].measure[0].id ];
+                colorVector.push_back(evalColor(measured_value));
+                vertices.push_back(vertex_position);
+
+                vertex_vector = x[b];
+                vertex_position = sofa::type::Vec3(vertex_vector[0], vertex_vector[1], vertex_vector[2]);
+                measured_value = measuredValues[ triangleInf[i].measure[1].id ];
+                colorVector.push_back(evalColor(measured_value));
+                vertices.push_back(vertex_position);
+
+                vertex_vector = x[c];
+                vertex_position = sofa::type::Vec3(vertex_vector[0], vertex_vector[1], vertex_vector[2]);
+                measured_value = measuredValues[ triangleInf[i].measure[2].id ]; 
+                colorVector.push_back(evalColor(measured_value));
+                vertices.push_back(vertex_position);
+
+            }
+            vparams->drawTool()->drawTriangles(vertices, colorVector);
+            vertices.clear();
+            colorVector.clear();
+        }
+
+    }
+
+
   }
 
 
