@@ -227,7 +227,7 @@ public:
         TRQSTriangleHandler* triangleHandler;
 
 private:
-        sofa::helper::ColorMap* p_drawColorMap; ///< colormap to display the gradiant of stress if @sa showStressValue is set to true
+        sofa::helper::ColorMap d_drawColorMap; ///< colormap to display the gradiant of stress if @sa showStressValue is set to true
         Real m_minStress = 0; ///< min stress computed for @sa showStressValue
         Real m_maxStress = 0; ///< max stress computed for @sa showStressValue
 

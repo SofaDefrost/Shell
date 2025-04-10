@@ -125,7 +125,7 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
 
     triangleHandler = new TRQSTriangleHandler(this, &triangleInfo);
 
-    p_drawColorMap = new helper::ColorMap(256, "Blue to Red");
+    d_drawColorMap = helper::ColorMap(256, "Blue to Red");
 }
 
 
@@ -1384,7 +1384,7 @@ void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams
         std::vector<sofa::type::Vec3> vertices;
         std::vector<sofa::type::RGBAColor> colorVector;
 
-        auto evalColor = p_drawColorMap->getEvaluator(m_minStress, m_maxStress);
+        auto evalColor = d_drawColorMap.getEvaluator(m_minStress, m_maxStress);
         const auto& measuredValues = sofa::helper::getReadAccessor(d_measuredValues);
 
         if(measuredValues.size()){
