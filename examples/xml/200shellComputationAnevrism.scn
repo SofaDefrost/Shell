@@ -1,5 +1,27 @@
 <?xml version="1.0" ?>
+
 <Node name="root" dt="0.04" gravity="0 -10 0">
+    <!-- List of plugins needed to load all components used by this scene -->
+    <Node name="plugins">
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint,FixedRotationProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->  
+        <RequiredPlugin name="Sofa.Component.Engine.Transform"/> <!-- Needed to use components [Vertex2Frame] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [SparseLDLSolver] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [PCGLinearSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->  
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+        <RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TriangleSetTopologyContainer] -->  
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->
+        <RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshOBJLoader] -->  
+        <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] --> 
+        <RequiredPlugin name="Shell"/>
+    </Node>
+
+
 
     <VisualStyle displayFlags="showForceFields showVisualModels" />
 
@@ -9,15 +31,18 @@
 <!--    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />-->
 <!--    <CollisionGroup />-->
 
+
+    <!--<DefaultAnimationLoop/>-->
+    <FreeMotionAnimationLoop computeBoundingBox="false"/>
     <Node name="CoarseMesh">
-        <MeshObjLoader name="coarseMesh" filename="../mesh/aneurysm200.obj"/>
-        <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid" position="@coarseMesh.position" normals="@coarseMesh.normals" invertNormals="false"/>
+        <MeshOBJLoader name="coarseMesh" filename="/home/lucasbureltojo/sofa3/plugins/Shell/mesh/aneurysm200.obj"/>
+        <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid3" position="@coarseMesh.position" normals="@coarseMesh.normals" invertNormals="false"/>
 
     </Node>
 
 	
     <Node name="TargetMesh">
-        <MeshObjLoader name="targetMesh" filename="../mesh/aneurysmHighRes.obj"/>
+        <MeshOBJLoader name="targetMesh" filename="/home/lucasbureltojo/sofa3/plugins/Shell/mesh/aneurysmHighRes.obj"/>
         <TriangleSetTopologyContainer name="targetTopo" src="@targetMesh" />
         <!-- <MechanicalObject name="targetMesh_MO" template="Vec3d"/> -->
     </Node>
@@ -29,16 +54,16 @@
         <!--<CGLinearSolver iterations="20" tolerance="0.05" threshold="1e-20"/>-->
         
         <PCGLinearSolver iterations="5" tolerance="0.05"  preconditioners="Precond"/>
-        <SparseLDLSolver name="Precond"/>
+        <SparseLDLSolver name="Precond" template="CompressedRowSparseMatrixMat3x3"/>
         
 
         <TriangleSetTopologyContainer name="coarseTopo"
             position="@/CoarseMesh/coarseMesh.position"
             edges="@/CoarseMesh/coarseMesh.edges"
             triangles="@/CoarseMesh/coarseMesh.triangles" />
-        <MechanicalObject name="coarseMesh_MO" template="Rigid" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
+        <MechanicalObject name="coarseMesh_MO" template="Rigid3" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
 
-        <UniformMass mass="0.3 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.03"  compute_mapping_inertia="0" />
+        <UniformMass mass="0.3 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.03"  compute_mapping_inertia="0" totalMass="1.0" />
 
 		<BoxConstraint box="-0.2 -1 -0.2 0.2 -0.8 0.2  0.4 0.3 -0.8 0.8 0.7 -0.7" />
 
