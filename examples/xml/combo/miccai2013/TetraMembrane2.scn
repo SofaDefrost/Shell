@@ -1,22 +1,51 @@
 <?xml version="1.0"?>
 <Node name="root" dt="0.01" gravity="0 0 0">
 	<VisualStyle displayFlags="hideVisual hideBehaviorModels hideForceFields showCollisionModels" />
+    <Node name="plugins">
+        <RequiredPlugin name="Shell"/>
+        <RequiredPlugin name="ArticulatedSystemPlugin"/> <!-- Needed to use components [ArticulatedHierarchyBVHController,ArticulatedHierarchyContainer,ArticulatedSystemMapping] -->  
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,BruteForceDetection,CollisionPipeline] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [LocalMinDistance] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Lagrangian.Correction"/> <!-- Needed to use components [LinearSolverConstraintCorrection] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Lagrangian.Solver"/> <!-- Needed to use components [GenericConstraintSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->
+        <RequiredPlugin name="Sofa.Component.Engine.Generate"/> <!-- Needed to use components [GroupFilterYoungModulus] -->  
+        <RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshOBJLoader,MeshVTKLoader,VTKExporter] -->    
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [BTDLinearSolver,SparseLDLSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [BarycentricMapping,BeamLinearMapping,IdentityMapping] -->  
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+        <RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+        <RequiredPlugin name="Sofa.Component.SolidMechanics.FEM.Elastic"/> <!-- Needed to use components [BeamFEMForceField,TetrahedronFEMForceField] -->  
+        <RequiredPlugin name="Sofa.Component.SolidMechanics.Spring"/> <!-- Needed to use components [RestShapeSpringsForceField] -->  
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TetrahedronSetTopologyContainer,TriangleSetTopologyContainer] -->  
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->
+        <RequiredPlugin name="Sofa.Component.Collision.Geometry"/> <!-- Needed to use components [LineCollisionModel,PointCollisionModel,TriangleCollisionModel] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Constant"/> <!-- Needed to use components [MeshTopology] -->   
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Grid"/> <!-- Needed to use components [RegularGridTopology] --> 
+    </Node>
+
 
 	<FreeMotionAnimationLoop />
-	<GenericConstraintSolver tolerance="1e-8" printLog="true"/>
+	<GenericConstraintSolver tolerance="1e-8" printLog="false"/>
         <!--<ComplianceVisualModel />-->
 	<CollisionPipeline depth="6" verbose="0" draw="0"/>
-	<BruteForceDetection name="N2" />
-        <MinProximityIntersection name="proximity" alarmDistance="0.001" contactDistance="0.001" />
-        <LocalMinDistance name="Proximity"  alarmDistance="0.002" contactDistance="0.0017"  angleCone="0.0"/>
-	<DefaultContactManager name="Response" response="FrictionContact" />
+	<BruteForceBroadPhase name="N2" />
+    <BVHNarrowPhase/>
+    <MinProximityIntersection name="proximity" alarmDistance="0.001" contactDistance="0.001" />
+    <LocalMinDistance name="Proximity"  alarmDistance="0.002" contactDistance="0.0017"  angleCone="0.0"/>
+	<CollisionResponse name="Response" response="FrictionContactConstraint" />
         <!--<RuleBasedContactManager name="Response" response="FrictionContact" rules="10 * NeedleContact" />-->
 
 	<Node name="articulatedObject1">
 		<MechanicalObject name="ArticulatedObject" template="Vec1d"/>
 		<Node name="6D_DOFs1">
-			<MechanicalObject name="6D_Dof" template="Rigid" dx="0.01" dz="-0.00"/>
-			<UniformMass mass="0.0000128 0.000001 [0.00000001 0 0 0 0.0000001 0 0 0 0.0000001]"/>
+			<MechanicalObject name="6D_Dof" template="Rigid3d" dx="0.01" dz="-0.00"/>
+			<UniformMass vertexMass="0.0000128 0.000001 [0.00000001 0 0 0 0.0000001 0 0 0 0.0000001]"/>
 			<ArticulatedSystemMapping input1="@../ArticulatedObject" output="@6D_Dof"/>
 		</Node>
 		<ArticulatedHierarchyContainer filename="tube.bvh"/>
@@ -26,12 +55,12 @@
         <Node name="VolMesh">
             <MeshVTKLoader name="loader"  filename="cubeMembrane100k.vtk"
                 rotation="0 -90 0" scale3d="0.03 0.03 0.03" translation="0.14 -0.015 -0.015" />
-            <TetrahedronSetTopologyContainer name="topo" src="@loader" />
+            <TetrahedronSetTopologyContainer name="topo" triangles="@loader.triangles" position="@loader.position" />
             <MechanicalObject name="VolMO" />
         </Node>
 
         <Node name="SurfMesh">
-            <MeshObjLoader name="loader" filename="cubeMembrane100k.obj"
+            <MeshOBJLoader name="loader" filename="cubeMembrane100k.obj"
                 rotation="0 -90 0" scale3d="0.03 0.03 0.03" translation="0.14 -0.015 -0.015" />
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="SurfMO" />
@@ -39,9 +68,9 @@
 
 
 	<Node name="Needle">
-		<EulerImplicit rayleighMass="0.01" rayleighStiffness="0.1" />
+		<EulerImplicitSolver rayleighMass="0.01" rayleighStiffness="0.1" />
 		<BTDLinearSolver />
-                <MechanicalObject template="Rigid" name="catheter" dz="-0.00" position="
+                <MechanicalObject template="Rigid3d" name="catheter" dz="-0.00" position="
                     0.010 0 0 0 0 0 1
                     0.017 0 0 0 0 0 1
                     0.024 0 0 0 0 0 1
@@ -58,14 +87,14 @@
                     0.101 0 0 0 0 0 1
                     0.108 0 0 0 0 0 1
                     "/>
-		<Mesh name="lines" lines="0 1  1 2  2 3  3 4  4 5  5 6  6 7  7 8  8 9  9 10  10 11  11 12  12 13  13 14" />
-		<UniformMass mass="0.0000128 0.000001 [0.00000001 0 0 0 0.0000001 0 0 0 0.0000001]"/>
+		<MeshTopology name="lines" lines="0 1  1 2  2 3  3 4  4 5  5 6  6 7  7 8  8 9  9 10  10 11  11 12  12 13  13 14" />
+		<UniformMass vertexMass="0.0000128 0.000001 [0.00000001 0 0 0 0.0000001 0 0 0 0.0000001]"/>
 		<BeamFEMForceField name="FEM" radius="0.0005" youngModulus="1e11" />
 		<LinearSolverConstraintCorrection />
 
 		<Node name="Constraints">
 			<MechanicalObject name="points"/>
-			<RegularGrid
+			<RegularGridTopology
 				nx="15" ny="1" nz="1"
 				xmin="0" xmax="14"
 				ymin="0" ymax="0"
@@ -77,13 +106,13 @@
 		<Node name="centerline">
 			<MechanicalObject name="CM"  template="Vec3d"/>
 			<IdentityMapping input="@.." output="@."/>
-                        <Mesh name="lines" lines="0 1  1 2  2 3  3 4  4 5  5 6  6 7  7 8  8 9  9 10  10 11  11 12  12 13  13 14 " />
-                        <Line name="needle_collis_line" group="10"/>
-                        <Point name="needle_collis_point" group="10" />
+                        <MeshTopology name="lines" lines="0 1  1 2  2 3  3 4  4 5  5 6  6 7  7 8  8 9  9 10  10 11  11 12  12 13  13 14 " />
+                        <LineCollisionModel name="needle_collis_line" group="10"/>
+                        <PointCollisionModel name="needle_collis_point" group="10" />
 		</Node>
 
 		<!--	<AttachConstraint name="Attach" object1="articulatedObject1\6D_DOFs1\6D_Dof" object2="catheter"  indices1="1" indices2="0"/>	-->
-		<RestShapeSpringsForceField points="0" stiffness="1e8" angularStiffness="1e8"  external_rest_shape="../../articulatedObject1/6D_DOFs1/6D_Dof" external_points="1"/>
+		<RestShapeSpringsForceField points="0" stiffness="1e8" angularStiffness="1e8"  external_rest_shape="@../articulatedObject1/6D_DOFs1/6D_Dof" external_points="1"/>
 
 		<!--	<BilateralInteractionConstraint object1="articulatedObject1\6D_DOFs1\6D_Dof" object2="catheter" first_point="1" second_point="0" />	-->
 
@@ -93,39 +122,39 @@
 	</Node>
 
 	<Node name="Cube">
-		<EulerImplicit name="cg_odesolver" printLog="false"/>
+		<EulerImplicitSolver name="cg_odesolver" printLog="false"/>
                 <!--<CGLinearSolver iterations="200" name="linear solver" tolerance="1.0e-9" threshold="1.0e-9" />-->
-                <SparseLDLSolver/> 
+        <SparseLDLSolver template="CompressedRowSparseMatrixMat3x3d"/> 
 
-                <Mesh src="@/VolMesh/loader" />
-                <MechanicalObject src="@/VolMesh/loader"/>
+        <MeshTopology src="@/VolMesh/loader" />
+        <MechanicalObject src="@/VolMesh/loader"/>
 
-                <GroupFilterYoungModulus name="youngModulus" template="Vec3d"
+        <GroupFilterYoungModulus name="youngModulus" template="Vec3d"
                     elementsGroup="@/VolMesh/loader.dataset"
                     mapGroupModulus="20000 2870; 20001 8e6;" />
-                <TetrahedronFEMForceField template="Vec3d" name="FEM"
+        <TetrahedronFEMForceField template="Vec3d" name="FEM"
                     computeGlobalMatrix="false" method="large"
                     youngModulus="@youngModulus.youngModulus" poissonRatio="0.45"
                     drawHeterogeneousTetra="1" />
 
-		<UniformMass mass="0.0025"/>
+		<UniformMass vertexMass="0.0025"/>
 		<BoxROI name="box_roi" box="0.139 -0.016 -0.016    0.141 0.016 0.016" drawBoxes="true"/>
-		<FixedConstraint indices="@box_roi.indices" />
+		<FixedProjectiveConstraint indices="@box_roi.indices" />
 
                 <!--<PrecomputedConstraintCorrection rotations="0" printLog="0" recompute="1" fileCompliance="cube0coarse_homog_3e4.comp"/> -->
-                <LinearSolverConstraintCorrection/>
+        <LinearSolverConstraintCorrection/>
 
-                <VTKExporter filename="out-TetraMembrane2.vtk" exportAtEnd="true"
+        <VTKExporter filename="out-TetraMembrane2.vtk" exportAtEnd="true"
                     edges="true" triangles="true" quads="true" tetras="true" />
 
-                <Node name="CubeCollision">
-                    <Mesh src="@/SurfMesh/topo" />
-                    <MechanicalObject src="@/SurfMesh/SurfMO" />
-                    <Triangle name="cube_collis_triangle" computeNormals="false" bothSide="true" group="11" />
-                    <Line name="cube_collis_line" group="11" />
-                    <Point name="cube_collis_point" group="11" />
-                    <BarycentricMapping input="@.." output="@." />
-                </Node>
+            <Node name="CubeCollision">
+                <MeshTopology src="@/SurfMesh/topo" />
+                <MechanicalObject src="@/SurfMesh/SurfMO" />
+                <TriangleCollisionModel name="cube_collis_triangle" computeNormals="false" bothSide="true" group="11" />
+                <LineCollisionModel name="cube_collis_line" group="11" />
+                <PointCollisionModel name="cube_collis_point" group="11" />
+                <BarycentricMapping input="@.." output="@." />
+            </Node>
 
 	</Node>
 </Node>

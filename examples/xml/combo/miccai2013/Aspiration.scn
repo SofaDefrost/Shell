@@ -16,22 +16,50 @@
 
 <Node name="root" dt="0.01" gravity="0 0 0">
 	<VisualStyle displayFlags="showVisual hideForceFields hideCollisionModels" />
-	<RequiredPlugin pluginName="shells"/>
+	<Node name="plugins">
 
-        <FreeMotionAnimationLoop />
-	<GenericConstraintSolver tolerance="1e-8" printLog="false"/>
-        <!--<ComplianceVisualModel />-->
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->  
+        <RequiredPlugin name="MultiThreading"/> <!-- Needed to use components [ParallelBruteForceBroadPhase] -->
+  		<RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,BruteForceDetection,CollisionPipeline] -->  
+  		<RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [LocalMinDistance] -->  
+  		<RequiredPlugin name="Sofa.Component.Constraint.Lagrangian.Correction"/> <!-- Needed to use components [LinearSolverConstraintCorrection] -->  
+  		<RequiredPlugin name="Sofa.Component.Constraint.Lagrangian.Solver"/> <!-- Needed to use components [GenericConstraintSolver] -->  
+  		<RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint] -->  
+  		<RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI,SphereROI] -->  
+  		<RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshSTLLoader,MeshVTKLoader,VTKExporter] -->  
+  		<RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [SparseLDLSolver template="CompressedRowSparseMatrixMat3x3d"] -->  
+  		<RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [CGLinearSolver] -->
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [BarycentricMapping,IdentityMapping] -->  
+  		<RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+  		<RequiredPlugin name="Sofa.Component.MechanicalLoad"/> <!-- Needed to use components [SurfacePressureForceField] -->  
+  		<RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+  		<RequiredPlugin name="Sofa.Component.SolidMechanics.FEM.Elastic"/> <!-- Needed to use components [TetrahedronFEMForceField] -->  
+		<RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+		<RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TetrahedronSetTopologyContainer,TriangleSetTopologyContainer,TriangleSetTopologyModifier] -->  
+		<RequiredPlugin name="Sofa.Component.Topology.Mapping"/> <!-- Needed to use components [Tetra2TriangleTopologicalMapping] -->  
+		<RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->  
+  		<RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] --> 
+		<RequiredPlugin name='Sofa.Component.Collision.Response.Contact'/>
+		<RequiredPlugin name="Sofa.Component.Collision.Geometry"/> <!-- Needed to use components [LineCollisionModel] -->  
+		<RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+		<RequiredPlugin name="Sofa.Component.Topology.Container.Constant"/> <!-- Needed to use components [MeshTopology] --> 
+        <RequiredPlugin name="Shell"/>
+    </Node>
+
+    <FreeMotionAnimationLoop />
+	
+	<LCPConstraintSolver maxIt="1000" tolerance="1e-8" printLog="false"/>
 	<CollisionPipeline depth="6" verbose="0" draw="0"/>
-	<BruteForceDetection name="N2" />
-        <!--<MinProximityIntersection name="proximity" alarmDistance="0.1" contactDistance="0.01" />-->
-        <LocalMinDistance name="Proximity"  alarmDistance="0.01" contactDistance="0.0005"  angleCone="0.0" />
-	<DefaultContactManager name="Response" response="FrictionContact" />
+	<ParallelBruteForceBroadPhase name="N2"/>
+	<ParallelBVHNarrowPhase/>
+    <LocalMinDistance name="Proximity"  alarmDistance="0.01" contactDistance="0.0005"  angleCone="0.0" />
+	<CollisionResponse name="Response" response="FrictionContactConstraint" />
 
         <Node name="VolMesh">
             <!--<MeshVTKLoader name="loader"  filename="../cube2739.vtk"-->
             <MeshVTKLoader name="loader"  filename="cube2648G.vtk"
                  scale3d="0.015 0.015 0.015" translation="-0.0075 0 -0.0075" />
-            <TetrahedronSetTopologyContainer name="topo" src="@loader" />
+            <TetrahedronSetTopologyContainer name="topo" triangles="@loader.triangles" position="@loader.position" />
             <MechanicalObject name="VolMO" />
             <Node name="Surface">
                 <TriangleSetTopologyContainer name="triangles" />
@@ -42,33 +70,33 @@
         </Node>
 
         <Node name="SurfMesh">
-            <!--<MeshObjLoader name="loader" filename="../cube2739.obj"-->
-            <MeshObjLoader name="loader" filename="cube2648G.obj"
+            <!--<MeshOBJLoader name="loader" filename="../cube2739.obj"-->
+            <MeshOBJLoader name="loader" filename="cube2648G.obj"
                 scale3d="0.015 0.015 0.015" translation="-0.0075 0 -0.0075" />
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="SurfMO" />
         </Node>
 
         <Node name="TubeMesh">
-            <MeshObjLoader name="loader" filename="tube.obj" scale3d="0.01 0.01 0.01" translation="0 0.0206 0" />
-<!-- 	    <MeshSTLLoader name="loader" filename="tubeHalf.stl" scale3d="0.01 0.01 0.01" translation="0 0.0206 0" /> -->
+            <!--<MeshOBJLoader name="loader" filename="tube.obj" scale3d="0.01 0.01 0.01" translation="0 0.0206 0" />-->
+ 	        <MeshSTLLoader name="loader" filename="tubeHalf.stl" scale3d="0.01 0.01 0.01" translation="0 0.0206 0" /> 
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="TubeMO" />
         </Node>
 
         <Node name="Tube">
-            <EulerImplicit />
-            <SparseLDLSolver/> 
-
-            <TriangleSetTopologyContainer name="topo" src="@/TubeMesh/topo" />
+            <EulerImplicitSolver />
+            <!--<CGLinearSolver iterations="100" tolerance="1e-20" threshold="1e-20" warmStart="1" />-->
+            <SparseLDLSolver template="CompressedRowSparseMatrixMat3x3d"/>
+            <TriangleSetTopologyContainer name="topo" src="@../TubeMesh/topo" />
 
             <MechanicalObject template="Vec3d" />
 
-            <FixedConstraint indices="0-63" />
+            <FixedProjectiveConstraint indices="0-63" />
 
             <LinearSolverConstraintCorrection />
 
-            <UniformMass mass="1"/>
+            <UniformMass totalMass="1"/>
 
             <Node name="Collision">
                 <TriangleSetTopologyContainer name="topo" src="@../topo" />
@@ -77,24 +105,24 @@
                 <MechanicalObject template="Vec3d" />
                 <IdentityMapping input="@.." output="@."/>
  
-                <!--<Point name="tube_collis_point" group="10" />-->
-                <Line name="tube_collis_line" group="10"/>
-                <!--<Triangle name="tube_collis_line" bothSide="true" group="10"/>-->
+                <PointCollisionModel name="tube_collis_point" group="10" />
+                <LineCollisionModel name="tube_collis_line" group="10"/>
+                <TriangleCollisionModel name="tube_collis_triangle" bothSide="true" group="10"/>
             </Node>
 
 	</Node>
 
         <Node name="Cube">
-                <EulerImplicit />
-                <SparseLDLSolver/> 
-               
+                <EulerImplicitSolver />
+                <SparseLDLSolver template="CompressedRowSparseMatrixMat3x3d"/>
+                <!--<CGLinearSolver iterations="100" tolerance="1e-20" threshold="1e-20" warmStart="1" />-->
 
-                <Mesh src="@/VolMesh/loader" />
+                <MeshTopology src="@/VolMesh/loader" />
                 <MechanicalObject name="MO" src="@/VolMesh/loader"/>
                 <BoxROI name="top" box="-0.0076 0.0149 -0.0076  0.0076 0.0178 0.0076" drawBoxes="true" />
-                <BoxROI name="bottom" box="-0.0076 -0.0001 -0.0076  0.0076 0.0001 0.0076" drawBoxes="true" />-->
+                <BoxROI name="bottom" box="-0.0076 -0.0001 -0.0076  0.0076 0.0001 0.0076" drawBoxes="true" />
 
-                <UniformMass mass="0.001"/>
+                <UniformMass totalMass="0.001"/>
 
                 <VTKExporter filename="result_aspiration.vtk" XMLformat="false" listening="true"
                     edges="0" triangles="0" quads="0" tetras="1"
@@ -122,34 +150,34 @@
                     <!--</Node>-->
                 </Node>
 
-                <!--<FixedConstraint indices="@bottom.indices" />-->
+                <!--<FixedProjectiveConstraint indices="@bottom.indices" />-->
 
                 <LinearSolverConstraintCorrection/>
 
                 <Node name="CubeCollision">
-                    <Mesh src="@/SurfMesh/topo" />
+                    <MeshTopology src="@/SurfMesh/topo" />
                     <MechanicalObject />
                     <!--<Point name="cube_collis_point" group="11" />-->
-                    <Line name="cube_collis_line" group="11" />
+                    <LineCollisionModel name="cube_collis_line" group="11" />
                     <!--<Triangle name="cube_collis_triangle" computeNormals="false" bothSide="true" group="11" />-->
-                    <BarycentricMapping input="@.." output="@." />
-
+                    <!--<BarycentricMapping input="@../MO" output="@cube_collis_line" />-->
+					<BarycentricMapping name="Linecol" />
                     <Node name="Visual">
                         <OglModel color="green" />
-                        <IdentityMapping input="@.." output="@." />
+                        <IdentityMapping/>
                     </Node>
                 </Node>
 
         </Node>
 
         <Node name="TubeRender">
-<!--             <MeshObjLoader name="loader" filename="tube.obj" scale3d="0.01 0.01 0.01" translation="0 0.0201 0" /> -->
-		<MeshSTLLoader name="loader" filename="tubeHalf.stl" scale3d="0.01 0.01 0.01" translation="0 0.0201 0" />
+<!--             <MeshOBJLoader name="loader" filename="tube.obj" scale3d="0.01 0.01 0.01" translation="0 0.0201 0" /> -->
+			<MeshSTLLoader name="loader" filename="tubeHalf.stl" scale3d="0.01 0.01 0.01" translation="0 0.0201 0" />
             <TriangleSetTopologyContainer name="topo" src="@loader" />
             <MechanicalObject name="TubeMO" />
             <Node name="Visual">
                 <OglModel color="0.75 0.75 0.75 0.15" alphaBlend="true" />
-                <IdentityMapping input="@.." output="@."/>
+                <IdentityMapping/>
             </Node>
         </Node>
 

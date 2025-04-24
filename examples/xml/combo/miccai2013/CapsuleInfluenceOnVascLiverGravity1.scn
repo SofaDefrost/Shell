@@ -1,46 +1,82 @@
 ﻿<?xml version="1.0"?>
 <Node name="root" dt="0.1" gravity="0 -9.810 0">
-	<RequiredPlugin pluginName="shells"/>
-	<RequiredPlugin pluginName="SofaMiscForcefieldDev"/>
 	
+	
+
+	<Node name="plugins">
+		<RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->  
+		<RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint] -->  
+		<RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->  
+		<RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshVTKLoader] -->  
+		<RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [SparseLDLSolver] -->  
+		<RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [BarycentricMapping] -->  
+		<RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+		<RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [StaticSolver] -->  
+		<RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+		<RequiredPlugin name="Sofa.Component.SolidMechanics.FEM.Elastic"/> <!-- Needed to use components [BeamFEMForceField,TetrahedronFEMForceField] -->  
+		<RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+		<RequiredPlugin name="Sofa.Component.Topology.Container.Constant"/> <!-- Needed to use components [MeshTopology] -->  
+		<RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TetrahedronSetGeometryAlgorithms,TetrahedronSetTopologyContainer,TetrahedronSetTopologyModifier] -->  
+		<RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->  
+		<RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] --> 
+        <RequiredPlugin name="Shell"/>
+		<RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,CollisionPipeline] -->  
+  		<RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [MinProximityIntersection] -->  
+  		<RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+
+
+    </Node>
+
+
 	<VisualStyle displayFlags="hideCollisionModels hideForceFields hideBehaviorModels showVisualModels showWireframe" />
+
+
+	<DefaultAnimationLoop/>
+
+	<CollisionPipeline verbose="0"/>
+    <BruteForceBroadPhase name="N2" />
+    <BVHNarrowPhase/>
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+    <CollisionResponse name="Response" response="PenaltyContactForceField" />
+
+
+
 	<Node name="liver1">		
 <!-- 		<EulerImplicitSolver/> -->
-		<StaticSolver applyIncrementFactor="true" />		
+		<StaticSolver />		
 
 <!-- 		<CGLinearSolver iterations="25" tolerance="1e-12" threshold="1e-12"/> -->
 <!-- 		<PCGLinearSolver  name="linearsolver" tolerance="1e-12" preconditioners="precond" max_use_by_step="-1" /> -->
 
-		<SparseLDLSolver name="precond"/>
+		<SparseLDLSolver name="precond" template="CompressedRowSparseMatrixMat3x3d"/>
 
 		<MeshVTKLoader name="vloader" filename="Data_Pig210213/mesh15.vtk" flipNormals="false" scale3d="0.001 0.001 0.001"/>
-		<MeshObjLoader name="sloader" filename="Data_Pig210213/Supine_Liver_SmDec.obj" scale3d="0.001 0.001 0.001"/>
+		<MeshOBJLoader name="sloader" filename="Data_Pig210213/Supine_Liver_SmDec.obj" scale3d="0.001 0.001 0.001"/>
 
 		<TetrahedronSetTopologyContainer name="Container" src="@vloader"/>
 		<TetrahedronSetTopologyModifier name="Modifier"/>
-		<TetrahedronSetTopologyAlgorithms name="TopoAlgo"/>
 		<TetrahedronSetGeometryAlgorithms name="GeomAlgo"/>
 		<MechanicalObject template="Vec3d" name="LiverMO"/>
-		<UniformMass totalmass="0.67" />	
+		<UniformMass totalMass="0.67" />	
 		<TetrahedronFEMForceField name="FEM" youngModulus="3.5e3" poissonRatio="0.45" method="large" listening="1" />
 <!-- 		<MJEDTetrahedralForceField ParameterSet="1206.89655172414  10862.0689655172" materialName="StVenantKirchhoff" considerInversion="0" matrixRegularization="0"/>		 -->
 
 <!-- 		<BoxROI name="box" box="0 0.300 0.300 0.400 0.400 0.500" drawBoxes="1"/> -->
 		<BoxROI name="box" box="-0.025 -0.005 0.070 0.045 0.025 0.090" drawBoxes="1"/>
-<!-- 		<BoxROI name="box" box="-0.02 0.010 0.085 0.04 0.035 0.100" drawBoxes="1"/> --> -->
-		<FixedConstraint  indices="@box.indices"/>
+<!-- 		<BoxROI name="box" box="-0.02 0.010 0.085 0.04 0.035 0.100" drawBoxes="1"/> --> 
+		<FixedProjectiveConstraint  indices="@box.indices"/>
 <!-- 		<VTKExporter filename="result_vascularized1.vtk" XMLformat="false" listening="true" edges="0" triangles="0" quads="0" tetras="1" exportAtEnd="true"/>   	 -->
 			
 		<Node name="visual2" activated="1">
 			<VisualStyle displayFlags="hideCollisionModels hideForceFields hideMappings hideBehaviorModels showVisualModels showWireframe" />
-			<Mesh src="@../sloader" name="surface" />
+			<MeshTopology src="@../sloader" name="surface" />
 			<OglModel name="LiverVisu" color="1 0  0  1"/>
 			<BarycentricMapping input="@../LiverMO" output="@LiverVisu"/>
 		</Node>
 		
 		<Node name="visual" activated="1">
 			<VisualStyle displayFlags="hideCollisionModels hideForceFields hideMappings hideBehaviorModels showVisualModels hideWireframe" />
-			<Mesh src="@../sloader" name="surface" />
+			<MeshTopology src="@../sloader" name="surface" />
 			<OglModel name="LiverVisu" color="1  0  0  0.4"/>
 			<BarycentricMapping input="@../LiverMO" output="@LiverVisu"/>
 		</Node>
@@ -54,7 +90,9 @@
 		</Node>-->
 		
 
-		<MappedBeamToTetraForceField mappedFEM="PortalVein/BeamFEM" mappedMechObject="PortalVein/BeamMO" mapping="PortalVein/BeamTetraMapping" printLog="1"/>
+<!--		<MappedBeamToTetraForceField mappedFEM="PortalVein/BeamFEM" mappedMechObject="PortalVein/BeamMO" mapping="PortalVein/BeamTetraMapping" printLog="true"/>
+-->			<!--In this program, i tried to transform "MappedBeamToTetraForceField" into two components below "BarycentricMapping+TetrahedronFEMForceField", i don't know if 
+			it's correct or not...-->
 		
 		<Node name="PortalVein" activated="1">
 			<VisualStyle displayFlags="hideCollisionModels hideForceFields hideMappings hideBehaviorModels showVisualModels hideWireframe" />
@@ -74,47 +112,48 @@
 					<Object type="IdentityMapping" object1="Quads" object2="Visual"/>
 				</Node>
 			</Node>-->
-		</Node>		
+		</Node>
+		<BarycentricMapping name="BeamToTetraMapping" input="@LiverMO" output="@PortalVein/BeamMO" />
+		<TetrahedronFEMForceField name="TetraFEM" youngModulus="3.5e3" poissonRatio="0.45" method="large" />	
 		
 	</Node>
 	
 	<Node name="liver2" activated="0">
 <!-- 		<EulerImplicitSolver/> -->
-		<StaticSolver applyIncrementFactor="true"/>
+		<StaticSolver/>
 
 <!-- 		<CGLinearSolver iterations="25" tolerance="1e-12" threshold="1e-12"/> -->
 <!-- 		<PCGLinearSolver  name="linearsolver" tolerance="1e-12" preconditioners="precond" max_use_by_step="-1" /> -->
 
-		<SparseLDLSolver name="precond"/>
+		<SparseLDLSolver name="precond" template="CompressedRowSparseMatrixMat3x3d"/>
 
 		<MeshVTKLoader name="vloader" filename="Data_Pig210213/mesh13.vtk" flipNormals="false" scale3d="0.001 0.001 0.001"/>
-		<MeshObjLoader name="sloader" filename="Data_Pig210213/Supine_Liver_SmDec.obj" scale3d="0.001 0.001 0.001"/>
+		<MeshOBJLoader name="sloader" filename="Data_Pig210213/Supine_Liver_SmDec.obj" scale3d="0.001 0.001 0.001"/>
 
 		<TetrahedronSetTopologyContainer name="Container" src="@vloader"/>
 		<TetrahedronSetTopologyModifier name="Modifier"/>
-		<TetrahedronSetTopologyAlgorithms name="TopoAlgo"/>
 		<TetrahedronSetGeometryAlgorithms name="GeomAlgo"/>
 		<MechanicalObject template="Vec3d" name="LiverMO"/>
-		<UniformMass totalmass="0.67" />	
+		<UniformMass totalMass="0.67" />	
 		<TetrahedronFEMForceField name="FEM" youngModulus="3.5e3" poissonRatio="0.45" method="large" listening="1" />
 <!-- 		<MJEDTetrahedralForceField ParameterSet="1206.89655172414  10862.0689655172" materialName="StVenantKirchhoff" considerInversion="0" matrixRegularization="0"/>		 -->
 
 <!-- 		<BoxROI name="box" box="0 0.300 0.300 0.400 0.400 0.500" drawBoxes="1"/> -->
 		<BoxROI name="box" box="-0.025 -0.005 0.070 0.045 0.025 0.090" drawBoxes="1"/>
 <!-- 		<BoxROI name="box" box="-0.02 0.010 0.085 0.04 0.035 0.100" drawBoxes="1"/> --> -->
-		<FixedConstraint  indices="@box.indices"/>
+		<FixedProjectiveConstraint  indices="@box.indices"/>
 <!-- 		<VTKExporter filename="result_vascularized1.vtk" XMLformat="false" listening="true" edges="0" triangles="0" quads="0" tetras="1" exportAtEnd="true"/>   	 -->
 			
 		<Node name="visual1">
 			<VisualStyle displayFlags="hideCollisionModels hideForceFields hideMappings hideBehaviorModels showVisualModels showWireframe" />			
-			<Mesh src="@../sloader" name="surface" />
+			<MeshTopology src="@../sloader" name="surface" />
 			<OglModel name="LiverVisu" color="1 1  0  1"/>
 			<BarycentricMapping input="@../LiverMO" output="@LiverVisu"/>
 		</Node>
 		
 		<Node name="visual2">
 			<VisualStyle displayFlags="hideCollisionModels hideForceFields hideMappings hideBehaviorModels showVisualModels hideWireframe" />			
-			<Mesh src="@../sloader" name="surface" />
+			<MeshTopology src="@../sloader" name="surface" />
 			<OglModel name="LiverVisu" color="1 1  0  0.4"/>
 			<BarycentricMapping input="@../LiverMO" output="@LiverVisu"/>
 		</Node>
@@ -129,8 +168,11 @@
 		</Node>
 		
 
-		<MappedBeamToTetraForceField mappedFEM="PortalVein/BeamFEM" mappedMechObject="PortalVein/BeamMO" mapping="PortalVein/BeamTetraMapping" printLog="1"/>
+<!--		<MappedBeamToTetraForceField mappedFEM="PortalVein/BeamFEM" mappedMechObject="PortalVein/BeamMO" mapping="PortalVein/BeamTetraMapping" printLog="1"/>
+-->		<BarycentricMapping name="BeamToTetraMapping" input="@LiverMO" output="@../liver1/PortalVein/BeamMO" />
+		<TetrahedronFEMForceField name="TetraFEM" youngModulus="3.5e3" poissonRatio="0.45" method="large" />
 		
+
 		<Node name="PortalVein" activated="1">
 			<VisualStyle displayFlags="hideCollisionModels hideForceFields hideMappings hideBehaviorModels showVisualModels hideWireframe" />
 			<include href="Data_Pig210213/RigidMO.xml" scale3d="0.001 0.001 0.001"/>
@@ -140,13 +182,13 @@
 
 			<Node name="VisuThread">
 				
-				<Object type="MechanicalObject" name="Quads" />
-				<include href="Objects/QuadSetTopology.xml"/>
-				<Object type="Edge2QuadTopologicalMapping" nbPointsOnEachCircle="10" radius="0.003" object1="BeamTopology" object2="Container"/>
-				<Object type="TubularMapping" nbPointsOnEachCircle="10" radius="0.002" object1="BeamMO" object2="Quads"/> 
-				<Node name="VisuOgl">
-					<Object type="OglModel" name="Visual" color="1 1 0 0.5" />
-					<Object type="IdentityMapping" object1="Quads" object2="Visual"/>
+				<MechanicalObject name="Quads" />
+				<include href="Objects/QuadSetTopology.xml" template="Vec3d"/>
+				<Edge2QuadTopologicalMapping nbPointsOnEachCircle="10" radius="0.003" input="@BeamTopology" output="@Container"/>
+				<TubularMapping nbPointsOnEachCircle="10" radius="0.002" input="@../BeamMO" output="@Quads"/> 
+				<Node name="VisuOgl" activated="1">
+					<OglModel name="Visual" color="1 0.0 0.0 0.5" />
+					<IdentityMapping input="@../Quads" output="@Visual"/>
 				</Node>
 			</Node>
 		</Node>		
@@ -162,10 +204,10 @@
 		<TetrahedronSetTopologyAlgorithms name="TopoAlgo"/>
 		<TetrahedronSetGeometryAlgorithms name="GeomAlgo"/>
 		<MechanicalObject template="Vec3d" name="LiverMO"/>
-		<UniformMass totalmass="0.8" />	
+		<UniformMass totalMass="0.8" />	
 		<TetrahedronFEMForceField name="FEM" youngModulus="5e3" poissonRatio="0.45" method="large" listening="1" />				
 		<BoxROI name="box" box="-0.025 -0.005 0.070 0.045 0.025 0.090" drawBoxes="1"/>
-		<FixedConstraint  indices="@box.indices"/>
+		<FixedProjectiveConstraint  indices="@box.indices"/>
 		<Node name="visual2">
 			<OglModel name="LiverVisu" fileMesh="../../../../Data/PIG_210213_SCANNER_NEEDLES/Meshes/mesh10.obj" color="1 1  0  1" scale3d="0.001 0.001 0.001"/>
 			<BarycentricMapping input="@../LiverMO" output="@LiverVisu"/>
@@ -178,17 +220,17 @@
 		<StaticSolver applyIncrementFactor="false"/>
 		<CGLinearSolver iterations="30" tolerance="1e-12" threshold="1e-12"/>
 		<MeshVTKLoader name="vloader" filename="../Data/Mesh1/liver-volume-500-ordered.vtu" flipNormals="false" />
-		<MeshObjLoader name="loader" filename="../Data/Mesh1/liverM.obj" flipNormals="false" />
+		<MeshOBJLoader name="loader" filename="../Data/Mesh1/liverM.obj" flipNormals="false" />
 		<TetrahedronSetTopologyContainer name="Container" src="@vloader"/>
 		<TetrahedronSetTopologyModifier name="Modifier"/>
 		<TetrahedronSetTopologyAlgorithms name="TopoAlgo"/>
 		<TetrahedronSetGeometryAlgorithms name="GeomAlgo"/>
 		<MechanicalObject template="Vec3d" name="LiverMO" scale3d="0.001 0.001 0.001" translation="0.00 0.00 0.00" />
-		<UniformMass totalmass="1.5" />				
+		<UniformMass totalMass="1.5" />				
 		<TetrahedronFEMForceField name="FEM" youngModulus="3.5e3" poissonRatio="0.45" method="large" listening="1" />
 
 		<BoxROI name="box" box="0.20 0.24 0.36 0.25 0.28 0.42" drawBoxes="1"/>		
-		<FixedConstraint  indices="@box.indices"/>
+		<FixedProjectiveConstraint  indices="@box.indices"/>
  		<VTKExporter filename="result_vascularized2.vtk" XMLformat="false" listening="true" edges="0" triangles="0" quads="0" tetras="1" exportAtEnd="true"/>
 
 		<Node name="visual">
