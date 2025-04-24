@@ -5,6 +5,7 @@
     <Node name="plugins">
         <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->
         <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint,FixedRotationProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Lagrangian.Solver"/> <!-- Needed to use components [LCPConstraintSolver] --> 
         <RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->  
         <RequiredPlugin name="Sofa.Component.Engine.Transform"/> <!-- Needed to use components [Vertex2Frame] -->  
         <RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [SparseLDLSolver] -->  
@@ -33,16 +34,18 @@
 
 
     <!--<DefaultAnimationLoop/>-->
-    <FreeMotionAnimationLoop computeBoundingBox="false"/>
+
+    <FreeMotionAnimationLoop computeBoundingBox="true"/>
+    
     <Node name="CoarseMesh">
-        <MeshOBJLoader name="coarseMesh" filename="/home/lucasbureltojo/sofa3/plugins/Shell/mesh/aneurysm200.obj"/>
+        <MeshOBJLoader name="coarseMesh" filename="../../../Shell/mesh/aneurysm200.obj"/>
         <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid3" position="@coarseMesh.position" normals="@coarseMesh.normals" invertNormals="false"/>
 
     </Node>
 
 	
     <Node name="TargetMesh">
-        <MeshOBJLoader name="targetMesh" filename="/home/lucasbureltojo/sofa3/plugins/Shell/mesh/aneurysmHighRes.obj"/>
+        <MeshOBJLoader name="targetMesh" filename="../../../Shell/mesh/aneurysmHighRes.obj"/>
         <TriangleSetTopologyContainer name="targetTopo" src="@targetMesh" />
         <!-- <MechanicalObject name="targetMesh_MO" template="Vec3d"/> -->
     </Node>
@@ -52,8 +55,8 @@
     <Node name="Shell">
         <EulerImplicitSolver />
         <!--<CGLinearSolver iterations="20" tolerance="0.05" threshold="1e-20"/>-->
-        
-        <PCGLinearSolver iterations="5" tolerance="0.05"  preconditioners="Precond"/>
+        <LCPConstraintSolver/>
+        <PCGLinearSolver iterations="5" tolerance="0.05"  preconditioner="@Precond"/>
         <SparseLDLSolver name="Precond" template="CompressedRowSparseMatrixMat3x3"/>
         
 
@@ -61,13 +64,13 @@
             position="@/CoarseMesh/coarseMesh.position"
             edges="@/CoarseMesh/coarseMesh.edges"
             triangles="@/CoarseMesh/coarseMesh.triangles" />
-        <MechanicalObject name="coarseMesh_MO" template="Rigid3" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
+        <MechanicalObject name="coarseMesh_MO" template="Rigid3d" rest_position="@/CoarseMesh/coarseMeshVertex2Frame.frames" position="@/CoarseMesh/coarseMeshVertex2Frame.frames"/>
 
-        <UniformMass mass="0.3 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.03"  compute_mapping_inertia="0" totalMass="1.0" />
+        <UniformMass vertexMass="0.3 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.03"  compute_mapping_inertia="0" totalMass="1.0" />
 
 		<BoxConstraint box="-0.2 -1 -0.2 0.2 -0.8 0.2  0.4 0.3 -0.8 0.8 0.7 -0.7" />
 
-        <FixedRotationConstraint FixedZRotation="true" />
+        <FixedRotationProjectiveConstraint template ="Rigid3" FixedZRotation="true" />
         <TriangularBendingFEMForceField name="FEM" bending="true"
             youngModulus="5000000" poissonRatio="0.45" thickness="0.05" />
 
@@ -78,11 +81,11 @@
             <TriangleSetTopologyContainer  name="subTrianglesTopo"
                 position="@/TargetMesh/targetTopo.position" triangles="@/TargetMesh/targetTopo.triangles" />
             <MechanicalObject name="subCoarse_MO" rest_position="@/TargetMesh/targetTopo.position" />
-            <BendingPlateMechanicalMapping printLog="1" object1="coarseMesh_MO" object2="subCoarse_MO" name="MappingShells" isMechanical="false"/>
+            <BendingPlateMechanicalMapping printLog="1" input="@../coarseMesh_MO" output="@subCoarse_MO" name="MappingShells" isMechanical="false"/>
 
-            <Node>
+            <Node name="Visu">
                 <OglModel name="Visual" color="red"/>
-                <IdentityMapping object1="subCoarse_MO" object2="Visual"/>
+                <IdentityMapping input="@../subCoarse_MO" output="@Visual"/>
             </Node>
         </Node>
 
