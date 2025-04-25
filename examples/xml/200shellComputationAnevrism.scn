@@ -36,6 +36,7 @@
     <!--<DefaultAnimationLoop/>-->
 
     <FreeMotionAnimationLoop computeBoundingBox="true"/>
+    <LCPConstraintSolver/>
     
     <Node name="CoarseMesh">
         <MeshOBJLoader name="coarseMesh" filename="../../../Shell/mesh/aneurysm200.obj"/>
@@ -55,7 +56,6 @@
     <Node name="Shell">
         <EulerImplicitSolver />
         <!--<CGLinearSolver iterations="20" tolerance="0.05" threshold="1e-20"/>-->
-        <LCPConstraintSolver/>
         <PCGLinearSolver iterations="5" tolerance="0.05"  preconditioner="@Precond"/>
         <SparseLDLSolver name="Precond" template="CompressedRowSparseMatrixMat3x3"/>
         

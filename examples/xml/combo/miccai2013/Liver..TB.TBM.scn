@@ -26,12 +26,6 @@
     </Node>
 
     <DefaultAnimationLoop/>
-    <!--FreeMotionAnimationLoop/--> <!-- Je ne sais pas pourquoi mais lorsque j'utilise FreeMotionAnimationLoop, l'animation ne fonction plus... 
-                                    Alors que je souhaite utiliser FreeMotionAnimationLoop pour que ça soit plus réaliste que DefaultAnimationLoop-->
-    <!--LCPConstraintSolver tolerance="1e-3" maxIt="1000"/-->
-    
-    <!--<AdaptiveCuttingSetting button="Left" /-->
-
     <CollisionPipeline verbose="0"/>
     <BruteForceBroadPhase name="N2" />
     <BVHNarrowPhase/>
