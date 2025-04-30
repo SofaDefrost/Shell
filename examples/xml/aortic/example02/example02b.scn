@@ -1,19 +1,40 @@
 <?xml version="1.0"?>
-<Node gravity="0 0 0">
+<Node name="root" gravity="0 0 0">
+	<!-- List of plugins needed to load all components used by this scene -->
+    <Node name="plugins">
+		<RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint] -->  
+		<RequiredPlugin name="Sofa.Component.Engine.Transform"/> <!-- Needed to use components [Vertex2Frame] -->  
+		<RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [CGLinearSolver] -->  
+		<RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->  
+		<RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+		<RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+		<RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+		<RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TriangleSetTopologyContainer] -->  
+		<RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->
+		<RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshOBJLoader] -->  
+  		<RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] --> 
+		<RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] --> 
+		<RequiredPlugin name="Sofa.Component.SolidMechanics.Spring"/> <!-- Needed to use components [RestShapeSpringsForceField] -->
+        <RequiredPlugin name="Shell"/>
+    </Node>
+
+	<DefaultAnimationLoop/>
+
     <Node name="splitMesh">
         <VisualStyle displayFlags="showWireframe" />
-        <MeshObjLoader name="loader" filename="splitMesh.obj" />
-        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
+        <MeshOBJLoader name="loader" filename="splitMesh.obj" />
+        <Vertex2Frame name="frames" template="Rigid3" position="@loader.position" normals="@loader.normals" />
         <TriangleSetTopologyContainer name="topology" src="@loader" />
-        <MechanicalObject template="Rigid" position="@frames.frames" />
+        <MechanicalObject template="Rigid3" position="@frames.frames" />
 		<OglModel name="visual" color="0.75 0 0" />
 		<IdentityMapping input="@." output="@visual" />
     </Node>
 
     <Node name="joinedMesh">
-        <MeshObjLoader name="loader" filename="joinedMesh.obj"/>
-        <Vertex2Frame name="frames" template="Rigid" position="@loader.position" normals="@loader.normals" />
-        <MechanicalObject name="mechanicalObject" template="Rigid" position="@frames.frames" />
+        <MeshOBJLoader name="loader" filename="joinedMesh.obj"/>
+        <Vertex2Frame name="frames" template="Rigid3" position="@loader.position" normals="@loader.normals" />
+        <MechanicalObject name="mechanicalObject" template="Rigid3" position="@frames.frames" />
     </Node>
 	
 	<Node name="fixedPoints">
@@ -53,24 +74,24 @@
 				-1.000001  6.012416 -0.000001 0 0 0 1
 				-0.923880  6.012416 -0.382684 0 0 0 1
 				-0.707107  6.012416 -0.707107 0 0 0 1"
-			template="Rigid" />
-		<FixedConstraint indices="0-31" />
+			template="Rigid3" />
+		<FixedProjectiveConstraint indices="0-31" />
 	</Node>
 
 	<Node name="simulation">
-        <EulerImplicit />
+        <EulerImplicitSolver />
         <CGLinearSolver iterations="20" tolerance="1e-9" threshold="1e-9" />
         <TriangleSetTopologyContainer src="@/joinedMesh/loader" />
-        <MechanicalObject template="Rigid" position="@/joinedMesh/frames.frames" />
+        <MechanicalObject template="Rigid3" position="@/joinedMesh/frames.frames" />
 		<UniformMass showAxisSizeFactor="0.1" totalMass="1" />
 		<RestShapeSpringsForceField
 			angularStiffness="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
 			external_points="0-31"
-			external_rest_shape="/fixedPoints/mechanicalObject"
+			external_rest_shape="@/fixedPoints/mechanicalObject"
 			points="5-20 159-174"
 			stiffness="5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000"
-			template="Rigid" />
-		<Node>
+			template="Rigid3" />
+		<Node name="behavior">
 			<VisualStyle displayFlags="showBehavior" />
 			<TriangularBendingFEMForceField
 				bending="true"
