@@ -3,20 +3,11 @@ project(Shell VERSION 1.0 LANGUAGES CXX)
 
 # Find and load CMake configuration of packages containing this plugin's dependencies
 find_package(Sofa.Config REQUIRED)
-sofa_find_package(Sofa.GL REQUIRED)
-sofa_find_package(Sofa.Type REQUIRED)
-sofa_find_package(Sofa.Geometry REQUIRED)
-sofa_find_package(Sofa.Simulation.Core REQUIRED)
 sofa_find_package(Sofa.Component.Controller REQUIRED)
-sofa_find_package(Sofa.Component.StateContainer REQUIRED)
-sofa_find_package(Sofa.Component.Mapping.NonLinear REQUIRED)
-sofa_find_package(Sofa.Component.Mapping.Linear REQUIRED)
-sofa_find_package(Sofa.Component.Constraint REQUIRED)
-sofa_find_package(Sofa.Component.Constraint.Lagrangian REQUIRED)
-sofa_find_package(Sofa.Component.Constraint.Lagrangian.Model REQUIRED)
-sofa_find_package(Sofa.Component.Constraint.Lagrangian.Solver REQUIRED)
 sofa_find_package(Sofa.Component.Topology.Container.Dynamic REQUIRED)
-sofa_find_package(Sofa.Component.Collision.Detection.Intersection REQUIRED)
+sofa_find_package(Sofa.Component.StateContainer REQUIRED)
+sofa_find_package(Sofa.Component.Mapping.Linear REQUIRED)
+sofa_find_package(Sofa.GL REQUIRED)
 
 set(README_FILE README.md)
 
@@ -118,22 +109,10 @@ add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILE
 
 # Link the plugin library to its dependency(ies).
 target_link_libraries(${PROJECT_NAME}
-    Sofa.Component.Collision.Detection.Intersection
-    Sofa.Component.Constraint.Lagrangian
-    Sofa.Component.Constraint.Lagrangian.Model
-    Sofa.Component.Constraint.Lagrangian.Solver
-    Sofa.Component.Constraint.Projective
     Sofa.Component.Controller
-    Sofa.Component.Engine.Select
-    Sofa.Component.LinearSolver.Iterative
-    Sofa.Component.Mapping.Linear
-    Sofa.Component.Mapping.NonLinear
-    Sofa.Component.Mass
-    Sofa.Component.MechanicalLoad
-    Sofa.Component.ODESolver.Backward
-    Sofa.Component.SolidMechanics.Spring
-    Sofa.Component.StateContainer
     Sofa.Component.Topology.Container.Dynamic
+    Sofa.Component.StateContainer
+    Sofa.Component.Mapping.Linear
     Sofa.GL
 )
 

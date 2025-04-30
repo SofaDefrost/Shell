@@ -30,7 +30,6 @@
 #include <Shell/misc/PointProjection.h>
 
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
-#include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/core/ConstraintParams.h>
 
 // We have own code to check the getJ() because checkJacobian sucks (at this
@@ -46,7 +45,6 @@ namespace component
 namespace mapping
 {
 
-using namespace sofa::component::collision;
 using namespace sofa::helper;
 
 
