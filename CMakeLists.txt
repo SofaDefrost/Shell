@@ -10,6 +10,7 @@ sofa_find_package(Sofa.Simulation.Core REQUIRED)
 sofa_find_package(Sofa.Component.Controller REQUIRED)
 sofa_find_package(Sofa.Component.StateContainer REQUIRED)
 sofa_find_package(Sofa.Component.Mapping.NonLinear REQUIRED)
+sofa_find_package(Sofa.Component.Mapping.Linear REQUIRED)
 sofa_find_package(Sofa.Component.Constraint REQUIRED)
 sofa_find_package(Sofa.Component.Constraint.Lagrangian REQUIRED)
 sofa_find_package(Sofa.Component.Constraint.Lagrangian.Model REQUIRED)
@@ -123,6 +124,7 @@ target_link_libraries(${PROJECT_NAME}
     Sofa.GL
     Sofa.Component.Collision.Detection.Intersection
     Sofa.Component.Mapping.NonLinear
+    Sofa.Component.Mapping.Linear
     Sofa.Component.Constraint.Lagrangian.Model
     Sofa.Component.Constraint.Lagrangian.Solver
     Sofa.Component.Constraint.Lagrangian
@@ -133,7 +135,6 @@ target_link_libraries(${PROJECT_NAME}
     Sofa.Component.LinearSolver.Iterative
     Sofa.Component.ODESolver.Backward
     Sofa.Component.Engine.Select
-    Sofa.Component.Mapping.Linear
 )
 
 sofa_create_package_with_targets(
