@@ -118,23 +118,23 @@ add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILE
 
 # Link the plugin library to its dependency(ies).
 target_link_libraries(${PROJECT_NAME}
-    Sofa.Component.Controller
-    Sofa.Component.Topology.Container.Dynamic
-    Sofa.Component.StateContainer
-    Sofa.GL
     Sofa.Component.Collision.Detection.Intersection
-    Sofa.Component.Mapping.NonLinear
-    Sofa.Component.Mapping.Linear
+    Sofa.Component.Constraint.Lagrangian
     Sofa.Component.Constraint.Lagrangian.Model
     Sofa.Component.Constraint.Lagrangian.Solver
-    Sofa.Component.Constraint.Lagrangian
     Sofa.Component.Constraint.Projective
-    Sofa.Component.Mass
-    Sofa.Component.SolidMechanics.Spring
-    Sofa.Component.MechanicalLoad
-    Sofa.Component.LinearSolver.Iterative
-    Sofa.Component.ODESolver.Backward
+    Sofa.Component.Controller
     Sofa.Component.Engine.Select
+    Sofa.Component.LinearSolver.Iterative
+    Sofa.Component.Mapping.Linear
+    Sofa.Component.Mapping.NonLinear
+    Sofa.Component.Mass
+    Sofa.Component.MechanicalLoad
+    Sofa.Component.ODESolver.Backward
+    Sofa.Component.SolidMechanics.Spring
+    Sofa.Component.StateContainer
+    Sofa.Component.Topology.Container.Dynamic
+    Sofa.GL
 )
 
 sofa_create_package_with_targets(
