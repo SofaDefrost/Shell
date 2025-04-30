@@ -31,7 +31,6 @@
 #include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/component/collision/detection/intersection/MeshMinProximityIntersection.h>
 
-#include <sofa/component/mechanicalload/ConstantForceField.h>
 
 namespace sofa::component::mapping
 {

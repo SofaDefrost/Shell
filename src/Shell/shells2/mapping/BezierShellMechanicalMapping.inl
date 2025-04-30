@@ -33,8 +33,6 @@
 #include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/core/ConstraintParams.h>
 
-#include <sofa/component/mechanicalload/ConstantForceField.h>
-
 // We have own code to check the getJ() because checkJacobian sucks (at this
 // point in time).
 //#define CHECK_J

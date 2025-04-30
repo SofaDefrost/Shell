@@ -30,9 +30,6 @@
 #include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
 
-#include <sofa/component/mechanicalload/ConstantForceField.h>
-
-
 namespace sofa
 {
 
