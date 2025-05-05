@@ -58,7 +58,7 @@ Theoretical results are:
     <BruteForceBroadPhase name="N2"/>
     <BVHNarrowPhase/>
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
-    <CollisionResponse name="Response" response="default" />
+    <CollisionResponse name="Response" response="PenaltyContactForceField" />
     <!--CollisionGroupManager /-->
 	
 

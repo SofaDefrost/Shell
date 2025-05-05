@@ -32,15 +32,16 @@
 <!--    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />-->
 <!--    <CollisionGroup />-->
     <FreeMotionAnimationLoop computeBoundingBox="true"/>
-
+    <LCPConstraintSolver/>
+    
     <Node name="CoarseMesh">
-        <MeshOBJLoader name="coarseMesh" filename="/home/lucasbureltojo/sofa3/plugins/Shell/mesh/aneurysm600.obj"/>
+        <MeshOBJLoader name="coarseMesh" filename="../../../Shell/mesh/aneurysm600.obj"/>
         <Vertex2Frame name="coarseMeshVertex2Frame" template="Rigid3" position="@coarseMesh.position" normals="@coarseMesh.normals" invertNormals="false"/>
     </Node>
 
 
     <Node name="TargetMesh">
-        <MeshOBJLoader name="targetMesh" filename="/home/lucasbureltojo/sofa3/plugins/Shell/mesh/aneurysmHighRes.obj"/>
+        <MeshOBJLoader name="targetMesh" filename="../../../Shell/mesh/aneurysmHighRes.obj"/>
         <TriangleSetTopologyContainer name="targetTopo" src="@targetMesh"/>
     </Node>
 
@@ -49,7 +50,7 @@
     <Node name="Shell">
         <EulerImplicitSolver />
         <!--<CGLinearSolver iterations="20" tolerance="0.05" threshold="1e-20"/>-->
-        <LCPConstraintSolver/>
+        
         <PCGLinearSolver iterations="5" tolerance="0.05"  preconditioner="@Precond"/>
         <SparseLDLSolver name="Precond" template="CompressedRowSparseMatrixMat3x3"/>
         

@@ -55,7 +55,7 @@ Theoretical solution:
     <BruteForceBroadPhase name="N2" />
     <BVHNarrowPhase/>
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
-    <CollisionResponse name="Response" response="default" />
+    <CollisionResponse name="Response" response="PenaltyContactForceField" />
 
 
     <RegularGridTopology name="gridTopo" min="-1 -1 0" max="1 1 0" nx="3" ny="3" nz="1" />

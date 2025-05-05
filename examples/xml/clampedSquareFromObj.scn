@@ -29,18 +29,16 @@
     </Node>
 
     <!--<FreeMotionAnimationLoop computeBoundingBox="true"/>-->
+    <!--<LCPConstraintSolver/>-->
     <DefaultAnimationLoop/>
     <CollisionPipeline verbose="0" />
-    <!--BruteForceDetection name="N2" /-->
     <BruteForceBroadPhase name="N2"/>
     <BVHNarrowPhase/>
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
-    <CollisionResponse name="Response" response="default" />
-    <!--CollisionGroupManager /-->
-	
+    <CollisionResponse name="Response" response="PenaltyContactForceField" />
 
     <Node name="Rest_position">
-        <MeshOBJLoader name="rest_shape" filename="/home/lucasbureltojo/sofa3/plugins/Shell/mesh/square3x3.obj"/>
+        <MeshOBJLoader name="rest_shape" filename="../../../Shell/mesh/square3x3.obj"/>
         <MeshTopology name="topology" src="@rest_shape"/>
         <Vertex2Frame name="RestVertex2Frame" template="Rigid3" position="@rest_shape.position" normals="@rest_shape.normals" />
         <MechanicalObject name="rest_triangles" template="Rigid3" position="@RestVertex2Frame.frames"/>
@@ -50,12 +48,12 @@
     <Node name="Square">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
         <CGLinearSolver iterations="500" tolerance="1e-15" threshold="1e-15"/>
-        <LCPConstraintSolver/>
+        
 <!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
 <!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
-        <TriangleSetTopologyContainer name="baseTriangles" filename="/home/lucasbureltojo/sofa3/plugins/Shell/mesh/square3x3.obj"/>
+        <TriangleSetTopologyContainer name="baseTriangles" filename="../../../Shell/mesh/square3x3.obj"/>
         <TriangleSetTopologyModifier name="Topology Modifier" />
-        <TriangleSetGeometryAlgorithms name="GeomAlgo" template="Vec3" drawEdges="1" drawColorEdges="1.0 1.0 0.3" />
+        <TriangleSetGeometryAlgorithms name="GeomAlgo" template="Vec3d" drawEdges="1" drawColorEdges="1.0 1.0 0.3" />
         <MechanicalObject name="tri" template="Rigid3" showIndices="false"  rest_position="@../Rest_position/RestVertex2Frame.frames" position="@../Rest_position/RestVertex2Frame.frames"/>
 <!--        <MechanicalObject name="tri" template="Vec3d" debugViewIndices="false" debugViewIndicesScale="0.0003"/>-->
 
@@ -93,7 +91,7 @@
 
 			<TriangleSetTopologyContainer name="subTriangles" />
             <TriangleSetTopologyModifier name="Topology Modifier" />
-            <TriangleSetGeometryAlgorithms name="GeomAlgo" template="Vec3" drawEdges="1" drawColorEdges="1.0 1.0 0.3" />
+            <TriangleSetGeometryAlgorithms name="GeomAlgo" template="Vec3d" drawEdges="1" drawColorEdges="1.0 1.0 0.3" />
 <!--        <TriangleSubdivisionTopologicalMapping name="topoMapping" inputPositions="@baseTriangles.position"  inputTriangles="@baseTriangles.triangles" output="@subTriangles" subdivisions="0"/>
 -->            
 <!--            <SubsetTopologicalMapping name="topoMapping" pointS2D="@../baseTriangles.position"  triangleS2D="@../baseTriangles.triangles" output="@subTriangles"/>

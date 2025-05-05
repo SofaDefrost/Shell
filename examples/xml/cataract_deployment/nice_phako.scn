@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<Node name="root" dt="0.01" gravity="0 -9 0" showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0">
-	
+<Node name="root" dt="0.01" gravity="0 -9 0" >
+	<VisualStyle displayFlags="showBehaviorModels showCollisionModels showMappings showForceFields showBoundingTree"/> 
 	<Node name="plugins">
         
 		<RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->  
@@ -65,16 +65,17 @@
 				    <OglFloatVariable" id="refractCoeff" value="1.0"/>
 				    <OglFloatVariable" id="sphereRadius" value="3.60106"/>
 				    <OglFloatVariable" id="lightProjRadius" value="2.5"/>
-					<OglTexture" textureFilename="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/textures/choroid2.bmp" textureUnit="1" id="sphereTexture" />
-					<OglModel" name="Lens"  fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/flat_lens.obj"  dz="-0.85" castshadow="0" premultipliedAlpha="true"/>
+					<OglTexture" textureFilename="data/textures/choroid2.bmp" textureUnit="1" id="sphereTexture" />
+					<OglModel" name="Lens"  fileMesh="data/mesh/flat_lens.obj"  dz="-0.85" castshadow="0" premultipliedAlpha="true"/>
 				</Node>
 -->
 				<Node name="Iris_">
-					<OglModel scale="1000" name="Iris"  fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/iris.obj" texturename="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/textures/iris.bmp" />
+					<MeshOBJLoader name="Iris" filename="data/mesh/iris.obj" />
+					<OglModel scale="1000" src="@Iris" texturename="data/textures/iris.bmp" />
 				</Node>
 				
 				<Node name="Sclera_">
-					<OglShader fileVertexShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.vert']" fileFragmentShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.frag']" />
+					<OglShader fileVertexShaders="['shaders/generalRenderingShader.vert']" fileFragmentShaders="['shaders/generalRenderingShader.frag']" />
 					<OglShaderDefineMacro id="TEXTURE_UNIT_0" />
 					<OglShaderDefineMacro id="PHONG" />
 					<OglFloatVariable id="altitude" value="0.1"/>
@@ -83,28 +84,30 @@
 					<OglIntVariable id="axis" value="2"/>
 					<OglFloatVector4Variable id="colors" value="1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 1.0"/>
 					<OglTexture filename="textures/lights4-small-noise.bmp" textureUnit="1" id="planeTexture" />
-					
-					<OglModel scale="1000" name="Sclera" fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/sclera.obj" texturename="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/textures/sclera.bmp" castshadow="0" premultipliedAlpha="true" />
+					<MeshOBJLoader name="Sclera" filename="data/mesh/sclera.obj" />
+					<OglModel scale="1000" src="@Sclera" texturename="data/textures/sclera.bmp" castshadow="0" premultipliedAlpha="true" />
 				</Node>
 	
 				<Node name="Choroid_">
-					<OglModel scale="1000" name="Choroid" fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/choroid.obj" normals="0" texturename="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/textures/choroid.bmp" castshadow="0"/>
+					<MeshOBJLoader name="Choroid" filename="data/mesh/choroid.obj" />
+					<OglModel scale="1000" src="@Choroid" normals="0" texturename="data/textures/choroid.bmp" castshadow="0"/>
 				</Node> 
 				 
 				<Node name="Ciliary_">
-					<OglModel scale="1000" name="Ciliary"  fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/ciliary_processes.obj" texturename="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/textures/ciliary.bmp" castshadow="0"/>
+					<MeshOBJLoader name="Ciliary" filename="data/mesh/ciliary_processes.obj" />
+					<OglModel scale="1000" src="@Ciliary"  fileMesh="data/mesh/ciliary_processes.obj" texturename="data/textures/ciliary.bmp" castshadow="0"/>
 				</Node>
 				
 				<!--<Node name="Capsule">
-					<OglModel" name="Capsule"  fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/eye_lens_capsule_with_hole_2.obj" castshadow="0" />
+					<OglModel" name="Capsule"  fileMesh="data/mesh/eye_lens_capsule_with_hole_2.obj" castshadow="0" />
 				</Node>
 				-->
 <!--				<Node name="Cornea_">-->
-<!--					<OglShader" fileVertexShaders="/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.vert" fileFragmentShaders="/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.frag" />-->
+<!--					<OglShader" fileVertexShaders="shaders/generalRenderingShader.vert" fileFragmentShaders="shaders/generalRenderingShader.frag" />-->
 <!--					<OglShaderDefineMacro" id="PLANE_ENVIRONMENT_MAPPING" />-->
 <!--					<OglFloatVariable" id="altitude" value="0.0000001"/>-->
 <!--					<OglTexture" textureFilename="textures/lights4-small-noise.bmp" textureUnit="2" id="planeTexture"/>-->
-<!--					<OglModel" scale="1000" name="Cornea"  fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/cornea.obj" premultipliedAlpha="true"-->
+<!--					<OglModel" scale="1000" name="Cornea"  fileMesh="data/mesh/cornea.obj" premultipliedAlpha="true"-->
 <!--						material="texture Ambient 1 0.2 0.2 0.2 1.0 Diffuse 1 1.0 1.0 1.0 0.8 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 500"/>-->
 <!--						/>-->
 <!--				</Node>-->
@@ -114,7 +117,7 @@
 		<Node name="LensKernelRigid">
 			
 		<Node name="LensKernel">
-			<TetrahedronSetTopologyContainer name="Container" fileTopology="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/lens_kernel.msh"/>
+			<TetrahedronSetTopologyContainer name="Container" fileTopology="data/mesh/lens_kernel.msh"/>
 			<TetrahedronSetTopologyModifier/>
 			<MechanicalObject scale="1000.0" />
 			
@@ -134,11 +137,12 @@
 	 			<TriangleCollisionModel contactStiffness="1000" contactFriction="0" />
 
 				<Node name="LensCM">
-					<include href="Objects/TriangleSetTopology.xml" />
+					<include href="Objects/TriangleSetTopology.xml" src="@../../Container"/>
 					<Tetra2TriangleTopologicalMapping input="@../Container2" output="@Container"/>
 	
-					<Node name="LensVM"  showVisualModels="1">
-						<OglShader fileVertexShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.vert']" fileFragmentShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.frag']" />
+					<Node name="LensVM">
+						<VisualStyle displayFlags="showVisualModels"/>
+						<OglShader fileVertexShaders="['shaders/generalRenderingShader.vert']" fileFragmentShaders="['shaders/generalRenderingShader.frag']" />
 						<OglFloatVariable id="altitude" value="0.2"/>
 						<OglFloatVariable id="border_alpha" value="0.4"/>
 						<OglFloatVariable id="border_gamma" value="1.0"/>
@@ -149,7 +153,7 @@
 					</Node>
 				</Node> 
 				<Node name="LensVM">
-						<OglShader geometryVerticesOut="12" geometryInputType="10" geometryOutputType="5" fileVertexShaders="['/home/lucasbureltojo/sofa3/src/applications/plugins/VolumetricRendering/examples/share/shaders/PT.vert']" fileGeometryShaders="['/home/lucasbureltojo/sofa3/src/applications/plugins/VolumetricRendering/examples/share/shaders/PT.geo']" fileFragmentShaders="['/home/lucasbureltojo/sofa3/src/applications/plugins/VolumetricRendering/examples/share/shaders/PT.frag']"/>
+						<OglShader geometryVerticesOut="12" geometryInputType="10" geometryOutputType="5" fileVertexShaders="['sofa3/src/applications/plugins/VolumetricRendering/examples/share/shaders/PT.vert']" fileGeometryShaders="['sofa3/src/applications/plugins/VolumetricRendering/examples/share/shaders/PT.geo']" fileFragmentShaders="['sofa3/src/applications/plugins/VolumetricRendering/examples/share/shaders/PT.frag']"/>
 						<OglFloat3Variable id="fragmentColor" value="0.7 0.6 0.6" />
 						<OglFloatVariable id="fragmentOpacity" value="3.0"/>
 						<OglFloatVector4Variable id="MappingTable" value="
@@ -215,52 +219,54 @@
 	</Node>
 	
 <!--	<Node name="Implant" >-->
-<!--		<OglShader fileVertexShaders="/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.vert" fileFragmentShaders="/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.frag" />-->
+<!--		<OglShader fileVertexShaders="shaders/generalRenderingShader.vert" fileFragmentShaders="shaders/generalRenderingShader.frag" />-->
 <!--		<OglShaderDefineMacro id="BORDER_OPACIFYING" />-->
 <!--		<OglShaderDefineMacro id="PHONG" />-->
 <!--		<OglShaderDefineMacro id="DOUBLE_SIDED" />-->
 <!--		<OglFloatVariable id="coeffAngle" value="0.1"/>-->
 <!--		<OglFloatVariable id="border_alpha" value="1.0"/>-->
 <!--		<OglFloatVariable id="border_gamma" value="4.0"/>-->
-<!--		<OglModel scale="1000" premultipliedAlpha="true" name="LensVM"  filename="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/cataract_deployment.obj" -->
+<!--		<OglModel scale="1000" premultipliedAlpha="true" name="LensVM"  filename="data/mesh/cataract_deployment.obj" -->
 <!--		material="texture Ambient 1 0.5 0.5 0.0 1.0 Diffuse 1 0.2 0.2 0.0 0.2 Specular 1 0.8 0.8 0.8 1.0 Emissive 0 0.25 0.05 0.05 0.0 Shininess 1 25"/>-->
 <!--	</Node>-->
 	
 <!--	<Node name="Injector">		-->
-<!--		<OglShader fileVertexShaders="/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.vert" fileFragmentShaders="/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.frag" />-->
+<!--		<OglShader fileVertexShaders="shaders/generalRenderingShader.vert" fileFragmentShaders="shaders/generalRenderingShader.frag" />-->
 <!--		<OglShaderDefineMacro id="PHONG" />-->
 <!--	-->
-<!--		<OglModel scale="1000" name="Inject"       fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/injector_visual.obj" -->
+<!--		<OglModel scale="1000" name="Inject"       fileMesh="data/mesh/injector_visual.obj" -->
 <!--			material="texture Ambient 1 0.0 0.0 0.0 1.0 Diffuse 1 0.2 0.2 0.2 1.0 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 10"-->
 <!--		/>-->
 <!--	</Node>-->
 
 
         <Node name="Visual">
-            <OglShader fileVertexShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.vert']" fileFragmentShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.frag']" />
+            <OglShader fileVertexShaders="['shaders/generalRenderingShader.vert']" fileFragmentShaders="['shaders/generalRenderingShader.frag']" />
             <OglShaderDefineMacro id="PHONG" />
-            <OglModel name="visual_instrument" fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/phaco_collis.obj" normals="0" scale="10" ry="90" rz="90" dx="-3.5" dz="-5" color="1.0 1.0 1.0 1.0" />
+			<MeshOBJLoader name="visual_instrument" filename="../ISBMS/data/mesh/phaco_collis.obj" />
+            <OglModel src="@visual_instrument" normals="0" scale="10" ry="90" rz="90" dx="-3.5" dz="-5" color="1.0 1.0 1.0 1.0" />
         </Node>
 
 	<Node name="Clamps">		
-		<OglShader fileVertexShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.vert']" fileFragmentShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.frag']" />
+		<OglShader fileVertexShaders="['shaders/generalRenderingShader.vert']" fileFragmentShaders="['shaders/generalRenderingShader.frag']" />
 		<OglShaderDefineMacro id="PHONG" />
-	
-		<OglModel scale="1000" name="Clamps"       fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/clamps.obj" 
+		<MeshOBJLoader name="Clamps" filename="data/mesh/clamps.obj" />
+		<OglModel scale="1000" src="@Clamps"
 			material="texture Ambient 1 0.0 0.0 0.0 1.0 Diffuse 1 0.2 0.2 0.2 1.0 Specular 1 1.0 1.0 1.0 1.0 Emissive 0 0.15 0.05 0.05 0.0 Shininess 1 10"
 		/>
 	</Node>
 
 	<Node name="CompleteEyeAnatomicalModel_Skin">
-		<OglShader fileVertexShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.vert']" fileFragmentShaders="['/home/lucasbureltojo/sofa3/src/share/shaders/generalRenderingShader.frag']" />
+		<OglShader fileVertexShaders="['shaders/generalRenderingShader.vert']" fileFragmentShaders="['shaders/generalRenderingShader.frag']" />
 		<OglShaderDefineMacro id="PHONG" />
 		<OglShaderDefineMacro id="BUMP_MAPPING" />
 		<OglShaderDefineMacro id="TEXTURE_UNIT_0" />
 		
 		<OglFloatVariable id="bumpFactor" value="1.0" />
-		<OglTexture name="color" id="colorTexture" textureFilename="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/textures/face_color.jpg" textureUnit="1" repeat="true"/>
-		<OglTexture name="bump" id="normalMap" textureFilename="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/textures/face_normalMap.jpg" textureUnit="2" repeat="true"/>
-		<OglModel scale="1000"  name="Skin" fileMesh="/home/lucasbureltojo/sofa3/plugins/Shell/examples/xml/ISBMS/data/mesh/face.obj"  putOnlyTexCoords="true" /> 
+		<OglTexture name="color" id="colorTexture" textureFilename="data/textures/face_color.jpg" textureUnit="1" repeat="true"/>
+		<OglTexture name="bump" id="normalMap" textureFilename="data/textures/face_normalMap.jpg" textureUnit="2" repeat="true"/>
+		<MeshOBJLoader name="Skin" filename="data/mesh/face.obj" />
+		<OglModel scale="1000" src="@Skin"  putOnlyTexCoords="true" /> 
 	</Node>
 
 	
