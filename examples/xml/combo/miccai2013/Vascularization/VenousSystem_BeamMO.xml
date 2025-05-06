@@ -1,4 +1,4 @@
-<MechanicalObject template="Rigid" scale3d="scale3d" name="BeamMO" translation="translation" position="
+<MechanicalObject template="Rigid3d" scale3d="1 1 1" name="BeamMO" translation="0 0 0" position="
 								225.379 265.056 390.6030.568459 -0.420541 0.521111 0.477957
 								226.172 265.335 401.134-0.340982 -0.61946 -0.384918 0.593159
 								225.886 265.141 403.261-0.240593 -0.664917 -0.397546 0.584771

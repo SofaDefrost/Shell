@@ -19,29 +19,67 @@ Theoretical results are:
 
 -->
 
-<Node name="root" dt="0.01" gravity="0 0 0"
-    showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" showWireFrame="1" showNormals="0" >
+<Node name="root" dt="0.01" gravity="0 0 0">
+    <!--showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" showWireframe="1" showNormals="0" /-->
+    <!-- List of plugins needed to load all components used by this scene -->
+    <Node name="plugins">
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] --> 
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,BruteForceDetection,CollisionPipeline] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [MinProximityIntersection] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->
+        <RequiredPlugin name="Sofa.Component.Engine.Generate"/> <!-- Needed to use components [JoinPoints] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [CGLinearSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->  
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+        <RequiredPlugin name="Sofa.Component.MechanicalLoad"/> <!-- Needed to use components [ConstantForceField] -->  
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+        <RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TriangleSetTopologyContainer,TriangleSetTopologyModifier] -->  
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->  
+        <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] --> 
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Grid"/> <!-- Needed to use components [RegularGridTopology] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Mapping"/> <!-- Needed to use components [Quad2TriangleTopologicalMapping] --> 
+        <RequiredPlugin name="Shell"/>
+    </Node>
+    
+    
+    
+
+    <DefaultAnimationLoop/>
+    <!--FreeMotionAnimationLoop computeBoundingBox="false"/-->
+
+    <VisualStyle displayFlags="showCollisionModels hideVisualModels" />
+    
     <CollisionPipeline verbose="0" />
-    <BruteForceDetection name="N2" />
-    <CollisionResponse response="default" />
+    <!--BruteForceDetection name="N2" /-->
+    <BruteForceBroadPhase name="N2"/>
+    <BVHNarrowPhase/>
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
-    <CollisionGroup />
+    <CollisionResponse name="Response" response="PenaltyContactForceField" />
+    <!--CollisionGroupManager /-->
 	
+
+
+
 	<Node name="SquareDetailed">
-		<RegularGrid name="gridTopo" min="-1 -1 0" max="1 1 0" nx="30" ny="30" nz="1" />
+		<RegularGridTopology name="gridTopo" min="-1 -1 0" max="1 1 0" nx="30" ny="30" nz="1" />
         <MechanicalObject template="Vec3d" name="toto"/>
 		
 		<Node name="DetailedTriangleTopo">
 		
 				<TriangleSetTopologyContainer name="detailedTri"/>
 				<TriangleSetTopologyModifier name="Modifier" />
-				<Quad2TriangleTopologicalMapping object1="gridTopo" object2="detailedTri" />
+				<Quad2TriangleTopologicalMapping input="@gridTopo" output="@detailedTri" />
 		</Node>
 	
 	</Node>
 
     <Node name="Square2" activated="true">
-
+        <EulerImplicitSolver/>
+        <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
 <!--
         <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
         <CGLinearSolver iterations="20" tolerance="1e-15" threshold="1e-15"/>
@@ -50,22 +88,24 @@ Theoretical results are:
         <LULinearSolver name="LU Solver" printLog="false" />
 -->
 
-        <RegularGrid name="gridTopo" min="-1 -1 0" max="1 1 0" nx="3" ny="3" nz="1" />
+        <RegularGridTopology name="gridTopo" min="-1 -1 0" max="1 1 0" nx="3" ny="3" nz="1" />
         <MechanicalObject template="Vec3d" name="toto"/>
 
-        <Node>
+        <Node name="TriTopo">
 		
 			<EulerImplicitSolver />
 			<CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
             <TriangleSetTopologyContainer name="trianglesTopo"/>
             <TriangleSetTopologyModifier name="Modifier" />
-            <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
-            <MechanicalObject name="basePoints" template="Rigid" showIndices="true" />
+            <TriangleSetGeometryAlgorithms template="Vec3d" name="GeomAlgo" />
+            <Quad2TriangleTopologicalMapping input="@../gridTopo" output="@trianglesTopo" />
+            <MechanicalObject name="basePoints" template="Rigid3d" showIndices="true" />
 
-            <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="1" totalmass="0.00012" />
+            <!--UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="1" totalMass="0.00012" /-->
+            <UniformMass showAxisSizeFactor="1" totalMass="0.00012" />
 
             <BoxROI name="box1" box="-1.1 -1.1 -0.1 1.1 -0.9 0.1" drawSize="0"/>
-            <FixedConstraint indices="@box1.indices" drawSize="0"/>
+            <FixedProjectiveConstraint indices="@box1.indices" drawSize="0"/>
 
 <!--
             <BoxROI name="box2" box="-1.1 0.9 -0.1 1.1 1.1 0.1" drawSize="0"/>
@@ -84,7 +124,7 @@ Theoretical results are:
 
             <!-- Distributed load 
             -->
-            <ConstantForceField points="@boxAll.indices" totalForce="0 0 4e1 0 0 0"/>
+            <ConstantForceField indices="@boxAll.indices" totalForce="0 0 4e1 0 0 0"/>
             <!-- Concentrated load
             <ConstantForceField points="@boxCenter.indices" forces="0 0 4e-4 0 0 0"/>
             -->
@@ -116,12 +156,12 @@ Theoretical results are:
                 <TriangleSubdivisionTopologicalMapping name="subdivTopoMapping" object1="trianglesTopo" inputTriangles="@../trianglesTopo.triangles" inputPositions="@../../toto.position" object2="subTrianglesTopo" subdivisions="1"/>
 				-->
                 <MechanicalObject template="Vec3d" name="subPoints" />
-				<Point/>
+				<JoinPoints/>
 				
                 <BezierTriangleMechanicalMapping />
-                <Node name="visual">
+                <Node name="Visual">
                     <OglModel name="Visual" color="red"/>
-                    <IdentityMapping object1="subPoints" object2="Visual"/>
+                    <IdentityMapping input="@subPoints" output="@Visual"/>
                 </Node>
             </Node>
             

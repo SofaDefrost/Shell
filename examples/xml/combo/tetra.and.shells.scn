@@ -1,67 +1,109 @@
 <?xml version="1.0"?>
 <Node name="root" gravity="0 30 0" dt="0.05">
 	<VisualStyle displayFlags="hideCollisionModels showForceFields showBehaviorModels"/>
+
+    <Node name="plugins">
+        <RequiredPlugin name="Shell"/>
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->  
+        <RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshVTKLoader] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [SparseLDLSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [BarycentricMapping,IdentityMapping,Mesh2PointTopologicalMapping] -->  
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+        <RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+        <RequiredPlugin name="Sofa.Component.SolidMechanics.FEM.Elastic"/> <!-- Needed to use components [TetrahedronFEMForceField] -->  
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [PointSetTopologyContainer,TetrahedronSetTopologyContainer,TriangleSetTopologyContainer,TriangleSetTopologyModifier] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Grid"/> <!-- Needed to use components [RegularGridTopology] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Mapping"/> <!-- Needed to use components [Quad2TriangleTopologicalMapping] --> 
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->  
+        <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] -->
+        <RequiredPlugin name="MultiThreading"/> <!-- Needed to use components [ParallelBVHNarrowPhase,ParallelBruteForceBroadPhase] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [CollisionPipeline] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [LocalMinDistance] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Lagrangian.Solver"/> <!-- Needed to use components [LCPConstraintSolver] -->
+    </Node>
+
+
+
+    <FreeMotionAnimationLoop />
+	<LCPConstraintSolver maxIt="1000" tolerance="1e-8" printLog="false"/>
+	<CollisionPipeline depth="6" verbose="0" draw="0"/>
+	<ParallelBruteForceBroadPhase name="N2"/>
+	<ParallelBVHNarrowPhase/>
+    <LocalMinDistance name="Proximity"  alarmDistance="0.01" contactDistance="0.0005"  angleCone="0.0" />
+	<CollisionResponse name="Response" response="FrictionContactConstraint" />
+
+
 <!-- 	<EulerImplicitSolver /> -->
 	<Node name="Cube">
  		<!--<StaticSolver applyIncrementFactor="true" verbose="0" />-->
-                <EulerImplicitSolver />
-                <SparseLDLSolver/>
+        <EulerImplicitSolver />
+        <SparseLDLSolver template="CompressedRowSparseMatrixMat3x3d"/>
                 <!--<CGLinearSolver />-->
-                <MeshVTKLoader name="meshLoader"  filename="cube2739.vtk" scale3d="0.03 0.03 0.03" translation="-0.015 -0.015 -0.015"/>
+        <MeshVTKLoader name="meshLoader"  filename="cube2739.vtk" scale3d="0.03 0.03 0.03" translation="-0.015 -0.015 -0.015"/>
 		<!--<MeshVTKLoader name="meshLoader"  filename="cube144.vtk" scale3d="0.03 0.03 0.03" translation="-0.015 -0.015 -0.015"/>-->
-		<TetrahedronSetTopologyContainer name="topo"  position="@meshLoader.position"  edges="@meshLoader.edges"  triangles="@meshLoader.triangles"  tetrahedra="@meshLoader.tetras" />		
+<!--        <TetrahedronSetTopologyContainer name="topo"  position="@meshLoader.position"  edges="@meshLoader.edges"  triangles="@meshLoader.triangles"  tetrahedra="@meshLoader.tetras" />		
+-->        
+        <TetrahedronSetTopologyContainer name="topo"  position="@meshLoader.position"   tetrahedra="@meshLoader.tetras" createTriangleArray="1"/>		
 		<MechanicalObject name="BlockMO" />
-		<UniformMass totalmass="0.027" />
+		<UniformMass totalMass="0.027" />
 		<BoxConstraint box="-0.016 -0.016 -0.016 0.016 -0.014 0.016"/>		
 		<BoxROI name="TopFace" box="-0.016 0.014 -0.016 0.016 0.016 0.016" drawBoxes="1"/>
 		<TetrahedronFEMForceField name="FEM" youngModulus="2870" poissonRatio="0.45" method="large" drawHeterogeneousTetra="0" />
 
 		<!--<RestShapeSpringsForceField name="Spring" stiffness="1e3" angularStiffness="0" points="@TopFace.indices"  external_rest_shape="../TopNodesDisp/BlockMODisp" external_points="@TopFace.indices"/>-->
 
-                <MappedBeamToTetraForceField mappedFEM="Shells/FEM/FF" mappedMechObject="Shells/ShellMO" mapping="Shells/ShellTetraMapping" printLog="1"/>
+        <!--<MappedBeamToTetraForceField mappedFEM="Shells/FEM/FF" mappedMechObject="Shells/ShellMO" mapping="Shells/ShellTetraMapping" printLog="1"/>-->
 
-                <Node name="Shells">
+            <Node name="Shells">
 
-                    <Node name="grid">
-                        <RegularGrid name="gridTopo" min="-0.015 -0.015 0.015" max="0.015 0.015 0.015" nx="5" ny="5" nz="1" />
-                    </Node>
+                <Node name="grid">
+                    <RegularGridTopology name="gridTopo" min="-0.015 -0.015 0.015" max="0.015 0.015 0.015" nx="5" ny="5" nz="1" />
+                </Node>
 
-                    <TriangleSetTopologyContainer name="trianglesTopo"/>
-                    <TriangleSetTopologyModifier name="Modifier" />
-                    <Quad2TriangleTopologicalMapping input="@grid/gridTopo" output="@trianglesTopo" />
+                <TriangleSetTopologyContainer name="trianglesTopo"/>
+                <TriangleSetTopologyModifier name="Modifier" />
+                <Quad2TriangleTopologicalMapping input="@grid/gridTopo" output="@trianglesTopo" />
 
-                    <MechanicalObject name="ShellMO" template="Rigid" />
-                    <UniformMass mass="0.001 0.001 [0.0001 0 0 0 0.0001 0 0 0 0.0001]" printLog="false" totalmass="0.001" />
+                <MechanicalObject name="ShellMO" template="Rigid3d" />
+                <UniformMass vertexMass="0.001 0.001 [0.0001 0 0 0 0.0001 0 0 0 0.0001]" printLog="false"  /> <!--totalMass="0.001"-->
 
-                    <BarycentricMapping name="ShellTetraMapping" isMechanical="true" object1="../BlockMO" object2="ShellMO"/>
+                <BarycentricMapping name="ShellTetraMapping" isMechanical="true" input="@../BlockMO" output="@ShellMO"/>
 
-                    <Node name="bezierNodes">
-                        <PointSetTopologyContainer template="Vec3d" name="BezierPoints" />
-                        <Mesh2PointTopologicalMapping input="@../trianglesTopo" output="@BezierPoints"
+                <Node name="bezierNodes">
+                    <PointSetTopologyContainer template="Vec3d" name="BezierPoints" />
+                    <Mesh2PointTopologicalMapping input="@../trianglesTopo" output="@BezierPoints"
                             pointBaryCoords="0 0 0"
                             edgeBaryCoords="0.333 0.6666 0    0.6666 0.3333 0"
                             triangleBaryCoords="0.3333 0.3333 0" />
-                        <BezierShellInterpolation template="Rigid" name="bsInterp" />
-                    </Node>
+                    <BezierShellInterpolation template="Rigid3d" name="bsInterp" />
+                </Node>
 
-                    <Node name="FEM">
-                        <BezierShellForceField name="FF"
+                <Node name="FEM">
+                    <BezierShellForceField name="FF"
                             youngModulus="2870" poissonRatio="0.45" thickness="0.001"
                             bsInterpolation="@../bezierNodes/bsInterp"
                             drawFrame="false" drawNodes="false" drawPointSize="2" />
-                        <Node>
-                            <OglModel name="Visual" color="green"/>
-                            <IdentityMapping input="@.." output="@Visual"/>
-                        </Node>
+                    <Node name="visu">
+                        <OglModel name="Visual" color="green"/>
+                        <IdentityMapping input="@.." output="@Visual"/>
                     </Node>
                 </Node>
+            </Node>
 
 
             </Node>
 
 	<Node name="TopNodesDisp">
 		<MeshVTKLoader name="meshLoader"  filename="cube2739.vtk" scale3d="0.03 0.03 0.03" translation="-0.015 -0.015 -0.015"/>
-		<TetrahedronSetTopologyContainer name="topo"  position="@meshLoader.position"  edges="@meshLoader.edges"  triangles="@meshLoader.triangles"  tetrahedra="@meshLoader.tetras" />	
-		<MechanicalObject name="BlockMODisp" translation="0 0.0040 0" />
+<!--		<TetrahedronSetTopologyContainer name="topo"  position="@meshLoader.position"  edges="@meshLoader.edges"  triangles="@meshLoader.triangles"  tetrahedra="@meshLoader.tetras" />	
+-->		
+        <TetrahedronSetTopologyContainer name="topo"  position="@meshLoader.position" tetrahedra="@meshLoader.tetras" createTriangleArray="1" />		
+
+        <MechanicalObject name="BlockMODisp" translation="0 0.0040 0" />
 	</Node>
 </Node>

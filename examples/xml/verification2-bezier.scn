@@ -18,12 +18,48 @@ Theoretical solution:
 
 -->
 
-<Node name="root" dt="0.01" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
-    <CollisionPipeline verbose="0" />
-    <BruteForceDetection name="N2" />
-    <CollisionResponse response="default" />
+<Node name="root" dt="0.01" gravity="0 0 0">
+    <!--showBehaviorModels="0" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" showWireframe="1" showNormals="0" /-->
+    <!-- List of plugins needed to load all components used by this scene -->
+    <Node name="plugins">
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] --> 
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,BruteForceDetection,CollisionPipeline] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [MinProximityIntersection] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->
+        <RequiredPlugin name="Sofa.Component.Engine.Generate"/> <!-- Needed to use components [JoinPoints] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [CGLinearSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->  
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+        <RequiredPlugin name="Sofa.Component.MechanicalLoad"/> <!-- Needed to use components [ConstantForceField] -->  
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+        <RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TriangleSetTopologyContainer,TriangleSetTopologyModifier] -->  
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->  
+        <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] --> 
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Grid"/> <!-- Needed to use components [RegularGridTopology] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Mapping"/> <!-- Needed to use components [Quad2TriangleTopologicalMapping] --> 
+        <RequiredPlugin name="Shell"/>
+        <RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshExporter] -->  
+        <RequiredPlugin name="Sofa.Component.Playback"/> <!-- Needed to use components [WriteState] -->  
+    </Node>
+    
+    <DefaultAnimationLoop/>
+
+    <VisualStyle displayFlags="showBehaviorModels showForceFields" /> <!-- showCollisionModels -->
+    <DefaultVisualManagerLoop />
+    <CollisionPipeline verbose="0"/>
+    
+    <BruteForceBroadPhase name="N2" />
+    <BVHNarrowPhase/>
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
-    <CollisionGroup />
+    <CollisionResponse name="Response" response="PenaltyContactForceField" />
+
+
+    <RegularGridTopology name="gridTopo" min="-1 -1 0" max="1 1 0" nx="3" ny="3" nz="1" />
+    <MechanicalObject template="Vec3d" name="toto"/>
 
     <Node name="Square2" activated="true">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
@@ -32,24 +68,30 @@ Theoretical solution:
 <!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
 
         <TriangleSetTopologyContainer name="baseTopo" filename="../mesh/twisted12.obj"/>
-        <MechanicalObject name="basePoints" template="Rigid"
+        <TriangleSetTopologyModifier   name="Modifier" />
+        <TriangleSetGeometryAlgorithms template="Vec3d" name="GeomAlgo" />
+        <Quad2TriangleTopologicalMapping input="@../gridTopo" output="@baseTopo" />
+
+        <MechanicalObject name="basePoints" template="Rigid3d"
             showIndices="false" showIndicesScale="0.0001"/>
 
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="1" totalmass="0.00012" />
+        <!--UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="1" totalMass="0.00012" /-->
+        <UniformMass showAxisSizeFactor="1" totalMass="0.00012" />
 
         <BoxROI name="box1" box="-0.1 -0.1 -2 0.1 0.1 2" drawSize="0"/>
-        <FixedConstraint indices="@box1.indices" drawSize="0"/>
+        <FixedProjectiveConstraint indices="@box1.indices" drawSize="0"/>
 
-        <ConstantForceField points="36-38" forces="0 1 0 0 0 0"/>
+        <ConstantForceField indices="37" forces="0 1 0 0 0 0"/>
 
         <!--<FixedRotationConstraint FixedZRotation="true"/>-->
 
         <BezierTriangularBendingFEMForceField name="FEM"
             youngModulus="29.0e6" poissonRatio="0.22" thickness="0.32" />
         
-        <OglModel name="Visual" />
-        <IdentityMapping object1="basePoints" object2="Visual"/>
-
+        <Node name="Visu">
+            <OglModel name="Visual" />
+            <IdentityMapping input="@basePoints" output="@Visual"/>
+        </Node>
         <WriteState filename="verification2-bezier-12.state"
             writeX="true" writeX0="false" writeV="false"
             time="0" period="1" />
