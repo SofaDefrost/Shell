@@ -1,54 +1,84 @@
-<Node name="root" dt="0.02" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
-    <CollisionPipeline verbose="0" />
-    <BruteForceDetection name="N2" />
-    <CollisionResponse response="default" />
-    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
-    <CollisionGroup />
+<?xml version="1.0"?>
+<Node name="root" dt="0.02" gravity="0 0 0">
+    <Node name="plugins">
+        <RequiredPlugin name="Shell"/>
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,CollisionPipeline] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [MinProximityIntersection] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint,FixedRotationProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshOBJLoader] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [CGLinearSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->  
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+        <RequiredPlugin name="Sofa.Component.MechanicalLoad"/> <!-- Needed to use components [ConstantForceField] -->  
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TriangleSetTopologyContainer] -->  
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->  
+        <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Geometry"/> <!-- Needed to use components [TriangleCollisionModel] -->  
+        <RequiredPlugin name="Sofa.Component.Engine.Transform"/> <!-- Needed to use components [Vertex2Frame] -->  
+        <RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [SparseLDLSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Constant"/> <!-- Needed to use components [MeshTopology] -->  
+
+
+    </Node>
+
+    <VisualStyle displayFlags="showBehaviorModels showForceFields showVisualModels" />
+
+    <DefaultAnimationLoop/>
+    <CollisionPipeline verbose="0"/>
+    <BruteForceBroadPhase name="N2"/>
+    <BVHNarrowPhase/>
+    <CollisionResponse name="Response" response="PenaltyContactForceField"/>
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
 
     <Node name="Rest_position">
-        <MeshLoader name="rest_shape" filename="../mesh/7small_triangles_bis.obj"/>
-        <Mesh/>
-        <Vertex2Frame name="RestVertex2Frame" template="Rigid" vertices="@rest_shape.vertices" normals="@rest_shape.normals" />
-<!--        <MechanicalObject name="rest_triangles" template="Rigid" position="@RestVertex2Frame.frames"/>-->
+        <MeshOBJLoader name="rest_shape" filename="../../../Shell/mesh/7small_triangles_bis.obj"/>
+        <MeshTopology/>
+        <Vertex2Frame name="RestVertex2Frame" template="Rigid3" position="@rest_shape.position" normals="@rest_shape.normals" />
+<!--        <MechanicalObject name="rest_triangles" template="Rigid3" position="@RestVertex2Frame.frames"/>-->
 <!--        <OglModel name="Visual" color="green"/>-->
     </Node>
 
     <Node name="pointA">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="0 0 0 0.5 -0.5 -0.5 0.5"/>
+       <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0 0.5 -0.5 -0.5 0.5"/>
     </Node>
 
     <Node name="pointB">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="0 0 0.001 0.5 -0.5 -0.5 0.5"/>
+       <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0.001 0.5 -0.5 -0.5 0.5"/>
     </Node>
 
     <Node name="pointC">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="0 0 0.002 0.5 -0.5 -0.5 0.5"/>
+       <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0.002 0.5 -0.5 -0.5 0.5"/>
    </Node>
 
    <Node name="pointD">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="0 0 0.003 0.5 -0.5 -0.5 0.5"/>
+       <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0.003 0.5 -0.5 -0.5 0.5"/>
    </Node>
 
     <Node name="pointE">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="0 0 0.004 0.5 -0.5 -0.5 0.5"/>
+       <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0.004 0.5 -0.5 -0.5 0.5"/>
     </Node>
 
     <Node name="7smallTriangles">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="0.5"/>
-<!--        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-<!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />
-        <TriangleSetTopologyContainer name="baseTriangles" filename="../mesh/7small_triangles_bis.obj"/>
-        <MechanicalObject name="tri" template="Rigid" debugViewIndices="false" debugViewIndicesScale="0.0007" rest_position="@../Rest_position/RestVertex2Frame.frames" position="@../Rest_position/RestVertex2Frame.frames"/>
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.0002" totalmass="0.0001" />
-        <AttachConstraint name="Constraint" object2="tri" object1="pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
-        <AttachConstraint name="Constraint" object2="tri" object1="pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />
-        <AttachConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="false" />
-        <AttachConstraint name="Constraint" object2="tri" object1="pointD/fixedPoint" indices1="0" indices2="3" freeRotations="false" />
-        <AttachConstraint name="Constraint" object2="tri" object1="pointE/fixedPoint" indices1="0" indices2="4" freeRotations="false" />
-        <FixedRotationConstraint FixedZRotation="true"/>
-<!--        <FixedConstraint indices="5-8"/>-->
-        <ConstantForceField points="9-11" forces="-0.00005 0 0 0 0 0"/>
+        <!--<SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
+        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-50"/>
+        <MeshOBJLoader name="loader" filename="../../../Shell/mesh/7small_triangles_bis.obj"/>
+        <TriangleSetTopologyContainer name="baseTriangles" src="@loader" />
+        <MechanicalObject name="tri" template="Rigid3" topology="@baseTriangles" showIndices="false" showIndicesScale="0.0007" rest_position="@../Rest_position/RestVertex2Frame.frames" position="@../Rest_position/RestVertex2Frame.frames"/>
+        <UniformMass vertexMass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.0002"  />
+        <!--<AttachProjectiveConstraint name="ConstraintA" object2="@tri" object1="@/pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
+        <AttachProjectiveConstraint name="ConstraintB" object2="@tri" object1="@/pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />
+        <AttachProjectiveConstraint name="ConstraintC" object2="@tri" object1="@/pointC/fixedPoint" indices1="0" indices2="2" freeRotations="false" />
+        <AttachProjectiveConstraint name="ConstraintD" object2="@tri" object1="@/pointD/fixedPoint" indices1="0" indices2="3" freeRotations="false" />
+        <AttachProjectiveConstraint name="ConstraintE" object2="@tri" object1="@/pointE/fixedPoint" indices1="0" indices2="4" freeRotations="false" />-->
+        <FixedRotationProjectiveConstraint FixedZRotation="true"/>
+        <FixedProjectiveConstraint indices="0-4"/>
+        <ConstantForceField indices="9-11" forces="-0.00005 0 0 0 0 0"/>
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.0001"/>
 
 <!--        <Node>-->
@@ -56,19 +86,19 @@
 <!--            <IdentityMapping/>-->
 <!--            <Node name="VisualBasePoints">-->
 <!--                <OglModel name="Visual" color="green"/>-->
-<!--                <IdentityMapping object1="basePointsVec3" object2="Visual"/>-->
+<!--                <IdentityMapping object1="@/basePointsVec3" object2="@Visual"/>-->
 <!--            </Node>-->
 <!--        </Node>-->
 
         <Node name="SubTriangles">
             <TriangleSetTopologyContainer  name="subTriangles"/>
-            <TriangleSubdivisionTopologicalMapping object1="baseTriangles" object2="subTriangles" subdivisions="2"/>
-            <MechanicalObject  name="subPoints" debugViewIndices="false" debugViewIndicesScale="0.0003"/>
-            <BendingPlateMechanicalMapping/>
-            <Triangle />
-            <Node>
+            <!--<TriangleSubdivisionTopologicalMapping object1="@baseTriangles" object2="@subTriangles" subdivisions="2"/>-->
+            <MechanicalObject  name="subPoints" topology="@subTriangles" showIndices="false" showIndicesScale="0.0003"/>
+            <BendingPlateMechanicalMapping input="@../tri" output="@subPoints"/>
+            <TriangleCollisionModel />
+            <Node name="visual">
                 <OglModel name="Visual" color="red"/>
-                <IdentityMapping object1="subPoints" object2="Visual"/>
+                <IdentityMapping input="@../subPoints" output="@Visual"/>
             </Node>
         </Node>
 
