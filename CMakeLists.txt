@@ -68,40 +68,6 @@ set(SOURCE_FILES
     ${SHELL_SRC_DIR}/shells2/mapping/BezierShellMechanicalMapping.cpp
 )
 
-if(SOFA-PLUGIN_SHELLS_ADAPTIVITY)
-    set(COMPILER_DEFINE "SOFA_BUILD_SHELLS_ADAPTIVITY")
-
-    list(APPEND HEADER_FILES
-        ${SHELL_SRC_DIR}/controller/AdaptiveCuttingController.h
-        ${SHELL_SRC_DIR}/controller/AdaptiveCuttingController.inl
-        ${SHELL_SRC_DIR}/controller/Test2DAdapter.h
-        ${SHELL_SRC_DIR}/controller/Test2DAdapter.inl
-        ${SHELL_SRC_DIR}/misc/Optimize2DSurface.h
-        ${SHELL_SRC_DIR}/misc/Optimize2DSurface.inl
-        ${SHELL_SRC_DIR}/misc/SurfaceParametrization.h
-        ${SHELL_SRC_DIR}/misc/SurfaceParametrization.inl
-    )
-
-    list(APPEND SOURCE_FILES
-        ${SHELL_SRC_DIR}/controller/AdaptiveCuttingController.cpp
-        ${SHELL_SRC_DIR}/controller/Test2DAdapter.cpp
-        ${SHELL_SRC_DIR}/misc/Optimize2DSurface.cpp
-        ${SHELL_SRC_DIR}/misc/SurfaceParametrization.cpp
-    )
-
-    if(SofaGui_FOUND AND SofaOpenglVisual_FOUND)
-        list(APPEND HEADER_FILES
-            ${SHELL_SRC_DIR}/cutting/AdaptiveCutting.h
-        )
-
-        list(APPEND SOURCE_FILES
-            ${SHELL_SRC_DIR}/cutting/AdaptiveCutting.cpp
-        )
-    endif()
-
-endif()
-
-
 # Create the plugin library
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
 
