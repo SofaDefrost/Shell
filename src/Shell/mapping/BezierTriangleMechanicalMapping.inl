@@ -27,11 +27,7 @@
 
 #include <Shell/mapping/BezierTriangleMechanicalMapping.h>
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
-#include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
-
-#include <sofa/component/mechanicalload/ConstantForceField.h>
-
 
 namespace sofa
 {
@@ -42,7 +38,6 @@ namespace component
 namespace mapping
 {
 
-using namespace sofa::component::collision;
 using namespace sofa::helper;
 
 // Returns the skew-symetric matrix for computing a cross-product with the 

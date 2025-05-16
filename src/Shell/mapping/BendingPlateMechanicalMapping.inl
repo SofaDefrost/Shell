@@ -25,19 +25,18 @@
 #pragma once
 #include <Shell/mapping/BendingPlateMechanicalMapping.h>
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
-#include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
+// #include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
 #include <sofa/core/visual/VisualParams.h>
 
-#include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
-#include <sofa/component/collision/detection/intersection/MeshMinProximityIntersection.h>
+// #include <sofa/component/collision/detection/intersection/MinProximityIntersection.h>
+// #include <sofa/component/collision/detection/intersection/MeshMinProximityIntersection.h>
 
-#include <sofa/component/mechanicalload/ConstantForceField.h>
 
 namespace sofa::component::mapping
 {
 
-using namespace sofa::component::collision;
-
+// using namespace sofa::component::collision;
+//
 
 template <class TIn, class TOut>
 void BendingPlateMechanicalMapping<TIn, TOut>::init()
