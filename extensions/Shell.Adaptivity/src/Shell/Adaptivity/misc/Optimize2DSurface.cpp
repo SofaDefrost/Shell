@@ -15,7 +15,7 @@ template class SHELL_ADAPTIVITY_API Optimize2DSurface<defaulttype::Vec3dTypes>;
 #endif //SOFA_FLOAT
 #ifndef SOFA_DOUBLE
 //template class SHELL_ADAPTIVITY_API Optimize2DSurface<float>;
-template class SHELL_ADAPTIVITY_API Optimize2DSurface<defaulttype3fTypes>;
+template class SHELL_ADAPTIVITY_API Optimize2DSurface<defaulttype::Vec3fTypes>;
 #endif //SOFA_DOUBLE
 
 }

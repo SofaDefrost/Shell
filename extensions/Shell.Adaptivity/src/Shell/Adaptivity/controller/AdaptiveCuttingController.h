@@ -104,7 +104,6 @@ private:
     Test2DAdapter<DataTypes>* m_adapter;
     sofa::component::topology::container::dynamic::TriangleSetTopologyContainer*  m_container;
     sofa::component::topology::container::dynamic::TriangleSetGeometryAlgorithms<DataTypes> *m_algoGeom;
-    sofa::component::topology::container::dynamic::TriangleSetTopologyAlgorithms<DataTypes> *m_algoTopo;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
 
     // TODO: This should go to cutting config (maybe?)

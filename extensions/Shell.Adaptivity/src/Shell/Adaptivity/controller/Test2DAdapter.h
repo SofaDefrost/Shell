@@ -334,7 +334,6 @@ private:
     sofa::component::topology::container::dynamic::TriangleSetTopologyContainer*  m_container;
     sofa::component::topology::container::dynamic::TriangleSetTopologyModifier*  m_modifier;
     sofa::component::topology::container::dynamic::TriangleSetGeometryAlgorithms<DataTypes> *m_algoGeom;
-    sofa::component::topology::container::dynamic::TriangleSetTopologyAlgorithms<DataTypes> *m_algoTopo;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
 
     /// List of nodes that have to be rechecked if they are on the boundry.
@@ -437,10 +436,10 @@ private:
 
 protected:
 
-    topology::PointData< sofa::type::vector<PointInformation> > pointInfo;
+    sofa::core::topology::PointData< sofa::type::vector<PointInformation> > pointInfo;
     PointInfoHandler* pointHandler;
 
-    topology::TriangleData< sofa::type::vector<TriangleInformation> > triInfo;
+    sofa::core::topology::TriangleData< sofa::type::vector<TriangleInformation> > triInfo;
     TriangleInfoHandler* triHandler;
 
 };

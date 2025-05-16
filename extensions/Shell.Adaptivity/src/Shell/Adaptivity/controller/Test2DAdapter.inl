@@ -38,7 +38,7 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 #define SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 
-#include <Shell/config.h>
+#include <Shell/Adaptivity/config.h>
 
 #include <map>
 #include <float.h>
@@ -252,12 +252,6 @@ void Test2DAdapter<DataTypes>::init()
     this->getContext()->get(m_algoGeom);
     if (m_algoGeom == NULL) {
         msg_error() << "Unable to find TriangleSetGeometryAlgorithms" ;
-        return;
-    }
-
-    this->getContext()->get(m_algoTopo);
-    if (m_algoTopo == NULL) {
-        msg_error() << "Unable to find TriangleSetTopologyAlgorithms" ;
         return;
     }
 

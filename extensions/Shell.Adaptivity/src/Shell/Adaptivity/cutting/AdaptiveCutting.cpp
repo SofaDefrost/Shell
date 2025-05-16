@@ -34,12 +34,12 @@ namespace collision
 #ifndef SOFA_DOUBLE
 helper::Creator<
     InteractionPerformer::InteractionPerformerFactory,
-    AdaptiveCuttingPerformer<defaulttype3fTypes> >
+    AdaptiveCuttingPerformer<defaulttype::Vec3fTypes> >
         AdaptiveCuttingPerformerVec3fClass("AdaptiveCutting", true);
 #endif
 #ifndef SOFA_FLOAT
 helper::Creator<gui::component::performer::InteractionPerformer::InteractionPerformerFactory,
-    AdaptiveCuttingPerformer<defaulttype3dTypes> >
+    AdaptiveCuttingPerformer<defaulttype::Vec3dTypes> >
         AdaptiveCuttingPerformerVec3dClass("AdaptiveCutting", true);
 #endif
 
@@ -62,7 +62,7 @@ template class SHELL_ADAPTIVITY_API  AdaptiveCuttingPerformer<defaulttype::Vec3d
 namespace gui
 {
 
-int AdaptiveCuttingOperationReg = sofa::gui::RegisterOperation("AdaptiveCutting")
+int AdaptiveCuttingOperationReg = sofa::gui::common::RegisterOperation("AdaptiveCutting")
     .add< AdaptiveCuttingOperation >();
 
 void AdaptiveCuttingOperation::start()
@@ -90,7 +90,7 @@ void AdaptiveCuttingOperation::wait()
 {
     // Update the position in the adaptivity component
     if (!pickHandle) return;
-    sofa::component::collision::BodyPicked *picked = pickHandle->getLastPicked();
+    sofa::gui::component::performer::BodyPicked *picked = pickHandle->getLastPicked();
     if (!picked) return;
 
     CuttingAdapter *ca = getAdapter();
@@ -99,14 +99,14 @@ void AdaptiveCuttingOperation::wait()
     }
 }
 
-component::controller::CuttingAdapter* AdaptiveCuttingOperation::getAdapter()
+sofa::component::controller::CuttingAdapter* AdaptiveCuttingOperation::getAdapter()
 {
     if (!pickHandle) return NULL;
 
-    sofa::component::collision::BodyPicked *picked = pickHandle->getLastPicked();
+    sofa::gui::component::performer::BodyPicked *picked = pickHandle->getLastPicked();
     if (!picked) return NULL;
 
-    component::controller::CuttingAdapter *ca = NULL;
+    sofa::component::controller::CuttingAdapter *ca = NULL;
     if (picked->body) {
         if (!picked->body->getContext()) std::cout << "no context!\n";
         picked->body->getContext()->get(ca);

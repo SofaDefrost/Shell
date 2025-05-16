@@ -4,14 +4,13 @@
 // TODO
 // - protect/unprotect cut edges (m_cutEdge,m_cutList)
 
-#include <Shell/config.h>
+#include <Shell/Adaptivity/config.h>
 
 #include <float.h>
 #include <sofa/helper/rmath.h>
 
 #include <Shell/Adaptivity/controller/AdaptiveCuttingController.h>
 #include <Shell/misc/PointProjection.h>
-#include <SofaMeshCollision/TriangleModel.h>
 #include <sofa/component/collision/geometry/TriangleModel.h>
 
 #define OTHER(x, a, b) ((x == a) ? b : a)
@@ -76,12 +75,6 @@ void AdaptiveCuttingController<DataTypes>::init()
         return;
     }
 
-    this->getContext()->get(m_algoTopo);
-    if (m_algoTopo == NULL) {
-        msg_error() << "Unable to find TriangleSetTopologyAlgorithms";
-        return;
-    }
-
     reinit();
 }
 
@@ -118,7 +111,7 @@ void AdaptiveCuttingController<DataTypes>::onEndAnimationStep(const double /*dt*
         }
         // Then perform the incision
         bool bReachedBorder;
-        m_algoTopo->InciseAlongEdgeList(m_cutList, newList, endList,
+        m_algoGeom->InciseAlongEdgeList(m_cutList, newList, endList,
             bReachedBorder);
         //m_algoTopo->InciseAlongEdge(m_cutList[0], NULL);
         m_cutList.clear();
@@ -212,7 +205,7 @@ void AdaptiveCuttingController<DataTypes>::setTrackedPoint(
     Real d2 = (x[ e[1] ] - m_point).norm2();
     m_pointId = (d1 < d2 ? e[0] : e[1]);
     } else*/
-    if(dynamic_cast<geometry::TriangleCollisionModel *>(picked.body)) {
+    if(dynamic_cast<geometry::TriangleCollisionModel<DataTypes> *>(picked.body)) {
 
         Index newId = InvalidID;
         Index newCutEdge = InvalidID;
@@ -351,7 +344,7 @@ template<class DataTypes>
 void AdaptiveCuttingController<DataTypes>::addCuttingPoint()
 {
     if (!m_adapter) return;
-    if (!m_algoTopo || !m_algoGeom) return;
+    if (!m_algoGeom) return;
 
     if (m_pointId == InvalidID) {
         msg_error() << "BUG! Attempted cutting with no point tracked.";
