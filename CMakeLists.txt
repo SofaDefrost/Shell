@@ -11,8 +11,6 @@ sofa_find_package(Sofa.GL REQUIRED)
 
 set(README_FILE README.md)
 
-option(SOFA-PLUGIN_SHELLS_ADAPTIVITY "Enables shells adaptivity" OFF)
-
 # List all files
 set(SHELL_SRC_DIR src/Shell)
 set(HEADER_FILES
@@ -124,3 +122,5 @@ sofa_create_package_with_targets(
     INCLUDE_INSTALL_DIR ${PROJECT_NAME}
     RELOCATABLE "plugins"
     )
+
+sofa_add_subdirectory(plugin extensions/Shell.Adaptivity Shell.Adaptivity)
