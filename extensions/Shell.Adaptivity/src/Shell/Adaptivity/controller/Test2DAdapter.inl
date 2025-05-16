@@ -38,7 +38,7 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 #define SOFA_COMPONENT_CONTROLLER_TEST2DADAPTER_INL
 
-#include <SofaShells/config.h>
+#include <Shell/config.h>
 
 #include <map>
 #include <float.h>
@@ -49,10 +49,10 @@
 #include <sofa/helper/SimpleTimer.h>
 #include <sofa/core/topology/TopologyData.inl>
 
-#include <SofaMeshCollision/TriangleModel.h>
+#include <sofa/component/collision/geometry/TriangleModel.h>
 
-#include <SofaShells/misc/PointProjection.h>
-#include <SofaShells/controller/Test2DAdapter.h>
+#include <Shell/misc/PointProjection.h>
+#include <Shell/Adaptivity/controller/Test2DAdapter.h>
 
 #define OTHER(x, a, b) ((x == a) ? b : a)
 
@@ -143,7 +143,7 @@ void Test2DAdapter<DataTypes>::TriangleInfoHandler::applyCreateFunction(
     adapter->m_toUpdate[t[2]] = true;
 
     // Compute initial normal
-    adapter->computeTriangleNormal(elem, adapter->m_state->read(sofa::core::VecCoordId::restPosition())->getValue(), tInfo.normal);
+    adapter->computeTriangleNormal(elem, adapter->m_state->read(sofa::core::vec_id::read_access::restPosition)->getValue(), tInfo.normal);
 }
 
 template<class DataTypes>
@@ -319,7 +319,7 @@ void Test2DAdapter<DataTypes>::reinit()
 
     stepCounter = 0;
 
-    m_surf.init(m_container, m_state->read(sofa::core::VecCoordId::restPosition())->getValue());
+    m_surf.init(m_container, m_state->read(sofa::core::vec_id::read_access::restPosition)->getValue());
 }
 
 
@@ -341,7 +341,7 @@ void Test2DAdapter<DataTypes>::onEndAnimationStep(const double /*dt*/)
 
     //stepCounter = 0;
 
-    Data<VecCoord>* datax = m_state->write(sofa::core::VecCoordId::restPosition());
+    Data<VecCoord>* datax = m_state->write(sofa::core::vec_id::write_access::restPosition);
     //VecCoord& x = *datax->beginEdit();
     // WARNING: Notice that we're working on a copy that is NOT updated by
     //          external changes!
@@ -507,9 +507,9 @@ void Test2DAdapter<DataTypes>::swapEdge(Index triID)
     Real oldValue = m_functionals.getValue()[triID];
 
     const VecCoord& x0 = m_state->read(
-        sofa::core::ConstVecCoordId::restPosition())->getValue();
+        sofa::core::vec_id::read_access::restPosition)->getValue();
     const VecCoord& x = m_state->read(
-        sofa::core::ConstVecCoordId::position())->getValue();
+        sofa::core::vec_id::read_access::position)->getValue();
     const Triangle &t1 = m_container->getTriangle(triID);
 
     const EdgesInTriangle &elist = m_container->getEdgesInTriangle(triID);
@@ -682,8 +682,8 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
 
     const VecCoord& x = m_state->read(
         bInRest
-        ? sofa::core::ConstVecCoordId::restPosition()
-        : sofa::core::ConstVecCoordId::position()
+        ? sofa::core::vec_id::read_access::restPosition
+        : sofa::core::vec_id::read_access::position
         )->getValue();
 
     if ((x[pt] - target).norm() < m_precision) return; // Nothing to do
@@ -762,7 +762,7 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
 
     // Check
     //const VecCoord& xnew = m_state->read(
-    //    sofa::core::ConstVecCoordId::restPosition())->getValue();
+    //    sofa::core::vec_id::read_access::restPosition)->getValue();
     //std::cout << "requested " << target << "\tgot " << xnew[pt] << "\tdelta"
     //    << (target - xnew[pt]).norm() << "\n";
 }
@@ -773,7 +773,7 @@ typename Test2DAdapter<DataTypes>::PointInformation::NodeType Test2DAdapter<Data
     if (m_container == NULL)
         return PointInformation::NORMAL;
 
-    const VecCoord& x0 = m_state->read(sofa::core::ConstVecCoordId::restPosition())->getValue();
+    const VecCoord& x0 = m_state->read(sofa::core::vec_id::read_access::restPosition)->getValue();
 
     VecVec3 dirlist; // Directions of boundary edges
 
@@ -823,7 +823,7 @@ void Test2DAdapter<DataTypes>::projectionInit()
     if (!m_container) return;
 
     const VecCoord& x0= m_state->read(
-        sofa::core::ConstVecCoordId::restPosition())->getValue();
+        sofa::core::vec_id::read_access::restPosition)->getValue();
 
     const VecCoord& xProj = m_projectedPoints.getValue();
     unsigned int nVertices = xProj.size();
@@ -885,7 +885,7 @@ void Test2DAdapter<DataTypes>::projectionUpdate(Index pt)
     PointProjection<Real> proj(*m_container);
 
     const VecCoord& x0= m_state->read(
-        sofa::core::ConstVecCoordId::restPosition())->getValue();
+        sofa::core::vec_id::read_access::restPosition)->getValue();
 
     const VecCoord& xProj = m_projectedPoints.getValue();
 
@@ -981,10 +981,10 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
         return;
 
     if (!m_state) return;
-    const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecCoord& x = m_state->read(sofa::core::vec_id::read_access::position)->getValue();
 
-    type::vector<type::Vector3> boundary;
-    type::vector<type::Vector3> fixed;
+    type::vector<type::Vec3> boundary;
+    type::vector<type::Vec3> fixed;
     const type::vector<PointInformation> &pts = pointInfo.getValue();
     if (pts.size() != x.size()) return;
     for (Index i=0; i < x.size(); i++) {
@@ -1001,9 +1001,9 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
 
     if (m_pointId != InvalidID) {
         // Draw tracked position
-        type::vector<type::Vector3> vv;
+        type::vector<type::Vec3> vv;
         vv.push_back(
-            type::Vector3(m_point[0], m_point[1], m_point[2]));
+            type::Vec3(m_point[0], m_point[1], m_point[2]));
         vparams->drawTool()->drawPoints(vv, 6,
             type::RGBAColor(1.0, 1.0, 1.0, 1.0));
         // Draw tracked position (projected in rest shape)
@@ -1022,7 +1022,7 @@ void Test2DAdapter<DataTypes>::draw(const core::visual::VisualParams* vparams)
 
 
     if (m_protectedEdges.size() > 0) {
-        type::vector<type::Vector3> points;
+        type::vector<type::Vec3> points;
         for (VecIndex::const_iterator i=m_protectedEdges.begin();
             i != m_protectedEdges.end(); i++) {
             const Edge &e = m_container->getEdge(*i);

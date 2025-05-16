@@ -1,10 +1,11 @@
-#include <SofaShells/config.h>
+#include <Shell/Adaptivity/config.h>
 
+#include <Shell/Adaptivity/cutting/AdaptiveCutting.h>
 #include <sofa/core/ObjectFactory.h>
 #include <sofa/defaulttype/VecTypes.h>
+#include <sofa/gui/common/PickHandler.h>
+#include <sofa/gui/component/performer/InteractionPerformer.h>
 #include <sofa/helper/Factory.inl>
-#include <sofa/gui/PickHandler.h>
-#include <SofaShells/cutting/AdaptiveCutting.h>
 
 namespace sofa
 {
@@ -33,23 +34,22 @@ namespace collision
 #ifndef SOFA_DOUBLE
 helper::Creator<
     InteractionPerformer::InteractionPerformerFactory,
-    AdaptiveCuttingPerformer<type::Vec3fTypes> >
+    AdaptiveCuttingPerformer<defaulttype3fTypes> >
         AdaptiveCuttingPerformerVec3fClass("AdaptiveCutting", true);
 #endif
 #ifndef SOFA_FLOAT
-helper::Creator<
-    InteractionPerformer::InteractionPerformerFactory,
-    AdaptiveCuttingPerformer<type::Vec3dTypes> >
+helper::Creator<gui::component::performer::InteractionPerformer::InteractionPerformerFactory,
+    AdaptiveCuttingPerformer<defaulttype3dTypes> >
         AdaptiveCuttingPerformerVec3dClass("AdaptiveCutting", true);
 #endif
 
 #ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<type::Vec3fTypes>;
-//template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<defaulttype::Rigid3fTypes>;
+template class SHELL_ADAPTIVITY_API  AdaptiveCuttingPerformer<defaulttype::Vec3fTypes>;
+//template class SHELL_ADAPTIVITY_API  AdaptiveCuttingPerformer<defaulttype::Rigid3fTypes>;
 #endif
 #ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<type::Vec3dTypes>;
-//template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<defaulttype::Rigid3dTypes>;
+template class SHELL_ADAPTIVITY_API  AdaptiveCuttingPerformer<defaulttype::Vec3dTypes>;
+//template class SHELL_ADAPTIVITY_API  AdaptiveCuttingPerformer<defaulttype::Rigid3dTypes>;
 #endif
 
 } // namespace collision

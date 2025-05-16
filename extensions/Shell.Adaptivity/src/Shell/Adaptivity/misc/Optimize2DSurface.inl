@@ -8,8 +8,8 @@
 //    do the latter.
 //
 
-#include <SofaShells/controller/Test2DAdapter.h>
-#include <SofaShells/misc/Optimize2DSurface.h>
+#include <Shell/Adaptivity/controller/Test2DAdapter.h>
+#include <Shell/Adaptivity/misc/Optimize2DSurface.h>
 
 #include <float.h>
 #include <sofa/helper/rmath.h>
@@ -25,7 +25,7 @@ namespace sofa
 
 template <class DataTypes>
 void Optimize2DSurface<DataTypes>::initValues(VecReal &metrics,
-    sofa::component::topology::TriangleSetTopologyContainer *topology)
+    sofa::component::topology::container::dynamic::TriangleSetTopologyContainer *topology)
 {
     m_topology = topology;
 

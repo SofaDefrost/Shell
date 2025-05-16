@@ -3,19 +3,19 @@
 // triangular networks.
 //
 
-#include <SofaShells/config.h>
-#include <SofaShells/misc/Optimize2DSurface.inl>
+#include <Shell/Adaptivity/config.h>
+#include <Shell/Adaptivity/misc/Optimize2DSurface.inl>
 
 namespace sofa
 {
 
 #ifndef SOFA_FLOAT
-//template class SOFA_SHELLS_API Optimize2DSurface<double>;
-template class SOFA_SHELLS_API Optimize2DSurface<type::Vec3dTypes>;
+//template class SHELL_ADAPTIVITY_API Optimize2DSurface<double>;
+template class SHELL_ADAPTIVITY_API Optimize2DSurface<defaulttype::Vec3dTypes>;
 #endif //SOFA_FLOAT
 #ifndef SOFA_DOUBLE
-//template class SOFA_SHELLS_API Optimize2DSurface<float>;
-template class SOFA_SHELLS_API Optimize2DSurface<type::Vec3fTypes>;
+//template class SHELL_ADAPTIVITY_API Optimize2DSurface<float>;
+template class SHELL_ADAPTIVITY_API Optimize2DSurface<defaulttype3fTypes>;
 #endif //SOFA_DOUBLE
 
 }

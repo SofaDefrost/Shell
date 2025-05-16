@@ -2,17 +2,17 @@
 // Class for parametrizing 3D surface in 2D domain.
 //
 
-#include <SofaShells/config.h>
-#include <SofaShells/misc/SurfaceParametrization.inl>
+#include <Shell/Adaptivity/config.h>
+#include <Shell/Adaptivity/misc/SurfaceParametrization.inl>
 
 namespace sofa
 {
 
 #ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API SurfaceParametrization<double>;
+template class SHELL_ADAPTIVITY_API SurfaceParametrization<double>;
 #endif //SOFA_FLOAT
 #ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API SurfaceParametrization<float>;
+template class SHELL_ADAPTIVITY_API SurfaceParametrization<float>;
 #endif //SOFA_DOUBLE
 
 }

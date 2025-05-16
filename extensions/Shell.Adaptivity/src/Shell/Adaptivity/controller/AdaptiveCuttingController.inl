@@ -4,14 +4,15 @@
 // TODO
 // - protect/unprotect cut edges (m_cutEdge,m_cutList)
 
-#include <SofaShells/config.h>
+#include <Shell/config.h>
 
 #include <float.h>
 #include <sofa/helper/rmath.h>
 
-#include <SofaShells/misc/PointProjection.h>
-#include <SofaShells/controller/AdaptiveCuttingController.h>
+#include <Shell/Adaptivity/controller/AdaptiveCuttingController.h>
+#include <Shell/misc/PointProjection.h>
 #include <SofaMeshCollision/TriangleModel.h>
+#include <sofa/component/collision/geometry/TriangleModel.h>
 
 #define OTHER(x, a, b) ((x == a) ? b : a)
 
@@ -105,7 +106,7 @@ void AdaptiveCuttingController<DataTypes>::onEndAnimationStep(const double /*dt*
     if (m_gracePeriod > 0) m_gracePeriod--;
 
     const VecCoord& x0 = m_state->read(
-        sofa::core::ConstVecCoordId::restPosition())->getValue();
+        sofa::core::vec_id::read_access::restPosition)->getValue();
 
     // Perform the (delayed) cutting
     if ((m_cutList.size() > 0) && (m_cutPoints > 2) ) {
@@ -161,10 +162,10 @@ void AdaptiveCuttingController<DataTypes>::draw(
         return;
 
     if (!m_state) return;
-    const VecCoord& x = m_state->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecCoord& x = m_state->read(sofa::core::vec_id::read_access::position)->getValue();
 
     if (m_cutList.size() > 0) {
-        type::vector<type::Vector3> points;
+        type::vector<type::Vec3> points;
         for (VecIndex::const_iterator i=m_cutList.begin();
             i != m_cutList.end(); i++) {
             const Edge &e = m_container->getEdge(*i);
@@ -177,7 +178,7 @@ void AdaptiveCuttingController<DataTypes>::draw(
 
     if (m_cutEdge != InvalidID) {
         const Edge &e = m_container->getEdge(m_cutEdge);
-        type::vector<type::Vector3> points;
+        type::vector<type::Vec3> points;
         points.push_back(x[ e[0] ]);
         points.push_back(x[ e[1] ]);
         vparams->drawTool()->drawLines(points, 4,
@@ -188,16 +189,16 @@ void AdaptiveCuttingController<DataTypes>::draw(
 
 template<class DataTypes>
 void AdaptiveCuttingController<DataTypes>::setTrackedPoint(
-    const collision::BodyPicked &picked)
+    const sofa::gui::component::performer::BodyPicked &picked)
 {
     if (!m_adapter) return;
 
     using namespace sofa::component::collision;
 
     //const VecCoord& x0 = m_state->read(
-    //    sofa::core::ConstVecCoordId::restPosition())->getValue();
+    //    sofa::core::vec_id::read_access::restPosition)->getValue();
     const VecCoord& x = m_state->read(
-        sofa::core::ConstVecCoordId::position())->getValue();
+        sofa::core::vec_id::read_access::position)->getValue();
 
 
     // Support only trianglular model! The others don't give any added value.
@@ -211,7 +212,7 @@ void AdaptiveCuttingController<DataTypes>::setTrackedPoint(
     Real d2 = (x[ e[1] ] - m_point).norm2();
     m_pointId = (d1 < d2 ? e[0] : e[1]);
     } else*/
-    if(dynamic_cast<TriangleModel*>(picked.body)) {
+    if(dynamic_cast<geometry::TriangleCollisionModel *>(picked.body)) {
 
         Index newId = InvalidID;
         Index newCutEdge = InvalidID;
@@ -358,9 +359,9 @@ void AdaptiveCuttingController<DataTypes>::addCuttingPoint()
     }
 
     const VecCoord& x = m_state->read(
-        sofa::core::ConstVecCoordId::position())->getValue();
+        sofa::core::vec_id::read_access::position)->getValue();
     //const VecCoord& xrest = m_state->read(
-    //    sofa::core::ConstVecCoordId::restPosition())->getValue();
+    //    sofa::core::vec_id::read_access::restPosition)->getValue();
     Coord oldpos = x[m_pointId];
 
     bool bFirst = !cutting();

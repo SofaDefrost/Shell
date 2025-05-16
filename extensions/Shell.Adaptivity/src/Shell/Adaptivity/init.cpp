@@ -1,4 +1,4 @@
-#include <Shell.Adaptivity/init.h>
+#include <Shell/Adaptivity/init.h>
 #include <sofa/core/ObjectFactory.h>
 
 namespace shelladaptivity
@@ -34,7 +34,7 @@ extern "C"
 
     SHELL_ADAPTIVITY_API const char* getModuleLicense() 
     {
-        return "LGPL";
+        return "";
     }
 
     SHELL_ADAPTIVITY_API const char* getModuleDescription() 

@@ -1,7 +1,7 @@
 #ifndef SOFA_COMPONENT_CONTROLLER_ADAPTIVECUTTINGCONTROLLER_H
 #define SOFA_COMPONENT_CONTROLLER_ADAPTIVECUTTINGCONTROLLER_H
 
-#include <SofaUserInteraction/Controller.h>
+#include <sofa/component/controller/Controller.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/type/Vec.h>
@@ -11,14 +11,13 @@
 #include <sofa/gui/component/performer/MouseInteractor.h>
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyModifier.h>
-#include <sofa/component/topology/container/dynamic/TriangleSetTopologyAlgorithms.h>
 #include <sofa/component/topology/container/dynamic/TriangleSetGeometryAlgorithms.h>
 #include <sofa/core/topology/TopologyData.h>
 
 #include <sofa/helper/map.h>
 #include <sofa/type/vector.h>
 
-#include <SofaShells/controller/Test2DAdapter.h>
+#include <Shell/Adaptivity/controller/Test2DAdapter.h>
 
 namespace sofa
 {
@@ -33,7 +32,7 @@ namespace controller
 class CuttingAdapter
 {
 public:
-    virtual void setTrackedPoint(const collision::BodyPicked &picked) = 0;
+    virtual void setTrackedPoint(const sofa::gui::component::performer::BodyPicked &picked) = 0;
     virtual void freeTrackedPoint() = 0;
     virtual void addCuttingPoint() = 0;
 };
@@ -60,11 +59,11 @@ public:
 
     typedef sofa::core::topology::BaseMeshTopology::Edge               Edge;
     typedef sofa::core::topology::BaseMeshTopology::EdgesAroundVertex  EdgesAroundVertex;
-    typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID     Index;
-    typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle       Triangle;
-    typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
-    typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
-    typedef sofa::component::topology::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
+    typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TriangleID     Index;
+    typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::Triangle       Triangle;
+    typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
+    typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
+    typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
     typedef sofa::type::vector<Index> VecIndex;
 
     enum { InvalidID = sofa::core::topology::Topology::InvalidID };
@@ -76,23 +75,13 @@ public:
     virtual void init();
     virtual void reinit();
 
-    virtual std::string getTemplateName() const
-    {
-        return templateName(this);
-    }
-
-    static std::string templateName(const AdaptiveCuttingController<DataTypes>* = NULL)
-    {
-        return DataTypes::Name();
-    }
-
     void onEndAnimationStep(const double dt);
     //void onKeyPressedEvent(core::objectmodel::KeypressedEvent *key);
 
     void draw(const core::visual::VisualParams* vparams);
 
 
-    void setTrackedPoint(const collision::BodyPicked &picked);
+    void setTrackedPoint(const sofa::gui::component::performer::BodyPicked &picked);
     void freeTrackedPoint() {
         // Detach the point
         m_pointId = InvalidID;
@@ -113,9 +102,9 @@ protected:
 private:
 
     Test2DAdapter<DataTypes>* m_adapter;
-    sofa::component::topology::TriangleSetTopologyContainer*  m_container;
-    sofa::component::topology::TriangleSetGeometryAlgorithms<DataTypes> *m_algoGeom;
-    sofa::component::topology::TriangleSetTopologyAlgorithms<DataTypes> *m_algoTopo;
+    sofa::component::topology::container::dynamic::TriangleSetTopologyContainer*  m_container;
+    sofa::component::topology::container::dynamic::TriangleSetGeometryAlgorithms<DataTypes> *m_algoGeom;
+    sofa::component::topology::container::dynamic::TriangleSetTopologyAlgorithms<DataTypes> *m_algoTopo;
     sofa::core::behavior::MechanicalState<DataTypes>* m_state;
 
     // TODO: This should go to cutting config (maybe?)
