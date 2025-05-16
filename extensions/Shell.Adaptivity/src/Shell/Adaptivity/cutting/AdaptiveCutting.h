@@ -1,13 +1,13 @@
 #ifndef SOFA_GUI_ADAPTIVECUTTING_H
 #define SOFA_GUI_ADAPTIVECUTTING_H
 
-#include <SofaGraphComponent/MouseButtonSetting.h>
-#include <SofaUserInteraction/MouseInteractor.h>
-#include <SofaUserInteraction/InteractionPerformer.h>
-#include <sofa/gui/MouseOperations.h>
-#include <sofa/gui/OperationFactory.h>
+#include <sofa/component/setting/MouseButtonSetting.h>
+#include <sofa/gui/component/performer/MouseInteractor.h>
+#include <sofa/gui/component/performer/InteractionPerformer.h>
+#include <sofa/gui/common/MouseOperations.h>
+#include <sofa/gui/common/OperationFactory.h>
 
-#include <SofaShells/controller/AdaptiveCuttingController.h>
+#include <Shell/Adaptivity/controller/AdaptiveCuttingController.h>
 
 namespace sofa
 {
@@ -20,10 +20,10 @@ namespace component
 namespace configurationsetting
 {
 
-class SOFA_SHELLS_API AdaptiveCuttingSetting: public MouseButtonSetting
+class SHELL_ADAPTIVITY_API AdaptiveCuttingSetting: public sofa::component::setting::MouseButtonSetting
 {
 public:
-    SOFA_CLASS(AdaptiveCuttingSetting, MouseButtonSetting);
+    SOFA_CLASS(AdaptiveCuttingSetting, sofa::component::setting::MouseButtonSetting);
 
 protected:
     AdaptiveCuttingSetting() { }
@@ -40,14 +40,14 @@ namespace collision
 {
 
 template <class DataTypes>
-class AdaptiveCuttingPerformer: public TInteractionPerformer<DataTypes>
+class AdaptiveCuttingPerformer: public sofa::gui::component::performer::TInteractionPerformer<DataTypes>
 {
 public:
     //typedef sofa::component::collision::BaseContactMapper< DataTypes >        MouseContactMapper;
     //typedef sofa::core::behavior::MechanicalState< DataTypes >         MouseContainer;
     //typedef sofa::core::behavior::BaseForceField              MouseForceField;
 
-    AdaptiveCuttingPerformer(BaseMouseInteractor *i) : TInteractionPerformer<DataTypes>(i)
+    AdaptiveCuttingPerformer(gui::component::performer::BaseMouseInteractor *i) : sofa::gui::component::performer::TInteractionPerformer<DataTypes>(i)
     {}
 
     void start() {
@@ -92,7 +92,7 @@ public:
     //}
 
 
-    void configure(configurationsetting::MouseButtonSetting* setting)
+    void configure(sofa::component::setting::MouseButtonSetting* setting)
     {
         configurationsetting::AdaptiveCuttingSetting* s = dynamic_cast<configurationsetting::AdaptiveCuttingSetting*>(setting);
         if (s)
@@ -112,11 +112,11 @@ public:
 namespace gui
 {
 
-class SOFA_SHELLS_API AdaptiveCuttingOperation : public Operation
+class SHELL_ADAPTIVITY_API AdaptiveCuttingOperation : public sofa::gui::common::Operation
 {
 public:
 
-    typedef component::controller::CuttingAdapter CuttingAdapter;
+    typedef ::sofa::component::controller::CuttingAdapter CuttingAdapter;
 
     AdaptiveCuttingOperation(sofa::component::configurationsetting::AdaptiveCuttingSetting::SPtr s = sofa::core::objectmodel::New<sofa::component::configurationsetting::AdaptiveCuttingSetting>()) : Operation(s)
     {}

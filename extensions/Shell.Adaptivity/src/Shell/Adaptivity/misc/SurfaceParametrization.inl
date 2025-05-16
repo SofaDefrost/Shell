@@ -4,9 +4,10 @@
 // TODO:
 //   -- Can we use edge swapping at all? It seems that because of a varying
 //      metric tensor the topology can become non-conforming.
+#pragma once
 
-#include <SofaShells/misc/SurfaceParametrization.h>
-#include <SofaShells/misc//PointProjection.h>
+#include <Shell/Adaptivity/misc/SurfaceParametrization.h>
+#include <Shell/misc//PointProjection.h>
 
 #include <sofa/helper/rmath.h>
 
@@ -15,7 +16,7 @@ namespace sofa
 
 template <class Real>
 void SurfaceParametrization<Real>::init(
-    sofa::component::topology::TriangleSetTopologyContainer *topology,
+    sofa::component::topology::container::dynamic::TriangleSetTopologyContainer *topology,
     const VecVec3 &x)
 {
     m_topology = topology;
@@ -289,7 +290,7 @@ void SurfaceParametrization<Real>::getAngle(const Vec2 &u, const Vec2 &v, Real &
 
 
 template <class Real>
-void SurfaceParametrization<Real>::pointAdd(unsigned int pointIndex, const sofa::core::topology::Point &/*elem*/,
+void SurfaceParametrization<Real>::pointAdd(unsigned int pointIndex, const sofa::Index &/*elem*/,
     const sofa::type::vector< unsigned int > &ancestors,
     const sofa::type::vector< double > &coeffs)
 {
@@ -378,19 +379,19 @@ void SurfaceParametrization<Real>::draw(const core::visual::VisualParams* vparam
     vparams->drawTool()->saveLastState();
     vparams->drawTool()->disableLighting();
 
-    std::vector< sofa::type::Vector3 > points;
-    sofa::type::Vec4f color(1.0, 1.0, 1.0, 1.0);
+    std::vector< sofa::type::Vec3 > points;
+    sofa::type::RGBAColor color(1.0, 1.0, 1.0, 1.0);
 
     for (int i=0; i<m_topology->getNbTriangles(); ++i)
     {
         const Triangle &t = m_topology->getTriangle(i);
         for (int j=0; j<3; j++)
         {
-            points.push_back(sofa::type::Vector3(m_points[t[j]][0], m_points[t[j]][1], 1.0f));
-            points.push_back(sofa::type::Vector3(m_points[t[(j+1)%3]][0], m_points[t[(j+1)%3]][1], 1.0f));
+            points.push_back(sofa::type::Vec3(m_points[t[j]][0], m_points[t[j]][1], 1.0f));
+            points.push_back(sofa::type::Vec3(m_points[t[(j+1)%3]][0], m_points[t[(j+1)%3]][1], 1.0f));
         }
     }
-    vparams->drawTool()->drawLines(points, 1.0, color);
+    vparams->drawTool()->drawLines(points, 1.0f, color);
 
     vparams->drawTool()->restoreLastState();
 }

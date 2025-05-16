@@ -11,7 +11,7 @@
 #include <sofa/core/topology/TopologyHandler.h>
 #include <sofa/core/visual/VisualParams.h>
 
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/type/Vec.h>
@@ -40,14 +40,14 @@ class SurfaceParametrization
         typedef sofa::type::Mat<2,2, Real> Mat22;
         typedef sofa::type::Mat<3,3, Real> Mat33;
 
-        typedef sofa::component::topology::TriangleSetTopologyContainer::Edge                   Edge;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID             Index;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle               Triangle;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::SeqEdges               SeqEdges;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::SeqTriangles           SeqTriangles;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::Edge                   Edge;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TriangleID             Index;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::Triangle               Triangle;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TrianglesAroundEdge    TrianglesAroundEdge;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::EdgesInTriangle        EdgesInTriangle;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::SeqEdges               SeqEdges;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::SeqTriangles           SeqTriangles;
 
         typedef sofa::type::vector<Vec2>      VecVec2;
         typedef sofa::type::vector<Vec3>      VecVec3;
@@ -65,7 +65,7 @@ class SurfaceParametrization
          * @param x         Position of points of the surface.
          */
         void init(
-            sofa::component::topology::TriangleSetTopologyContainer *_topology,
+            sofa::component::topology::container::dynamic::TriangleSetTopologyContainer *_topology,
             const VecVec3 &x);
 
         void draw(const core::visual::VisualParams* vparams);
@@ -74,7 +74,7 @@ class SurfaceParametrization
          * @name Hadling of topological changes (also handles point relocation).
          * @{
          */
-        void pointAdd(unsigned int pointIndex, const sofa::core::topology::Point &elem,
+        void pointAdd(unsigned int pointIndex, const sofa::Index &elem,
             const sofa::type::vector< unsigned int > &ancestors,
             const sofa::type::vector< double > &coeffs);
         void pointRemove(unsigned int pointIndex);
@@ -242,7 +242,7 @@ class SurfaceParametrization
         };
 
         /// Topology defining the surface.
-        sofa::component::topology::TriangleSetTopologyContainer *m_topology;
+        sofa::component::topology::container::dynamic::TriangleSetTopologyContainer *m_topology;
 
         /// Positions in the parameter space.
         VecVec2 m_points;
