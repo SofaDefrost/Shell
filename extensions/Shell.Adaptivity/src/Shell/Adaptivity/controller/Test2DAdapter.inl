@@ -255,12 +255,8 @@ void Test2DAdapter<DataTypes>::init()
         return;
     }
 
-    pointInfo.createTopologicalEngine(m_container, pointHandler);
-    pointInfo.registerTopologicalData();
-
-    triInfo.createTopologicalEngine(m_container, triHandler);
-    triInfo.registerTopologicalData();
-
+    pointInfo.createTopologyHandler(m_container);
+    triInfo.createTopologyHandler(m_container);
 
     reinit();
 }
