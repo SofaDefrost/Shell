@@ -101,7 +101,7 @@ void Test2DAdapter<DataTypes>::PointInfoHandler::swap(unsigned int i1,
     unsigned int i2)
 {
     //std::cout << "pt " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
-    Inherited::swap(i1, i2);
+    // Inherited::swap(i1, i2);
 
     // m_pointId may change
     if (adapter->m_pointId == i1) {
@@ -164,7 +164,7 @@ void Test2DAdapter<DataTypes>::TriangleInfoHandler::swap(unsigned int i1,
     unsigned int i2)
 {
     //std::cout << "tri " << __FUNCTION__ << " " << i1 << " " << i2 << std::endl;
-    Inherited::swap(i1, i2);
+    // Inherited::swap(i1, i2);
 
     if (adapter->m_pointTriId == i1) {
         adapter->m_pointTriId = i2;
@@ -743,9 +743,9 @@ void Test2DAdapter<DataTypes>::relocatePoint(Index pt, Coord target,
             tri[0], tri[1], tri[2], bInRest));
 
     // Do the real work
-    m_modifier->movePointsProcess(move_ids, move_ancestors, move_coefs);
-    m_modifier->notifyEndingEvent();
-    m_modifier->propagateTopologicalChanges();
+    // m_modifier->movePointsProcess(move_ids, move_ancestors, move_coefs);
+    // m_modifier->notifyEndingEvent();
+    // m_modifier->propagateTopologicalChanges();
 
     //mytimer.step("Projection");
     projectionUpdate(pt);
