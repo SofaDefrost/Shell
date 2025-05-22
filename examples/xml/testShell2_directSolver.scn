@@ -31,7 +31,7 @@
     <CollisionResponse name="Response" response="PenaltyContactForceField"/>
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
     
-    <Node name="pointA">
+    <!--<Node name="pointA">
         <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0 0 0 0 1"/>
     </Node>
     <Node name="pointB">
@@ -39,13 +39,13 @@
     </Node>
     <Node name="pointC">
         <MechanicalObject template="Rigid3" name="fixedPoint" position="0.5 0.9 0 0 0 0 1"/>
-    </Node>
+    </Node>-->
 
 
     <Node name="one_triangle">
         <EulerImplicitSolver />
-        <!--<CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>
+        <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15" template="GraphScattered"/>
+        <!--<CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
         <!--<SparseTAUCSSolver name="Solver" symmetric="true" options="taucs.factor.indefinite=true taucs.factor.ordering=metis" printLog="false" />-->
         <!--<CholeskySolver name="Cholesky Preconditioner" printLog="false" />-->
         <!--<SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
@@ -53,7 +53,7 @@
         <TriangleSetTopologyContainer name="trianglesTopo" src="@loader" />
         <MechanicalObject name="tri" template="Rigid3" topology="@trianglesTopo" />
         <!--<MechanicalObject name="tri" template="Rigid3" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1"  position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0.258819 0 0 0.965926"/>-->
-        <UniformMass vertexMass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.5" totalMass="0.01" />
+        <UniformMass vertexMass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.5"  />
         <!--<AttachProjectiveConstraint name="Constraint" object2="@tri" object1="@/pointA/fixedPoint" indices1="0" indices2="0" freeRotations="false" />
         <AttachProjectiveConstraint name="Constraint2" object2="@tri" object1="@/pointB/fixedPoint" indices1="0" indices2="1" freeRotations="false" />-->
         <!--AttachProjectiveConstraint name="Constraint" object2="tri" object1="pointC/fixedPoint" indices1="0" indices2="2" freeRotations="true" />-->
@@ -63,7 +63,8 @@
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1"/>
             
         <Node name="SubTriangles">
-            <TriangleSetTopologyContainer  name="subTrianglesTopo"/>
+            <MeshOBJLoader name="loader" filename="../../../Shell/mesh/oneTriangle.obj"/>
+            <TriangleSetTopologyContainer  name="subTrianglesTopo" src="@loader"/>
             <!--<TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="2"/>-->
             <MechanicalObject  name="subPoints" topology="@subTrianglesTopo" />
             <BendingPlateMechanicalMapping input="@../tri" output="@subPoints" />

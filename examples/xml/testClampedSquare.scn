@@ -34,7 +34,7 @@
         <TriangleSetTopologyContainer name="trianglesTopo" src="@loader"/>
         <MechanicalObject name="tri" template="Rigid3" topology="@trianglesTopo" />
 
-<!--        <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.1" />-->
+<!--       <UniformMass mass="0.1 0.1 [ 0.1 0 0 ,  0 0.1 0 ,  0 0 0.05 ]" showAxisSizeFactor="0.001" totalmass="0.1" />-->
 
         <BoxROI name="Side1" box="-5.1 -5.1 -0.1 -4.9 5.1 0.1" drawSize="0"/>
         <FixedProjectiveConstraint indices="@Side1.indices" drawSize="0"/>

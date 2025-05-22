@@ -32,7 +32,7 @@
     <CollisionResponse name="Response" response="PenaltyContactForceField"/>
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
 
-    <Node name="pointA">
+    <!--<Node name="pointA">
        <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0 0 0 0 1"/>
     </Node>
 
@@ -50,7 +50,7 @@
 
     <Node name="pointE">
        <MechanicalObject template="Rigid3" name="fixedPoint" position="4 0 0 0 0 0 1"/>
-    </Node>
+    </Node>-->
 
     <Node name="7triangles">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>

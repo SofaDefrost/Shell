@@ -43,7 +43,7 @@
 <!--        <OglModel name="Visual" color="green"/>-->
     </Node>
 
-    <Node name="pointA">
+    <!--<Node name="pointA">
        <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0 0.5 -0.5 -0.5 0.5"/>
     </Node>
 
@@ -61,7 +61,7 @@
 
     <Node name="pointE">
        <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0.004 0.5 -0.5 -0.5 0.5"/>
-    </Node>
+    </Node>-->
 
     <Node name="7smallTriangles">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="0.5"/>

@@ -35,7 +35,7 @@
     <CollisionResponse name="Response" response="PenaltyContactForceField"/>
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
 
-    <Node name="pointA">
+    <!--<Node name="pointA">
         <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0 0 0.5 -0.5 -0.5 0.5"/>
     </Node>
     <Node name="pointB">
@@ -43,7 +43,7 @@
     </Node>
     <Node name="pointC">
         <MechanicalObject template="Rigid3" name="fixedPoint" position="0 0.9 0.5 0.5 -0.5 -0.5 0.5"/>
-    </Node>
+    </Node>-->
 
     <Node name="initial_triangle">
         <MeshOBJLoader name="initial_shape" filename="../../../Shell/mesh/oneTriangle_yz.obj" />
