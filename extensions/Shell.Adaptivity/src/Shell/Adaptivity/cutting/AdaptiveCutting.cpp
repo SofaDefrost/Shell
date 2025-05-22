@@ -1,10 +1,11 @@
-#include <SofaShells/config.h>
+#include <Shell/Adaptivity/config.h>
 
+#include <Shell/Adaptivity/cutting/AdaptiveCutting.h>
 #include <sofa/core/ObjectFactory.h>
 #include <sofa/defaulttype/VecTypes.h>
+#include <sofa/gui/common/PickHandler.h>
+#include <sofa/gui/component/performer/InteractionPerformer.h>
 #include <sofa/helper/Factory.inl>
-#include <sofa/gui/PickHandler.h>
-#include <SofaShells/cutting/AdaptiveCutting.h>
 
 namespace sofa
 {
@@ -33,23 +34,22 @@ namespace collision
 #ifndef SOFA_DOUBLE
 helper::Creator<
     InteractionPerformer::InteractionPerformerFactory,
-    AdaptiveCuttingPerformer<type::Vec3fTypes> >
+    AdaptiveCuttingPerformer<defaulttype::Vec3fTypes> >
         AdaptiveCuttingPerformerVec3fClass("AdaptiveCutting", true);
 #endif
 #ifndef SOFA_FLOAT
-helper::Creator<
-    InteractionPerformer::InteractionPerformerFactory,
-    AdaptiveCuttingPerformer<type::Vec3dTypes> >
+helper::Creator<gui::component::performer::InteractionPerformer::InteractionPerformerFactory,
+    AdaptiveCuttingPerformer<defaulttype::Vec3dTypes> >
         AdaptiveCuttingPerformerVec3dClass("AdaptiveCutting", true);
 #endif
 
 #ifndef SOFA_DOUBLE
-template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<type::Vec3fTypes>;
-//template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<defaulttype::Rigid3fTypes>;
+template class SHELL_ADAPTIVITY_API  AdaptiveCuttingPerformer<defaulttype::Vec3fTypes>;
+//template class SHELL_ADAPTIVITY_API  AdaptiveCuttingPerformer<defaulttype::Rigid3fTypes>;
 #endif
 #ifndef SOFA_FLOAT
-template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<type::Vec3dTypes>;
-//template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<defaulttype::Rigid3dTypes>;
+template class SHELL_ADAPTIVITY_API  AdaptiveCuttingPerformer<defaulttype::Vec3dTypes>;
+//template class SHELL_ADAPTIVITY_API  AdaptiveCuttingPerformer<defaulttype::Rigid3dTypes>;
 #endif
 
 } // namespace collision
@@ -62,7 +62,7 @@ template class SOFA_SHELLS_API  AdaptiveCuttingPerformer<type::Vec3dTypes>;
 namespace gui
 {
 
-int AdaptiveCuttingOperationReg = sofa::gui::RegisterOperation("AdaptiveCutting")
+int AdaptiveCuttingOperationReg = sofa::gui::common::RegisterOperation("AdaptiveCutting")
     .add< AdaptiveCuttingOperation >();
 
 void AdaptiveCuttingOperation::start()
@@ -90,7 +90,7 @@ void AdaptiveCuttingOperation::wait()
 {
     // Update the position in the adaptivity component
     if (!pickHandle) return;
-    sofa::component::collision::BodyPicked *picked = pickHandle->getLastPicked();
+    sofa::gui::component::performer::BodyPicked *picked = pickHandle->getLastPicked();
     if (!picked) return;
 
     CuttingAdapter *ca = getAdapter();
@@ -99,14 +99,14 @@ void AdaptiveCuttingOperation::wait()
     }
 }
 
-component::controller::CuttingAdapter* AdaptiveCuttingOperation::getAdapter()
+sofa::component::controller::CuttingAdapter* AdaptiveCuttingOperation::getAdapter()
 {
     if (!pickHandle) return NULL;
 
-    sofa::component::collision::BodyPicked *picked = pickHandle->getLastPicked();
+    sofa::gui::component::performer::BodyPicked *picked = pickHandle->getLastPicked();
     if (!picked) return NULL;
 
-    component::controller::CuttingAdapter *ca = NULL;
+    sofa::component::controller::CuttingAdapter *ca = NULL;
     if (picked->body) {
         if (!picked->body->getContext()) std::cout << "no context!\n";
         picked->body->getContext()->get(ca);

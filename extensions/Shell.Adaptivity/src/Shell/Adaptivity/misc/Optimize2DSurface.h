@@ -6,14 +6,14 @@
 #ifndef OPTIMIZE2DFUNCTION_H
 #define OPTIMIZE2DFUNCTION_H
 
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
+#include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/type/Vec.h>
 
 #include <sofa/type/vector.h>
 
-#include <SofaShells/misc/SurfaceParametrization.h>
+#include <Shell/Adaptivity/misc/SurfaceParametrization.h>
 
 // Return non-zero if triangle with points (a,b,c) is defined in
 // counter-clockwise direction. (2D case)
@@ -49,11 +49,11 @@ class Optimize2DSurface
         typedef sofa::type::Mat<2,2, Real> Mat22;
         typedef sofa::type::Mat<3,3, Real> Mat33;
 
-        typedef sofa::component::topology::EdgeSetTopologyContainer::Edge                       Edge;
-        typedef sofa::component::topology::EdgeSetTopologyContainer::EdgesAroundVertex          EdgesAroundVertex;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::TriangleID             Index;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::Triangle               Triangle;
-        typedef sofa::component::topology::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
+        typedef sofa::component::topology::container::dynamic::EdgeSetTopologyContainer::Edge                       Edge;
+        typedef sofa::component::topology::container::dynamic::EdgeSetTopologyContainer::EdgesAroundVertex          EdgesAroundVertex;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TriangleID             Index;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::Triangle               Triangle;
+        typedef sofa::component::topology::container::dynamic::TriangleSetTopologyContainer::TrianglesAroundVertex  TrianglesAroundVertex;
 
         typedef sofa::type::vector<Real>      VecReal;
         typedef sofa::type::vector<Vec2>      VecVec2;
@@ -83,7 +83,7 @@ class Optimize2DSurface
          * @param topology Associated triangular topology.
          */
         void initValues(VecReal &metrics,
-            sofa::component::topology::TriangleSetTopologyContainer *topology);
+            sofa::component::topology::container::dynamic::TriangleSetTopologyContainer *topology);
 
         /**
          * @brief Perform smoothing step for single point.
@@ -169,7 +169,7 @@ class Optimize2DSurface
     private:
 
         sofa::component::controller::Test2DAdapter<DataTypes> *m_adapter;
-        sofa::component::topology::TriangleSetTopologyContainer *m_topology;
+        sofa::component::topology::container::dynamic::TriangleSetTopologyContainer *m_topology;
         SurfaceParametrization<Real> &m_surf;
 
         /// Orientation of each triangle.
