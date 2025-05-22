@@ -31,89 +31,86 @@ Results with bending only and a 9x9 grid:
     q = 5 => zmax = 0.637 (should be 0.630) zmax = 0.644 with an 11x11 grid
 -->
 
-<Node name="root" dt="0.01" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="0" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
-    <CollisionPipeline verbose="0" />
-    <BruteForceDetection name="N2" />
-    <CollisionResponse response="default" />
-    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
-    <CollisionGroup />
+<Node name="root" dt="0.01" gravity="0 0 0">
 
+    <Node name="plugins">
+        <RequiredPlugin name="Shell"/>
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,CollisionPipeline] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [MinProximityIntersection] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Geometry"/> <!-- Needed to use components [TriangleCollisionModel] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint,FixedRotationProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [CGLinearSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->  
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+        <RequiredPlugin name="Sofa.Component.MechanicalLoad"/> <!-- Needed to use components [ConstantForceField] -->  
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TriangleSetTopologyContainer] -->  
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] --> 
+        <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] -->  
+        <RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshOBJLoader] -->
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [SparseLDLSolver] -->
+        <RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Grid"/> <!-- Needed to use components [RegularGridTopology] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Mapping"/> <!-- Needed to use components [Quad2TriangleTopologicalMapping] --> 
 
-<!--
-
-    <Node name="pointA">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="-0.005 -0.002 0 0 0 0 1"/>
     </Node>
 
-    <Node name="pointB">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="-0.005 0 0 0 0 0 1"/>
-    </Node>
-
-    <Node name="pointC">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="-0.005 0.002 0 0 0 0 1"/>
-    </Node>
-
-    <Node name="pointD">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="0.005 -0.002 0 0 0 0 1"/>
-    </Node>
-
-    <Node name="pointE">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="0.005 0 0 0 0 0 1"/>
-    </Node>
-
-    <Node name="pointF">
-       <MechanicalObject template="Rigid" name="fixedPoint" position="0.005 0.002 0 0 0 0 1"/>
-    </Node>
-
-
--->
-
-
+    <VisualStyle displayFlags ="showForceFields showVisualModels"/>
+    <DefaultAnimationLoop/>
+    <CollisionPipeline verbose="0"/>
+    <BruteForceBroadPhase name="N2"/>
+    <BVHNarrowPhase/>
+    <CollisionResponse name="Response" response="PenaltyContactForceField"/>
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
 
     <Node name="Square2" activated="true">
         <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.5"/>
         <CGLinearSolver iterations="200" tolerance="1e-15" threshold="1e-15"/>
-<!--        <CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
-<!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
-<!--        <RegularGrid name="gridTopo" min="-0.005 -0.002 0" max="0.005 0.002 0" nx="7" ny="3" nz="1" />-->
-        <RegularGrid name="gridTopo" min="-5 -5 0" max="5 5 0" nx="3" ny="3" nz="1" />
-    
+        <!--<CGLinearSolver template="FullMatrix" iterations="100" tolerance="1e-15" threshold="1e-15"/>-->
+        <!--<SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
+        <!--<RegularGrid name="gridTopo" min="-0.005 -0.002 0" max="0.005 0.002 0" nx="7" ny="3" nz="1" />-->
+        <RegularGridTopology name="gridTopo" min="-5 -5 0" max="5 5 0" nx="3" ny="3" nz="1" />
+        <MechanicalObject name="basePoints" template="Rigid3" />
+        <UniformMass showAxisSizeFactor="1" totalMass="0.00012" />
 
-        <Node>
+        <BoxROI name="box1" box="-5.1 -5.1 -0.1 5.1 -4.9 0.1" drawSize="0"/>
+        <FixedProjectiveConstraint indices="@box1.indices" drawSize="0"/>
+        
+        <BoxROI name="box2" box="-5.1 4.9 -0.1 5.1 5.1 0.1" drawSize="0"/>
+        <FixedProjectiveConstraint indices="@box2.indices" drawSize="0"/>
+        
+        <BoxROI name="box3" box="-5.1 -5.1 -0.1 -4.9 5.1 0.1" drawSize="0"/>
+        <FixedProjectiveConstraint indices="@box3.indices" drawSize="0"/>
+        
+        <BoxROI name="box4" box="4.9 -5.1 -0.1 5.1 5.1 0.1" drawSize="0"/>
+        <FixedProjectiveConstraint indices="@box4.indices" drawSize="0"/>
+        
+
+        <Node name="triangles">
             <TriangleSetTopologyContainer name="trianglesTopo"/>
             <TriangleSetTopologyModifier name="Modifier" />
-            <Quad2TriangleTopologicalMapping object1="gridTopo" object2="trianglesTopo" />
-            <MechanicalObject name="basePoints" template="Rigid" />
-            <IdentityMapping />
+            <Quad2TriangleTopologicalMapping input="@../gridTopo" output="@trianglesTopo" />
+            
 
-     
-
-            <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="1" totalmass="0.00012" />
-
-            <BoxROI name="box1" box="-5.1 -5.1 -0.1 5.1 -4.9 0.1" drawSize="0"/>
-            <FixedConstraint indices="@box1.indices" drawSize="0"/>
-            <BoxROI name="box2" box="-5.1 4.9 -0.1 5.1 5.1 0.1" drawSize="0"/>
-            <FixedConstraint indices="@box2.indices" drawSize="0"/>
-            <BoxROI name="box3" box="-5.1 -5.1 -0.1 -4.9 5.1 0.1" drawSize="0"/>
-            <FixedConstraint indices="@box3.indices" drawSize="0"/>
-            <BoxROI name="box4" box="4.9 -5.1 -0.1 5.1 5.1 0.1" drawSize="0"/>
-
-            <FixedConstraint indices="@box4.indices" drawSize="0"/>
-            <ConstantForceField points="0-8" forces="0 0 0.001 0 0 0"/>
-<!--            <FixedRotationConstraint FixedZRotation="true"/>-->
+            <FixedRotationProjectiveConstraint FixedZRotation="true"/>
 
             <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1.092e6" poissonRatio="0.42" thickness="0.001" />
+            <ConstantForceField indices="0 1 2 3 4 5 6 7 8" forces="0 0 0.001 0 0 0"/>
             
             <Node name="SubTriangles">
                 <TriangleSetTopologyContainer name="subTrianglesTopo"/>
-                <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>
-                <MechanicalObject name="subPoints" />
-                <BendingPlateMechanicalMapping input="@../basePoints" output="@subPoints" />
-				<Triangle />
+                <!--TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="1"/>-->
+                <MechanicalObject name="subPoints" topology="@subTrianglesTopo"/>
+                <BendingPlateMechanicalMapping input="@../../basePoints" output="@subPoints" />
+				<TriangleCollisionModel />
 				
                 <Node name="visual">
                     <OglModel name="Visual" color="green"/>
-                    <IdentityMapping object1="subPoints" object2="Visual"/>
+                    <IdentityMapping input="@../subPoints" output="@Visual"/>
                 </Node>
             </Node>
 			

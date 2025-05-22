@@ -1,60 +1,87 @@
 <?xml version="1.0"?>
-<Node name="root" dt="0.02" showBehaviorModels="1" showCollisionModels="0" showMappings="0" showForceFields="1" showBoundingTree="0" showVisualModels="1" gravity="0 0 0">
+<Node name="root" dt="0.02" gravity="0 0 0">
+    <Node name="plugins">
+        <RequiredPlugin name="Shell"/>
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,CollisionPipeline] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [MinProximityIntersection] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint,FixedRotationProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshOBJLoader] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [CGLinearSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->  
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+        <RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+        <RequiredPlugin name="Sofa.Component.SolidMechanics.Spring"/> <!-- Needed to use components [RestShapeSpringsForceField] -->  
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TriangleSetTopologyContainer] -->  
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->  
+        <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] --> 
+        <RequiredPlugin name="Sofa.Component.Collision.Geometry"/> <!-- Needed to use components [TriangleCollisionModel] -->
+        <RequiredPlugin name="Sofa.Component.Engine.Generate"/> <!-- Needed to use components [NormalsFromPoints] --> 
+
+    </Node>
+    <VisualStyle displayFlags="showBehaviorModels showForceFields showVisualsModels"/>
+    <DefaultAnimationLoop/>
     <CollisionPipeline verbose="0"/>
-    <BruteForceDetection name="N2"/>
-    <CollisionResponse response="default"/>
+    <BruteForceBroadPhase name="N2"/>
+    <BVHNarrowPhase/>
+    <CollisionResponse name="Response" response="PenaltyContactForceField"/>
     <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
-    <CollisionGroup/>
+    
 
     <Node name="points">
-        <MechanicalObject template="Rigid" name="fixedPoints"
+        <MechanicalObject template="Rigid3" name="fixedPoints"
                           position="0.5 0.9 1 0.3856834 0 0 0.9238795"
                           showObject="true" />
-        <FixedConstraint indices="0" />
+        <FixedProjectiveConstraint indices="0" />
     </Node>
 
     <Node name="shell">
         <EulerImplicitSolver/>
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
 <!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
-        <TriangleSetTopologyContainer name="trianglesTopo" filename="applications/plugins/shells/mesh/oneTriangle.obj"/>
+        <MeshOBJLoader name="loader" filename="../../../Shell/mesh/oneTriangle.obj"/>
+        <TriangleSetTopologyContainer name="trianglesTopo" src="@loader"/>
 
         <!--                No rotation - flat rest position                -->
-<!--        <MechanicalObject name="tri" template="Rigid" />-->
+<!--        <MechanicalObject name="tri" template="Rigid3" />-->
 
         <!--                No rotation - deformed rest position                -->
-<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"  position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"/>-->
+<!--        <MechanicalObject name="tri" template="Rigid3" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"  position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"/>-->
 
         <!--        Rotation of Pi/2 around z        -->
-<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"  position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"/>-->
+<!--        <MechanicalObject name="tri" template="Rigid3" rest_position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"  position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"/>-->
 
         <!--        Rotation of Pi/2 around z + torque on vertex 2 around local x       -->
-<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"  position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"/>-->
+<!--        <MechanicalObject name="tri" template="Rigid3" rest_position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"  position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"/>-->
 
         <!--        Rotation of Pi/2 around z + displacement on vertex 2 along z       -->
-        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1" position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1"/>
+        <MechanicalObject name="tri" template="Rigid3" topology="@trianglesTopo" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1" position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1"/>
 
 
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.2" totalmass="1"/>
-        <FixedConstraint indices="0 1" drawSize="0"/>
+        <UniformMass vertexMass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.2" />
+        <FixedProjectiveConstraint indices="0 1" drawSize="0"/>
 
-        <RestShapeSpringsForceField template="Rigid" name="Springs" external_rest_shape="../points/fixedPoints"
+        <RestShapeSpringsForceField template="Rigid3" name="Springs" external_rest_shape="@../points/fixedPoints"
             points="2"
             external_points="0"
             stiffness="50000"
             angularStiffness="50000" />
 
 
-        <FixedRotationConstraint FixedZRotation="true"/>
+        <FixedRotationProjectiveConstraint FixedZRotation="true"/>
         <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="20000" poissonRatio="0.45" thickness="0.1"/>
 
         <Node name="SubTriangles">
-            <TriangleSetTopologyContainer name="subTrianglesTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="3"/>
-            <MechanicalObject name="subPoints"/>
+            <MeshOBJLoader name="loader" filename="../../../Shell/mesh/oneTriangle.obj"/>
+            <TriangleSetTopologyContainer name="subTrianglesTopo" src="@loader"/>
+<!--            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="3"/>
+-->            <MechanicalObject name="subPoints" topology="@subTrianglesTopo"/>
             <BendingPlateMechanicalMapping input="@../tri" output="@subPoints"/>
-            <Triangle contactStiffness="0.001"/>
-            <Node>
+            <TriangleCollisionModel contactStiffness="0.001"/>
+            <Node name="visual">
                 <OglModel name="Visual" color="red"/>
                 <IdentityMapping input="@../subPoints" output="@Visual"/>
             </Node>
@@ -66,47 +93,54 @@
         <EulerImplicitSolver/>
         <CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
 <!--        <SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
-        <TriangleSetTopologyContainer name="trianglesTopo" filename="applications/plugins/shells/mesh/oneTriangle.obj"/>
+        <MeshOBJLoader name="loader" filename="../../../Shell/mesh/oneTriangle.obj"/>
+        <TriangleSetTopologyContainer name="trianglesTopo" src="@loader"/>
 
         <!--                No rotation - flat rest position                -->
-<!--        <MechanicalObject name="tri" template="Rigid" />-->
+<!--        <MechanicalObject name="tri" template="Rigid3" />-->
 
         <!--                No rotation - deformed rest position                -->
-<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"  position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"/>-->
+<!--        <MechanicalObject name="tri" template="Rigid3" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"  position="0 0 0 0 0 0 1   1 0 0 0 0 0 1    0.5 0.9 0 0.107456 0 0 0.99421"/>-->
 
         <!--        Rotation of Pi/2 around z        -->
-<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"  position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"/>-->
+<!--        <MechanicalObject name="tri" template="Rigid3" rest_position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"  position="0 0 0 0 0 0.707107 0.707107   1 0 0 0 0 0.707107 0.707107   0.5 0.9 0 0 0 0.707107 0.707107"/>-->
 
         <!--        Rotation of Pi/2 around z + torque on vertex 2 around local x       -->
-<!--        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"  position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"/>-->
+<!--        <MechanicalObject name="tri" template="Rigid3" rest_position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"  position="0 0 0 0 0 0.707629 0.706586   1 0 0 0 0 0.707629 0.706586   0.5 0.9 0 0.0783006 -0.0735901 0.680883 0.724466"/>-->
 
         <!--        Rotation of Pi/2 around z + displacement on vertex 2 along z       -->
-        <MechanicalObject name="tri" template="Rigid" rest_position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1" position="0 0 0 0 0 0 1   1 0 0 0 0 0 1   0.5 0.9 0 0 0 0 1"/>
+        <MechanicalObject name="tri" template="Rigid3" topology="@trianglesTopo" />
+        <NormalsFromPoints name="NormalsFrom"  position="@tri.position"/>
 
+        <UniformMass vertexMass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.2" />
+        <FixedProjectiveConstraint indices="0 1" drawSize="0"/>
 
-        <UniformMass mass="0.1 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.2" totalmass="1"/>
-        <FixedConstraint indices="0 1" drawSize="0"/>
-
-        <RestShapeSpringsForceField template="Rigid" name="Springs" external_rest_shape="../points/fixedPoints"
+        <RestShapeSpringsForceField template="Rigid3" name="Springs" external_rest_shape="@../points/fixedPoints"
             points="2"
             external_points="0"
             stiffness="50000"
             angularStiffness="50000" />
 
 
-        <BezierTriangularBendingFEMForceField name="FEM" youngModulus="20000" poissonRatio="0.45" thickness="0.1"/>
+        <BezierTriangularBendingFEMForceField name="FEM" youngModulus="20000" poissonRatio="0.45" thickness="0.1" normals="@NormalsFrom.normals"/>
+        <!--<TriangularBendingFEMForceField name="FEM" youngModulus="20000" poissonRatio="0.45" thickness="0.1" />-->
 
         <Node name="SubTriangles">
-            <TriangleSetTopologyContainer name="subTrianglesTopo"/>
-            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="3"/>
-            <MechanicalObject name="subPoints"/>
+            <MeshOBJLoader name="loader" filename="../../../Shell/mesh/oneTriangle.obj"/>
+            <TriangleSetTopologyContainer name="subTrianglesTopo" src="@loader"/>
+<!--            <TriangleSubdivisionTopologicalMapping object1="trianglesTopo" object2="subTrianglesTopo" subdivisions="3"/>
+-->         <MechanicalObject name="subPoints" topology="@subTrianglesTopo"/>
             <BezierTriangleMechanicalMapping input="@../tri" output="@subPoints"/>
-            <Triangle contactStiffness="0.001"/>
-            <Node>
+            <TriangleCollisionModel contactStiffness="0.001"/>
+            <Node name="visual">
                 <OglModel name="Visual" color="green"/>
                 <IdentityMapping input="@../subPoints" output="@Visual"/>
             </Node>
         </Node>
         
     </Node>
+
+
+
+    
 </Node>
