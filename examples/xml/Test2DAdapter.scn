@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<Node name="Root">
+    <VisualStyle displayFlags="showWireframe showBehavior" />
+    <AdaptiveCuttingSetting button="Left" />
+
+    <CollisionPipeline verbose="0" />
+    <BruteForceDetection name="N2" />
+    <CollisionResponse response="default" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5" />
+    <CollisionGroup />
+
+    <Node>
+        <MeshObjLoader name="mesh" filename="../mesh/plane2048-noise.obj"/>
+        <TriangleSetTopologyContainer name="points" src="@mesh" />
+
+        <!-- Used for mouse tracking
+             TODO: need to pass MO to the adapter for so that the distances are computed properly
+        <Node name="original">
+            <TriangleSetTopologyContainer name="points" src="@../mesh" />
+            <MechanicalObject template="Vec3d" name="MO_orig" rest_position="@mesh.position" /> 
+            <Triangle />
+            <Node name="Render">
+                <OglModel name="Visual" color="gray"/>
+                <IdentityMapping input="@.." output="@Visual"/>
+            </Node>
+        </Node>
+        -->
+
+        <TriangleSetTopologyModifier />
+        <TriangleSetTopologyAlgorithms />
+        <TriangleSetGeometryAlgorithms />
+
+        <!--
+        -->
+        <Test2DAdapter template="Vec3d" name="adapter" sigma="1e-5" />
+        <MechanicalObject template="Vec3d" name="MO" rest_position="@mesh.position" /> 
+
+        <Triangle />
+        <!--
+        -->
+
+        <Node name="Data">
+            <DataDisplay cellData="@../adapter.functionals" colorNaN="1 0 1 1" />
+            <ColorMap colorScheme="Green" />
+            <IdentityMapping input="@.." output="@."/>
+        </Node>
+        <!--
+        -->
+
+        <Node name="Render">
+            <OglModel name="Visual" color="black" depthTest="false" />
+            <IdentityMapping input="@.." output="@Visual"/>
+        </Node>
+
+
+
+    </Node>
+
+</Node>
