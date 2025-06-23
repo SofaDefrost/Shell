@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<Node name="root" dt="0.02" gravity="0 0 0">
+
+    <Node name="plugins">
+        <RequiredPlugin name="Shell"/>
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,CollisionPipeline] -->  
+		<RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [MinProximityIntersection] -->  
+		<RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+		<RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [CGLinearSolver] -->  
+		<RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+		<RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+		<RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+		<RequiredPlugin name="Sofa.Component.SolidMechanics.FEM.Elastic"/> <!-- Needed to use components [TetrahedronFEMForceField] -->  
+		<RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+		<RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] -->  
+		<RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] --> 
+		<RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->
+		<RequiredPlugin name="Sofa.Component.Topology.Container.Constant"/> <!-- Needed to use components [MeshTopology] --> 
+    </Node>
+
+	<VisualStyle displayFlags ="showBehaviorModels showForceFields showVisualModels"/>
+	<DefaultAnimationLoop/>
+	<CollisionPipeline verbose="0"/>
+    <BruteForceBroadPhase name="N2"/>
+    <BVHNarrowPhase/>
+    <CollisionResponse name="Response" response="PenaltyContactForceField"/>
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
+	
+	<Node name="Meshtest" >
+		<EulerImplicitSolver />
+		<CGLinearSolver iterations="100" tolerance="1e-15" threshold="1e-15"/>
+		<include href="Mesh_test.xml" filename="Mesh_test.xml" src="@tetras" />
+		<MechanicalObject name="tetras" showIndices="false" showIndicesScale="0.0007"/>
+		<UniformMass showAxisSizeFactor="0.00001" totalMass="1" />
+		
+		<TetrahedronFEMForceField name="FEM" youngModulus="2870" poissonRatio="0.45" method="large" drawHeterogeneousTetra="0" />
+		<Node name="Visual">
+			<OglModel name="Visual" color="green"/>
+            <IdentityMapping input="@.." output="@Visual"/>
+		</Node>
+	</Node>
+	
+	
+	
+		
+</Node>
