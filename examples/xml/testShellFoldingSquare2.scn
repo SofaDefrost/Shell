@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<Node name="root" dt="0.01" gravity="0 0 0">
+
+    <Node name="plugins">
+        <RequiredPlugin name="Shell"/>
+        <RequiredPlugin name="Sofa.Component.AnimationLoop"/> <!-- Needed to use components [FreeMotionAnimationLoop] -->
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/> <!-- Needed to use components [BVHNarrowPhase,BruteForceBroadPhase,CollisionPipeline] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/> <!-- Needed to use components [MinProximityIntersection] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Geometry"/> <!-- Needed to use components [TriangleCollisionModel] -->  
+        <RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/> <!-- Needed to use components [CollisionResponse] -->  
+        <RequiredPlugin name="Sofa.Component.Constraint.Projective"/> <!-- Needed to use components [FixedProjectiveConstraint,FixedRotationProjectiveConstraint] -->  
+        <RequiredPlugin name="Sofa.Component.Engine.Select"/> <!-- Needed to use components [BoxROI] -->  
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/> <!-- Needed to use components [CGLinearSolver] -->  
+        <RequiredPlugin name="Sofa.Component.Mapping.Linear"/> <!-- Needed to use components [IdentityMapping] -->  
+        <RequiredPlugin name="Sofa.Component.Mass"/> <!-- Needed to use components [UniformMass] -->  
+        <RequiredPlugin name="Sofa.Component.MechanicalLoad"/> <!-- Needed to use components [ConstantForceField] -->  
+        <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/> <!-- Needed to use components [EulerImplicitSolver] -->  
+        <RequiredPlugin name="Sofa.Component.StateContainer"/> <!-- Needed to use components [MechanicalObject] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/> <!-- Needed to use components [TriangleSetTopologyContainer] -->  
+        <RequiredPlugin name="Sofa.Component.Visual"/> <!-- Needed to use components [VisualStyle] --> 
+        <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/> <!-- Needed to use components [OglModel] -->  
+        <RequiredPlugin name="Sofa.Component.IO.Mesh"/> <!-- Needed to use components [MeshOBJLoader] -->
+        <RequiredPlugin name="Sofa.Component.LinearSolver.Direct"/> <!-- Needed to use components [SparseLDLSolver] -->
+        <RequiredPlugin name="Sofa.Component.SceneUtility"/> <!-- Needed to use components [InfoComponent] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Container.Grid"/> <!-- Needed to use components [RegularGridTopology] -->  
+        <RequiredPlugin name="Sofa.Component.Topology.Mapping"/> <!-- Needed to use components [Quad2TriangleTopologicalMapping] --> 
+
+    </Node>
+
+    <VisualStyle displayFlags =" showForceFields showVisualModels"/>
+    <DefaultAnimationLoop/>
+    <CollisionPipeline verbose="0"/>
+    <BruteForceBroadPhase name="N2"/>
+    <BVHNarrowPhase/>
+    <CollisionResponse name="Response" response="PenaltyContactForceField"/>
+    <MinProximityIntersection name="Proximity" alarmDistance="0.8" contactDistance="0.5"/>
+
+    <Node name="Square">
+        <EulerImplicitSolver rayleighMass="1.0" rayleighStiffness="1.0" />
+        <CGLinearSolver iterations="75" tolerance="1e-15" threshold="1e-15"/>
+        <!--<SparseLDLSolver name="SparseLDL Solver" printLog="false" />-->
+        <!--<CholeskySolver name="Cholesky Preconditioner" printLog="false" />-->
+        <RegularGridTopology name="gridTopo" min="0 0 0" max="0.01 0.01 0" nx="10" ny="10" nz="1"/>
+        <MechanicalObject template="Rigid3" />
+        <UniformMass vertexMass="0.01 0.1 [ 0.1 0 0 , 0 0.1 0 , 0 0 0.05 ]" showAxisSizeFactor="0.005"/>
+
+        <BoxConstraint name="BoxConstraint" box="0.004 0 -0.0001  0.006 0.01 0.0001"/>
+
+        <FixedRotationProjectiveConstraint FixedZRotation="true" />
+
+        <Node name="triangles">
+            <TriangleSetTopologyContainer  name="trianglesTopo"/>
+            <TriangleSetTopologyModifier   name="Modifier" />
+            <Quad2TriangleTopologicalMapping input="@../gridTopo" output="@trianglesTopo" />
+            <MechanicalObject  name="basePoints" template="Rigid3"/>
+            <!--<WriteState filename="FoldingSquare.state" writeX="1" writeV="0"/>-->
+            <IdentityMapping />
+            <TriangularBendingFEMForceField name="FEM" bending="true" youngModulus="1e6" poissonRatio="0.42" thickness="0.001" />
+
+            <ConstantForceField indices="0-99" forces="0 0 0.3 0 0 0"/>
+
+            
+
+        </Node>
+
+    </Node>
+
+</Node>
