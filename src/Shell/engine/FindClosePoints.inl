@@ -59,7 +59,7 @@ void FindClosePoints<DataTypes>::doUpdate()
         for (Index i=0; i<points.size()-1; i++) {
             for (Index j=i+1; j<points.size(); j++) {
                 if ((points[i] - points[j]).norm() <= threshold) {
-                    list.push_back(type::fixed_array<Index,2>(i,j));
+                    list.push_back(type::fixed_array<Index,2>{i,j});
                 }
             }
         }

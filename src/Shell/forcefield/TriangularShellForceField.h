@@ -37,6 +37,7 @@
 
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/core/topology/TopologyData.h>
+#include <sofa/helper/ColorMap.h>
 
 
 // Uncomment the following to use quaternions instead of matrices for
@@ -214,11 +215,16 @@ public:
         Data<bool> d_corotated;
         Data<sofa::helper::OptionsGroup> d_measure;
         Data<type::vector<Real> > d_measuredValues;
+        Data<bool> d_showMeasuredValuesColorMap;
         Data<bool> d_isShellveryThin;
         Data<bool> d_use_rest_position;
         Data<Real> d_arrow_radius;
 
         TRQSTriangleHandler* triangleHandler;
+
+        helper::ColorMap m_colorMap = helper::ColorMap(256, "Blue to Red");
+        Real m_minMeasuredValue;
+        Real m_maxMeasuredValue;
 
 protected :
 
