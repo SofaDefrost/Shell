@@ -216,6 +216,7 @@ public:
         Data<sofa::helper::OptionsGroup> d_measure;
         Data<type::vector<Real> > d_measuredValues;
         Data<bool> d_showMeasuredValuesColorMap;
+        Data<bool> d_showArrows;
         Data<bool> d_isShellveryThin;
         Data<bool> d_use_rest_position;
         Data<Real> d_arrow_radius;

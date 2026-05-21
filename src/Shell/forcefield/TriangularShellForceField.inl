@@ -82,6 +82,7 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
     , d_measure(initData(&d_measure, "measure", "Compute the strain or stress"))
     , d_measuredValues(initData(&d_measuredValues, "measuredValues", "Measured values for stress or strain"))
     , d_showMeasuredValuesColorMap(initData(&d_showMeasuredValuesColorMap, false, "showMeasuredValuesColorMap", "draw elements showing the measured values (color map from blue to red)"))
+    , d_showArrows(initData(&d_showArrows, false, "showArrows", "Show the orientation of the triangle as arrow."))
     , d_isShellveryThin(initData(&d_isShellveryThin, false, "isShellveryThin", "This bool is to adapt "
                                                                                "computation in case we are using verry tiny(thickness) shell element"))
     , d_use_rest_position(initData(&d_use_rest_position, true, "use_rest_position", "Use the rest position inteat of using postion to update the restposition"))
@@ -1315,23 +1316,29 @@ void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams
 
    for (unsigned int i=0; i< nbTriangles; i++)
    {
-     const TriangleInformation &tinfo = triangleInf[i];
-     Vec3 vx = tinfo.R * Vec3(1, 0, 0);
-     Vec3 vy = tinfo.R * Vec3(0, 1, 0);
-     Vec3 vz = tinfo.R * Vec3(0, 0, 1);
-
      auto triangle = _topology->getTriangle(i);
      // get triangle i indices
      auto a = triangle[0];
      auto b = triangle[1];
      auto c = triangle[2];
 
-     // compute the center of the triangle
-     Vec3 center = (positions[a].getCenter() + positions[b].getCenter() + positions[c].getCenter())/3;
+     vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(positions[a])));
+     vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(positions[b])));
+     vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(positions[c])));
+
      // Draw arrows from using shell triangle info (tinfo.R) in the center of the triangle
-     vparams->drawTool()->drawArrow(center, center + vx, radius, type::RGBAColor(1.0, 0.0, 0.0, 1.0));
-     vparams->drawTool()->drawArrow(center, center + vy, radius, type::RGBAColor(0.0, 1.0, 0.0, 1.0));
-     vparams->drawTool()->drawArrow(center, center + vz, radius, type::RGBAColor(0.0, 0.0, 1.0, 1.0));
+     if (d_showArrows.getValue())
+     {
+         // compute the center of the triangle
+         Vec3 center = (positions[a].getCenter() + positions[b].getCenter() + positions[c].getCenter())/3;
+         const TriangleInformation &tinfo = triangleInf[i];
+         Vec3 vx = tinfo.R * Vec3(1, 0, 0);
+         Vec3 vy = tinfo.R * Vec3(0, 1, 0);
+         Vec3 vz = tinfo.R * Vec3(0, 0, 1);
+         vparams->drawTool()->drawArrow(center, center + vx, radius, type::RGBAColor(1.0, 0.0, 0.0, 1.0));
+         vparams->drawTool()->drawArrow(center, center + vy, radius, type::RGBAColor(0.0, 1.0, 0.0, 1.0));
+         vparams->drawTool()->drawArrow(center, center + vz, radius, type::RGBAColor(0.0, 0.0, 1.0, 1.0));
+     }
 
      if(d_showMeasuredValuesColorMap.getValue() & !values.empty())
      {
@@ -1346,11 +1353,8 @@ void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams
          colorVector.push_back(sofa::type::RGBAColor(0, 0.5, 0.5, 1));
          colorVector.push_back(sofa::type::RGBAColor(0, 0, 1, 1));
      }
-
-     vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(positions[a])));
-     vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(positions[b])));
-     vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(positions[c])));
    }
+
    // Draw triangles
    vparams->drawTool()->drawTriangles(vertices, colorVector);
 
