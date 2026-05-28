@@ -33,6 +33,7 @@
 #include <sofa/gl/gl.h>
 #include <sofa/gl/template.h>
 #include <sofa/helper/system/thread/debug.h>
+#include <sofa/helper/ScopedAdvancedTimer.h>
 #include <fstream> // for reading the file
 #include <iostream> //for debugging
 #include <vector>
@@ -1292,6 +1293,8 @@ void TriangularShellForceField<DataTypes>::dktSD(StrainDisplacement &B, const Tr
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
+    SCOPED_TIMER("draw_TriangularShellForceField");
+
    if (!vparams->displayFlags().getShowForceFields())
        return;
 
