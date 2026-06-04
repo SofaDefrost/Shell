@@ -7,6 +7,7 @@ sofa_find_package(Sofa.Component.Controller REQUIRED)
 sofa_find_package(Sofa.Component.Topology.Container.Dynamic REQUIRED)
 sofa_find_package(Sofa.Component.StateContainer REQUIRED)
 sofa_find_package(Sofa.Component.Mapping.Linear REQUIRED)
+sofa_find_package(Sofa.Component.SolidMechanics.FEM.Elastic REQUIRED)
 sofa_find_package(Sofa.GL REQUIRED)
 
 set(README_FILE README.md)
@@ -77,6 +78,7 @@ target_link_libraries(${PROJECT_NAME}
     Sofa.Component.Topology.Container.Dynamic
     Sofa.Component.StateContainer
     Sofa.Component.Mapping.Linear
+    Sofa.Component.SolidMechanics.FEM.Elastic
     Sofa.GL
 )
 
