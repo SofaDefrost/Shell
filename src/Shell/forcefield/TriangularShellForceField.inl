@@ -33,6 +33,7 @@
 #include <sofa/gl/gl.h>
 #include <sofa/gl/template.h>
 #include <sofa/helper/system/thread/debug.h>
+#include <sofa/helper/ScopedAdvancedTimer.h>
 #include <fstream> // for reading the file
 #include <iostream> //for debugging
 #include <vector>
@@ -79,6 +80,8 @@ TriangularShellForceField<DataTypes>::TriangularShellForceField()
     , d_corotated(initData(&d_corotated, true, "corotated", "Compute forces in corotational frame"))
     , d_measure(initData(&d_measure, "measure", "Compute the strain or stress"))
     , d_measuredValues(initData(&d_measuredValues, "measuredValues", "Measured values for stress or strain"))
+    , d_showMeasuredValuesColorMap(initData(&d_showMeasuredValuesColorMap, false, "showMeasuredValuesColorMap", "draw elements showing the measured values (color map from blue to red)"))
+    , d_showArrows(initData(&d_showArrows, false, "showArrows", "Show the orientation of the triangle as arrow."))
     , d_isShellveryThin(initData(&d_isShellveryThin, false, "isShellveryThin", "This bool is to adapt "
                                                                                "computation in case we are using verry tiny(thickness) shell element"))
     , d_use_rest_position(initData(&d_use_rest_position, true, "use_rest_position", "Use the rest position inteat of using postion to update the restposition"))
@@ -215,6 +218,8 @@ template <class DataTypes> void TriangularShellForceField<DataTypes>::reinit()
     {
         d_measuredValues.beginEdit()->resize(_topology->getNbPoints());
         d_measuredValues.endEdit();
+        m_minMeasuredValue = 0;
+        m_maxMeasuredValue = 0;
     }
 
     /// Prepare to store info in the triangle array
@@ -700,26 +705,35 @@ void TriangularShellForceField<DataTypes>::accumulateForce(VecDeriv &f, const Ve
     }
 
     // Compute the measure (stress/strain)
-    if (bMeasureStrain) {
+    if (bMeasureStrain || bMeasureStress)
+    {
+        m_minMeasuredValue = std::numeric_limits<float>::max();
+        m_maxMeasuredValue = std::numeric_limits<float>::min();
         type::vector<Real> &values = *d_measuredValues.beginEdit();
-        for (unsigned int i=0; i< tinfo->measure.size(); i++) {
-            Vec3 strain = tinfo->measure[i].B * Dm + tinfo->measure[i].Bb * Db;
-            // Norm from strain in x and y
-            // NOTE: Shear strain is not included
-            values[ tinfo->measure[i].id ] = helper::rsqrt(
-                strain[0] * strain[0] + strain[1] * strain[1]);
+
+        if (bMeasureStrain) {
+            for (unsigned int i=0; i< tinfo->measure.size(); i++) {
+                Vec3 strain = tinfo->measure[i].B * Dm + tinfo->measure[i].Bb * Db;
+                // Norm from strain in x and y
+                // NOTE: Shear strain is not included
+                values[ tinfo->measure[i].id ] = helper::rsqrt(strain[0] * strain[0] + strain[1] * strain[1]);
+            }
+        } else if (bMeasureStress) {
+            for (unsigned int i=0; i< tinfo->measure.size(); i++) {
+                Vec3 stress = materialMatrix * tinfo->measure[i].B * Dm
+                              + materialMatrix * tinfo->measure[i].Bb * Db;
+                // Von Mises stress criterion (plane stress)
+                values[ tinfo->measure[i].id ] = helper::rsqrt(stress[0] * stress[0] - stress[0] * stress[1]
+                                                             + stress[1] * stress[1] + 3 * stress[2] * stress[2]);
+            }
         }
-        d_measuredValues.endEdit();
-    } else if (bMeasureStress) {
-        type::vector<Real> &values = *d_measuredValues.beginEdit();
-        for (unsigned int i=0; i< tinfo->measure.size(); i++) {
-            Vec3 stress = materialMatrix * tinfo->measure[i].B * Dm
-                          + materialMatrix * tinfo->measure[i].Bb * Db;
-            // Von Mises stress criterion (plane stress)
-            values[ tinfo->measure[i].id ] = helper::rsqrt(
-                stress[0] * stress[0] - stress[0] * stress[1]
-                + stress[1] * stress[1] + 3 * stress[2] * stress[2]);
+
+        for (size_t i = 0; i < values.size(); i++)
+        {
+            m_minMeasuredValue = std::min(values[i], m_minMeasuredValue);
+            m_maxMeasuredValue = std::max(values[i], m_maxMeasuredValue);
         }
+
         d_measuredValues.endEdit();
     }
 
@@ -1276,35 +1290,78 @@ void TriangularShellForceField<DataTypes>::dktSD(StrainDisplacement &B, const Tr
 }
 
 template <class DataTypes>
-void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams* vparams){
-   // Draw arrows from using shell triangle info (tinfo.R) in the center of the triangle
+void TriangularShellForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
+{
+    SCOPED_TIMER("draw_TriangularShellForceField");
 
-   int nbTriangles=_topology->getNbTriangles();
+   if (!vparams->displayFlags().getShowForceFields())
+       return;
+
+   const auto stateLifeCycle = vparams->drawTool()->makeStateLifeCycle();
+   vparams->drawTool()->disableLighting();
+
+   if (vparams->displayFlags().getShowWireFrame())
+       vparams->drawTool()->setPolygonMode(0, true);
+
+   unsigned int nbTriangles=_topology->getNbTriangles();
    auto triangles = _topology->getTriangles();
    const VecCoord& positions =this->mstate->read(sofa::core::vec_id::read_access::position)->getValue();
    type::vector<TriangleInformation>& triangleInf = *(triangleInfo.beginEdit());
    const Real radius = d_arrow_radius.getValue();
+
+   std::vector<sofa::type::RGBAColor> colorVector;
+   std::vector<sofa::type::Vec3> vertices;
+   colorVector.reserve(nbTriangles * 3);
+   vertices.reserve(nbTriangles * 3);
+
+   helper::ReadAccessor<Data<type::vector<Real> > > values =  d_measuredValues;
+
    for (unsigned int i=0; i< nbTriangles; i++)
    {
-     const TriangleInformation &tinfo = triangleInf[i];
-     Vec3 vx = tinfo.R * Vec3(1, 0, 0);
-     Vec3 vy = tinfo.R * Vec3(0, 1, 0);
-     Vec3 vz = tinfo.R * Vec3(0, 0, 1);
-
      auto triangle = _topology->getTriangle(i);
      // get triangle i indices
      auto a = triangle[0];
      auto b = triangle[1];
      auto c = triangle[2];
 
-     // compute the center of the triangle
-     Vec3 center = (positions[a].getCenter() + positions[b].getCenter() + positions[c].getCenter())/3;
-     vparams->drawTool()->drawArrow(center, center + vx, radius, type::RGBAColor(1.0, 0.0, 0.0, 1.0));
-     vparams->drawTool()->drawArrow(center, center + vy, radius, type::RGBAColor(0.0, 1.0, 0.0, 1.0));
-     vparams->drawTool()->drawArrow(center, center + vz, radius, type::RGBAColor(0.0, 0.0, 1.0, 1.0));
+     vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(positions[a])));
+     vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(positions[b])));
+     vertices.push_back(sofa::type::Vec3(DataTypes::getCPos(positions[c])));
+
+     // Draw arrows from using shell triangle info (tinfo.R) in the center of the triangle
+     if (d_showArrows.getValue())
+     {
+         // compute the center of the triangle
+         Vec3 center = (positions[a].getCenter() + positions[b].getCenter() + positions[c].getCenter())/3;
+         const TriangleInformation &tinfo = triangleInf[i];
+         Vec3 vx = tinfo.R * Vec3(1, 0, 0);
+         Vec3 vy = tinfo.R * Vec3(0, 1, 0);
+         Vec3 vz = tinfo.R * Vec3(0, 0, 1);
+         vparams->drawTool()->drawArrow(center, center + vx, radius, type::RGBAColor(1.0, 0.0, 0.0, 1.0));
+         vparams->drawTool()->drawArrow(center, center + vy, radius, type::RGBAColor(0.0, 1.0, 0.0, 1.0));
+         vparams->drawTool()->drawArrow(center, center + vz, radius, type::RGBAColor(0.0, 0.0, 1.0, 1.0));
+     }
+
+     if(d_showMeasuredValuesColorMap.getValue() & !values.empty())
+     {
+         helper::ColorMap::evaluator<Real> evalColor = m_colorMap.getEvaluator(m_minMeasuredValue, m_maxMeasuredValue);
+         colorVector.push_back(evalColor(values[triangle[0]]));
+         colorVector.push_back(evalColor(values[triangle[1]]));
+         colorVector.push_back(evalColor(values[triangle[2]]));
+     }
+     else
+     {
+         colorVector.push_back(sofa::type::RGBAColor::green());
+         colorVector.push_back(sofa::type::RGBAColor(0, 0.5, 0.5, 1));
+         colorVector.push_back(sofa::type::RGBAColor(0, 0, 1, 1));
+     }
    }
+
+   // Draw triangles
+   vparams->drawTool()->drawTriangles(vertices, colorVector);
+
    triangleInfo.endEdit();
-  }
+}
 
 
 } // namespace forcefield
