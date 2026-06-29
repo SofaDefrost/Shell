@@ -74,9 +74,7 @@ void TriangularShellForceField<DataTypes>::TRQSTriangleHandler::applyCreateFunct
 // --------------------------------------------------------------------------------------
 template <class DataTypes>
 TriangularShellForceField<DataTypes>::TriangularShellForceField()
-    : d_poisson(initData(&d_poisson,(Real)0.45,"poissonRatio","Poisson ratio in Hooke's law"))
-    , d_young(initData(&d_young,(Real)3000.,"youngModulus","Young modulus in Hooke's law"))
-    , d_thickness(initData(&d_thickness,(Real)0.1,"thickness","Thickness of the plates"))
+    : d_thickness(initData(&d_thickness,(Real)0.1,"thickness","Thickness of the plates"))
     , d_membraneElement(initData(&d_membraneElement, "membraneElement", "The membrane element to use"))
     , d_bendingElement(initData(&d_bendingElement, "bendingElement", "The bending plate element to use"))
     , d_corotated(initData(&d_corotated, true, "corotated", "Compute forces in corotational frame"))
@@ -548,8 +546,8 @@ void TriangularShellForceField<DataTypes>::computeRotation(Transformation& R, co
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeMaterialStiffness()
 {
-    Real E = d_young.getValue(),
-        nu = d_poisson.getValue(),
+    Real E = getYoungModulusInElement(0),
+        nu = getPoissonRatioInElement(0),
         t = d_thickness.getValue();
 
     materialMatrix[0][0] = 1.0;
@@ -1171,7 +1169,8 @@ void TriangularShellForceField<DataTypes>::computeStiffnessMatrixLSTRet(Stiffnes
 template <class DataTypes>
 void TriangularShellForceField<DataTypes>::computeStiffnessMatrixAndesOpt(StiffnessMatrix &K, TriangleInformation &tinfo)
 {
-    Real beta0 = helper::rmax(0.5 - 2.0*d_poisson.getValue()*d_poisson.getValue(), 0.01);
+    Real poissonRatio = getPoissonRatioInElement(0);
+    Real beta0 = helper::rmax(0.5 - 2.0 * poissonRatio * poissonRatio, 0.01);
     return andesTemplate(K, tinfo, 3.0/2.0, AndesBeta{beta0, 1.0, 2.0, 1.0, 0.0, 1.0, -1.0, -1.0, -1.0, -2.0});
 }
 

@@ -30,7 +30,7 @@
 #endif
 
 
-#include <sofa/core/behavior/ForceField.h>
+#include <sofa/component/solidmechanics/fem/elastic/BaseLinearElasticityFEMForceField.h>
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/core/objectmodel/Data.h>
 #include <sofa/helper/OptionsGroup.h>
@@ -58,7 +58,7 @@ namespace forcefield
 using namespace sofa::type;
 using sofa::type::vector;
 using namespace sofa::core::topology;
-using namespace sofa::core::behavior;
+using namespace sofa::component::solidmechanics::fem::elastic;
 
 /// This class can be overridden if needed for additional storage within template specializations.
 template<class DataTypes>
@@ -69,14 +69,14 @@ public:
 
 
 template<class DataTypes>
-class TriangularShellForceField : public core::behavior::ForceField<DataTypes>
+class TriangularShellForceField : public BaseLinearElasticityFEMForceField<DataTypes>
 {
     public:
-        SOFA_CLASS(SOFA_TEMPLATE(TriangularShellForceField,DataTypes), SOFA_TEMPLATE(core::behavior::ForceField,DataTypes));
+        SOFA_CLASS(SOFA_TEMPLATE(TriangularShellForceField,DataTypes), SOFA_TEMPLATE(BaseLinearElasticityFEMForceField,DataTypes));
 
-        typedef core::behavior::ForceField<DataTypes>       Inherited;
-        typedef typename DataTypes::VecCoord                VecCoord;
-        typedef typename DataTypes::VecDeriv                VecDeriv;
+        typedef BaseLinearElasticityFEMForceField<DataTypes> Inherited;
+        typedef typename DataTypes::VecCoord                 VecCoord;
+        typedef typename DataTypes::VecDeriv                 VecDeriv;
         //typedef typename DataTypes::VecReal                 VecReal;
 
         typedef typename DataTypes::Coord                   Coord;
@@ -207,8 +207,9 @@ public:
 
         sofa::core::topology::BaseMeshTopology* getTopology() {return _topology;}
 
-        Data<Real> d_poisson;
-        Data<Real> d_young;
+        using BaseLinearElasticityFEMForceField<DataTypes>::getYoungModulusInElement;
+        using BaseLinearElasticityFEMForceField<DataTypes>::getPoissonRatioInElement;
+
         Data <Real> d_thickness;
         Data <sofa::helper::OptionsGroup> d_membraneElement;
         Data <sofa::helper::OptionsGroup> d_bendingElement;
